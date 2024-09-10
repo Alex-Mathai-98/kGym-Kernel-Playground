@@ -1,7 +1,15 @@
 # Kernel-Playground
 Kernel Playground - A playground to run large scale experiments on the Linux Kernel
+<p align="left">
+    <a href="https://arxiv.org/abs/2407.02680"><img src="https://img.shields.io/badge/arXiv-2407.02680-b31b1b.svg?style=for-the-badge"> </a>
+    <a href="https://opensource.org/license/mit/"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge"> </a>
+</p>
 
 Below are the list of steps to follow when trying to run a sample experiment from the paper ```kGym: A Platform and Dataset to Benchmark Large Language Models on Linux Kernel Crash Resolution```.
+
+#### List of Submodules in this repository
+1. KBDr_Runner - [Kernel Gym](https://github.com/Alex-Mathai-98/kGym-Kernel-Gym)
+2. Kernel_Bench_Experiments - [Kernel Bench Experiments](https://github.com/Alex-Mathai-98/kGym-Kernel-Bench-Experiments)
 
 ## Step 0 - Set up kGym
 Follow the README.md file in KBDr_Runner and bring up kGym
