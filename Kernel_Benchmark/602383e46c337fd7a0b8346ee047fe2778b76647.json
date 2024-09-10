@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "possible deadlock in send_sigurg",
+    "display-title": "possible deadlock in send_sigurg (2)",
+    "id": "602383e46c337fd7a0b8346ee047fe2778b76647",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fcntl: Fix potential deadlock in send_sig{io, urg}()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8d1ddb5e79374fb277985a6b3faa2ed8631c5b4c",
+            "hash": "8d1ddb5e79374fb277985a6b3faa2ed8631c5b4c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "locking: More accurate annotations for read_lock()",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e918188611f073063415f40fae568fa4d86d9044",
+        "hash": "e918188611f073063415f40fae568fa4d86d9044",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000009d056805b252e883@google.com/T/",
+        "https://lore.kernel.org/all/20201223021626.2790791-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201223021813.2791612-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201223022103.2792705-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210104155703.375788488@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210104155705.740576914@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210104155708.800470590@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210105090818.518271884@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15197862500000",
+            "c-reproducer": "/text?tag=ReproC&x=13c59f6c500000",
+            "kernel-config": "/text?tag=KernelConfig&x=61033507391c77ff",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4ef8451b332662d004df269d4cdeb7d9f31419b5",
+            "kernel-source-commit": "4ef8451b332662d004df269d4cdeb7d9f31419b5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/cba33199be220cbf61f7c0c8223d88a25a913d6f",
+            "syzkaller-commit": "cba33199be220cbf61f7c0c8223d88a25a913d6f",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=128f3e1a500000"
+        }
+    ],
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "529adfe8f131c60938ece113379f1a07640aefb1",
+    "patch": "diff --git a/fs/fcntl.c b/fs/fcntl.c\nindex 19ac5baad50f..05b36b28f2e8 100644\n--- a/fs/fcntl.c\n+++ b/fs/fcntl.c\n@@ -781,9 +781,10 @@ void send_sigio(struct fown_struct *fown, int fd, int band)\n {\n \tstruct task_struct *p;\n \tenum pid_type type;\n+\tunsigned long flags;\n \tstruct pid *pid;\n \t\n-\tread_lock(&fown->lock);\n+\tread_lock_irqsave(&fown->lock, flags);\n \n \ttype = fown->pid_type;\n \tpid = fown->pid;\n@@ -804,7 +805,7 @@ void send_sigio(struct fown_struct *fown, int fd, int band)\n \t\tread_unlock(&tasklist_lock);\n \t}\n  out_unlock_fown:\n-\tread_unlock(&fown->lock);\n+\tread_unlock_irqrestore(&fown->lock, flags);\n }\n \n static void send_sigurg_to_task(struct task_struct *p,\n@@ -819,9 +820,10 @@ int send_sigurg(struct fown_struct *fown)\n \tstruct task_struct *p;\n \tenum pid_type type;\n \tstruct pid *pid;\n+\tunsigned long flags;\n \tint ret = 0;\n \t\n-\tread_lock(&fown->lock);\n+\tread_lock_irqsave(&fown->lock, flags);\n \n \ttype = fown->pid_type;\n \tpid = fown->pid;\n@@ -844,7 +846,7 @@ int send_sigurg(struct fown_struct *fown)\n \t\tread_unlock(&tasklist_lock);\n \t}\n  out_unlock_fown:\n-\tread_unlock(&fown->lock);\n+\tread_unlock_irqrestore(&fown->lock, flags);\n \treturn ret;\n }\n \n",
+    "patch_modified_files": [
+        "fs/fcntl.c"
+    ]
+}

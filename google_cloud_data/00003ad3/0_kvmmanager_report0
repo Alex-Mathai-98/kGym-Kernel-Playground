@@ -1,0 +1,106 @@
+EXT4-fs error (device loop7): ext4_xattr_ibody_get:669: inode #18: comm syz-executor.7: corrupted in-inode xattr: bad magic number in in-inode xattr
+==================================================================
+BUG: KASAN: slab-use-after-free in get_max_inline_xattr_value_size+0x369/0x510
+Read of size 4 at addr ffff8880731e7084 by task syz-executor.7/5158
+
+CPU: 0 PID: 5158 Comm: syz-executor.7 Not tainted 6.4.0-rc1-syzkaller-00014-g6dcc98fbc465 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1e7/0x2d0
+ print_report+0x163/0x540
+ kasan_report+0x176/0x1b0
+ get_max_inline_xattr_value_size+0x369/0x510
+ ext4_get_max_inline_size+0x141/0x200
+ ext4_prepare_inline_data+0x87/0x1d0
+ ext4_da_write_inline_data_begin+0x24e/0x1090
+ ext4_da_write_begin+0x4ea/0xa40
+ generic_perform_write+0x300/0x5e0
+ ext4_buffered_write_iter+0x122/0x3a0
+ ext4_file_write_iter+0x1d6/0x1930
+ vfs_write+0x790/0xb20
+ ksys_write+0x1a0/0x2c0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f9d2c67c999
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f9d2d3eb0c8 EFLAGS: 00000246
+ ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007f9d2c79c050 RCX: 00007f9d2c67c999
+RDX: 0000000000000010 RSI: 0000000020000100 RDI: 0000000000000004
+RBP: 00007f9d2c6d8b20 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000006e R14: 00007f9d2c79c050 R15: 00007fffb3b7d948
+ </TASK>
+
+Allocated by task 4999:
+ kasan_set_track+0x4f/0x70
+ __kasan_kmalloc+0x98/0xb0
+ __kmalloc+0xb9/0x230
+ kobject_get_path+0xb8/0x230
+ kobject_uevent_env+0x29f/0x8e0
+ netdev_queue_update_kobjects+0x231/0x480
+ netdev_register_kobject+0x267/0x310
+ register_netdevice+0x1066/0x1790
+ team_newlink+0x10a/0x170
+ rtnl_newlink+0x1468/0x2010
+ rtnetlink_rcv_msg+0x825/0xf40
+ netlink_rcv_skb+0x1df/0x430
+ netlink_unicast+0x7c3/0x990
+ netlink_sendmsg+0xa2a/0xd60
+ __sys_sendto+0x475/0x630
+ __x64_sys_sendto+0xde/0xf0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+The buggy address belongs to the object at ffff8880731e7080
+ which belongs to the cache kmalloc-64 of size 64
+The buggy address is located 4 bytes inside of
+ freed 64-byte region [ffff8880731e7080, ffff8880731e70c0)
+
+The buggy address belongs to the physical page:
+page:ffffea0001cc79c0 refcount:1 mapcount:0 mapping:0000000000000000 index:0xffff8880731e7700 pfn:0x731e7
+flags: 0xfff00000000200(slab|node=0|zone=1|lastcpupid=0x7ff)
+page_type: 0xffffffff()
+raw: 00fff00000000200 ffff888012441640 ffffea0000abfd90 ffffea0001d9f610
+raw: ffff8880731e7700 0000000000200011 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x12cc0(GFP_KERNEL|__GFP_NOWARN|__GFP_NORETRY), pid 4999, tgid 4999 (syz-executor.7), ts 58024741680, free_ts 15103078460
+ get_page_from_freelist+0x321c/0x33a0
+ __alloc_pages+0x255/0x670
+ alloc_slab_page+0x6a/0x160
+ new_slab+0x84/0x2f0
+ ___slab_alloc+0xa85/0x10a0
+ __kmem_cache_alloc_node+0x1b8/0x290
+ __kmalloc+0xa8/0x230
+ kobject_get_path+0xb8/0x230
+ kobject_uevent_env+0x29f/0x8e0
+ netdev_queue_update_kobjects+0x231/0x480
+ netdev_register_kobject+0x267/0x310
+ register_netdevice+0x1066/0x1790
+ team_newlink+0x10a/0x170
+ rtnl_newlink+0x1468/0x2010
+ rtnetlink_rcv_msg+0x825/0xf40
+ netlink_rcv_skb+0x1df/0x430
+page last free stack trace:
+ free_unref_page_prepare+0x8fe/0xa10
+ free_unref_page+0x37/0x3f0
+ free_contig_range+0x9e/0x150
+ destroy_args+0x102/0x9a0
+ debug_vm_pgtable+0x405/0x490
+ do_one_initcall+0x23d/0x7d0
+ do_initcall_level+0x157/0x210
+ do_initcalls+0x3f/0x80
+ kernel_init_freeable+0x43b/0x5d0
+ kernel_init+0x1d/0x2a0
+ ret_from_fork+0x1f/0x30
+
+Memory state around the buggy address:
+ ffff8880731e6f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff8880731e7000: fb fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+>ffff8880731e7080: fb fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+                   ^
+ ffff8880731e7100: fb fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+ ffff8880731e7180: fb fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+==================================================================

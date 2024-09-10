@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in get_max_inline_xattr_value_size",
+    "display-title": "KASAN: slab-out-of-bounds Read in get_max_inline_xattr_value_size",
+    "id": "731e35eeed762019e385baa96953d9ec8eb63c10",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: add bounds checking in get_max_inline_xattr_value_size()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2220eaf90992c11d888fe771055d4de330385f01",
+            "hash": "2220eaf90992c11d888fe771055d4de330385f01",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000cdfab505f819529a@google.com/T/",
+        "https://lore.kernel.org/all/000000000000ece18705f3b20934@google.com/T/",
+        "https://lore.kernel.org/all/20230512220307.1412989-1-tytso@mit.edu/T/",
+        "https://lore.kernel.org/all/20230513051210.1446682-1-tytso@mit.edu/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-use-after-free Read in get_max_inline_xattr_value_size",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1597fd0ec80000",
+            "c-reproducer": "/text?tag=ReproC&x=14149471c80000",
+            "kernel-config": "/text?tag=KernelConfig&x=acdb62bf488a8fe5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=da8e7da11e4ba758caf4c149cc8d8cd555aefe5f",
+            "kernel-source-commit": "da8e7da11e4ba758caf4c149cc8d8cd555aefe5f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/fbf0499acc828df26995835e51d83c3a0117e716",
+            "syzkaller-commit": "fbf0499acc828df26995835e51d83c3a0117e716",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11c39f19c80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "get_max_inline_xattr_value_size",
+            "fs/ext4/inline.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-12T19:11:02+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "6dcc98fbc46511f7a6650946f198df6951a5a88c",
+    "patch": "diff --git a/fs/ext4/inline.c b/fs/ext4/inline.c\nindex d3dfc51a43c5..f47adb284e90 100644\n--- a/fs/ext4/inline.c\n+++ b/fs/ext4/inline.c\n@@ -34,6 +34,7 @@ static int get_max_inline_xattr_value_size(struct inode *inode,\n \tstruct ext4_xattr_ibody_header *header;\n \tstruct ext4_xattr_entry *entry;\n \tstruct ext4_inode *raw_inode;\n+\tvoid *end;\n \tint free, min_offs;\n \n \tif (!EXT4_INODE_HAS_XATTR_SPACE(inode))\n@@ -57,14 +58,23 @@ static int get_max_inline_xattr_value_size(struct inode *inode,\n \traw_inode = ext4_raw_inode(iloc);\n \theader = IHDR(inode, raw_inode);\n \tentry = IFIRST(header);\n+\tend = (void *)raw_inode + EXT4_SB(inode->i_sb)->s_inode_size;\n \n \t/* Compute min_offs. */\n-\tfor (; !IS_LAST_ENTRY(entry); entry = EXT4_XATTR_NEXT(entry)) {\n+\twhile (!IS_LAST_ENTRY(entry)) {\n+\t\tvoid *next = EXT4_XATTR_NEXT(entry);\n+\n+\t\tif (next >= end) {\n+\t\t\tEXT4_ERROR_INODE(inode,\n+\t\t\t\t\t \"corrupt xattr in inline inode\");\n+\t\t\treturn 0;\n+\t\t}\n \t\tif (!entry->e_value_inum && entry->e_value_size) {\n \t\t\tsize_t offs = le16_to_cpu(entry->e_value_offs);\n \t\t\tif (offs < min_offs)\n \t\t\t\tmin_offs = offs;\n \t\t}\n+\t\tentry = next;\n \t}\n \tfree = min_offs -\n \t\t((void *)entry - (void *)IFIRST(header)) - sizeof(__u32);\n",
+    "patch_modified_files": [
+        "fs/ext4/inline.c"
+    ]
+}

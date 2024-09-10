@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "memory leak in bcsp_recv",
+    "display-title": "memory leak in bcsp_recv",
+    "id": "84f71cc91e3c76e86a37858f87f0807ee8294deb",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: hci_bcsp: Fix memory leak in rx_skb",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4ce9146e0370fcd573f0372d9b4e5a211112567c",
+            "hash": "4ce9146e0370fcd573f0372d9b4e5a211112567c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000013d4880589b9c7d3@google.com/T/",
+        "https://lore.kernel.org/all/20190528134258.3743-1-tomasbortoli@gmail.com/T/",
+        "https://lore.kernel.org/all/20190624051407.GC30702@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20190715134655.4076-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715140341.6443-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715141809.8445-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715142839.9896-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715143629.10893-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715144535.11636-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190724191655.268628197@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190724191724.382593077@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190724191735.096702571@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190729190820.321094988@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190802092203.671944552@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190802092238.692035242@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=143fcb8aa00000",
+            "c-reproducer": "/text?tag=ReproC&x=137bd84ca00000",
+            "kernel-config": "/text?tag=KernelConfig&x=61dd9e15a761691d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c50bbf615f2f0028ad1771506ef8807130ccc2ce",
+            "kernel-source-commit": "c50bbf615f2f0028ad1771506ef8807130ccc2ce",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/85c573157db1baae51178263fe3289c8329e6dc2",
+            "syzkaller-commit": "85c573157db1baae51178263fe3289c8329e6dc2",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11fd0c9aa00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "bcsp_close",
+            "drivers/bluetooth/hci_bcsp.c"
+        ]
+    ],
+    "patch_commit_date": "2019-05-28T13:42:58+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "6c595ea8b7b9d4048760c28cbccd8956acbc0762",
+    "patch": "diff --git a/drivers/bluetooth/hci_bcsp.c b/drivers/bluetooth/hci_bcsp.c\nindex 82b13faa9422..fe2e307009f4 100644\n--- a/drivers/bluetooth/hci_bcsp.c\n+++ b/drivers/bluetooth/hci_bcsp.c\n@@ -744,6 +744,11 @@ static int bcsp_close(struct hci_uart *hu)\n \tskb_queue_purge(&bcsp->rel);\n \tskb_queue_purge(&bcsp->unrel);\n \n+\tif (bcsp->rx_skb) {\n+\t\tkfree_skb(bcsp->rx_skb);\n+\t\tbcsp->rx_skb = NULL;\n+\t}\n+\n \tkfree(bcsp);\n \treturn 0;\n }\n",
+    "patch_modified_files": [
+        "drivers/bluetooth/hci_bcsp.c"
+    ]
+}

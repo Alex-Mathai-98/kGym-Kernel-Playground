@@ -1,0 +1,114 @@
+==================================================================
+BUG: KASAN: use-after-free in __wake_up_common+0x590/0x5a0
+Read of size 8 at addr ffff888068406630 by task syz-executor.1/3773
+
+CPU: 0 PID: 3773 Comm: syz-executor.1 Not tainted 5.17.0-rc7-syzkaller-00047-ge2c0cb7c0cc7 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xfc/0x174
+ print_address_description.constprop.0.cold+0x8d/0x328
+ kasan_report.cold+0x83/0xdf
+ __wake_up_common+0x590/0x5a0
+ __wake_up_common_lock+0xd1/0x130
+ tty_release+0x86a/0x12f0
+ __fput+0x273/0x990
+ task_work_run+0xdd/0x1a0
+ exit_to_user_mode_prepare+0x27c/0x290
+ syscall_exit_to_user_mode+0x19/0x60
+ do_syscall_64+0x40/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x560a469388ca
+Code: 48 3d 00 f0 ff ff 77 48 c3 0f 1f 80 00 00 00 00 48 83 ec 18 89 7c 24 0c e8 03 7c 02 00 8b 7c 24 0c 89 c2 b8 03 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 36 89 d7 89 44 24 0c e8 63 7c 02 00 8b 44 24
+RSP: 002b:00007fff9bf1afa0 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 0000000000000004 RCX: 0000560a469388ca
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000003
+RBP: ffffffffffffffff R08: 0000560a46a4bf60 R09: 0000560a46a4bf6c
+R10: 00007fff9bf1b120 R11: 0000000000000293 R12: 0000000000012453
+R13: 0000560a46a4bf60 R14: 0000000000012486 R15: 0000560a46e50000
+ </TASK>
+
+Allocated by task 3767:
+ kasan_save_stack+0x1c/0x40
+ __kasan_kmalloc+0xa7/0xd0
+ io_arm_poll_handler+0x3d9/0x9f0
+ __io_queue_sqe+0x283/0x8f0
+ io_submit_sqes+0x1151/0x9a80
+ __do_sys_io_uring_enter+0xb0d/0x1700
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+Freed by task 3767:
+ kasan_save_stack+0x1c/0x40
+ kasan_set_track+0x21/0x30
+ kasan_set_free_info+0x20/0x30
+ ____kasan_slab_free+0x11c/0x170
+ slab_free_freelist_hook+0xae/0x1e0
+ kfree+0xd0/0x380
+ io_clean_op+0x210/0xd40
+ __io_req_complete_post+0x8e9/0xec0
+ io_req_complete_post+0x56/0x1d0
+ io_apoll_task_func+0x291/0x390
+ tctx_task_work+0x814/0x1850
+ task_work_run+0xdd/0x1a0
+ do_exit+0xb6b/0x2ab0
+ do_group_exit+0xd2/0x2f0
+ get_signal+0x4e4/0x26d0
+ arch_do_signal_or_restart+0x1e7/0x1c00
+ exit_to_user_mode_prepare+0x161/0x290
+ syscall_exit_to_user_mode+0x19/0x60
+ do_syscall_64+0x40/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+The buggy address belongs to the object at ffff888068406600
+ which belongs to the cache kmalloc-96 of size 96
+The buggy address is located 48 bytes inside of
+ 96-byte region [ffff888068406600, ffff888068406660)
+The buggy address belongs to the page:
+page:ffffea0001a10180 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x68406
+flags: 0xfff00000000200(slab|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000000200 0000000000000000 dead000000000122 ffff888010c41780
+raw: 0000000000000000 0000000000200020 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x112c40(GFP_NOFS|__GFP_NOWARN|__GFP_NORETRY|__GFP_HARDWALL), pid 3528, ts 74866415413, free_ts 74863845739
+ get_page_from_freelist+0x1642/0x3680
+ __alloc_pages+0x1b1/0x500
+ alloc_pages+0x1ab/0x310
+ allocate_slab+0x26a/0x3c0
+ ___slab_alloc+0xb37/0x13b0
+ __slab_alloc.constprop.0+0x4d/0xa0
+ __kmalloc+0x381/0x460
+ tomoyo_encode2+0xfc/0x3d0
+ tomoyo_encode+0x25/0x40
+ tomoyo_realpath_from_path+0x1a4/0x760
+ tomoyo_path_perm+0x21b/0x3d0
+ tomoyo_path_unlink+0x8e/0xd0
+ security_path_unlink+0xf5/0x160
+ do_unlinkat+0x326/0x670
+ __x64_sys_unlink+0xc4/0x100
+ do_syscall_64+0x34/0xb0
+page last free stack trace:
+ free_pcp_prepare+0x359/0x810
+ free_unref_page+0x19/0x6a0
+ tlb_finish_mmu+0x256/0x8c0
+ exit_mmap+0x21b/0x690
+ __mmput+0x124/0x4b0
+ mmput+0x58/0x60
+ do_exit+0xa81/0x2ab0
+ do_group_exit+0xd2/0x2f0
+ get_signal+0x4e4/0x26d0
+ arch_do_signal_or_restart+0x1e7/0x1c00
+ exit_to_user_mode_prepare+0x161/0x290
+ syscall_exit_to_user_mode+0x19/0x60
+ do_syscall_64+0x40/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+Memory state around the buggy address:
+ ffff888068406500: 00 00 00 00 00 00 00 00 00 00 00 00 fc fc fc fc
+ ffff888068406580: 00 00 00 00 00 00 00 00 00 00 00 00 fc fc fc fc
+>ffff888068406600: fa fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+                                     ^
+ ffff888068406680: fa fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+ ffff888068406700: fa fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+==================================================================

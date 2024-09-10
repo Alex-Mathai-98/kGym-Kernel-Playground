@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "INFO: task hung in hci_dev_close_sync",
+    "display-title": "INFO: task hung in hci_dev_close_sync",
+    "id": "8137f770127ad3ae80cc615fbb3b3bdf71c5e17e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: core: Fix deadlock on hci_power_on_sync.",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e36bea6e78ab2b6c9c7396972fee231eae551cfc",
+            "hash": "e36bea6e78ab2b6c9c7396972fee231eae551cfc",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Merge tag 'nvme-5.18-2022-03-17' of git://git.infradead.org/nvme into for-5.18/drivers",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ae53aea611b7a532a52ba966281a8b7a8cfd008a",
+        "hash": "ae53aea611b7a532a52ba966281a8b7a8cfd008a",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000d59b7105de1e6d3a@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "INFO: task hung in hci_dev_close_sync",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17c258f5f00000",
+            "c-reproducer": "/text?tag=ReproC&x=144f1233f00000",
+            "kernel-config": "/text?tag=KernelConfig&x=d5ef46f0e355ceff",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9d004b2f4fea97cde123e7f1939b80e77bf2e695",
+            "kernel-source-commit": "9d004b2f4fea97cde123e7f1939b80e77bf2e695",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a46af3462c457f5f23b620200144d9a2a430f49f",
+            "syzkaller-commit": "a46af3462c457f5f23b620200144d9a2a430f49f",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=170d4cd3f00000"
+        }
+    ],
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "029cc0963412c4f989d2731759ce4578f7e1a667",
+    "patch": "diff --git a/net/bluetooth/hci_core.c b/net/bluetooth/hci_core.c\nindex 59a5c1341c26..a0f99baafd35 100644\n--- a/net/bluetooth/hci_core.c\n+++ b/net/bluetooth/hci_core.c\n@@ -571,6 +571,7 @@ int hci_dev_close(__u16 dev)\n \t\tgoto done;\n \t}\n \n+\tcancel_work_sync(&hdev->power_on);\n \tif (hci_dev_test_and_clear_flag(hdev, HCI_AUTO_OFF))\n \t\tcancel_delayed_work(&hdev->power_off);\n \n@@ -2675,6 +2676,8 @@ void hci_unregister_dev(struct hci_dev *hdev)\n \tlist_del(&hdev->list);\n \twrite_unlock(&hci_dev_list_lock);\n \n+\tcancel_work_sync(&hdev->power_on);\n+\n \thci_cmd_sync_clear(hdev);\n \n \tif (!test_bit(HCI_QUIRK_NO_SUSPEND_NOTIFIER, &hdev->quirks))\ndiff --git a/net/bluetooth/hci_sync.c b/net/bluetooth/hci_sync.c\nindex 286d6767f017..1739e8cb3291 100644\n--- a/net/bluetooth/hci_sync.c\n+++ b/net/bluetooth/hci_sync.c\n@@ -4088,7 +4088,6 @@ int hci_dev_close_sync(struct hci_dev *hdev)\n \n \tbt_dev_dbg(hdev, \"\");\n \n-\tcancel_work_sync(&hdev->power_on);\n \tcancel_delayed_work(&hdev->power_off);\n \tcancel_delayed_work(&hdev->ncmd_timer);\n \n",
+    "patch_modified_files": [
+        "net/bluetooth/hci_core.c",
+        "net/bluetooth/hci_sync.c"
+    ]
+}

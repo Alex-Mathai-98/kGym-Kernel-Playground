@@ -1,0 +1,49 @@
+BUG: Dentry 000000009f097845{i=1,n=/}  still in use (2) [unmount of sysfs sysfs]
+WARNING: CPU: 0 PID: 4448 at fs/dcache.c:1529 umount_check.cold+0xec/0x110
+Modules linked in:
+CPU: 0 PID: 4448 Comm: syz-executor.4 Not tainted 5.2.0-rc5-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:umount_check.cold+0xec/0x110
+Code: 4e f0 ff 4d 8b 64 24 40 e8 fd c5 b7 ff 4d 89 f9 45 89 e8 48 89 d9 41 56 4c 89 e2 48 89 de 48 c7 c7 20 d6 75 87 e8 f4 ca a1 ff <0f> 0b 58 e9 aa 24 ff ff e8 d3 4d f0 ff e9 28 ff ff ff 4c 89 e7 e8
+RSP: 0018:ffff8881c797fb30 EFLAGS: 00010282
+RAX: 0000000000000050 RBX: ffff8881c8e631e0 RCX: 0000000000000000
+RDX: 0000000000000050 RSI: ffffffff815aa295 RDI: ffffed1038f2ff58
+RBP: ffff8881c797fb60 R08: 0000000000000001 R09: 0000000000000005
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000001
+R13: 0000000000000002 R14: ffff8881c9af27a8 R15: ffffffff8778ab60
+FS:  0000555555fd9480(0000) GS:ffff8881f6600000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fec38839098 CR3: 00000001f252d002 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ d_walk+0x71/0x7d0
+ shrink_dcache_for_umount+0x8a/0x340
+ generic_shutdown_super+0x6d/0x370
+ kill_anon_super+0x3c/0x60
+ kernfs_kill_sb+0x163/0x1e1
+ sysfs_kill_sb+0x22/0x40
+ deactivate_locked_super+0x9a/0x170
+ deactivate_super+0x1ab/0x1c0
+ cleanup_mnt+0x1a7/0x290
+ __cleanup_mnt+0x16/0x20
+ task_work_run+0x152/0x1d0
+ prepare_exit_to_usermode+0x55d/0x5e0
+ syscall_return_slowpath+0xfe/0x720
+ do_syscall_64+0x123/0x190
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7fb7cc5b8e5a
+Code: 48 3d 00 f0 ff ff 77 48 c3 0f 1f 80 00 00 00 00 48 83 ec 18 89 7c 24 0c e8 13 7f 02 00 8b 7c 24 0c 89 c2 b8 03 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 36 89 d7 89 44 24 0c e8 73 7f 02 00 8b 44 24
+RSP: 002b:00007fff37188e40 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 0000000000000005 RCX: 00007fb7cc5b8e5a
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000004
+RBP: 00007fb7cc6e9980 R08: 00007fb7cc53c000 R09: 0000000000000001
+R10: 0000000000000001 R11: 0000000000000293 R12: 000000000000ff88
+R13: 000000000000ff56 R14: 00007fff37189000 R15: 00007fb7cc570cb0
+irq event stamp: 1512
+hardirqs last  enabled at (1511): [<ffffffff815a3455>] console_unlock+0xc85/0xf00
+hardirqs last disabled at (1512): [<ffffffff810066a5>] trace_hardirqs_off_thunk+0x1a/0x1c
+softirqs last  enabled at (1508): [<ffffffff8740068f>] __do_softirq+0x68f/0x9aa
+softirqs last disabled at (1489): [<ffffffff8144d2ba>] irq_exit+0x22a/0x270
+---[ end trace b8e76c811df2d730 ]---
+VFS: Busy inodes after unmount of sysfs. Self-destruct in 5 seconds.  Have a nice day...

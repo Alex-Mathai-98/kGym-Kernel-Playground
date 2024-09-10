@@ -1,0 +1,30 @@
+------------[ cut here ]------------
+refcount_t: addition on 0; use-after-free.
+WARNING: CPU: 1 PID: 5120 at lib/refcount.c:25 refcount_warn_saturate+0x1b8/0x1f0
+Modules linked in:
+CPU: 1 PID: 5120 Comm: kworker/u4:7 Not tainted 6.3.0-rc4-syzkaller-00161-gf9d2b1e146e0 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: qrtr_ns_handler qrtr_ns_worker
+RIP: 0010:refcount_warn_saturate+0x1b8/0x1f0
+Code: 0a 31 ff 89 de e8 88 f5 6f fd 84 db 0f 85 f6 fe ff ff e8 0b fa 6f fd 48 c7 c7 e0 ca a6 8a c6 05 51 c1 4f 0a 01 e8 08 50 38 fd <0f> 0b e9 d7 fe ff ff e8 ec f9 6f fd 48 c7 c7 a0 cb a6 8a c6 05 30
+RSP: 0018:ffffc9000422f9e0 EFLAGS: 00010082
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: ffff88801cd48000 RSI: ffffffff814be467 RDI: 0000000000000001
+RBP: ffff88802b55ec98 R08: 0000000000000001 R09: 0000000000000000
+R10: 0000000000000000 R11: 746e756f63666572 R12: 0000000000000000
+R13: ffff888145128000 R14: ffff8880282b6034 R15: ffff8880282b6030
+FS:  0000000000000000(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f6b2939d988 CR3: 000000001ddf9000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ qrtr_recvmsg+0x859/0x980
+ sock_recvmsg+0xe2/0x170
+ qrtr_ns_worker+0x179/0x1840
+ process_one_work+0x9f0/0x15d0
+ worker_thread+0x67d/0x10e0
+ kthread+0x2e4/0x3a0
+ ret_from_fork+0x1f/0x30
+ </TASK>

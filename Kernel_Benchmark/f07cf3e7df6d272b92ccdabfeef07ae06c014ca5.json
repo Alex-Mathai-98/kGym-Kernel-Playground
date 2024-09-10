@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "possible deadlock in jbd2_log_wait_commit",
+    "display-title": "possible deadlock in jbd2_log_wait_commit",
+    "id": "f07cf3e7df6d272b92ccdabfeef07ae06c014ca5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: Fix deadlock during directory rename",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3c92792da8506a295afb6d032b4476e46f979725",
+            "hash": "3c92792da8506a295afb6d032b4476e46f979725",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "ext4: Fix possible corruption when moving a directory",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0813299c586b175d7edb25f56412c54b812d0379",
+        "hash": "0813299c586b175d7edb25f56412c54b812d0379",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000052865105f5c8f2c8@google.com/T/",
+        "https://lore.kernel.org/all/20230301141004.15087-1-jack@suse.cz/T/"
+    ],
+    "crashes": [
+        {
+            "title": "possible deadlock in jbd2_log_wait_commit",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12317df8c80000",
+            "c-reproducer": "/text?tag=ReproC&x=150109acc80000",
+            "kernel-config": "/text?tag=KernelConfig&x=ff98a3b3c1aed3ab",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e492250d5252635b6c97d52eddf2792ec26f1ec1",
+            "kernel-source-commit": "e492250d5252635b6c97d52eddf2792ec26f1ec1",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/95aee97a7beb71d14db32465bb39b1d650ec6868",
+            "syzkaller-commit": "95aee97a7beb71d14db32465bb39b1d650ec6868",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=138d3098c80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ext4_rename",
+            "fs/ext4/namei.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "ext4_rename",
+            "fs/ext4/namei.c"
+        ]
+    ],
+    "patch_commit_date": "2023-03-01T14:10:04+00:00",
+    "cause_commit_date": "2023-01-26T11:22:21+00:00",
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "7fc1f5c28ae4c615ccc5346f39a7bf4c4e0900ac",
+    "patch": "diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c\nindex e8f429330f3c..7cc3918e2f18 100644\n--- a/fs/ext4/namei.c\n+++ b/fs/ext4/namei.c\n@@ -3813,10 +3813,20 @@ static int ext4_rename(struct user_namespace *mnt_userns, struct inode *old_dir,\n \t\t\treturn retval;\n \t}\n \n+\t/*\n+\t * We need to protect against old.inode directory getting converted\n+\t * from inline directory format into a normal one.\n+\t */\n+\tif (S_ISDIR(old.inode->i_mode))\n+\t\tinode_lock_nested(old.inode, I_MUTEX_NONDIR2);\n+\n \told.bh = ext4_find_entry(old.dir, &old.dentry->d_name, &old.de,\n \t\t\t\t &old.inlined);\n-\tif (IS_ERR(old.bh))\n-\t\treturn PTR_ERR(old.bh);\n+\tif (IS_ERR(old.bh)) {\n+\t\tretval = PTR_ERR(old.bh);\n+\t\tgoto unlock_moved_dir;\n+\t}\n+\n \t/*\n \t *  Check for inode number is _not_ due to possible IO errors.\n \t *  We might rmdir the source, keep it as pwd of some process\n@@ -3873,11 +3883,6 @@ static int ext4_rename(struct user_namespace *mnt_userns, struct inode *old_dir,\n \t\t\tif (new.dir != old.dir && EXT4_DIR_LINK_MAX(new.dir))\n \t\t\t\tgoto end_rename;\n \t\t}\n-\t\t/*\n-\t\t * We need to protect against old.inode directory getting\n-\t\t * converted from inline directory format into a normal one.\n-\t\t */\n-\t\tinode_lock_nested(old.inode, I_MUTEX_NONDIR2);\n \t\tretval = ext4_rename_dir_prepare(handle, &old);\n \t\tif (retval) {\n \t\t\tinode_unlock(old.inode);\n@@ -4014,12 +4019,15 @@ static int ext4_rename(struct user_namespace *mnt_userns, struct inode *old_dir,\n \t} else {\n \t\text4_journal_stop(handle);\n \t}\n-\tif (old.dir_bh)\n-\t\tinode_unlock(old.inode);\n release_bh:\n \tbrelse(old.dir_bh);\n \tbrelse(old.bh);\n \tbrelse(new.bh);\n+\n+unlock_moved_dir:\n+\tif (S_ISDIR(old.inode->i_mode))\n+\t\tinode_unlock(old.inode);\n+\n \treturn retval;\n }\n \n",
+    "patch_modified_files": [
+        "fs/ext4/namei.c"
+    ]
+}

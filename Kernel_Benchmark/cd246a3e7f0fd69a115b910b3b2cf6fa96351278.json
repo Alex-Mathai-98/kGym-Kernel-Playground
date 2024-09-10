@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "general protection fault in nilfs_btree_insert",
+    "display-title": "general protection fault in nilfs_btree_insert",
+    "id": "cd246a3e7f0fd69a115b910b3b2cf6fa96351278",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: fix general protection fault in nilfs_btree_insert()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7633355e5c7f29c049a9048e461427d1d8ed3051",
+            "hash": "7633355e5c7f29c049a9048e461427d1d8ed3051",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000bd89e205f0e38355@google.com/T/",
+        "https://lore.kernel.org/all/20230105055356.8811-1-konishi.ryusuke@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in nilfs_btree_insert",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1243578c480000",
+            "c-reproducer": "/text?tag=ReproC&x=1506f1ac480000",
+            "kernel-config": "/text?tag=KernelConfig&x=4e2d7bfa2d6d5a76",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=51094a24b85e29138b7fa82ef1e1b4fe19c90046",
+            "kernel-source-commit": "51094a24b85e29138b7fa82ef1e1b4fe19c90046",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9da18ae8fa827d046ef8da48cc23c97418553c23",
+            "syzkaller-commit": "9da18ae8fa827d046ef8da48cc23c97418553c23",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1236caa8480000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__nilfs_btree_get_block",
+            "fs/nilfs2/btree.c"
+        ]
+    ],
+    "patch_commit_date": "2023-01-05T05:53:56+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "1beb8ae302a01fb487787f5a4fb97cf5338a86c1",
+    "patch": "diff --git a/fs/nilfs2/btree.c b/fs/nilfs2/btree.c\nindex b9d15c3df3cc..40ce92a332fe 100644\n--- a/fs/nilfs2/btree.c\n+++ b/fs/nilfs2/btree.c\n@@ -480,9 +480,18 @@ static int __nilfs_btree_get_block(const struct nilfs_bmap *btree, __u64 ptr,\n \tret = nilfs_btnode_submit_block(btnc, ptr, 0, REQ_OP_READ, &bh,\n \t\t\t\t\t&submit_ptr);\n \tif (ret) {\n-\t\tif (ret != -EEXIST)\n-\t\t\treturn ret;\n-\t\tgoto out_check;\n+\t\tif (likely(ret == -EEXIST))\n+\t\t\tgoto out_check;\n+\t\tif (ret == -ENOENT) {\n+\t\t\t/*\n+\t\t\t * Block address translation failed due to invalid\n+\t\t\t * value of 'ptr'.  In this case, return internal code\n+\t\t\t * -EINVAL (broken bmap) to notify bmap layer of fatal\n+\t\t\t * metadata corruption.\n+\t\t\t */\n+\t\t\tret = -EINVAL;\n+\t\t}\n+\t\treturn ret;\n \t}\n \n \tif (ra) {\n",
+    "patch_modified_files": [
+        "fs/nilfs2/btree.c"
+    ]
+}

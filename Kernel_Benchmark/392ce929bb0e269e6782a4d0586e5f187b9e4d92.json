@@ -1,0 +1,59 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in hci_le_meta_evt",
+    "display-title": "KASAN: slab-out-of-bounds Read in hci_le_meta_evt (2)",
+    "id": "392ce929bb0e269e6782a4d0586e5f187b9e4d92",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: stop proccessing malicious adv data",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3a56ef719f0b9682afb8a86d64b2399e36faa4e6",
+            "hash": "3a56ef719f0b9682afb8a86d64b2399e36faa4e6",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000035de5905cfa98e03@google.com/T/",
+        "https://lore.kernel.org/all/20211101071212.15355-1-paskripkin@gmail.com/T/",
+        "https://lore.kernel.org/all/20220124183927.095545464@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183932.787526760@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183937.101330125@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183943.102762895@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183953.750177707@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124184024.407936072@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124184100.867127425@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124184125.121143506@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Read in hci_le_meta_evt",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1128465cb00000",
+            "c-reproducer": "/text?tag=ReproC&x=1431dfe2b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=6362530af157355b",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=119c85055d867b9588263bca59794c872ef2a30e",
+            "kernel-source-commit": "119c85055d867b9588263bca59794c872ef2a30e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/098b5d530648147c744a7c2eb8b78c1307f9d3ce",
+            "syzkaller-commit": "098b5d530648147c744a7c2eb8b78c1307f9d3ce",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10d741f4b00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "hci_le_adv_report_evt",
+            "net/bluetooth/hci_event.c"
+        ]
+    ],
+    "patch_commit_date": "2021-11-01T07:12:12+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "dd2ac1d6d4954522c67279e42e7069b91f67f151",
+    "patch": "diff --git a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c\nindex d4b75a6cfeee..5471fbf38873 100644\n--- a/net/bluetooth/hci_event.c\n+++ b/net/bluetooth/hci_event.c\n@@ -5906,7 +5906,8 @@ static void hci_le_adv_report_evt(struct hci_dev *hdev, struct sk_buff *skb)\n \t\tstruct hci_ev_le_advertising_info *ev = ptr;\n \t\ts8 rssi;\n \n-\t\tif (ev->length <= HCI_MAX_AD_LENGTH) {\n+\t\tif (ev->length <= HCI_MAX_AD_LENGTH &&\n+\t\t    ev->data + ev->length <= skb_tail_pointer(skb)) {\n \t\t\trssi = ev->data[ev->length];\n \t\t\tprocess_adv_report(hdev, ev->evt_type, &ev->bdaddr,\n \t\t\t\t\t   ev->bdaddr_type, NULL, 0, rssi,\n@@ -5916,6 +5917,11 @@ static void hci_le_adv_report_evt(struct hci_dev *hdev, struct sk_buff *skb)\n \t\t}\n \n \t\tptr += sizeof(*ev) + ev->length + 1;\n+\n+\t\tif (ptr > (void *) skb_tail_pointer(skb) - sizeof(*ev)) {\n+\t\t\tbt_dev_err(hdev, \"Malicious advertising data. Stopping processing\");\n+\t\t\tbreak;\n+\t\t}\n \t}\n \n \thci_dev_unlock(hdev);\n",
+    "patch_modified_files": [
+        "net/bluetooth/hci_event.c"
+    ]
+}

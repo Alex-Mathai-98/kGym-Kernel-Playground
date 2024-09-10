@@ -1,0 +1,113 @@
+hid-thrustmaster 0003:044F:B65D.0001: hidraw0: USB HID v0.00 Device [HID 044f:b65d] on usb-dummy_hcd.7-1/input0
+==================================================================
+BUG: KASAN: slab-out-of-bounds in thrustmaster_probe+0x8b5/0xbc0
+Read of size 1 at addr ffff88801bd955d2 by task kworker/0:1/7
+
+CPU: 0 PID: 7 Comm: kworker/0:1 Not tainted 5.16.0-syzkaller-05691-gac89895213d8-dirty #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: usb_hub_wq hub_event
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xfc/0x174
+ print_address_description.constprop.0.cold+0x8d/0x312
+ kasan_report.cold+0x83/0xdf
+ thrustmaster_probe+0x8b5/0xbc0
+ hid_device_probe+0x2d4/0x400
+ really_probe+0x232/0xcb0
+ __driver_probe_device+0x337/0x4d0
+ driver_probe_device+0x4c/0x1a0
+ __device_attach_driver+0x202/0x2f0
+ bus_for_each_drv+0x155/0x1d0
+ __device_attach+0x1db/0x490
+ bus_probe_device+0x1e4/0x290
+ device_add+0xc5c/0x20d0
+ hid_add_device+0x33e/0x9c0
+ usbhid_probe+0xbce/0x1030
+ usb_probe_interface+0x30d/0x7d0
+ really_probe+0x232/0xcb0
+ __driver_probe_device+0x337/0x4d0
+ driver_probe_device+0x4c/0x1a0
+ __device_attach_driver+0x202/0x2f0
+ bus_for_each_drv+0x155/0x1d0
+ __device_attach+0x1db/0x490
+ bus_probe_device+0x1e4/0x290
+ device_add+0xc5c/0x20d0
+ usb_set_configuration+0xf91/0x19b0
+ usb_generic_driver_probe+0xb4/0xf0
+ usb_probe_device+0xdb/0x2c0
+ really_probe+0x232/0xcb0
+ __driver_probe_device+0x337/0x4d0
+ driver_probe_device+0x4c/0x1a0
+ __device_attach_driver+0x202/0x2f0
+ bus_for_each_drv+0x155/0x1d0
+ __device_attach+0x1db/0x490
+ bus_probe_device+0x1e4/0x290
+ device_add+0xc5c/0x20d0
+ usb_new_device.cold+0x660/0x10e5
+ hub_event+0x22c7/0x4840
+ process_one_work+0xa0b/0x1670
+ worker_thread+0x680/0x1160
+ kthread+0x3f0/0x4e0
+ ret_from_fork+0x1f/0x30
+ </TASK>
+
+Allocated by task 7:
+ kasan_save_stack+0x1c/0x40
+ __kasan_kmalloc+0xa7/0xd0
+ usb_get_configuration.cold+0x12c6/0x40b2
+ usb_new_device+0x589/0x7e0
+ hub_event+0x22c7/0x4840
+ process_one_work+0xa0b/0x1670
+ worker_thread+0x680/0x1160
+ kthread+0x3f0/0x4e0
+ ret_from_fork+0x1f/0x30
+
+The buggy address belongs to the object at ffff88801bd95580
+ which belongs to the cache kmalloc-96 of size 96
+The buggy address is located 82 bytes inside of
+ 96-byte region [ffff88801bd95580, ffff88801bd955e0)
+The buggy address belongs to the page:
+page:ffffea00006f6540 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x1bd95
+flags: 0xfff00000000200(slab|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000000200 0000000000000000 dead000000000001 ffff888010c41780
+raw: 0000000000000000 0000000000200020 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x12cc0(GFP_KERNEL|__GFP_NOWARN|__GFP_NORETRY), pid 44, ts 9048830001, free_ts 9045058530
+ get_page_from_freelist+0x1642/0x3680
+ __alloc_pages+0x1b1/0x500
+ alloc_pages+0x1aa/0x300
+ new_slab+0x292/0x3b0
+ ___slab_alloc+0x7e8/0xf00
+ __slab_alloc.constprop.0+0x4d/0xa0
+ kmem_cache_alloc_trace+0x308/0x3f0
+ blk_alloc_queue_stats+0x3b/0x100
+ blk_alloc_queue+0xf7/0x600
+ blk_mq_init_queue+0x37/0xd0
+ scsi_alloc_sdev+0x80f/0xd80
+ scsi_probe_and_add_lun+0x205a/0x34f0
+ __scsi_scan_target+0x226/0xdd0
+ scsi_scan_channel+0x149/0x1e0
+ scsi_scan_host_selected+0x2fa/0x3d0
+ do_scsi_scan_host+0x1e9/0x260
+page last free stack trace:
+ free_pcp_prepare+0x359/0x810
+ free_unref_page_list+0x1b1/0x1080
+ release_pages+0x3f1/0x15c0
+ tlb_finish_mmu+0x168/0x8c0
+ exit_mmap+0x1ea/0x620
+ __mmput+0x124/0x4b0
+ mmput+0x58/0x60
+ free_bprm+0x65/0x2e0
+ kernel_execve+0x36b/0x440
+ call_usermodehelper_exec_async+0x2f0/0x570
+ ret_from_fork+0x1f/0x30
+
+Memory state around the buggy address:
+ ffff88801bd95480: 00 00 00 00 00 00 00 00 00 00 00 00 fc fc fc fc
+ ffff88801bd95500: fa fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+>ffff88801bd95580: 00 00 00 00 00 00 00 00 00 00 fc fc fc fc fc fc
+                                                 ^
+ ffff88801bd95600: fa fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+ ffff88801bd95680: fa fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+==================================================================

@@ -1,0 +1,49 @@
+RBP: 00007f257c697120 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000002
+R13: 000000000000000b R14: 00007f257d444f80 R15: 00007ffedb7baec8
+------------[ cut here ]------------
+ODEBUG: assert_init not available (active state 0) object type: timer_list hint: 0x0
+WARNING: CPU: 0 PID: 3677 at lib/debugobjects.c:508 debug_object_assert_init+0x1e9/0x240
+Modules linked in:
+CPU: 0 PID: 3677 Comm: syz-executor.3 Not tainted 5.15.0-rc6-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:debug_object_assert_init+0x1e9/0x240
+Code: 89 ef e8 5a de c8 fd 4c 8b 45 00 48 c7 c7 40 17 59 8a 48 c7 c6 20 14 59 8a 48 c7 c2 e0 18 59 8a 31 c9 49 89 d9 e8 17 03 4c fd <0f> 0b ff 05 bb 23 3b 09 48 83 c5 38 48 89 e8 48 c1 e8 03 42 80 3c
+RSP: 0018:ffffc9000345e638 EFLAGS: 00010046
+RAX: 9421a3fddaf45b00 RBX: 0000000000000000 RCX: ffff888017bed580
+RDX: 0000000000000000 RSI: 0000000080000000 RDI: 0000000000000000
+RBP: ffffffff8a0c6800 R08: ffffffff8165d872 R09: ffffed1017383f2c
+R10: 0000000000000000 R11: dffffc0000000001 R12: dffffc0000000000
+R13: ffff88805ffc1898 R14: 0000000000000000 R15: ffffffff900bff88
+FS:  00007f257c6976c0(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f257c696ff8 CR3: 000000005feab000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ del_timer+0xaa/0x310
+ try_to_grab_pending+0x139/0x800
+ __cancel_work_timer+0x161/0x740
+ batadv_v_ogm_free+0x2e/0xc0
+ batadv_mesh_free+0x68/0x140
+ batadv_mesh_init+0x4e8/0x550
+ batadv_softif_init_late+0x903/0xd70
+ register_netdevice+0x564/0x1640
+ rtnl_newlink+0x148e/0x2060
+ rtnetlink_rcv_msg+0x8de/0xde0
+ netlink_rcv_skb+0x1cf/0x410
+ netlink_unicast+0x7b0/0x980
+ netlink_sendmsg+0xa0b/0xe00
+ ____sys_sendmsg+0x59e/0x8f0
+ ___sys_sendmsg+0x252/0x2e0
+ __se_sys_sendmsg+0x19a/0x260
+ do_syscall_64+0x44/0xd0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7f257d316f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f257c6970c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f257d444f80 RCX: 00007f257d316f69
+RDX: 0000000000000000 RSI: 0000000020000140 RDI: 0000000000000003
+RBP: 00007f257c697120 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000002
+R13: 000000000000000b R14: 00007f257d444f80 R15: 00007ffedb7baec8

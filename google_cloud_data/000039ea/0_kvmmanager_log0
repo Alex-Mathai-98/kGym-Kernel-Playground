@@ -1,0 +1,921 @@
+Warning: Permanently added '10.128.0.120' (ED25519) to the list of known hosts.
+2024/04/16 16:16:11 ignoring optional flag "sandboxArg"="0"
+2024/04/16 16:16:11 parsed 1 programs
+[   58.603506][   T26] audit: type=1400 audit(1713284171.731:83): avc:  denied  { getattr } for  pid=5005 comm="syz-execprog" path="user:[4026531837]" dev="nsfs" ino=4026531837 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:nsfs_t tclass=file permissive=1
+[   58.631847][   T26] audit: type=1400 audit(1713284171.761:84): avc:  denied  { read } for  pid=5005 comm="syz-execprog" dev="nsfs" ino=4026531837 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:nsfs_t tclass=file permissive=1
+[   58.653900][   T26] audit: type=1400 audit(1713284171.761:85): avc:  denied  { open } for  pid=5005 comm="syz-execprog" path="user:[4026531837]" dev="nsfs" ino=4026531837 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:nsfs_t tclass=file permissive=1
+[   58.679101][   T26] audit: type=1400 audit(1713284171.771:86): avc:  denied  { read } for  pid=5005 comm="syz-execprog" name="raw-gadget" dev="devtmpfs" ino=730 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:device_t tclass=chr_file permissive=1
+[   58.703553][   T26] audit: type=1400 audit(1713284171.771:87): avc:  denied  { open } for  pid=5005 comm="syz-execprog" path="/dev/raw-gadget" dev="devtmpfs" ino=730 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:device_t tclass=chr_file permissive=1
+[   58.720866][ T5010] SELinux:  Context root:object_r:swapfile_t is not valid (left unmapped).
+[   58.736428][   T26] audit: type=1400 audit(1713284171.771:88): avc:  denied  { read } for  pid=5005 comm="syz-execprog" name="vhci" dev="devtmpfs" ino=1074 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:vhost_device_t tclass=chr_file permissive=1
+[   58.761259][   T26] audit: type=1400 audit(1713284171.771:89): avc:  denied  { open } for  pid=5005 comm="syz-execprog" path="/dev/vhci" dev="devtmpfs" ino=1074 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:vhost_device_t tclass=chr_file permissive=1
+[   58.799152][   T26] audit: type=1400 audit(1713284171.831:90): avc:  denied  { mounton } for  pid=5010 comm="syz-executor" path="/proc/sys/fs/binfmt_misc" dev="binfmt_misc" ino=1 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:binfmt_misc_fs_t tclass=dir permissive=1
+[   58.824500][   T26] audit: type=1400 audit(1713284171.831:91): avc:  denied  { mount } for  pid=5010 comm="syz-executor" name="/" dev="binfmt_misc" ino=1 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:binfmt_misc_fs_t tclass=filesystem permissive=1
+[   58.848278][   T26] audit: type=1400 audit(1713284171.831:92): avc:  denied  { setattr } for  pid=5010 comm="syz-executor" name="raw-gadget" dev="devtmpfs" ino=730 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:device_t tclass=chr_file permissive=1
+2024/04/16 16:16:14 executed programs: 0
+[   61.420738][ T5010] Adding 124996k swap on ./swap-file.  Priority:0 extents:1 across:124996k FS
+[   61.434607][ T5009] memfd_create() without MFD_EXEC nor MFD_NOEXEC_SEAL, pid=5009 'syz-execprog'
+[   61.721100][ T5034] Bluetooth: hci0: unexpected cc 0x0c03 length: 249 > 1
+[   61.729677][ T5034] Bluetooth: hci1: unexpected cc 0x0c03 length: 249 > 1
+[   61.738031][ T5039] Bluetooth: hci0: unexpected cc 0x1003 length: 249 > 9
+[   61.746843][ T5039] Bluetooth: hci0: unexpected cc 0x1001 length: 249 > 9
+[   61.774231][ T5046] Bluetooth: hci3: unexpected cc 0x0c03 length: 249 > 1
+[   61.782513][ T5046] Bluetooth: hci4: unexpected cc 0x0c03 length: 249 > 1
+[   61.785343][ T5044] Bluetooth: hci1: unexpected cc 0x1003 length: 249 > 9
+[   61.790562][ T5046] Bluetooth: hci2: unexpected cc 0x0c03 length: 249 > 1
+[   61.798055][ T5044] Bluetooth: hci1: unexpected cc 0x1001 length: 249 > 9
+[   61.805561][ T5046] Bluetooth: hci0: unexpected cc 0x0c23 length: 249 > 4
+[   61.811652][ T5044] Bluetooth: hci1: unexpected cc 0x0c23 length: 249 > 4
+[   61.818539][ T5046] Bluetooth: hci0: unexpected cc 0x0c25 length: 249 > 3
+[   61.825101][ T5044] Bluetooth: hci4: unexpected cc 0x1003 length: 249 > 9
+[   61.839500][ T5046] Bluetooth: hci3: unexpected cc 0x1003 length: 249 > 9
+[   61.839977][ T5044] Bluetooth: hci0: unexpected cc 0x0c38 length: 249 > 2
+[   61.847686][ T5046] Bluetooth: hci2: unexpected cc 0x1003 length: 249 > 9
+[   61.854156][ T5044] Bluetooth: hci1: unexpected cc 0x0c25 length: 249 > 3
+[   61.862039][ T5046] Bluetooth: hci4: unexpected cc 0x1001 length: 249 > 9
+[   61.868758][ T5044] Bluetooth: hci3: unexpected cc 0x1001 length: 249 > 9
+[   61.876488][ T5046] Bluetooth: hci1: unexpected cc 0x0c38 length: 249 > 2
+[   61.883222][ T5044] Bluetooth: hci3: unexpected cc 0x0c23 length: 249 > 4
+[   61.890390][ T5049] Bluetooth: hci2: unexpected cc 0x1001 length: 249 > 9
+[   61.904875][ T5046] Bluetooth: hci2: unexpected cc 0x0c23 length: 249 > 4
+[   61.912438][ T5046] Bluetooth: hci4: unexpected cc 0x0c23 length: 249 > 4
+[   61.920397][ T5049] Bluetooth: hci4: unexpected cc 0x0c25 length: 249 > 3
+[   61.927516][ T5046] Bluetooth: hci3: unexpected cc 0x0c25 length: 249 > 3
+[   61.935396][ T5044] Bluetooth: hci2: unexpected cc 0x0c25 length: 249 > 3
+[   61.942998][ T5046] Bluetooth: hci3: unexpected cc 0x0c38 length: 249 > 2
+[   61.943025][ T5044] Bluetooth: hci2: unexpected cc 0x0c38 length: 249 > 2
+[   61.950092][ T5049] Bluetooth: hci4: unexpected cc 0x0c38 length: 249 > 2
+[   61.995596][ T5039] Bluetooth: hci6: unexpected cc 0x0c03 length: 249 > 1
+[   62.011092][ T5041] Bluetooth: hci6: unexpected cc 0x1003 length: 249 > 9
+[   62.011887][ T5049] Bluetooth: hci7: unexpected cc 0x1003 length: 249 > 9
+[   62.019394][ T5041] Bluetooth: hci6: unexpected cc 0x1001 length: 249 > 9
+[   62.026650][ T5049] Bluetooth: hci7: unexpected cc 0x1001 length: 249 > 9
+[   62.033588][ T5041] Bluetooth: hci6: unexpected cc 0x0c23 length: 249 > 4
+[   62.040233][ T5049] Bluetooth: hci7: unexpected cc 0x0c23 length: 249 > 4
+[   62.047432][ T5051] Bluetooth: hci6: unexpected cc 0x0c25 length: 249 > 3
+[   62.054116][ T5049] Bluetooth: hci7: unexpected cc 0x0c25 length: 249 > 3
+[   62.064587][ T5051] Bluetooth: hci6: unexpected cc 0x0c38 length: 249 > 2
+[   62.068028][ T5049] Bluetooth: hci7: unexpected cc 0x0c38 length: 249 > 2
+[   62.093703][ T5049] Bluetooth: hci5: unexpected cc 0x1003 length: 249 > 9
+[   62.102628][ T5049] Bluetooth: hci5: unexpected cc 0x1001 length: 249 > 9
+[   62.110758][ T5049] Bluetooth: hci5: unexpected cc 0x0c23 length: 249 > 4
+[   62.119217][ T5051] Bluetooth: hci5: unexpected cc 0x0c25 length: 249 > 3
+[   62.127955][ T5039] Bluetooth: hci5: unexpected cc 0x0c38 length: 249 > 2
+[   62.698991][ T5048] chnl_net:caif_netlink_parms(): no params data found
+[   62.775137][ T5033] chnl_net:caif_netlink_parms(): no params data found
+[   62.826028][ T5032] chnl_net:caif_netlink_parms(): no params data found
+[   62.849538][ T5040] chnl_net:caif_netlink_parms(): no params data found
+[   62.949995][ T5054] chnl_net:caif_netlink_parms(): no params data found
+[   63.018526][ T5038] chnl_net:caif_netlink_parms(): no params data found
+[   63.053435][ T5050] chnl_net:caif_netlink_parms(): no params data found
+[   63.109817][ T5037] chnl_net:caif_netlink_parms(): no params data found
+[   63.187171][ T5033] bridge0: port 1(bridge_slave_0) entered blocking state
+[   63.195149][ T5033] bridge0: port 1(bridge_slave_0) entered disabled state
+[   63.203044][ T5033] bridge_slave_0: entered allmulticast mode
+[   63.209738][ T5033] bridge_slave_0: entered promiscuous mode
+[   63.270445][ T5048] bridge0: port 1(bridge_slave_0) entered blocking state
+[   63.277612][ T5048] bridge0: port 1(bridge_slave_0) entered disabled state
+[   63.285256][ T5048] bridge_slave_0: entered allmulticast mode
+[   63.292317][ T5048] bridge_slave_0: entered promiscuous mode
+[   63.299167][ T5033] bridge0: port 2(bridge_slave_1) entered blocking state
+[   63.308135][ T5033] bridge0: port 2(bridge_slave_1) entered disabled state
+[   63.315738][ T5033] bridge_slave_1: entered allmulticast mode
+[   63.323077][ T5033] bridge_slave_1: entered promiscuous mode
+[   63.349445][ T5032] bridge0: port 1(bridge_slave_0) entered blocking state
+[   63.356791][ T5032] bridge0: port 1(bridge_slave_0) entered disabled state
+[   63.364257][ T5032] bridge_slave_0: entered allmulticast mode
+[   63.371648][ T5032] bridge_slave_0: entered promiscuous mode
+[   63.385765][ T5048] bridge0: port 2(bridge_slave_1) entered blocking state
+[   63.398013][ T5048] bridge0: port 2(bridge_slave_1) entered disabled state
+[   63.405307][ T5048] bridge_slave_1: entered allmulticast mode
+[   63.412499][ T5048] bridge_slave_1: entered promiscuous mode
+[   63.431541][ T5040] bridge0: port 1(bridge_slave_0) entered blocking state
+[   63.442173][ T5040] bridge0: port 1(bridge_slave_0) entered disabled state
+[   63.449456][ T5040] bridge_slave_0: entered allmulticast mode
+[   63.456729][ T5040] bridge_slave_0: entered promiscuous mode
+[   63.466151][ T5032] bridge0: port 2(bridge_slave_1) entered blocking state
+[   63.475896][ T5032] bridge0: port 2(bridge_slave_1) entered disabled state
+[   63.486307][ T5032] bridge_slave_1: entered allmulticast mode
+[   63.495413][ T5032] bridge_slave_1: entered promiscuous mode
+[   63.552320][ T5040] bridge0: port 2(bridge_slave_1) entered blocking state
+[   63.559451][ T5040] bridge0: port 2(bridge_slave_1) entered disabled state
+[   63.567030][ T5040] bridge_slave_1: entered allmulticast mode
+[   63.574416][ T5040] bridge_slave_1: entered promiscuous mode
+[   63.611782][ T5033] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   63.634031][ T5038] bridge0: port 1(bridge_slave_0) entered blocking state
+[   63.641158][ T5038] bridge0: port 1(bridge_slave_0) entered disabled state
+[   63.648695][ T5038] bridge_slave_0: entered allmulticast mode
+[   63.655662][ T5038] bridge_slave_0: entered promiscuous mode
+[   63.677008][ T5032] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   63.704239][ T5054] bridge0: port 1(bridge_slave_0) entered blocking state
+[   63.711390][ T5054] bridge0: port 1(bridge_slave_0) entered disabled state
+[   63.718887][ T5054] bridge_slave_0: entered allmulticast mode
+[   63.726349][ T5054] bridge_slave_0: entered promiscuous mode
+[   63.736056][ T5048] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   63.750084][ T5033] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   63.759582][ T5038] bridge0: port 2(bridge_slave_1) entered blocking state
+[   63.767432][ T5038] bridge0: port 2(bridge_slave_1) entered disabled state
+[   63.775184][ T5038] bridge_slave_1: entered allmulticast mode
+[   63.782272][ T5038] bridge_slave_1: entered promiscuous mode
+[   63.799058][ T5032] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   63.817344][ T5050] bridge0: port 1(bridge_slave_0) entered blocking state
+[   63.826209][ T5050] bridge0: port 1(bridge_slave_0) entered disabled state
+[   63.834033][ T5050] bridge_slave_0: entered allmulticast mode
+[   63.840623][ T5050] bridge_slave_0: entered promiscuous mode
+[   63.847886][ T5054] bridge0: port 2(bridge_slave_1) entered blocking state
+[   63.855141][ T5054] bridge0: port 2(bridge_slave_1) entered disabled state
+[   63.866674][ T5054] bridge_slave_1: entered allmulticast mode
+[   63.873897][ T5054] bridge_slave_1: entered promiscuous mode
+[   63.882194][ T5048] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   63.914243][ T5040] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   63.929619][ T5037] bridge0: port 1(bridge_slave_0) entered blocking state
+[   63.938153][ T5037] bridge0: port 1(bridge_slave_0) entered disabled state
+[   63.945701][ T5037] bridge_slave_0: entered allmulticast mode
+[   63.953054][ T5037] bridge_slave_0: entered promiscuous mode
+[   63.959876][ T5050] bridge0: port 2(bridge_slave_1) entered blocking state
+[   63.967368][ T5050] bridge0: port 2(bridge_slave_1) entered disabled state
+[   63.974882][ T5050] bridge_slave_1: entered allmulticast mode
+[   63.983013][ T5049] Bluetooth: hci4: command 0x0409 tx timeout
+[   63.989731][ T5049] Bluetooth: hci0: command 0x0409 tx timeout
+[   63.992125][ T5050] bridge_slave_1: entered promiscuous mode
+[   63.996439][ T5039] Bluetooth: hci3: command 0x0409 tx timeout
+[   64.008249][ T5034] Bluetooth: hci1: command 0x0409 tx timeout
+[   64.060069][ T5040] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   64.069396][ T5034] Bluetooth: hci2: command 0x0409 tx timeout
+[   64.070780][ T5037] bridge0: port 2(bridge_slave_1) entered blocking state
+[   64.083519][ T5037] bridge0: port 2(bridge_slave_1) entered disabled state
+[   64.090796][ T5037] bridge_slave_1: entered allmulticast mode
+[   64.098041][ T5037] bridge_slave_1: entered promiscuous mode
+[   64.140409][ T5033] team0: Port device team_slave_0 added
+[   64.146389][ T5034] Bluetooth: hci7: command 0x0409 tx timeout
+[   64.151817][ T5049] Bluetooth: hci6: command 0x0409 tx timeout
+[   64.162240][ T5038] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   64.174422][ T5032] team0: Port device team_slave_0 added
+[   64.200055][ T5050] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   64.211134][ T5054] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   64.222162][ T5049] Bluetooth: hci5: command 0x0409 tx timeout
+[   64.223873][ T5048] team0: Port device team_slave_0 added
+[   64.236106][ T5033] team0: Port device team_slave_1 added
+[   64.246528][ T5038] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   64.256766][ T5032] team0: Port device team_slave_1 added
+[   64.280222][ T5050] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   64.296799][ T5048] team0: Port device team_slave_1 added
+[   64.306207][ T5054] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   64.342146][ T5040] team0: Port device team_slave_0 added
+[   64.350720][ T5037] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   64.372072][ T5037] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   64.423362][ T5040] team0: Port device team_slave_1 added
+[   64.466127][ T5033] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   64.473549][ T5033] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   64.499914][ T5033] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   64.513824][ T5032] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   64.520977][ T5032] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   64.547804][ T5032] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   64.561827][ T5038] team0: Port device team_slave_0 added
+[   64.587699][ T5050] team0: Port device team_slave_0 added
+[   64.604297][ T5048] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   64.611276][ T5048] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   64.637579][ T5048] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   64.653389][ T5054] team0: Port device team_slave_0 added
+[   64.659992][ T5033] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   64.667474][ T5033] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   64.693933][ T5033] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   64.706121][ T5032] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   64.714657][ T5032] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   64.742091][ T5032] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   64.754754][ T5038] team0: Port device team_slave_1 added
+[   64.760812][ T5040] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   64.768348][ T5040] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   64.794866][ T5040] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   64.807804][ T5050] team0: Port device team_slave_1 added
+[   64.817610][ T5037] team0: Port device team_slave_0 added
+[   64.824450][ T5048] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   64.831480][ T5048] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   64.858009][ T5048] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   64.870877][ T5054] team0: Port device team_slave_1 added
+[   64.904640][ T5040] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   64.911637][ T5040] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   64.938126][ T5040] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   64.961140][ T5037] team0: Port device team_slave_1 added
+[   64.992014][ T5054] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   64.999015][ T5054] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   65.025323][ T5054] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   65.062193][ T5038] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   65.069168][ T5038] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   65.095172][ T5038] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   65.119730][ T5050] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   65.126865][ T5050] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   65.153611][ T5050] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   65.185821][ T5054] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   65.193241][ T5054] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   65.219632][ T5054] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   65.232780][ T5038] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   65.239758][ T5038] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   65.267155][ T5038] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   65.290031][ T5050] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   65.297118][ T5050] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   65.323658][ T5050] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   65.391314][ T5037] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   65.398604][ T5037] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   65.425341][ T5037] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   65.461204][ T5033] hsr_slave_0: entered promiscuous mode
+[   65.467840][ T5033] hsr_slave_1: entered promiscuous mode
+[   65.492766][ T5040] hsr_slave_0: entered promiscuous mode
+[   65.499626][ T5040] hsr_slave_1: entered promiscuous mode
+[   65.506115][ T5040] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   65.514485][ T5040] Cannot create hsr debugfs directory
+[   65.524422][ T5048] hsr_slave_0: entered promiscuous mode
+[   65.530746][ T5048] hsr_slave_1: entered promiscuous mode
+[   65.537595][ T5048] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   65.545363][ T5048] Cannot create hsr debugfs directory
+[   65.569022][ T5037] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   65.576378][ T5037] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   65.603475][ T5037] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   65.617035][ T5032] hsr_slave_0: entered promiscuous mode
+[   65.623839][ T5032] hsr_slave_1: entered promiscuous mode
+[   65.630038][ T5032] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   65.638411][ T5032] Cannot create hsr debugfs directory
+[   65.716132][ T5054] hsr_slave_0: entered promiscuous mode
+[   65.722587][ T5054] hsr_slave_1: entered promiscuous mode
+[   65.728616][ T5054] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   65.736523][ T5054] Cannot create hsr debugfs directory
+[   65.765205][ T5038] hsr_slave_0: entered promiscuous mode
+[   65.772715][ T5038] hsr_slave_1: entered promiscuous mode
+[   65.779013][ T5038] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   65.786953][ T5038] Cannot create hsr debugfs directory
+[   65.796457][ T5050] hsr_slave_0: entered promiscuous mode
+[   65.805017][ T5050] hsr_slave_1: entered promiscuous mode
+[   65.811528][ T5050] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   65.819479][ T5050] Cannot create hsr debugfs directory
+[   65.950608][ T5037] hsr_slave_0: entered promiscuous mode
+[   65.957439][ T5037] hsr_slave_1: entered promiscuous mode
+[   65.964518][ T5037] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   65.972700][ T5037] Cannot create hsr debugfs directory
+[   66.062495][ T5049] Bluetooth: hci4: command 0x041b tx timeout
+[   66.068553][ T5049] Bluetooth: hci1: command 0x041b tx timeout
+[   66.074872][ T5034] Bluetooth: hci0: command 0x041b tx timeout
+[   66.081147][ T5034] Bluetooth: hci3: command 0x041b tx timeout
+[   66.141815][ T5051] Bluetooth: hci2: command 0x041b tx timeout
+[   66.222126][ T5049] Bluetooth: hci6: command 0x041b tx timeout
+[   66.222132][ T5051] Bluetooth: hci7: command 0x041b tx timeout
+[   66.301869][ T5049] Bluetooth: hci5: command 0x041b tx timeout
+[   66.513383][ T5048] netdevsim netdevsim1 netdevsim0: renamed from eth0
+[   66.544974][ T5048] netdevsim netdevsim1 netdevsim1: renamed from eth1
+[   66.561189][ T5048] netdevsim netdevsim1 netdevsim2: renamed from eth2
+[   66.583665][ T5048] netdevsim netdevsim1 netdevsim3: renamed from eth3
+[   66.601144][ T5040] netdevsim netdevsim6 netdevsim0: renamed from eth0
+[   66.617948][ T5040] netdevsim netdevsim6 netdevsim1: renamed from eth1
+[   66.632470][ T5040] netdevsim netdevsim6 netdevsim2: renamed from eth2
+[   66.658993][ T5040] netdevsim netdevsim6 netdevsim3: renamed from eth3
+[   66.728884][ T5038] netdevsim netdevsim4 netdevsim0: renamed from eth0
+[   66.741278][ T5038] netdevsim netdevsim4 netdevsim1: renamed from eth1
+[   66.767317][ T5038] netdevsim netdevsim4 netdevsim2: renamed from eth2
+[   66.776941][ T5038] netdevsim netdevsim4 netdevsim3: renamed from eth3
+[   66.884284][ T5050] netdevsim netdevsim7 netdevsim0: renamed from eth0
+[   66.924527][ T5050] netdevsim netdevsim7 netdevsim1: renamed from eth1
+[   66.966153][ T5050] netdevsim netdevsim7 netdevsim2: renamed from eth2
+[   67.001214][ T5040] 8021q: adding VLAN 0 to HW filter on device bond0
+[   67.019568][ T5050] netdevsim netdevsim7 netdevsim3: renamed from eth3
+[   67.040838][ T5048] 8021q: adding VLAN 0 to HW filter on device bond0
+[   67.055496][ T5033] netdevsim netdevsim3 netdevsim0: renamed from eth0
+[   67.119096][ T5033] netdevsim netdevsim3 netdevsim1: renamed from eth1
+[   67.136278][ T5033] netdevsim netdevsim3 netdevsim2: renamed from eth2
+[   67.154051][ T5040] 8021q: adding VLAN 0 to HW filter on device team0
+[   67.191133][ T5038] 8021q: adding VLAN 0 to HW filter on device bond0
+[   67.200722][ T5033] netdevsim netdevsim3 netdevsim3: renamed from eth3
+[   67.213465][ T5108] bridge0: port 1(bridge_slave_0) entered blocking state
+[   67.221260][ T5108] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   67.247625][ T5048] 8021q: adding VLAN 0 to HW filter on device team0
+[   67.291587][ T5108] bridge0: port 2(bridge_slave_1) entered blocking state
+[   67.299261][ T5108] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   67.333731][ T5038] 8021q: adding VLAN 0 to HW filter on device team0
+[   67.362221][ T5054] netdevsim netdevsim0 netdevsim0: renamed from eth0
+[   67.373625][ T5054] netdevsim netdevsim0 netdevsim1: renamed from eth1
+[   67.437987][ T5054] netdevsim netdevsim0 netdevsim2: renamed from eth2
+[   67.456530][   T21] bridge0: port 1(bridge_slave_0) entered blocking state
+[   67.464517][   T21] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   67.486570][   T21] bridge0: port 2(bridge_slave_1) entered blocking state
+[   67.493882][   T21] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   67.518832][   T21] bridge0: port 1(bridge_slave_0) entered blocking state
+[   67.526036][   T21] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   67.547784][   T21] bridge0: port 2(bridge_slave_1) entered blocking state
+[   67.554962][   T21] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   67.648483][ T5054] netdevsim netdevsim0 netdevsim3: renamed from eth3
+[   67.823170][   T26] kauditd_printk_skb: 19 callbacks suppressed
+[   67.823186][   T26] audit: type=1400 audit(1713284180.951:112): avc:  denied  { sys_module } for  pid=5040 comm="syz-executor.6" capability=16  scontext=root:sysadm_r:sysadm_t tcontext=root:sysadm_r:sysadm_t tclass=capability permissive=1
+[   67.863496][ T5032] netdevsim netdevsim5 netdevsim0: renamed from eth0
+[   67.923406][ T5050] 8021q: adding VLAN 0 to HW filter on device bond0
+[   67.936266][ T5038] hsr0: Slave B (hsr_slave_1) is not up; please bring it up to get a fully working HSR network
+[   68.014848][ T5032] netdevsim netdevsim5 netdevsim1: renamed from eth1
+[   68.106544][ T5032] netdevsim netdevsim5 netdevsim2: renamed from eth2
+[   68.136449][ T5050] 8021q: adding VLAN 0 to HW filter on device team0
+[   68.143669][ T5049] Bluetooth: hci3: command 0x040f tx timeout
+[   68.149894][ T5049] Bluetooth: hci1: command 0x040f tx timeout
+[   68.157684][ T5049] Bluetooth: hci4: command 0x040f tx timeout
+[   68.162032][ T5034] Bluetooth: hci0: command 0x040f tx timeout
+[   68.192793][ T5037] netdevsim netdevsim2 netdevsim0: renamed from eth0
+[   68.223038][ T5051] Bluetooth: hci2: command 0x040f tx timeout
+[   68.225378][ T5032] netdevsim netdevsim5 netdevsim3: renamed from eth3
+[   68.271259][ T5033] 8021q: adding VLAN 0 to HW filter on device bond0
+[   68.296094][ T5111] bridge0: port 1(bridge_slave_0) entered blocking state
+[   68.303378][ T5111] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   68.311288][ T5049] Bluetooth: hci6: command 0x040f tx timeout
+[   68.312265][ T5051] Bluetooth: hci7: command 0x040f tx timeout
+[   68.347689][ T5037] netdevsim netdevsim2 netdevsim1: renamed from eth1
+[   68.360632][ T5037] netdevsim netdevsim2 netdevsim2: renamed from eth2
+[   68.381956][ T5051] Bluetooth: hci5: command 0x040f tx timeout
+[   68.412397][ T5033] 8021q: adding VLAN 0 to HW filter on device team0
+[   68.423690][ T5109] bridge0: port 2(bridge_slave_1) entered blocking state
+[   68.430913][ T5109] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   68.461559][ T5037] netdevsim netdevsim2 netdevsim3: renamed from eth3
+[   68.534910][ T5109] bridge0: port 1(bridge_slave_0) entered blocking state
+[   68.542105][ T5109] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   68.588567][ T5050] hsr0: Slave B (hsr_slave_1) is not up; please bring it up to get a fully working HSR network
+[   68.627739][ T5048] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   68.640059][ T5109] bridge0: port 2(bridge_slave_1) entered blocking state
+[   68.647262][ T5109] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   68.682476][ T5038] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   68.760794][ T5054] 8021q: adding VLAN 0 to HW filter on device bond0
+[   68.785255][ T5040] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   68.864708][ T5037] 8021q: adding VLAN 0 to HW filter on device bond0
+[   68.935658][ T5033] hsr0: Slave B (hsr_slave_1) is not up; please bring it up to get a fully working HSR network
+[   69.005618][ T5032] 8021q: adding VLAN 0 to HW filter on device bond0
+[   69.015475][ T5054] 8021q: adding VLAN 0 to HW filter on device team0
+[   69.030008][ T5048] veth0_vlan: entered promiscuous mode
+[   69.082857][ T5109] bridge0: port 1(bridge_slave_0) entered blocking state
+[   69.090004][ T5109] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   69.146634][ T5109] bridge0: port 2(bridge_slave_1) entered blocking state
+[   69.153952][ T5109] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   69.195268][ T5037] 8021q: adding VLAN 0 to HW filter on device team0
+[   69.218993][ T5048] veth1_vlan: entered promiscuous mode
+[   69.274122][    T6] bridge0: port 1(bridge_slave_0) entered blocking state
+[   69.281376][    T6] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   69.304425][    T6] bridge0: port 2(bridge_slave_1) entered blocking state
+[   69.311722][    T6] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   69.339252][ T5032] 8021q: adding VLAN 0 to HW filter on device team0
+[   69.490041][    T6] bridge0: port 1(bridge_slave_0) entered blocking state
+[   69.497242][    T6] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   69.575900][ T5054] hsr0: Slave B (hsr_slave_1) is not up; please bring it up to get a fully working HSR network
+[   69.649635][ T5050] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   69.660120][ T5048] veth0_macvtap: entered promiscuous mode
+[   69.675903][    T6] bridge0: port 2(bridge_slave_1) entered blocking state
+[   69.683162][    T6] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   69.750817][ T5048] veth1_macvtap: entered promiscuous mode
+[   69.843499][ T5033] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   69.899685][ T5032] hsr0: Slave B (hsr_slave_1) is not up; please bring it up to get a fully working HSR network
+[   69.918739][ T5048] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   69.947189][ T5048] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   69.974201][ T5038] veth0_vlan: entered promiscuous mode
+[   70.015679][ T5040] veth0_vlan: entered promiscuous mode
+[   70.031145][ T5048] netdevsim netdevsim1 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.044697][ T5048] netdevsim netdevsim1 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.054283][ T5048] netdevsim netdevsim1 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.064420][ T5048] netdevsim netdevsim1 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.099325][ T5038] veth1_vlan: entered promiscuous mode
+[   70.216856][ T5040] veth1_vlan: entered promiscuous mode
+[   70.223571][ T5051] Bluetooth: hci4: command 0x0419 tx timeout
+[   70.229736][ T5051] Bluetooth: hci1: command 0x0419 tx timeout
+[   70.236632][ T5034] Bluetooth: hci0: command 0x0419 tx timeout
+[   70.236652][ T5049] Bluetooth: hci3: command 0x0419 tx timeout
+[   70.302297][ T5039] Bluetooth: hci2: command 0x0419 tx timeout
+[   70.382061][ T5039] Bluetooth: hci6: command 0x0419 tx timeout
+[   70.388401][ T5039] Bluetooth: hci7: command 0x0419 tx timeout
+[   70.414897][ T5038] veth0_macvtap: entered promiscuous mode
+[   70.462165][ T5039] Bluetooth: hci5: command 0x0419 tx timeout
+[   70.504273][ T5038] veth1_macvtap: entered promiscuous mode
+[   70.526595][ T5033] veth0_vlan: entered promiscuous mode
+[   70.558498][ T5054] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   70.675138][ T5038] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   70.686194][ T5038] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   70.703380][ T5038] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   70.710996][ T5050] veth0_vlan: entered promiscuous mode
+[   70.726090][ T5033] veth1_vlan: entered promiscuous mode
+[   70.767026][ T5109] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   70.777752][ T5109] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   70.783878][ T5038] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   70.802468][ T5038] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   70.819180][ T5038] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   70.830379][ T5040] veth0_macvtap: entered promiscuous mode
+[   70.841162][ T5040] veth1_macvtap: entered promiscuous mode
+[   70.877077][ T5054] veth0_vlan: entered promiscuous mode
+[   70.894358][ T5050] veth1_vlan: entered promiscuous mode
+[   70.905160][ T5038] netdevsim netdevsim4 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.919601][ T5038] netdevsim netdevsim4 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.930316][ T5038] netdevsim netdevsim4 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.939412][ T5038] netdevsim netdevsim4 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.962997][ T5037] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   70.975719][  T773] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   70.994190][  T773] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   71.011613][ T5054] veth1_vlan: entered promiscuous mode
+[   71.028173][ T5032] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   71.041229][ T5033] veth0_macvtap: entered promiscuous mode
+[   71.089081][ T5040] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.120971][ T5040] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.131607][ T5040] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.146439][ T5040] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.158520][ T5040] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   71.199785][ T5033] veth1_macvtap: entered promiscuous mode
+[   71.227695][ T5040] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   71.238965][ T5040] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.249992][ T5040] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   71.264394][ T5040] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.283993][ T5040] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   71.299358][ T5040] netdevsim netdevsim6 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   71.299493][   T26] audit: type=1400 audit(1713284184.421:113): avc:  denied  { mounton } for  pid=5048 comm="syz-executor.1" path="/dev/binderfs" dev="devtmpfs" ino=2319 scontext=root:sysadm_r:sysadm_t tcontext=root:object_r:device_t tclass=dir permissive=1
+[   71.319874][ T5040] netdevsim netdevsim6 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   71.347029][   T26] audit: type=1400 audit(1713284184.421:114): avc:  denied  { mount } for  pid=5048 comm="syz-executor.1" name="/" dev="binder" ino=1 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:unlabeled_t tclass=filesystem permissive=1
+[   71.362433][ T5040] netdevsim netdevsim6 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   71.380665][ T5040] netdevsim netdevsim6 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   71.405948][ T5050] veth0_macvtap: entered promiscuous mode
+[   71.420083][   T26] audit: type=1400 audit(1713284184.541:115): avc:  denied  { read write } for  pid=5048 comm="syz-executor.1" name="loop1" dev="devtmpfs" ino=648 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fixed_disk_device_t tclass=blk_file permissive=1
+[   71.462180][   T21] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   71.470047][   T21] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   71.530220][   T26] audit: type=1400 audit(1713284184.591:116): avc:  denied  { open } for  pid=5048 comm="syz-executor.1" path="/dev/loop1" dev="devtmpfs" ino=648 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fixed_disk_device_t tclass=blk_file permissive=1
+[   71.541356][ T5054] veth0_macvtap: entered promiscuous mode
+[   71.565686][   T26] audit: type=1400 audit(1713284184.591:117): avc:  denied  { ioctl } for  pid=5048 comm="syz-executor.1" path="/dev/loop1" dev="devtmpfs" ino=648 ioctlcmd=0x4c01 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fixed_disk_device_t tclass=blk_file permissive=1
+[   71.594683][ T1231] ieee802154 phy0 wpan0: encryption failed: -22
+[   71.601305][ T1231] ieee802154 phy1 wpan1: encryption failed: -22
+[   71.629861][ T5050] veth1_macvtap: entered promiscuous mode
+[   71.654271][ T5054] veth1_macvtap: entered promiscuous mode
+[   71.665130][ T5033] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.701813][ T5033] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.731912][ T5033] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.762304][ T5033] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.782204][ T5033] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.795607][ T5033] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.823467][ T5033] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   71.859909][ T5037] veth0_vlan: entered promiscuous mode
+[   71.881065][ T5050] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.893970][ T5050] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.904408][ T5050] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.915323][ T5050] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.925939][ T5050] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.936707][ T5050] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.947171][ T5050] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.958644][ T5050] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.973991][ T5050] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   71.999088][ T5033] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   72.019420][ T5033] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   72.031271][ T5033] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   72.055845][ T5033] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   72.081493][ T5033] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   72.094814][ T5176] loop1: detected capacity change from 0 to 40427
+[   72.101582][ T5033] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   72.103871][ T5033] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   72.119667][   T26] audit: type=1400 audit(1713284185.231:118): avc:  denied  { mounton } for  pid=5175 comm="syz-executor.1" path="/root/syzkaller-testdir2852951677/syzkaller.D39Kzb/0/bus" dev="sda1" ino=1957 scontext=root:sysadm_r:sysadm_t tcontext=root:object_r:user_home_t tclass=dir permissive=1
+[   72.119919][ T5176] F2FS-fs (loop1): Invalid log_blocksize (268), supports only 12
+[   72.187168][ T5050] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   72.187866][ T5176] F2FS-fs (loop1): Can't find valid F2FS filesystem in 1th superblock
+[   72.204363][ T5050] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   72.216946][ T5050] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   72.229907][ T5050] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   72.234093][ T5176] F2FS-fs (loop1): Found nat_bits in checkpoint
+[   72.240232][ T5050] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   72.257298][ T5050] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   72.268019][ T5050] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   72.282538][ T5050] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   72.296208][ T5050] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   72.331259][ T5033] netdevsim netdevsim3 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   72.338198][ T5176] F2FS-fs (loop1): Try to recover 1th superblock, ret: 0
+[   72.341316][ T5033] netdevsim netdevsim3 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   72.356701][ T5033] netdevsim netdevsim3 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   72.356975][ T5176] F2FS-fs (loop1): Mounted with checkpoint version = 48b305e5
+[   72.366329][ T5033] netdevsim netdevsim3 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   72.388716][   T26] audit: type=1400 audit(1713284185.511:119): avc:  denied  { mount } for  pid=5175 comm="syz-executor.1" name="/" dev="loop1" ino=3 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fs_t tclass=filesystem permissive=1
+[   72.409904][ T5176] 
+[   72.412973][ T5176] ======================================================
+[   72.413759][   T26] audit: type=1400 audit(1713284185.511:120): avc:  denied  { write } for  pid=5175 comm="syz-executor.1" name="/" dev="loop1" ino=3 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:unlabeled_t tclass=dir permissive=1
+[   72.420160][ T5176] WARNING: possible circular locking dependency detected
+[   72.420169][ T5176] 6.5.0-rc1-syzkaller-00020-g005abf9e5e0d #0 Not tainted
+[   72.420181][ T5176] ------------------------------------------------------
+[   72.420187][ T5176] syz-executor.1/5176 is trying to acquire lock:
+[   72.443607][   T26] audit: type=1400 audit(1713284185.511:121): avc:  denied  { add_name } for  pid=5175 comm="syz-executor.1" name="file1" scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:unlabeled_t tclass=dir permissive=1
+[   72.449440][ T5176] ffff888064216888 (&fi->i_xattr_sem){.+.+}-{3:3}, at: f2fs_getxattr+0xb1e/0x12c0
+[   72.501506][ T5176] 
+[   72.501506][ T5176] but task is already holding lock:
+[   72.508876][ T5176] ffff88806421a668 (&fi->i_sem){+.+.}-{3:3}, at: f2fs_do_tmpfile+0x22/0x1d0
+[   72.517625][ T5176] 
+[   72.517625][ T5176] which lock already depends on the new lock.
+[   72.517625][ T5176] 
+[   72.528149][ T5176] 
+[   72.528149][ T5176] the existing dependency chain (in reverse order) is:
+[   72.537162][ T5176] 
+[   72.537162][ T5176] -> #1 (&fi->i_sem){+.+.}-{3:3}:
+[   72.544648][ T5176]        down_write+0x93/0x200
+[   72.549466][ T5176]        f2fs_add_inline_entry+0x2c0/0x6a0
+[   72.555330][ T5176]        f2fs_add_dentry+0xa6/0x230
+[   72.560539][ T5176]        f2fs_do_add_link+0x182/0x270
+[   72.565924][ T5176]        f2fs_create+0x3b3/0x650
+[   72.570881][ T5176]        lookup_open.isra.0+0x1049/0x1360
+[   72.576625][ T5176]        path_openat+0x931/0x2990
+[   72.581707][ T5176]        do_filp_open+0x1cb/0x410
+[   72.586854][ T5176]        do_sys_openat2+0x15c/0x1c0
+[   72.592079][ T5176]        __x64_sys_openat+0x175/0x210
+[   72.597562][ T5176]        do_syscall_64+0x38/0xb0
+[   72.602679][ T5176]        entry_SYSCALL_64_after_hwframe+0x63/0xcd
+[   72.609726][ T5176] 
+[   72.609726][ T5176] -> #0 (&fi->i_xattr_sem){.+.+}-{3:3}:
+[   72.617745][ T5176]        __lock_acquire+0x2e3d/0x5de0
+[   72.623668][ T5176]        lock_acquire+0x1ae/0x510
+[   72.629236][ T5176]        down_read+0x9c/0x470
+[   72.633927][ T5176]        f2fs_getxattr+0xb1e/0x12c0
+[   72.639135][ T5176]        __f2fs_get_acl+0x5a/0x900
+[   72.644256][ T5176]        f2fs_init_acl+0x15c/0xb30
+[   72.649474][ T5176]        f2fs_init_inode_metadata+0x159/0x1250
+[   72.655644][ T5176]        f2fs_do_tmpfile+0x31/0x1d0
+[   72.660880][ T5176]        __f2fs_tmpfile+0x1e6/0x460
+[   72.666182][ T5176]        f2fs_ioc_start_atomic_write+0xc8e/0x1270
+[   72.672731][ T5176]        __f2fs_ioctl+0x3bf4/0xa0a0
+[   72.678089][ T5176]        f2fs_ioctl+0x192/0x220
+[   72.683135][ T5176]        __x64_sys_ioctl+0x18f/0x210
+[   72.688521][ T5176]        do_syscall_64+0x38/0xb0
+[   72.693551][ T5176]        entry_SYSCALL_64_after_hwframe+0x63/0xcd
+[   72.700409][ T5176] 
+[   72.700409][ T5176] other info that might help us debug this:
+[   72.700409][ T5176] 
+[   72.710635][ T5176]  Possible unsafe locking scenario:
+[   72.710635][ T5176] 
+[   72.718254][ T5176]        CPU0                    CPU1
+[   72.723615][ T5176]        ----                    ----
+[   72.729066][ T5176]   lock(&fi->i_sem);
+[   72.733051][ T5176]                                lock(&fi->i_xattr_sem);
+[   72.740247][ T5176]                                lock(&fi->i_sem);
+[   72.746750][ T5176]   rlock(&fi->i_xattr_sem);
+[   72.751366][ T5176] 
+[   72.751366][ T5176]  *** DEADLOCK ***
+[   72.751366][ T5176] 
+[   72.759503][ T5176] 5 locks held by syz-executor.1/5176:
+[   72.764958][ T5176]  #0: ffff88807b292410 (sb_writers#12){.+.+}-{0:0}, at: f2fs_ioc_start_atomic_write+0x1b1/0x1270
+[   72.775620][ T5176]  #1: ffff888064218250 (&sb->s_type->i_mutex_key#19){+.+.}-{3:3}, at: f2fs_ioc_start_atomic_write+0x1f2/0x1270
+[   72.787498][ T5176]  #2: ffff888064218830 (&fi->i_gc_rwsem[WRITE]){+.+.}-{3:3}, at: f2fs_ioc_start_atomic_write+0x2ee/0x1270
+[   72.798929][ T5176]  #3: ffff88807c1843b0 (&sbi->cp_rwsem){.+.+}-{3:3}, at: __f2fs_tmpfile+0x1bb/0x460
+[   72.808874][ T5176]  #4: ffff88806421a668 (&fi->i_sem){+.+.}-{3:3}, at: f2fs_do_tmpfile+0x22/0x1d0
+[   72.818119][ T5176] 
+[   72.818119][ T5176] stack backtrace:
+[   72.824085][ T5176] CPU: 0 PID: 5176 Comm: syz-executor.1 Not tainted 6.5.0-rc1-syzkaller-00020-g005abf9e5e0d #0
+[   72.834415][ T5176] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   72.844467][ T5176] Call Trace:
+[   72.847748][ T5176]  <TASK>
+[   72.850677][ T5176]  dump_stack_lvl+0xd9/0x1b0
+[   72.855367][ T5176]  check_noncircular+0x2f7/0x3d0
+[   72.860316][ T5176]  ? reacquire_held_locks+0x4b0/0x4b0
+[   72.865725][ T5176]  ? print_circular_bug+0x750/0x750
+[   72.870950][ T5176]  ? _raw_spin_unlock_irqrestore+0x3b/0x70
+[   72.876790][ T5176]  __lock_acquire+0x2e3d/0x5de0
+[   72.881659][ T5176]  ? lockdep_hardirqs_on_prepare+0x410/0x410
+[   72.887697][ T5176]  ? mark_lock+0x105/0x1950
+[   72.892225][ T5176]  lock_acquire+0x1ae/0x510
+[   72.896760][ T5176]  ? f2fs_getxattr+0xb1e/0x12c0
+[   72.901638][ T5176]  ? lock_sync+0x190/0x190
+[   72.906071][ T5176]  ? find_held_lock+0x2d/0x110
+[   72.910845][ T5176]  down_read+0x9c/0x470
+[   72.915105][ T5176]  ? f2fs_getxattr+0xb1e/0x12c0
+[   72.920142][ T5176]  ? down_write_killable_nested+0x250/0x250
+[   72.926049][ T5176]  ? percpu_counter_add_batch+0x112/0x1f0
+[   72.931781][ T5176]  ? lockdep_hardirqs_on+0x7d/0x100
+[   72.937081][ T5176]  f2fs_getxattr+0xb1e/0x12c0
+[   72.941783][ T5176]  ? f2fs_init_security+0x40/0x40
+[   72.946822][ T5176]  __f2fs_get_acl+0x5a/0x900
+[   72.951476][ T5176]  ? f2fs_new_node_page+0xe40/0xe40
+[   72.956776][ T5176]  f2fs_init_acl+0x15c/0xb30
+[   72.961465][ T5176]  ? lock_sync+0x190/0x190
+[   72.965892][ T5176]  ? lock_acquire+0x1ae/0x510
+[   72.970578][ T5176]  f2fs_init_inode_metadata+0x159/0x1250
+[   72.976399][ T5176]  ? f2fs_do_make_empty_dir+0x1d0/0x1d0
+[   72.981962][ T5176]  ? down_write+0x14f/0x200
+[   72.986568][ T5176]  ? rwsem_down_write_slowpath+0x1250/0x1250
+[   72.992610][ T5176]  ? do_raw_spin_unlock+0x173/0x230
+[   72.997838][ T5176]  f2fs_do_tmpfile+0x31/0x1d0
+[   73.002526][ T5176]  __f2fs_tmpfile+0x1e6/0x460
+[   73.007233][ T5176]  f2fs_ioc_start_atomic_write+0xc8e/0x1270
+[   73.013232][ T5176]  __f2fs_ioctl+0x3bf4/0xa0a0
+[   73.017929][ T5176]  ? tomoyo_path_number_perm+0x169/0x550
+[   73.023576][ T5176]  ? tomoyo_execute_permission+0x4a0/0x4a0
+[   73.029395][ T5176]  ? f2fs_precache_extents+0x220/0x220
+[   73.034884][ T5176]  ? do_vfs_ioctl+0x350/0x1840
+[   73.039666][ T5176]  ? vfs_fileattr_set+0xbf0/0xbf0
+[   73.044707][ T5176]  ? ioctl_has_perm.constprop.0.isra.0+0x2ad/0x410
+[   73.051222][ T5176]  ? ioctl_has_perm.constprop.0.isra.0+0x2b6/0x410
+[   73.057761][ T5176]  ? selinux_bprm_creds_for_exec+0xb00/0xb00
+[   73.063950][ T5176]  ? reacquire_held_locks+0x4b0/0x4b0
+[   73.069345][ T5176]  ? rcu_is_watching+0x12/0xb0
+[   73.074144][ T5176]  ? xfd_validate_state+0x5d/0x180
+[   73.079295][ T5176]  ? selinux_file_ioctl+0x17d/0x270
+[   73.084535][ T5176]  f2fs_ioctl+0x192/0x220
+[   73.088998][ T5176]  ? __f2fs_ioctl+0xa0a0/0xa0a0
+[   73.093868][ T5176]  __x64_sys_ioctl+0x18f/0x210
+[   73.098769][ T5176]  do_syscall_64+0x38/0xb0
+[   73.103198][ T5176]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+[   73.109121][ T5176] RIP: 0033:0x7fa24d67cbe9
+[   73.113576][ T5176] Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+[   73.133247][ T5176] RSP: 002b:00007fa24e46f0c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[   73.141953][ T5176] RAX: ffffffffffffffda RBX: 00007fa24d79bf80 RCX: 00007fa24d67cbe9
+[   73.149973][ T5176] RDX: 0000000000000000 RSI: 000000000000f501 RDI: 0000000000000004
+[   73.158131][ T5176] RBP: 00007fa24d6c847a R08: 0000000000000000 R09: 0000000000000000
+[   73.166110][ T5176] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+[   73.174086][ T5176] R13: 000000000000000b R14: 00007fa24d79bf80 R15: 00007fffd8a88ac8
+[   73.182072][ T5176]  </TASK>
+2024/04/16 16:16:26 executed programs: 8
+[   73.195301][ T5040] ieee80211 phy7: Selected rate control algorithm 'minstrel_ht'
+[   73.215987][ T5037] veth1_vlan: entered promiscuous mode
+[   73.217789][   T26] kauditd_printk_skb: 3 callbacks suppressed
+[   73.217806][   T26] audit: type=1400 audit(1713284186.341:125): avc:  denied  { unmount } for  pid=5048 comm="syz-executor.1" scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fs_t tclass=filesystem permissive=1
+[   73.230524][ T5054] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   73.249319][ T5048] syz-executor.1: attempt to access beyond end of device
+[   73.249319][ T5048] loop1: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   73.259117][   T26] audit: type=1400 audit(1713284186.341:126): avc:  denied  { write } for  pid=5005 comm="syz-execprog" path="pipe:[29525]" dev="pipefs" ino=29525 scontext=root:sysadm_r:sysadm_t tcontext=system_u:system_r:sshd_t tclass=fifo_file permissive=1
+[   73.301741][ T5054] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.312431][ T5054] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   73.323568][ T5054] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.333660][ T5054] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   73.345556][ T5054] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.355707][ T5054] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   73.366384][ T5054] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.376583][ T5054] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   73.387544][ T5054] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.398790][ T5054] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   73.414403][ T5113] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   73.426718][ T5050] netdevsim netdevsim7 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   73.447029][ T5113] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   73.455149][ T5050] netdevsim netdevsim7 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   73.464378][ T5050] netdevsim netdevsim7 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   73.473501][ T5050] netdevsim netdevsim7 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   73.509192][ T5054] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   73.526974][ T5054] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.539001][ T5054] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   73.552986][ T5054] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.565440][ T5054] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   73.577001][ T5054] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.589517][ T5054] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   73.601547][ T5054] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.614442][ T5054] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   73.625591][ T5054] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.641375][ T5054] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   73.670995][ T5032] veth0_vlan: entered promiscuous mode
+[   73.691953][   T26] audit: type=1400 audit(1713284186.811:127): avc:  denied  { mounton } for  pid=5038 comm="syz-executor.4" path="/dev/binderfs" dev="devtmpfs" ino=2319 scontext=root:sysadm_r:sysadm_t tcontext=root:object_r:device_t tclass=dir permissive=1
+[   73.810059][ T5037] veth0_macvtap: entered promiscuous mode
+[   73.834375][ T5032] veth1_vlan: entered promiscuous mode
+[   73.844303][ T5054] netdevsim netdevsim0 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   73.861824][ T5054] netdevsim netdevsim0 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   73.888775][ T5054] netdevsim netdevsim0 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   73.911278][ T5054] netdevsim netdevsim0 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   73.940251][ T5040] ieee80211 phy8: Selected rate control algorithm 'minstrel_ht'
+[   73.953234][ T5108] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   73.964400][ T5108] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   73.965306][ T5183] loop1: detected capacity change from 0 to 40427
+[   73.996833][ T5183] F2FS-fs (loop1): Invalid log_blocksize (268), supports only 12
+[   73.996846][ T5037] veth1_macvtap: entered promiscuous mode
+[   74.013985][ T5183] F2FS-fs (loop1): Can't find valid F2FS filesystem in 1th superblock
+[   74.034162][ T5050] ieee80211 phy9: Selected rate control algorithm 'minstrel_ht'
+[   74.049713][ T5037] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.061401][ T5037] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.064401][ T5183] F2FS-fs (loop1): Found nat_bits in checkpoint
+[   74.072083][ T5037] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.090730][ T5037] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.100672][ T5037] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.112420][ T5037] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.123589][ T5037] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.145663][ T5037] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.167044][ T5037] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.177834][ T5037] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.180890][ T5183] F2FS-fs (loop1): Try to recover 1th superblock, ret: 0
+[   74.187712][ T5037] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.208125][ T5037] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.210742][ T5183] F2FS-fs (loop1): Mounted with checkpoint version = 48b305e5
+[   74.220170][ T5037] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   74.275851][ T5033] ieee80211 phy10: Selected rate control algorithm 'minstrel_ht'
+[   74.291644][ T5048] syz-executor.1: attempt to access beyond end of device
+[   74.291644][ T5048] loop1: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   74.302973][ T5032] veth0_macvtap: entered promiscuous mode
+[   74.317208][ T5108] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   74.318944][ T5032] veth1_macvtap: entered promiscuous mode
+[   74.331111][ T5108] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   74.356687][ T5037] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   74.358258][ T5186] loop4: detected capacity change from 0 to 40427
+[   74.373641][ T5037] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.385573][ T5037] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   74.388589][ T5186] F2FS-fs (loop4): Invalid log_blocksize (268), supports only 12
+[   74.396375][ T5037] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.413032][ T5186] F2FS-fs (loop4): Can't find valid F2FS filesystem in 1th superblock
+[   74.417245][ T5037] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   74.435436][ T5037] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.445826][ T5037] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   74.452103][ T5186] F2FS-fs (loop4): Found nat_bits in checkpoint
+[   74.457157][ T5037] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.482098][ T5037] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   74.512188][ T5037] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.523493][ T5037] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   74.530961][ T5186] F2FS-fs (loop4): Try to recover 1th superblock, ret: 0
+[   74.534624][ T5037] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.545731][ T5186] F2FS-fs (loop4): Mounted with checkpoint version = 48b305e5
+[   74.556382][ T5037] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   74.597321][ T5112] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   74.608868][ T5037] netdevsim netdevsim2 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   74.623670][ T5112] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   74.655658][ T5037] netdevsim netdevsim2 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   74.667059][ T5037] netdevsim netdevsim2 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   74.676256][ T5037] netdevsim netdevsim2 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   74.688856][ T5038] syz-executor.4: attempt to access beyond end of device
+[   74.688856][ T5038] loop4: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   74.696562][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.722730][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.754096][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.770323][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.780522][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.792145][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.802552][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.814922][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.841787][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.853460][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.865175][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.914443][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.938856][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.962881][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.986153][ T5032] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   75.027536][ T5054] ieee80211 phy11: Selected rate control algorithm 'minstrel_ht'
+[   75.062617][ T5108] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   75.074084][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.092030][ T5108] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   75.094692][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.132961][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.154736][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.175692][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.197334][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.220730][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.249280][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.267381][ T5195] loop6: detected capacity change from 0 to 40427
+[   75.274233][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.287255][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.297177][ T5195] F2FS-fs (loop6): Invalid log_blocksize (268), supports only 12
+[   75.305208][ T5195] F2FS-fs (loop6): Can't find valid F2FS filesystem in 1th superblock
+[   75.313831][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.324539][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.336482][ T5032] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.350408][ T5032] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.362169][ T5032] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   75.376674][ T5195] F2FS-fs (loop6): Found nat_bits in checkpoint
+[   75.390517][ T5050] ieee80211 phy12: Selected rate control algorithm 'minstrel_ht'
+[   75.455517][ T5032] netdevsim netdevsim5 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   75.467584][ T5032] netdevsim netdevsim5 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   75.478353][ T5032] netdevsim netdevsim5 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   75.487914][ T5032] netdevsim netdevsim5 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   75.496802][ T5195] F2FS-fs (loop6): Try to recover 1th superblock, ret: 0
+[   75.504508][ T5195] F2FS-fs (loop6): Mounted with checkpoint version = 48b305e5
+[   75.521022][ T5064] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   75.530592][ T5129] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   75.531318][ T5033] ieee80211 phy13: Selected rate control algorithm 'minstrel_ht'
+[   75.544752][ T5129] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   75.556085][ T5040] syz-executor.6: attempt to access beyond end of device
+[   75.556085][ T5040] loop6: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   75.573265][ T5064] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   75.709936][ T5054] ieee80211 phy14: Selected rate control algorithm 'minstrel_ht'
+[   75.727609][ T5197] loop1: detected capacity change from 0 to 40427
+[   75.743272][   T21] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   75.763637][   T21] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   75.787136][ T5197] F2FS-fs (loop1): Invalid log_blocksize (268), supports only 12
+[   75.813030][ T5032] ieee80211 phy15: Selected rate control algorithm 'minstrel_ht'
+[   75.829277][ T5197] F2FS-fs (loop1): Can't find valid F2FS filesystem in 1th superblock
+[   75.861995][ T5167] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   75.869918][ T5167] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   75.885423][ T5037] ieee80211 phy16: Selected rate control algorithm 'minstrel_ht'
+[   75.937362][ T3916] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   75.956783][ T3916] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   75.976376][ T5032] ieee80211 phy17: Selected rate control algorithm 'minstrel_ht'
+[   76.024707][ T5197] F2FS-fs (loop1): Found nat_bits in checkpoint
+[   76.039497][ T5109] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   76.067722][ T5109] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   76.098464][ T5037] ieee80211 phy18: Selected rate control algorithm 'minstrel_ht'
+[   76.157700][ T5129] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   76.186590][ T5129] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   76.213445][ T5169] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   76.233623][ T5169] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   76.265192][ T5197] F2FS-fs (loop1): Try to recover 1th superblock, ret: 0
+[   76.318137][ T5197] F2FS-fs (loop1): Mounted with checkpoint version = 48b305e5
+[   76.328751][ T5199] loop4: detected capacity change from 0 to 40427
+[   76.400016][ T5199] F2FS-fs (loop4): Invalid log_blocksize (268), supports only 12
+[   76.410436][ T5048] syz-executor.1: attempt to access beyond end of device
+[   76.410436][ T5048] loop1: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   76.458215][ T5199] F2FS-fs (loop4): Can't find valid F2FS filesystem in 1th superblock
+[   76.575256][ T5199] F2FS-fs (loop4): Found nat_bits in checkpoint
+[   76.843300][ T5199] F2FS-fs (loop4): Try to recover 1th superblock, ret: 0
+[   76.850435][ T5199] F2FS-fs (loop4): Mounted with checkpoint version = 48b305e5
+[   76.943463][ T5038] syz-executor.4: attempt to access beyond end of device
+[   76.943463][ T5038] loop4: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   77.053015][ T5204] loop7: detected capacity change from 0 to 40427
+[   77.115111][ T5204] F2FS-fs (loop7): Invalid log_blocksize (268), supports only 12
+[   77.161225][ T5204] F2FS-fs (loop7): Can't find valid F2FS filesystem in 1th superblock
+[   77.279880][ T5204] F2FS-fs (loop7): Found nat_bits in checkpoint
+[   77.394246][ T5206] loop3: detected capacity change from 0 to 40427
+[   77.431467][ T5206] F2FS-fs (loop3): Invalid log_blocksize (268), supports only 12
+[   77.482814][ T5206] F2FS-fs (loop3): Can't find valid F2FS filesystem in 1th superblock
+[   77.537915][ T5210] loop0: detected capacity change from 0 to 40427
+[   77.542203][ T5204] F2FS-fs (loop7): Try to recover 1th superblock, ret: 0
+[   77.555164][ T5206] F2FS-fs (loop3): Found nat_bits in checkpoint
+[   77.577477][ T5204] F2FS-fs (loop7): Mounted with checkpoint version = 48b305e5
+[   77.578179][ T5210] F2FS-fs (loop0): Invalid log_blocksize (268), supports only 12
+[   77.651096][ T5210] F2FS-fs (loop0): Can't find valid F2FS filesystem in 1th superblock
+[   77.688987][ T5050] syz-executor.7: attempt to access beyond end of device
+[   77.688987][ T5050] loop7: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   77.755871][ T5210] F2FS-fs (loop0): Found nat_bits in checkpoint
+[   77.773461][ T5213] loop5: detected capacity change from 0 to 40427
+[   77.787382][ T5206] F2FS-fs (loop3): Try to recover 1th superblock, ret: 0
+[   77.809708][ T5206] F2FS-fs (loop3): Mounted with checkpoint version = 48b305e5
+[   77.829421][ T5213] F2FS-fs (loop5): Invalid log_blocksize (268), supports only 12
+[   77.861438][ T5213] F2FS-fs (loop5): Can't find valid F2FS filesystem in 1th superblock
+[   77.875276][ T5033] syz-executor.3: attempt to access beyond end of device
+[   77.875276][ T5033] loop3: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   77.935136][ T5213] F2FS-fs (loop5): Found nat_bits in checkpoint
+[   77.971827][ T5210] F2FS-fs (loop0): Try to recover 1th superblock, ret: 0
+[   77.998173][ T5215] loop2: detected capacity change from 0 to 40427
+[   78.001788][ T5210] F2FS-fs (loop0): Mounted with checkpoint version = 48b305e5
+[   78.031576][ T5215] F2FS-fs (loop2): Invalid log_blocksize (268), supports only 12
+[   78.054060][ T5217] loop6: detected capacity change from 0 to 40427
+[   78.085970][ T5054] syz-executor.0: attempt to access beyond end of device
+[   78.085970][ T5054] loop0: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   78.093182][ T5215] F2FS-fs (loop2): Can't find valid F2FS filesystem in 1th superblock
+[   78.127100][ T5217] F2FS-fs (loop6): Invalid log_blocksize (268), supports only 12
+[   78.157884][ T5217] F2FS-fs (loop6): Can't find valid F2FS filesystem in 1th superblock
+[   78.170035][ T5213] F2FS-fs (loop5): Try to recover 1th superblock, ret: 0
+2024/04/16 16:16:31 executed programs: 17
+[   78.195988][ T5213] F2FS-fs (loop5): Mounted with checkpoint version = 48b305e5
+[   78.214436][ T5215] F2FS-fs (loop2): Found nat_bits in checkpoint
+[   78.253468][ T5032] syz-executor.5: attempt to access beyond end of device
+[   78.253468][ T5032] loop5: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   78.346163][ T5217] F2FS-fs (loop6): Found nat_bits in checkpoint
+[   78.486500][ T5215] F2FS-fs (loop2): Try to recover 1th superblock, ret: 0
+[   78.524020][ T5215] F2FS-fs (loop2): Mounted with checkpoint version = 48b305e5
+[   78.548097][ T5217] F2FS-fs (loop6): Try to recover 1th superblock, ret: 0
+[   78.569517][ T5217] F2FS-fs (loop6): Mounted with checkpoint version = 48b305e5
+[   78.595186][ T5037] syz-executor.2: attempt to access beyond end of device
+[   78.595186][ T5037] loop2: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   78.628498][ T5040] syz-executor.6: attempt to access beyond end of device
+[   78.628498][ T5040] loop6: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   78.807453][ T5224] loop1: detected capacity change from 0 to 40427
+[   78.876797][ T5224] F2FS-fs (loop1): Invalid log_blocksize (268), supports only 12
+[   78.920618][ T5224] F2FS-fs (loop1): Can't find valid F2FS filesystem in 1th superblock
+[   78.974393][ T5224] F2FS-fs (loop1): Found nat_bits in checkpoint
+[   79.105779][ T5224] F2FS-fs (loop1): Try to recover 1th superblock, ret: 0
+[   79.167632][ T5224] F2FS-fs (loop1): Mounted with checkpoint version = 48b305e5
+[   79.260958][ T5048] syz-executor.1: attempt to access beyond end of device
+[   79.260958][ T5048] loop1: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   79.536215][ T5235] loop4: detected capacity change from 0 to 40427
+[   79.590639][ T5235] F2FS-fs (loop4): Invalid log_blocksize (268), supports only 12
+[   79.617471][ T5235] F2FS-fs (loop4): Can't find valid F2FS filesystem in 1th superblock
+[   79.693994][ T5235] F2FS-fs (loop4): Found nat_bits in checkpoint
+[   79.918794][ T5235] F2FS-fs (loop4): Try to recover 1th superblock, ret: 0
+[   79.959878][ T5235] F2FS-fs (loop4): Mounted with checkpoint version = 48b305e5
+[   80.058364][ T5038] syz-executor.4: attempt to access beyond end of device
+[   80.058364][ T5038] loop4: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   80.161053][ T5246] loop3: detected capacity change from 0 to 40427
+[   80.210213][ T5246] F2FS-fs (loop3): Invalid log_blocksize (268), supports only 12
+[   80.255753][ T5246] F2FS-fs (loop3): Can't find valid F2FS filesystem in 1th superblock
+[   80.260390][ T5247] loop7: detected capacity change from 0 to 40427
+[   80.315822][ T5247] F2FS-fs (loop7): Invalid log_blocksize (268), supports only 12
+[   80.343060][ T5246] F2FS-fs (loop3): Found nat_bits in checkpoint
+[   80.356942][ T5247] F2FS-fs (loop7): Can't find valid F2FS filesystem in 1th superblock
+[   80.434796][ T5247] F2FS-fs (loop7): Found nat_bits in checkpoint
+[   80.586084][ T5246] F2FS-fs (loop3): Try to recover 1th superblock, ret: 0
+[   80.608590][ T5246] F2FS-fs (loop3): Mounted with checkpoint version = 48b305e5
+[   80.651165][ T5252] loop0: detected capacity change from 0 to 40427
+[   80.673850][ T5033] syz-executor.3: attempt to access beyond end of device
+[   80.673850][ T5033] loop3: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   80.745558][ T5247] F2FS-fs (loop7): Try to recover 1th superblock, ret: 0
+[   80.754940][ T5247] F2FS-fs (loop7): Mounted with checkpoint version = 48b305e5
+[   80.775111][ T5252] F2FS-fs (loop0): Invalid log_blocksize (268), supports only 12
+[   80.789844][ T5254] loop5: detected capacity change from 0 to 40427
+[   80.815483][ T5252] F2FS-fs (loop0): Can't find valid F2FS filesystem in 1th superblock
+[   80.854970][ T5050] syz-executor.7: attempt to access beyond end of device
+[   80.854970][ T5050] loop7: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   80.875035][ T5254] F2FS-fs (loop5): Invalid log_blocksize (268), supports only 12
+[   80.918842][ T5254] F2FS-fs (loop5): Can't find valid F2FS filesystem in 1th superblock
+[   80.934193][ T5252] F2FS-fs (loop0): Found nat_bits in checkpoint
+[   80.985099][ T5254] F2FS-fs (loop5): Found nat_bits in checkpoint
+[   81.095684][ T5256] loop2: detected capacity change from 0 to 40427
+[   81.153536][ T5256] F2FS-fs (loop2): Invalid log_blocksize (268), supports only 12
+[   81.170175][ T5254] F2FS-fs (loop5): Try to recover 1th superblock, ret: 0
+[   81.185552][ T5254] F2FS-fs (loop5): Mounted with checkpoint version = 48b305e5
+[   81.200868][ T5256] F2FS-fs (loop2): Can't find valid F2FS filesystem in 1th superblock
+[   81.208490][ T5252] F2FS-fs (loop0): Try to recover 1th superblock, ret: 0
+[   81.241115][ T5252] F2FS-fs (loop0): Mounted with checkpoint version = 48b305e5
+[   81.272241][ T5032] syz-executor.5: attempt to access beyond end of device
+[   81.272241][ T5032] loop5: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   81.296996][ T5054] syz-executor.0: attempt to access beyond end of device
+[   81.296996][ T5054] loop0: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   81.330498][ T5260] loop6: detected capacity change from 0 to 40427
+[   81.357741][ T5256] F2FS-fs (loop2): Found nat_bits in checkpoint
+[   81.425224][ T5260] F2FS-fs (loop6): Invalid log_blocksize (268), supports only 12
+[   81.468661][ T5260] F2FS-fs (loop6): Can't find valid F2FS filesystem in 1th superblock
+[   81.550793][ T5260] F2FS-fs (loop6): Found nat_bits in checkpoint
+[   81.638648][ T5256] F2FS-fs (loop2): Try to recover 1th superblock, ret: 0
+[   81.673763][ T5256] F2FS-fs (loop2): Mounted with checkpoint version = 48b305e5
+[   81.747131][ T5037] syz-executor.2: attempt to access beyond end of device
+[   81.747131][ T5037] loop2: rw=2049, sector=40960, nr_sectors = 8 limit=40427
+[   81.824430][  T916] cfg80211: failed to load regulatory.db
+[   81.875038][ T5260] F2FS-fs (loop6): Try to recover 1th superblock, ret: 0
+[   81.887008][ T5260] F2FS-fs (loop6): Mounted with checkpoint version = 48b305e5
+[   82.040877][ T5265] loop1: detected capacity change from 0 to 40427
+[   82.082856][ T5265] F2FS-fs (loop1): Invalid log_blocksize (268), supports only 12
+[   82.126441][ T5265] F2FS-fs (loop1): Can't find valid F2FS filesystem in 1th superblock
+[   82.236225][ T5265] F2FS-fs (loop1): Found nat_bits in checkpoint
+[   82.420074][ T5275] loop4: detected capacity change from 0 to 40427
+[   82.431428][ T5265] F2FS-fs (loop1): Try to recover 1th superblock, ret: 0

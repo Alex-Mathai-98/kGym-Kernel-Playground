@@ -1,0 +1,1666 @@
+Warning: Permanently added '10.128.0.112' (ED25519) to the list of known hosts.
+2024/04/16 17:07:57 ignoring optional flag "sandboxArg"="0"
+2024/04/16 17:07:57 parsed 1 programs
+[   56.629235][   T25] audit: type=1400 audit(1713287277.626:86): avc:  denied  { integrity } for  pid=2507 comm="syz-execprog" lockdown_reason="debugfs access" scontext=root:sysadm_r:sysadm_t tcontext=root:sysadm_r:sysadm_t tclass=lockdown permissive=1
+[   56.652390][   T25] audit: type=1400 audit(1713287277.626:87): avc:  denied  { getattr } for  pid=2507 comm="syz-execprog" path="user:[4026531837]" dev="nsfs" ino=4026531837 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:nsfs_t tclass=file permissive=1
+[   56.677101][   T25] audit: type=1400 audit(1713287277.626:88): avc:  denied  { read } for  pid=2507 comm="syz-execprog" dev="nsfs" ino=4026531837 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:nsfs_t tclass=file permissive=1
+[   56.698843][   T25] audit: type=1400 audit(1713287277.626:89): avc:  denied  { open } for  pid=2507 comm="syz-execprog" path="user:[4026531837]" dev="nsfs" ino=4026531837 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:nsfs_t tclass=file permissive=1
+[   56.715552][ T2512] cgroup: Unknown subsys name 'net'
+[   56.722778][   T25] audit: type=1400 audit(1713287277.656:90): avc:  denied  { read } for  pid=2507 comm="syz-execprog" name="raw-gadget" dev="devtmpfs" ino=687 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:device_t tclass=chr_file permissive=1
+[   56.750498][   T25] audit: type=1400 audit(1713287277.656:91): avc:  denied  { open } for  pid=2507 comm="syz-execprog" path="/dev/raw-gadget" dev="devtmpfs" ino=687 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:device_t tclass=chr_file permissive=1
+[   56.774194][   T25] audit: type=1400 audit(1713287277.656:92): avc:  denied  { read } for  pid=2507 comm="syz-execprog" name="vhci" dev="devtmpfs" ino=830 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:vhost_device_t tclass=chr_file permissive=1
+[   56.798110][   T25] audit: type=1400 audit(1713287277.656:93): avc:  denied  { open } for  pid=2507 comm="syz-execprog" path="/dev/vhci" dev="devtmpfs" ino=830 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:vhost_device_t tclass=chr_file permissive=1
+[   56.821905][   T25] audit: type=1400 audit(1713287277.696:94): avc:  denied  { mounton } for  pid=2512 comm="syz-executor" path="/syzcgroup/unified" dev="sda1" ino=1927 scontext=root:sysadm_r:sysadm_t tcontext=root:object_r:root_t tclass=dir permissive=1
+[   56.845119][   T25] audit: type=1400 audit(1713287277.696:95): avc:  denied  { mount } for  pid=2512 comm="syz-executor" name="/" dev="cgroup2" ino=1 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:cgroup_t tclass=filesystem permissive=1
+[   57.028332][ T2512] cgroup: Unknown subsys name 'rlimit'
+2024/04/16 17:07:58 executed programs: 0
+[   57.248667][ T2514] SELinux:  Context root:object_r:swapfile_t is not valid (left unmapped).
+[   57.286462][ T2512] Adding 124996k swap on ./swap-file.  Priority:0 extents:1 across:124996k FS
+[   58.277361][ T2530] chnl_net:caif_netlink_parms(): no params data found
+[   58.366301][ T2550] chnl_net:caif_netlink_parms(): no params data found
+[   58.410015][ T2529] chnl_net:caif_netlink_parms(): no params data found
+[   58.505197][ T2530] bridge0: port 1(bridge_slave_0) entered blocking state
+[   58.513002][ T2530] bridge0: port 1(bridge_slave_0) entered disabled state
+[   58.520963][ T2530] device bridge_slave_0 entered promiscuous mode
+[   58.586054][ T2528] chnl_net:caif_netlink_parms(): no params data found
+[   58.596386][ T2530] bridge0: port 2(bridge_slave_1) entered blocking state
+[   58.605120][ T2530] bridge0: port 2(bridge_slave_1) entered disabled state
+[   58.613421][ T2530] device bridge_slave_1 entered promiscuous mode
+[   58.651116][ T2562] chnl_net:caif_netlink_parms(): no params data found
+[   58.711252][ T2551] chnl_net:caif_netlink_parms(): no params data found
+[   58.763145][ T2550] bridge0: port 1(bridge_slave_0) entered blocking state
+[   58.770214][ T2550] bridge0: port 1(bridge_slave_0) entered disabled state
+[   58.778923][ T2550] device bridge_slave_0 entered promiscuous mode
+[   58.791005][ T2550] bridge0: port 2(bridge_slave_1) entered blocking state
+[   58.798323][ T2550] bridge0: port 2(bridge_slave_1) entered disabled state
+[   58.806806][ T2550] device bridge_slave_1 entered promiscuous mode
+[   58.835310][ T2530] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   58.900227][ T2530] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   58.918992][ T2529] bridge0: port 1(bridge_slave_0) entered blocking state
+[   58.926594][ T2529] bridge0: port 1(bridge_slave_0) entered disabled state
+[   58.935162][ T2529] device bridge_slave_0 entered promiscuous mode
+[   58.965323][ T2550] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   58.995639][ T2545] chnl_net:caif_netlink_parms(): no params data found
+[   59.006820][ T2529] bridge0: port 2(bridge_slave_1) entered blocking state
+[   59.014098][ T2529] bridge0: port 2(bridge_slave_1) entered disabled state
+[   59.021804][ T2529] device bridge_slave_1 entered promiscuous mode
+[   59.048037][ T2550] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   59.120823][ T2530] team0: Port device team_slave_0 added
+[   59.149038][ T2528] bridge0: port 1(bridge_slave_0) entered blocking state
+[   59.157628][ T2528] bridge0: port 1(bridge_slave_0) entered disabled state
+[   59.166216][ T2528] device bridge_slave_0 entered promiscuous mode
+[   59.203864][ T2530] team0: Port device team_slave_1 added
+[   59.220789][ T2529] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   59.232165][ T2532] chnl_net:caif_netlink_parms(): no params data found
+[   59.242619][ T2528] bridge0: port 2(bridge_slave_1) entered blocking state
+[   59.249753][ T2528] bridge0: port 2(bridge_slave_1) entered disabled state
+[   59.258474][ T2528] device bridge_slave_1 entered promiscuous mode
+[   59.290501][ T2550] team0: Port device team_slave_0 added
+[   59.311796][ T2529] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   59.341694][ T2562] bridge0: port 1(bridge_slave_0) entered blocking state
+[   59.349034][ T2562] bridge0: port 1(bridge_slave_0) entered disabled state
+[   59.368207][ T2562] device bridge_slave_0 entered promiscuous mode
+[   59.379344][ T2551] bridge0: port 1(bridge_slave_0) entered blocking state
+[   59.389025][ T2551] bridge0: port 1(bridge_slave_0) entered disabled state
+[   59.400762][ T2551] device bridge_slave_0 entered promiscuous mode
+[   59.411856][ T2550] team0: Port device team_slave_1 added
+[   59.436924][ T2530] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   59.443913][ T2530] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   59.469865][ T2530] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   59.502333][ T2562] bridge0: port 2(bridge_slave_1) entered blocking state
+[   59.509919][ T2562] bridge0: port 2(bridge_slave_1) entered disabled state
+[   59.517954][ T2562] device bridge_slave_1 entered promiscuous mode
+[   59.525548][ T2551] bridge0: port 2(bridge_slave_1) entered blocking state
+[   59.532604][ T2551] bridge0: port 2(bridge_slave_1) entered disabled state
+[   59.540710][ T2551] device bridge_slave_1 entered promiscuous mode
+[   59.567991][ T2530] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   59.578693][ T2530] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   59.593821][ T1192] Bluetooth: hci4: command 0x0409 tx timeout
+[   59.605217][    T5] Bluetooth: hci1: command 0x0409 tx timeout
+[   59.617019][ T2530] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   59.624210][ T1192] Bluetooth: hci2: command 0x0409 tx timeout
+[   59.628083][    T5] Bluetooth: hci0: command 0x0409 tx timeout
+[   59.653416][ T2528] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   59.673149][   T19] Bluetooth: hci6: command 0x0409 tx timeout
+[   59.690276][    T5] Bluetooth: hci5: command 0x0409 tx timeout
+[   59.696609][    T5] Bluetooth: hci3: command 0x0409 tx timeout
+[   59.737564][ T2529] team0: Port device team_slave_0 added
+[   59.746432][ T2528] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   59.775966][ T2550] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   59.783036][ T2550] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   59.809243][ T2550] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   59.827483][ T2545] bridge0: port 1(bridge_slave_0) entered blocking state
+[   59.834933][ T2545] bridge0: port 1(bridge_slave_0) entered disabled state
+[   59.842031][   T24] Bluetooth: hci7: command 0x0409 tx timeout
+[   59.849266][ T2545] device bridge_slave_0 entered promiscuous mode
+[   59.859916][ T2545] bridge0: port 2(bridge_slave_1) entered blocking state
+[   59.867235][ T2545] bridge0: port 2(bridge_slave_1) entered disabled state
+[   59.875858][ T2545] device bridge_slave_1 entered promiscuous mode
+[   59.884071][ T2529] team0: Port device team_slave_1 added
+[   59.901073][ T2562] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   59.912245][ T2551] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   59.922302][ T2550] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   59.929456][ T2550] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   59.955545][ T2550] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   60.012800][ T2562] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   60.023844][ T2551] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   60.077731][ T2528] team0: Port device team_slave_0 added
+[   60.174940][ T2530] device hsr_slave_0 entered promiscuous mode
+[   60.213150][ T2530] device hsr_slave_1 entered promiscuous mode
+[   60.273039][ T2545] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   60.282640][ T2529] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   60.289695][ T2529] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   60.316093][ T2529] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   60.328993][ T2528] team0: Port device team_slave_1 added
+[   60.348839][ T2551] team0: Port device team_slave_0 added
+[   60.365009][ T2532] bridge0: port 1(bridge_slave_0) entered blocking state
+[   60.372078][ T2532] bridge0: port 1(bridge_slave_0) entered disabled state
+[   60.380252][ T2532] device bridge_slave_0 entered promiscuous mode
+[   60.395571][ T2545] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   60.405746][ T2529] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   60.413329][ T2529] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   60.439976][ T2529] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   60.464427][ T2562] team0: Port device team_slave_0 added
+[   60.472051][ T2551] team0: Port device team_slave_1 added
+[   60.525864][ T2550] device hsr_slave_0 entered promiscuous mode
+[   60.573166][ T2550] device hsr_slave_1 entered promiscuous mode
+[   60.612867][ T2550] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   60.620813][ T2550] Cannot create hsr debugfs directory
+[   60.627102][ T2532] bridge0: port 2(bridge_slave_1) entered blocking state
+[   60.635537][ T2532] bridge0: port 2(bridge_slave_1) entered disabled state
+[   60.644004][ T2532] device bridge_slave_1 entered promiscuous mode
+[   60.703283][ T2562] team0: Port device team_slave_1 added
+[   60.755765][ T2532] bond0: (slave bond_slave_0): Enslaving as an active interface with an up link
+[   60.771645][ T2545] team0: Port device team_slave_0 added
+[   60.778250][ T2528] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   60.785678][ T2528] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   60.813164][ T2528] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   60.859332][ T2551] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   60.866769][ T2551] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   60.892885][ T2551] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   60.921556][ T2532] bond0: (slave bond_slave_1): Enslaving as an active interface with an up link
+[   60.932388][ T2545] team0: Port device team_slave_1 added
+[   60.939463][ T2528] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   60.946771][ T2528] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   60.972735][ T2528] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   60.999984][ T2551] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   61.007002][ T2551] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   61.033932][ T2551] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   61.080156][ T2562] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   61.087435][ T2562] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   61.119271][ T2562] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   61.196706][ T2529] device hsr_slave_0 entered promiscuous mode
+[   61.253278][ T2529] device hsr_slave_1 entered promiscuous mode
+[   61.292885][ T2529] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   61.300447][ T2529] Cannot create hsr debugfs directory
+[   61.340747][ T2562] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   61.348277][ T2562] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   61.374608][ T2562] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   61.417666][ T2545] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   61.424814][ T2545] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   61.458557][ T2545] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   61.472439][ T2545] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   61.479472][ T2545] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   61.505571][ T2545] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   61.521301][ T2532] team0: Port device team_slave_0 added
+[   61.600343][ T2532] team0: Port device team_slave_1 added
+[   61.656517][ T2528] device hsr_slave_0 entered promiscuous mode
+[   61.672962][   T19] Bluetooth: hci0: command 0x041b tx timeout
+[   61.678997][   T19] Bluetooth: hci2: command 0x041b tx timeout
+[   61.685162][   T19] Bluetooth: hci1: command 0x041b tx timeout
+[   61.691195][   T19] Bluetooth: hci4: command 0x041b tx timeout
+[   61.697633][ T2528] device hsr_slave_1 entered promiscuous mode
+[   61.742826][ T2528] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   61.750378][ T2528] Cannot create hsr debugfs directory
+[   61.753913][ T1017] Bluetooth: hci3: command 0x041b tx timeout
+[   61.756271][   T19] Bluetooth: hci6: command 0x041b tx timeout
+[   61.761796][ T1017] Bluetooth: hci5: command 0x041b tx timeout
+[   61.846807][ T2562] device hsr_slave_0 entered promiscuous mode
+[   61.904645][ T2562] device hsr_slave_1 entered promiscuous mode
+[   61.923058][ T1017] Bluetooth: hci7: command 0x041b tx timeout
+[   61.942772][ T2562] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   61.950376][ T2562] Cannot create hsr debugfs directory
+[   61.997066][ T2551] device hsr_slave_0 entered promiscuous mode
+[   62.043454][ T2551] device hsr_slave_1 entered promiscuous mode
+[   62.092790][ T2551] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   62.100374][ T2551] Cannot create hsr debugfs directory
+[   62.284906][ T2532] batman_adv: batadv0: Adding interface: batadv_slave_0
+[   62.291879][ T2532] batman_adv: batadv0: The MTU of interface batadv_slave_0 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   62.318318][ T2532] batman_adv: batadv0: Not using interface batadv_slave_0 (retrying later): interface not active
+[   62.336272][ T2532] batman_adv: batadv0: Adding interface: batadv_slave_1
+[   62.343348][ T2532] batman_adv: batadv0: The MTU of interface batadv_slave_1 is too small (1500) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+[   62.369656][ T2532] batman_adv: batadv0: Not using interface batadv_slave_1 (retrying later): interface not active
+[   62.516855][ T2545] device hsr_slave_0 entered promiscuous mode
+[   62.563452][ T2545] device hsr_slave_1 entered promiscuous mode
+[   62.602782][ T2545] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   62.610371][ T2545] Cannot create hsr debugfs directory
+[   62.695096][ T2532] device hsr_slave_0 entered promiscuous mode
+[   62.733142][ T2532] device hsr_slave_1 entered promiscuous mode
+[   62.772779][ T2532] debugfs: Directory 'hsr0' with parent 'hsr' already present!
+[   62.780345][ T2532] Cannot create hsr debugfs directory
+[   63.088177][ T2530] netdevsim netdevsim1 netdevsim0: renamed from eth0
+[   63.150640][ T2530] netdevsim netdevsim1 netdevsim1: renamed from eth1
+[   63.208878][ T2530] netdevsim netdevsim1 netdevsim2: renamed from eth2
+[   63.299410][ T2530] netdevsim netdevsim1 netdevsim3: renamed from eth3
+[   63.425904][ T2550] netdevsim netdevsim3 netdevsim0: renamed from eth0
+[   63.496540][ T2550] netdevsim netdevsim3 netdevsim1: renamed from eth1
+[   63.557203][ T2550] netdevsim netdevsim3 netdevsim2: renamed from eth2
+[   63.619423][ T2550] netdevsim netdevsim3 netdevsim3: renamed from eth3
+[   63.726394][ T2529] netdevsim netdevsim2 netdevsim0: renamed from eth0
+[   63.753289][    T5] Bluetooth: hci4: command 0x040f tx timeout
+[   63.759355][    T5] Bluetooth: hci1: command 0x040f tx timeout
+[   63.766543][    T5] Bluetooth: hci2: command 0x040f tx timeout
+[   63.772572][    T5] Bluetooth: hci0: command 0x040f tx timeout
+[   63.798198][ T2529] netdevsim netdevsim2 netdevsim1: renamed from eth1
+[   63.832871][ T2614] Bluetooth: hci6: command 0x040f tx timeout
+[   63.833082][    T5] Bluetooth: hci5: command 0x040f tx timeout
+[   63.845031][    T5] Bluetooth: hci3: command 0x040f tx timeout
+[   63.870519][ T2529] netdevsim netdevsim2 netdevsim2: renamed from eth2
+[   63.944785][ T2529] netdevsim netdevsim2 netdevsim3: renamed from eth3
+[   63.992907][ T2619] Bluetooth: hci7: command 0x040f tx timeout
+[   64.036187][ T2551] netdevsim netdevsim4 netdevsim0: renamed from eth0
+[   64.114730][ T2551] netdevsim netdevsim4 netdevsim1: renamed from eth1
+[   64.149103][ T2551] netdevsim netdevsim4 netdevsim2: renamed from eth2
+[   64.236296][ T2551] netdevsim netdevsim4 netdevsim3: renamed from eth3
+[   64.320976][ T2530] 8021q: adding VLAN 0 to HW filter on device bond0
+[   64.345720][ T2528] netdevsim netdevsim0 netdevsim0: renamed from eth0
+[   64.426224][ T2550] 8021q: adding VLAN 0 to HW filter on device bond0
+[   64.445722][ T2528] netdevsim netdevsim0 netdevsim1: renamed from eth1
+[   64.522288][ T2621] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   64.531931][ T2621] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   64.544301][ T2530] 8021q: adding VLAN 0 to HW filter on device team0
+[   64.556125][ T2528] netdevsim netdevsim0 netdevsim2: renamed from eth2
+[   64.602234][ T2562] netdevsim netdevsim7 netdevsim0: renamed from eth0
+[   64.676443][ T2562] netdevsim netdevsim7 netdevsim1: renamed from eth1
+[   64.735358][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   64.745361][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   64.754953][ T1017] bridge0: port 1(bridge_slave_0) entered blocking state
+[   64.762218][ T1017] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   64.771017][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   64.805069][ T2528] netdevsim netdevsim0 netdevsim3: renamed from eth3
+[   64.859067][ T2562] netdevsim netdevsim7 netdevsim2: renamed from eth2
+[   64.905910][ T2562] netdevsim netdevsim7 netdevsim3: renamed from eth3
+[   64.955367][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   64.965656][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   64.974244][ T1017] bridge0: port 2(bridge_slave_1) entered blocking state
+[   64.981308][ T1017] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   64.989030][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   65.001132][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   65.009943][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   65.019151][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   65.028267][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   65.036542][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   65.073963][ T2550] 8021q: adding VLAN 0 to HW filter on device team0
+[   65.087520][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   65.095787][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   65.106642][ T1017] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   65.129524][ T2529] 8021q: adding VLAN 0 to HW filter on device bond0
+[   65.178031][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   65.187387][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   65.196811][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   65.205669][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   65.214766][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   65.223484][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   65.231630][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   65.241227][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   65.249751][    T5] bridge0: port 1(bridge_slave_0) entered blocking state
+[   65.256852][    T5] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   65.267812][ T2529] 8021q: adding VLAN 0 to HW filter on device team0
+[   65.292977][ T2530] IPv6: ADDRCONF(NETDEV_CHANGE): hsr0: link becomes ready
+[   65.328384][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   65.338249][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   65.349344][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   65.358734][ T2587] bridge0: port 2(bridge_slave_1) entered blocking state
+[   65.365860][ T2587] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   65.393006][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   65.401767][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   65.411646][ T2622] bridge0: port 1(bridge_slave_0) entered blocking state
+[   65.418743][ T2622] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   65.426885][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   65.437240][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   65.445771][ T2622] bridge0: port 2(bridge_slave_1) entered blocking state
+[   65.452854][ T2622] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   65.460800][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   65.470958][ T2614] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   65.528954][ T2532] netdevsim netdevsim6 netdevsim0: renamed from eth0
+[   65.596653][ T2532] netdevsim netdevsim6 netdevsim1: renamed from eth1
+[   65.665105][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   65.674439][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   65.685892][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   65.695237][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   65.704353][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   65.714050][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   65.722390][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   65.773003][ T2532] netdevsim netdevsim6 netdevsim2: renamed from eth2
+[   65.799403][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   65.807233][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   65.816358][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   65.825360][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   65.833108][ T2614] Bluetooth: hci0: command 0x0419 tx timeout
+[   65.835454][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   65.839285][ T2614] Bluetooth: hci2: command 0x0419 tx timeout
+[   65.848282][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   65.862155][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   65.865900][ T2614] Bluetooth: hci1: command 0x0419 tx timeout
+[   65.888285][ T2614] Bluetooth: hci4: command 0x0419 tx timeout
+[   65.914126][ T2623] Bluetooth: hci3: command 0x0419 tx timeout
+[   65.926386][ T2550] IPv6: ADDRCONF(NETDEV_CHANGE): hsr0: link becomes ready
+[   65.937937][ T2619] Bluetooth: hci5: command 0x0419 tx timeout
+[   65.946338][ T2532] netdevsim netdevsim6 netdevsim3: renamed from eth3
+[   65.949757][   T25] kauditd_printk_skb: 24 callbacks suppressed
+[   65.949772][   T25] audit: type=1400 audit(1713287286.946:120): avc:  denied  { remove_name } for  pid=2099 comm="syslogd" name="messages" dev="tmpfs" ino=2 scontext=system_u:system_r:syslogd_t tcontext=system_u:object_r:tmpfs_t tclass=dir permissive=1
+[   65.963567][ T2619] Bluetooth: hci6: command 0x0419 tx timeout
+[   65.983464][   T25] audit: type=1400 audit(1713287286.946:121): avc:  denied  { rename } for  pid=2099 comm="syslogd" name="messages" dev="tmpfs" ino=2 scontext=system_u:system_r:syslogd_t tcontext=system_u:object_r:tmpfs_t tclass=file permissive=1
+[   66.014244][   T25] audit: type=1400 audit(1713287286.946:122): avc:  denied  { create } for  pid=2099 comm="syslogd" name="messages" scontext=system_u:system_r:syslogd_t tcontext=system_u:object_r:tmpfs_t tclass=file permissive=1
+[   66.055763][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   66.065792][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   66.075583][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   66.084683][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   66.093289][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   66.101479][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   66.109516][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   66.153637][   T11] Bluetooth: hci7: command 0x0419 tx timeout
+[   66.172062][ T2530] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   66.187716][ T2562] 8021q: adding VLAN 0 to HW filter on device bond0
+[   66.204258][   T19] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   66.212556][   T19] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   66.223396][ T2529] IPv6: ADDRCONF(NETDEV_CHANGE): hsr0: link becomes ready
+[   66.256584][ T2551] 8021q: adding VLAN 0 to HW filter on device bond0
+[   66.302282][ T2562] 8021q: adding VLAN 0 to HW filter on device team0
+[   66.314604][ T2545] netdevsim netdevsim5 netdevsim0: renamed from eth0
+[   66.376756][ T2626] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   66.389874][ T2626] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   66.411394][ T2626] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   66.420753][ T2626] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   66.432832][ T2545] netdevsim netdevsim5 netdevsim1: renamed from eth1
+[   66.486180][ T2545] netdevsim netdevsim5 netdevsim2: renamed from eth2
+[   66.580684][ T2551] 8021q: adding VLAN 0 to HW filter on device team0
+[   66.614814][ T2545] netdevsim netdevsim5 netdevsim3: renamed from eth3
+[   66.676604][ T2528] 8021q: adding VLAN 0 to HW filter on device bond0
+[   66.696217][ T2618] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   66.708783][ T2618] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   66.720666][ T2618] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   66.733566][ T2618] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   66.741861][ T2618] bridge0: port 1(bridge_slave_0) entered blocking state
+[   66.748928][ T2618] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   66.814985][ T2530] device veth0_vlan entered promiscuous mode
+[   66.825592][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   66.834234][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   66.843440][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   66.851744][ T2619] bridge0: port 2(bridge_slave_1) entered blocking state
+[   66.858864][ T2619] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   66.866773][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   66.876124][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   66.884996][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   66.893528][ T2619] bridge0: port 1(bridge_slave_0) entered blocking state
+[   66.900569][ T2619] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   66.908394][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   66.917016][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   66.926668][ T2619] bridge0: port 2(bridge_slave_1) entered blocking state
+[   66.933773][ T2619] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   66.941364][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   66.950153][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   66.958221][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   66.965895][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   66.974400][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   66.985740][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   66.993867][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   67.001526][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   67.009451][ T2619] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   67.023115][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   67.064426][ T2550] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   67.083061][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   67.091525][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   67.099774][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   67.109234][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   67.122829][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   67.145950][ T2530] device veth1_vlan entered promiscuous mode
+[   67.172168][ T2528] 8021q: adding VLAN 0 to HW filter on device team0
+[   67.204686][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan0: link becomes ready
+[   67.213337][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   67.220760][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   67.228894][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   67.238686][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   67.247559][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   67.256665][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   67.265759][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   67.274902][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   67.284725][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   67.338230][ T2529] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   67.353359][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan1: link becomes ready
+[   67.361334][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   67.374014][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   67.382335][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   67.391568][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   67.400201][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   67.409057][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   67.417897][ T2623] bridge0: port 1(bridge_slave_0) entered blocking state
+[   67.424995][ T2623] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   67.432939][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   67.441722][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   67.450757][ T2623] bridge0: port 2(bridge_slave_1) entered blocking state
+[   67.457868][ T2623] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   67.465756][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   67.474567][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   67.491666][ T2562] hsr0: Slave B (hsr_slave_1) is not up; please bring it up to get a fully working HSR network
+[   67.505820][ T2562] IPv6: ADDRCONF(NETDEV_CHANGE): hsr0: link becomes ready
+[   67.563024][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   67.571115][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   67.580423][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   67.589781][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   67.609092][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   67.670032][ T2532] 8021q: adding VLAN 0 to HW filter on device bond0
+[   67.711653][ T2550] device veth0_vlan entered promiscuous mode
+[   67.743271][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   67.754572][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   67.765824][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   67.774368][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   67.783821][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   67.801364][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   67.856390][ T2530] device veth0_macvtap entered promiscuous mode
+[   67.873709][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   67.881606][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   67.890050][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   67.899130][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   67.910528][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   67.921705][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   67.930963][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   67.939895][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   67.948303][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   67.977034][ T2532] 8021q: adding VLAN 0 to HW filter on device team0
+[   67.989155][ T2550] device veth1_vlan entered promiscuous mode
+[   67.999649][ T2530] device veth1_macvtap entered promiscuous mode
+[   68.014545][ T2545] 8021q: adding VLAN 0 to HW filter on device bond0
+[   68.021536][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan0: link becomes ready
+[   68.031164][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+[   68.039679][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   68.048286][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   68.057228][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   68.066223][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   68.074697][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   68.091076][ T2529] device veth0_vlan entered promiscuous mode
+[   68.114616][ T2562] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   68.135441][ T2530] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   68.160409][ T2528] hsr0: Slave A (hsr_slave_0) is not up; please bring it up to get a fully working HSR network
+[   68.173911][ T2528] hsr0: Slave B (hsr_slave_1) is not up; please bring it up to get a fully working HSR network
+[   68.188580][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan1: link becomes ready
+[   68.205523][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   68.214666][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   68.223597][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   68.231882][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   68.241438][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   68.250778][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   68.259647][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   68.268564][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   68.287954][ T2529] device veth1_vlan entered promiscuous mode
+[   68.299710][ T2530] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   68.316532][ T2545] 8021q: adding VLAN 0 to HW filter on device team0
+[   68.358937][ T2551] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   68.384467][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   68.392454][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   68.416746][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan0: link becomes ready
+[   68.431524][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): hsr0: link becomes ready
+[   68.440121][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   68.449462][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   68.458672][ T2587] bridge0: port 1(bridge_slave_0) entered blocking state
+[   68.465791][ T2587] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   68.473847][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   68.481374][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   68.489043][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   68.497162][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   68.505290][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   68.514220][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   68.522997][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   68.531615][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   68.540285][ T2587] bridge0: port 2(bridge_slave_1) entered blocking state
+[   68.547399][ T2587] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   68.571187][ T2530] netdevsim netdevsim1 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   68.593742][ T2530] netdevsim netdevsim1 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   68.602535][ T2530] netdevsim netdevsim1 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   68.622887][ T2530] netdevsim netdevsim1 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   68.653699][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan1: link becomes ready
+[   68.661961][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   68.683876][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   68.692621][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   68.702305][ T2624] bridge0: port 1(bridge_slave_0) entered blocking state
+[   68.709446][ T2624] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   68.741653][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   68.750705][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   68.759925][ T2624] bridge0: port 2(bridge_slave_1) entered blocking state
+[   68.767041][ T2624] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   68.774967][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   68.855294][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   68.865677][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   68.893718][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   68.902417][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   68.912472][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   68.921857][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   68.933309][ T2550] device veth0_macvtap entered promiscuous mode
+[   69.006472][ T2529] device veth0_macvtap entered promiscuous mode
+[   69.019361][ T2529] device veth1_macvtap entered promiscuous mode
+[   69.043940][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   69.052160][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   69.061761][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   69.071033][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   69.079870][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   69.089017][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   69.097865][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   69.106884][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+[   69.116033][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   69.125089][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   69.134156][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   69.143184][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   69.151524][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   69.160121][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   69.170004][ T2550] device veth1_macvtap entered promiscuous mode
+[   69.199055][ T2545] hsr0: Slave B (hsr_slave_1) is not up; please bring it up to get a fully working HSR network
+[   69.211893][ T2545] IPv6: ADDRCONF(NETDEV_CHANGE): hsr0: link becomes ready
+[   69.247864][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+[   69.255865][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   69.273491][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   69.281743][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   69.289938][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   69.299307][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   69.307873][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   69.317060][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   69.326297][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   69.335157][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   69.343992][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   69.352303][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   69.411273][ T2532] hsr0: Slave B (hsr_slave_1) is not up; please bring it up to get a fully working HSR network
+[   69.424969][ T2532] IPv6: ADDRCONF(NETDEV_CHANGE): hsr0: link becomes ready
+[   69.441564][ T2562] device veth0_vlan entered promiscuous mode
+[   69.462191][ T2562] device veth1_vlan entered promiscuous mode
+[   69.487369][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   69.500395][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   69.509737][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   69.518898][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   69.528061][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan0: link becomes ready
+[   69.536343][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   69.544138][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   69.560894][ T2528] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   69.570692][ T2529] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   69.587262][ T2529] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   69.616684][ T2529] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   69.666909][ T2551] device veth0_vlan entered promiscuous mode
+[   69.706332][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   69.714583][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   69.722428][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   69.732327][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   69.751862][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   69.761346][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   69.771520][ T2529] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   69.783423][ T2529] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   69.795803][ T2529] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   69.815650][ T2550] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   69.827256][ T2550] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   69.838565][ T2550] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   69.849239][ T2550] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   69.861249][ T2550] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   69.896065][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   69.913808][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   69.921851][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   69.931551][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   69.940798][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   69.949644][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   69.964022][ T2529] netdevsim netdevsim2 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   69.972801][ T2529] netdevsim netdevsim2 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   69.981493][ T2529] netdevsim netdevsim2 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   69.990570][ T2529] netdevsim netdevsim2 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.031905][ T2550] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   70.043335][ T2550] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   70.053732][ T2550] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   70.065556][ T2550] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   70.077938][ T2550] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   70.091339][ T2550] netdevsim netdevsim3 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.100652][ T2550] netdevsim netdevsim3 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.109638][ T2550] netdevsim netdevsim3 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.118735][ T2550] netdevsim netdevsim3 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   70.137364][ T2551] device veth1_vlan entered promiscuous mode
+[   70.144495][    T7] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   70.152560][    T7] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   70.194261][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   70.205148][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   70.214536][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   70.222286][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   70.230941][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   70.239467][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   70.247424][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   70.298015][ T2545] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   70.324507][ T2532] 8021q: adding VLAN 0 to HW filter on device batadv0
+[   70.340762][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   70.353613][   T24] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   70.421304][ T2562] device veth0_macvtap entered promiscuous mode
+[   70.452574][   T19] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   70.471874][   T19] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   70.493743][   T19] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   70.512471][ T2551] device veth0_macvtap entered promiscuous mode
+[   70.567777][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   70.567992][  T142] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   70.583649][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   70.585665][  T142] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   70.595179][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   70.607632][ T2623] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   70.638729][ T2562] device veth1_macvtap entered promiscuous mode
+[   70.660960][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+[   70.730508][ T2551] device veth1_macvtap entered promiscuous mode
+[   70.737008][   T25] audit: type=1400 audit(1713287291.726:123): avc:  denied  { mounton } for  pid=2530 comm="syz-executor.1" path="/dev/binderfs" dev="devtmpfs" ino=1819 scontext=root:sysadm_r:sysadm_t tcontext=root:object_r:device_t tclass=dir permissive=1
+[   70.786414][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+[   70.816935][ T1096] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   70.847947][ T2528] device veth0_vlan entered promiscuous mode
+[   70.856048][ T1096] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   70.866270][ T2562] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   70.880911][ T2562] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   70.892937][ T2562] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   70.904483][ T2562] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   70.914451][ T2562] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   70.924936][ T2562] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   70.937083][ T2562] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   70.946421][  T157] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   70.954677][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   70.955440][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   70.976056][  T157] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   70.986893][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   70.995733][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   71.006082][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   71.015228][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   71.062516][ T2545] device veth0_vlan entered promiscuous mode
+[   71.081519][ T2562] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   71.100004][   T25] audit: type=1400 audit(1713287292.096:124): avc:  denied  { read write } for  pid=2530 comm="syz-executor.1" name="loop1" dev="devtmpfs" ino=645 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fixed_disk_device_t tclass=blk_file permissive=1
+[   71.111563][ T2562] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.162808][ T2562] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   71.168000][   T25] audit: type=1400 audit(1713287292.126:125): avc:  denied  { open } for  pid=2530 comm="syz-executor.1" path="/dev/loop1" dev="devtmpfs" ino=645 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fixed_disk_device_t tclass=blk_file permissive=1
+[   71.182733][ T2562] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.210486][   T25] audit: type=1400 audit(1713287292.126:126): avc:  denied  { ioctl } for  pid=2530 comm="syz-executor.1" path="/dev/loop1" dev="devtmpfs" ino=645 ioctlcmd=0x4c01 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fixed_disk_device_t tclass=blk_file permissive=1
+[   71.249841][   T25] audit: type=1400 audit(1713287292.166:127): avc:  denied  { create } for  pid=2687 comm="syz-executor.1" scontext=root:sysadm_r:sysadm_t tcontext=root:sysadm_r:sysadm_t tclass=packet_socket permissive=1
+[   71.253099][ T2562] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   71.284760][   T25] audit: type=1400 audit(1713287292.166:128): avc:  denied  { ioctl } for  pid=2687 comm="syz-executor.1" path="socket:[29630]" dev="sockfs" ino=29630 ioctlcmd=0x8933 scontext=root:sysadm_r:sysadm_t tcontext=root:sysadm_r:sysadm_t tclass=packet_socket permissive=1
+2024/04/16 17:08:12 executed programs: 8
+[   71.286682][ T2562] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.327929][ T2562] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   71.340252][   T25] audit: type=1400 audit(1713287292.196:129): avc:  denied  { bind } for  pid=2687 comm="syz-executor.1" scontext=root:sysadm_r:sysadm_t tcontext=root:sysadm_r:sysadm_t tclass=packet_socket permissive=1
+[   71.365787][ T2551] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.382733][   T25] audit: type=1400 audit(1713287292.266:130): avc:  denied  { write } for  pid=2687 comm="syz-executor.1" scontext=root:sysadm_r:sysadm_t tcontext=root:sysadm_r:sysadm_t tclass=packet_socket permissive=1
+[   71.417281][ T2551] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.427631][ T2551] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.439475][ T2551] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.450527][ T2551] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.461225][ T2551] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.471759][ T2551] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   71.482588][ T2551] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.495650][ T2551] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   71.507662][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   71.516676][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   71.530081][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   71.563599][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   71.574470][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   71.574474][ T1096] ------------[ cut here ]------------
+[   71.594679][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   71.613587][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   71.633764][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   71.640720][ T1096] WARNING: CPU: 1 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   71.653950][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   71.669305][ T1096] Modules linked in:
+[   71.676672][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   71.680702][ T1096] CPU: 1 PID: 1096 Comm: kworker/u4:4 Not tainted 5.15.0-rc1-syzkaller #0
+[   71.698125][ T2528] device veth1_vlan entered promiscuous mode
+[   71.731640][ T2545] device veth1_vlan entered promiscuous mode
+[   71.735234][ T1096] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   71.764414][ T2562] netdevsim netdevsim7 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   71.775288][ T2562] netdevsim netdevsim7 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   71.792790][ T1096] Workqueue: phy4 ieee80211_iface_work
+[   71.798299][ T1096] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   71.802713][ T2562] netdevsim netdevsim7 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   71.826902][ T1096] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   71.832716][ T2562] netdevsim netdevsim7 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   71.866796][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan0: link becomes ready
+[   71.875959][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   71.884497][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   71.892401][ T2624] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan0: link becomes ready
+[   71.903290][ T1096] RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+[   71.909394][ T1096] RAX: 0000000000000000 RBX: ffff888178a90c80 RCX: 0000000000000000
+[   71.926157][ T2551] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   71.942919][ T2551] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   71.950270][ T1096] RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   71.961039][ T1096] RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+[   71.964922][ T2551] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   71.969365][ T1096] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   71.987626][ T1096] R13: ffff888177990048 R14: ffff888177990000 R15: 0000000000000001
+[   71.997124][ T1096] FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+[   71.998216][ T2551] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   72.006958][ T1096] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   72.023030][ T1096] CR2: 0000000020000040 CR3: 000000010a801006 CR4: 00000000003706f0
+[   72.031368][ T1096] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   72.034142][ T2551] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   72.043627][ T1096] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   72.057982][ T1096] Call Trace:
+[   72.061349][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   72.062801][ T2551] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   72.067142][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   72.093153][ T1096]  ? rate_control_rate_init+0x2fc/0x740
+[   72.095419][ T2551] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   72.098812][ T1096]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   72.114997][ T1096]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   72.121162][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   72.121858][ T2551] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   72.127218][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   72.147503][ T1096]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   72.151886][ T2551] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   72.154357][ T1096]  ieee80211_ibss_work+0x2c7/0xf70
+[   72.154405][ T1096]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   72.154446][ T1096]  ? mark_held_locks+0x9f/0xe0
+[   72.154493][ T1096]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   72.154522][ T1096]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   72.154566][ T1096]  ? lockdep_hardirqs_on+0x54/0x100
+[   72.154596][ T1096]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   72.154636][ T1096]  ieee80211_iface_work+0xb7c/0xd20
+[   72.154679][ T1096]  process_one_work+0xa11/0x16b0
+[   72.154734][ T1096]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   72.154776][ T1096]  ? rwlock_bug.part.0+0x90/0x90
+[   72.154818][ T1096]  worker_thread+0x67d/0x1220
+[   72.154873][ T1096]  ? process_one_work+0x16b0/0x16b0
+[   72.154907][ T1096]  kthread+0x3d0/0x4c0
+[   72.154934][ T1096]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   72.154968][ T1096]  ? set_kthread_struct+0x130/0x130
+[   72.155001][ T1096]  ret_from_fork+0x1f/0x30
+[   72.155076][ T1096] irq event stamp: 127647
+[   72.155092][ T1096] hardirqs last  enabled at (127653): [<ffffffff81635145>] vprintk_emit+0x415/0x520
+[   72.155143][ T1096] hardirqs last disabled at (127658): [<ffffffff81635191>] vprintk_emit+0x461/0x520
+[   72.155175][ T1096] softirqs last  enabled at (127542): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   72.155210][ T1096] softirqs last disabled at (127427): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   72.155249][ T1096] ---[ end trace 0715efc00e8b85cc ]---
+[   72.157057][ T1096] ------------[ cut here ]------------
+[   72.157070][ T1096] WARNING: CPU: 0 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   72.157115][ T1096] Modules linked in:
+[   72.157134][ T1096] CPU: 0 PID: 1096 Comm: kworker/u4:4 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   72.157162][ T1096] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   72.157179][ T1096] Workqueue: phy4 ieee80211_iface_work
+[   72.157211][ T1096] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   72.157246][ T1096] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   72.157270][ T1096] RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+[   72.157294][ T1096] RAX: 0000000000000000 RBX: ffff888178a90c80 RCX: 0000000000000000
+[   72.157312][ T1096] RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   72.157331][ T1096] RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+[   72.157350][ T1096] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   72.157368][ T1096] R13: ffff888179258048 R14: ffff888179258000 R15: 0000000000000001
+[   72.157388][ T1096] FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+[   72.157412][ T1096] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   72.157432][ T1096] CR2: 00007f30eb097d58 CR3: 0000000168362003 CR4: 00000000003706f0
+[   72.157458][ T1096] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   72.157474][ T1096] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   72.165977][ T1277] ieee802154 phy0 wpan0: encryption failed: -22
+[   72.170985][ T1096] Call Trace:
+[   72.185771][ T1277] ieee802154 phy1 wpan1: encryption failed: -22
+[   72.241286][    T7] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   72.246749][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   72.302749][    T7] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   72.322045][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   72.513848][ T1096]  ? rate_control_rate_init+0x2fc/0x740
+[   72.519499][ T1096]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   72.525290][ T1096]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   72.531393][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   72.537327][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   72.543275][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   72.544507][ T1096]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   72.552116][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   72.557315][ T1096]  ieee80211_ibss_work+0x2c7/0xf70
+[   72.581824][ T1096]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   72.593318][ T1096]  ? mark_held_locks+0x9f/0xe0
+[   72.598128][ T1096]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   72.605596][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   72.608949][ T1096]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   72.622628][ T1096]  ? lockdep_hardirqs_on+0x54/0x100
+[   72.629552][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   72.642765][ T1096]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   72.648659][ T1096]  ieee80211_iface_work+0xb7c/0xd20
+[   72.654061][ T1096]  process_one_work+0xa11/0x16b0
+[   72.659047][ T1096]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   72.673707][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   72.677518][ T1096]  ? rwlock_bug.part.0+0x90/0x90
+[   72.709002][ T2551] netdevsim netdevsim4 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   72.725392][ T1096]  worker_thread+0x67d/0x1220
+[   72.733108][ T2551] netdevsim netdevsim4 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   72.735766][ T1096]  ? process_one_work+0x16b0/0x16b0
+[   72.741816][ T2551] netdevsim netdevsim4 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   72.759419][ T2551] netdevsim netdevsim4 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   72.768475][ T1096]  kthread+0x3d0/0x4c0
+[   72.780272][ T2532] device veth0_vlan entered promiscuous mode
+[   72.801839][ T1096]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   72.807940][ T1096]  ? set_kthread_struct+0x130/0x130
+[   72.813754][ T1096]  ret_from_fork+0x1f/0x30
+[   72.818225][ T1096] irq event stamp: 129215
+[   72.822554][ T1096] hardirqs last  enabled at (129223): [<ffffffff81631518>] __up_console_sem+0xe8/0x170
+[   72.837360][ T1096] hardirqs last disabled at (129306): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+[   72.863343][  T142] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   72.865120][ T1096] softirqs last  enabled at (129484): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   72.871381][  T142] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   72.893000][ T1096] softirqs last disabled at (129499): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   72.909096][ T2528] device veth0_macvtap entered promiscuous mode
+[   72.913978][ T1096] ---[ end trace 0715efc00e8b85cd ]---
+[   72.921872][ T1096] ------------[ cut here ]------------
+[   72.930246][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   72.943686][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   72.962737][ T1096] WARNING: CPU: 1 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   72.977302][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   72.985408][ T1096] Modules linked in:
+[   72.989315][ T1096] CPU: 1 PID: 1096 Comm: kworker/u4:4 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   73.003183][ T1096] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   73.011309][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   73.013741][ T1096] Workqueue: phy4 ieee80211_iface_work
+[   73.022623][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   73.026842][ T1096] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   73.026884][ T1096] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   73.026909][ T1096] RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+[   73.026933][ T1096] RAX: 0000000000000000 RBX: ffff888178a90c80 RCX: 0000000000000000
+[   73.026951][ T1096] RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   73.053675][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   73.069759][ T1096] RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+[   73.093558][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   73.098303][ T1096] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   73.124065][ T1096] R13: ffff8881790e0048 R14: ffff8881790e0000 R15: 0000000000000001
+[   73.132059][ T1096] FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+[   73.132634][ T2532] device veth1_vlan entered promiscuous mode
+[   73.149876][ T1096] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   73.180623][ T1096] CR2: 00007f30eb097d58 CR3: 000000010a801001 CR4: 00000000003706f0
+[   73.186501][ T2545] device veth0_macvtap entered promiscuous mode
+[   73.188935][ T1096] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   73.208681][ T1096] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   73.216934][ T1096] Call Trace:
+[   73.220323][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   73.226580][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   73.236564][  T158] ------------[ cut here ]------------
+[   73.240301][ T2528] device veth1_macvtap entered promiscuous mode
+[   73.242248][  T158] WARNING: CPU: 1 PID: 158 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   73.260642][ T1096]  ? rate_control_rate_init+0x2fc/0x740
+[   73.271064][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   73.303678][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   73.311806][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   73.319517][ T1096]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   73.336001][ T1096]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   73.342116][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   73.353250][  T158] Modules linked in:
+[   73.362849][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   73.363180][  T158] CPU: 0 PID: 158 Comm: kworker/u4:3 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   73.382927][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   73.388346][ T1096]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   73.410692][ T2545] device veth1_macvtap entered promiscuous mode
+[   73.416283][ T1096]  ieee80211_ibss_work+0x2c7/0xf70
+[   73.422074][ T1096]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   73.442960][ T1096]  ? mark_held_locks+0x9f/0xe0
+[   73.453084][ T1096]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   73.461160][ T1096]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   73.492296][ T2528] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   73.504378][ T1096]  ? lockdep_hardirqs_on+0x54/0x100
+[   73.510054][ T1096]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   73.516533][  T158] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   73.542834][ T1096]  ieee80211_iface_work+0xb7c/0xd20
+[   73.548102][ T1096]  process_one_work+0xa11/0x16b0
+[   73.554964][  T158] Workqueue: phy7 ieee80211_iface_work
+[   73.560467][  T158] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   73.566933][ T2528] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.572764][ T1096]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   73.587348][ T2528] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   73.594212][  T158] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   73.612002][ T2528] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.618040][ T1096]  ? rwlock_bug.part.0+0x90/0x90
+[   73.657229][ T2528] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   73.662741][ T1096]  worker_thread+0x67d/0x1220
+[   73.676447][ T2528] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.688234][ T2528] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   73.688759][  T158] RSP: 0018:ffffc90000d579e8 EFLAGS: 00010293
+[   73.699495][ T2528] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.702776][ T1096]  ? process_one_work+0x16b0/0x16b0
+[   73.706162][ T2528] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   73.722718][  T158] 
+[   73.731901][ T2528] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   73.745304][ T1096]  kthread+0x3d0/0x4c0
+[   73.749425][ T1096]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   73.749459][ T2528] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   73.755851][  T158] RAX: 0000000000000000 RBX: ffff88810eb88c80 RCX: 0000000000000000
+[   73.797412][ T1096]  ? set_kthread_struct+0x130/0x130
+[   73.799377][  T158] RDX: ffff888105e8c4c0 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   73.804017][ T1096]  ret_from_fork+0x1f/0x30
+[   73.812803][  T158] RBP: ffffc90000d57aa0 R08: 0000000000000000 R09: 0000000000000001
+[   73.816820][ T1096] irq event stamp: 132139
+[   73.829320][ T2614] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   73.837390][  T158] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   73.837412][  T158] R13: ffff888171730048 R14: ffff888171730000 R15: 0000000000000001
+[   73.837431][  T158] FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+[   73.837453][  T158] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   73.837470][  T158] CR2: 00007ffe0979bc98 CR3: 000000000a88e001 CR4: 00000000003706f0
+[   73.837493][  T158] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   73.837519][  T158] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   73.837536][  T158] Call Trace:
+[   73.837552][  T158]  ? check_preemption_disabled+0x34/0xd0
+[   73.837589][  T158]  ? __local_bh_enable_ip+0x11f/0x210
+[   73.837620][  T158]  ? rate_control_rate_init+0x2fc/0x740
+[   73.837668][  T158]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   73.837722][  T158]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   73.837754][  T158]  ? check_preemption_disabled+0x34/0xd0
+[   73.861652][ T1096] hardirqs last  enabled at (132239): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+[   73.919392][  T158]  ? __local_bh_enable_ip+0x11f/0x210
+[   73.933776][ T2614] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   73.968515][ T2614] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   73.973105][  T158]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   73.977874][ T2614] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   73.982397][  T158]  ieee80211_ibss_work+0x2c7/0xf70
+[   74.016384][ T2532] device veth0_macvtap entered promiscuous mode
+[   74.023646][  T158]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   74.030188][ T2532] device veth1_macvtap entered promiscuous mode
+[   74.030241][  T158]  ? mark_held_locks+0x9f/0xe0
+[   74.037132][ T1096] hardirqs last disabled at (132396): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+[   74.050930][  T158]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   74.063941][ T1096] softirqs last  enabled at (132424): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   74.072773][  T158]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   74.075526][ T1096] softirqs last disabled at (132437): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   74.089305][ T1096] ---[ end trace 0715efc00e8b85ce ]---
+[   74.092844][  T158]  ? lockdep_hardirqs_on+0x54/0x100
+[   74.097941][ T1096] ------------[ cut here ]------------
+[   74.123045][  T157] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   74.132369][  T158]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   74.145625][ T2528] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   74.155657][ T1096] WARNING: CPU: 1 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   74.168249][  T157] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   74.178585][  T158]  ieee80211_iface_work+0xb7c/0xd20
+[   74.183526][ T1096] Modules linked in:
+[   74.186513][  T158]  process_one_work+0xa11/0x16b0
+[   74.188333][ T2528] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.193573][  T158]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   74.204808][ T1096] CPU: 1 PID: 1096 Comm: kworker/u4:4 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   74.208251][  T158]  ? rwlock_bug.part.0+0x90/0x90
+[   74.227181][  T158]  worker_thread+0x67d/0x1220
+[   74.231529][ T1096] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   74.231917][  T158]  ? process_one_work+0x16b0/0x16b0
+[   74.248004][  T158]  kthread+0x3d0/0x4c0
+[   74.248116][ T2528] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   74.252102][  T158]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   74.268336][  T158]  ? set_kthread_struct+0x130/0x130
+[   74.273155][ T1096] Workqueue: phy4 ieee80211_iface_work
+[   74.273886][  T158]  ret_from_fork+0x1f/0x30
+[   74.280364][ T2528] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.294401][ T1096] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   74.295552][  T158] irq event stamp: 1337747
+[   74.300409][ T1096] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   74.312709][  T158] hardirqs last  enabled at (1337779): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+[   74.327020][ T1096] RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+[   74.341848][ T2528] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   74.343017][ T1096] 
+[   74.348264][ T2528] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.369062][ T1096] RAX: 0000000000000000 RBX: ffff888178a90c80 RCX: 0000000000000000
+[   74.370972][  T158] hardirqs last disabled at (1337816): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+[   74.388117][ T1096] RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   74.388142][ T1096] RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+[   74.388159][ T1096] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   74.388178][ T1096] R13: ffff888177d00048 R14: ffff888177d00000 R15: 0000000000000001
+[   74.388197][ T1096] FS:  0000000000000000(0000) GS:ffff8881f6100000(0000) knlGS:0000000000000000
+[   74.388221][ T1096] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   74.388247][ T1096] CR2: 00007f8252129038 CR3: 000000010a801006 CR4: 00000000003706e0
+[   74.388278][ T1096] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   74.388296][ T1096] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   74.388315][ T1096] Call Trace:
+[   74.388330][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   74.388367][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   74.388400][ T1096]  ? rate_control_rate_init+0x2fc/0x740
+[   74.388449][ T1096]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   74.388483][ T1096]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   74.388517][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   74.388548][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   74.388577][ T1096]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   74.388614][ T1096]  ieee80211_ibss_work+0x2c7/0xf70
+[   74.388652][ T1096]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   74.401607][ T2528] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   74.419030][ T1096]  ? mark_held_locks+0x9f/0xe0
+[   74.423358][ T2528] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.447048][ T1096]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   74.459039][  T158] softirqs last  enabled at (1338038): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   74.463073][ T1096]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   74.467011][  T158] softirqs last disabled at (1337959): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   74.475637][ T1096]  ? lockdep_hardirqs_on+0x54/0x100
+[   74.478597][  T158] ---[ end trace 0715efc00e8b85cf ]---
+[   74.483857][ T1096]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   74.490150][ T2528] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   74.508483][ T1096]  ieee80211_iface_work+0xb7c/0xd20
+[   74.511935][ T2528] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.516162][ T1096]  process_one_work+0xa11/0x16b0
+[   74.532149][ T2528] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   74.533445][ T1096]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   74.583710][ T2528] netdevsim netdevsim0 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   74.602003][ T1096]  ? rwlock_bug.part.0+0x90/0x90
+[   74.612752][ T2528] netdevsim netdevsim0 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   74.635246][ T1096]  worker_thread+0x67d/0x1220
+[   74.640988][ T2528] netdevsim netdevsim0 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   74.661186][ T1096]  ? process_one_work+0x16b0/0x16b0
+[   74.662784][ T2528] netdevsim netdevsim0 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   74.670491][ T1096]  kthread+0x3d0/0x4c0
+[   74.698712][ T2532] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.698825][ T1096]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   74.719014][ T1096]  ? set_kthread_struct+0x130/0x130
+[   74.723061][ T2532] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.725037][ T1096]  ret_from_fork+0x1f/0x30
+[   74.738999][ T1096] irq event stamp: 134553
+[   74.743396][ T1096] hardirqs last  enabled at (134563): [<ffffffff81631518>] __up_console_sem+0xe8/0x170
+[   74.743606][ T2532] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.763867][ T2532] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.764789][ T1096] hardirqs last disabled at (134598): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+[   74.773733][ T2532] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.773752][ T2532] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.773769][ T2532] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.773786][ T2532] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.773799][ T2532] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.773816][ T2532] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.773829][ T2532] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.773846][ T2532] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.775616][ T2532] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   74.800720][ T1096] softirqs last  enabled at (134644): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   74.814293][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.830448][ T1096] softirqs last disabled at (134695): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   74.837223][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.857709][ T1096] ---[ end trace 0715efc00e8b85d0 ]---
+[   74.866319][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.866339][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.866355][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.866370][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.866387][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.866404][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.866417][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.866434][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.866448][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.889301][ T1096] ------------[ cut here ]------------
+[   74.896397][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.915836][ T1096] WARNING: CPU: 1 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   74.923696][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+[   74.942835][ T1096] Modules linked in:
+[   74.950419][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   74.979571][ T1096] 
+[   74.984953][ T2545] batman_adv: batadv0: Interface activated: batadv_slave_0
+[   74.990948][ T1096] CPU: 1 PID: 1096 Comm: kworker/u4:4 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   75.031315][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   75.047379][ T1096] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   75.055975][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   75.072943][ T1096] Workqueue: phy4 ieee80211_iface_work
+[   75.084055][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   75.103265][ T1096] 
+[   75.120342][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   75.121092][ T1096] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   75.124495][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   75.132761][ T1096] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   75.138188][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   75.158387][ T1096] RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+[   75.172782][   T11] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   75.177025][ T1096] 
+[   75.192482][ T2532] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.192571][ T1096] RAX: 0000000000000000 RBX: ffff888178a90c80 RCX: 0000000000000000
+[   75.211757][ T1096] RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   75.225400][ T1096] RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+[   75.233737][ T2532] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.233743][ T1096] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   75.251762][ T1096] R13: ffff88817ddf4048 R14: ffff88817ddf4000 R15: 0000000000000001
+[   75.252706][ T2532] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.259833][ T1096] FS:  0000000000000000(0000) GS:ffff8881f6100000(0000) knlGS:0000000000000000
+[   75.282239][ T1096] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   75.287094][ T2532] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.288933][ T1096] CR2: 0000555e8d95ea30 CR3: 000000010d0e5003 CR4: 00000000003706e0
+[   75.308027][ T1096] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   75.312306][ T2532] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.316139][ T1096] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   75.316160][ T1096] Call Trace:
+[   75.316175][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   75.316212][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   75.316244][ T1096]  ? rate_control_rate_init+0x2fc/0x740
+[   75.316292][ T1096]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   75.316325][ T1096]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   75.316358][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   75.343278][ T2532] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.345174][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   75.349171][ T2532] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.362780][ T1096]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   75.368926][ T2532] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.388722][ T1096]  ieee80211_ibss_work+0x2c7/0xf70
+[   75.411146][ T2532] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.420149][ T1096]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   75.436758][ T1096]  ? mark_held_locks+0x9f/0xe0
+[   75.441572][ T1096]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   75.447406][ T2532] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.447716][ T1096]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   75.457605][ T2532] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.474157][ T2532] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.474684][ T1096]  ? lockdep_hardirqs_on+0x54/0x100
+[   75.485785][ T2532] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   75.500242][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.503336][ T1096]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   75.514306][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.526894][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.528132][ T1096]  ieee80211_iface_work+0xb7c/0xd20
+[   75.537473][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.537493][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.537511][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.555251][ T1096]  process_one_work+0xa11/0x16b0
+[   75.567322][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.585508][ T1096]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   75.588694][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.605405][ T1096]  ? rwlock_bug.part.0+0x90/0x90
+[   75.606691][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.610778][ T1096]  worker_thread+0x67d/0x1220
+[   75.610841][ T1096]  ? process_one_work+0x16b0/0x16b0
+[   75.610875][ T1096]  kthread+0x3d0/0x4c0
+[   75.610902][ T1096]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   75.610933][ T1096]  ? set_kthread_struct+0x130/0x130
+[   75.610967][ T1096]  ret_from_fork+0x1f/0x30
+[   75.622304][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.638095][ T1096] irq event stamp: 137185
+[   75.640811][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.652053][ T1096] hardirqs last  enabled at (137205): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+[   75.660650][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.677129][ T1096] hardirqs last disabled at (137248): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+[   75.701790][ T2545] batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+[   75.711620][ T1096] softirqs last  enabled at (137278): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   75.717491][ T2545] batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+[   75.738073][ T2545] batman_adv: batadv0: Interface activated: batadv_slave_1
+[   75.740575][ T1096] softirqs last disabled at (137355): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   75.782726][ T1096] ---[ end trace 0715efc00e8b85d1 ]---
+[   75.792488][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   75.805183][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   75.814358][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   75.824110][ T2587] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   75.838137][ T2532] netdevsim netdevsim6 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   75.849866][ T2532] netdevsim netdevsim6 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   75.859070][ T2532] netdevsim netdevsim6 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   75.868280][ T2532] netdevsim netdevsim6 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   75.887218][ T2545] netdevsim netdevsim5 netdevsim0: set [1, 0] type 2 family 0 port 6081 - 0
+[   75.897445][ T2545] netdevsim netdevsim5 netdevsim1: set [1, 0] type 2 family 0 port 6081 - 0
+[   75.906824][ T2545] netdevsim netdevsim5 netdevsim2: set [1, 0] type 2 family 0 port 6081 - 0
+[   75.915908][ T2545] netdevsim netdevsim5 netdevsim3: set [1, 0] type 2 family 0 port 6081 - 0
+[   75.952989][    T7] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   75.961011][    T7] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   76.035218][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   76.105472][ T1096] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   76.122977][    T7] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   76.130988][    T7] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   76.134758][ T1096] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   76.170180][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   76.185797][ T2637] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   76.210605][ T1096] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   76.263419][ T1096] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   76.321481][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   76.352101][ T1096] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   76.360490][ T1096] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   76.370076][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   76.402129][    T7] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   76.435484][    T7] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   76.481605][ T2622] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   76.503167][ T1390] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   76.511326][ T1390] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+2024/04/16 17:08:17 executed programs: 19
+[   76.539729][  T157] ------------[ cut here ]------------
+[   76.555822][  T157] WARNING: CPU: 1 PID: 157 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   76.573954][ T2664] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   76.597244][  T157] Modules linked in:
+[   76.601179][  T157] CPU: 1 PID: 157 Comm: kworker/u4:2 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   76.622923][  T158] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   76.630961][  T158] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   76.654948][ T1096] ------------[ cut here ]------------
+[   76.682528][ T1096] WARNING: CPU: 0 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   76.685101][ T2664] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   76.700048][  T157] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   76.723571][  T158] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   76.731665][  T158] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   76.739399][ T1096] Modules linked in:
+[   76.739461][ T1096] CPU: 0 PID: 1096 Comm: kworker/u4:4 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   76.739491][ T1096] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   76.739510][ T1096] Workqueue: phy11 ieee80211_iface_work
+[   76.739547][ T1096] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   76.739583][ T1096] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   76.739617][ T1096] RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+[   76.739642][ T1096] RAX: 0000000000000000 RBX: ffff8881765e0c80 RCX: 0000000000000000
+[   76.739661][ T1096] RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   76.739680][ T1096] RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+[   76.739699][ T1096] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   76.739718][ T1096] R13: ffff888172818048 R14: ffff888172818000 R15: 0000000000000001
+[   76.739738][ T1096] FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+[   76.739762][ T1096] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   76.739782][ T1096] CR2: 00007faf45ac7ba8 CR3: 000000010a801003 CR4: 00000000003706f0
+[   76.739805][ T1096] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   76.739822][ T1096] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   76.782439][  T157] Workqueue: phy12 ieee80211_iface_work
+[   76.800096][    T5] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   76.910878][ T1096] Call Trace:
+[   76.914506][  T157] 
+[   76.916846][  T157] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   76.917048][ T1096]  ? lockdep_hardirqs_off+0x9a/0xd0
+[   76.940128][ T1096]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   76.947187][ T1096]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   76.954693][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   76.960362][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   76.965867][ T1096]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   76.969413][  T157] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   76.971176][ T1096]  ieee80211_ibss_work+0x2c7/0xf70
+[   77.011174][ T1096]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   77.012823][  T157] RSP: 0018:ffffc90000d479e8 EFLAGS: 00010293
+[   77.021175][ T1096]  ? mark_held_locks+0x9f/0xe0
+[   77.033361][  T157] RAX: 0000000000000000 RBX: ffff888111a28c80 RCX: 0000000000000000
+[   77.033910][ T1096]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   77.041352][  T157] RDX: ffff888101d62480 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   77.062816][ T1096]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   77.068665][ T1096]  ? lockdep_hardirqs_on+0x54/0x100
+[   77.086781][ T1096]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   77.092637][ T1096]  ieee80211_iface_work+0xb7c/0xd20
+[   77.111507][  T157] RBP: ffffc90000d47aa0 R08: 0000000000000000 R09: 0000000000000001
+[   77.119813][ T1096]  process_one_work+0xa11/0x16b0
+[   77.119866][ T1096]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   77.119914][ T1096]  ? rwlock_bug.part.0+0x90/0x90
+[   77.119958][ T1096]  worker_thread+0x67d/0x1220
+[   77.120010][ T1096]  ? process_one_work+0x16b0/0x16b0
+[   77.120044][ T1096]  kthread+0x3d0/0x4c0
+[   77.120078][ T1096]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   77.120108][ T1096]  ? set_kthread_struct+0x130/0x130
+[   77.120141][ T1096]  ret_from_fork+0x1f/0x30
+[   77.142725][  T157] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   77.242827][ T1096] irq event stamp: 228683
+[   77.252501][  T157] R13: ffff88816cfbc048 R14: ffff88816cfbc000 R15: 0000000000000001
+[   77.253216][ T1096] hardirqs last  enabled at (228695): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+[   77.261986][  T157] FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+[   77.301381][  T157] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   77.354021][  T157] CR2: 00007f76764b7440 CR3: 000000010a801005 CR4: 00000000003706f0
+[   77.367436][  T157] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   77.384133][  T157] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   77.392140][  T157] Call Trace:
+[   77.400063][ T1096] hardirqs last disabled at (228720): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+[   77.452720][ T1096] softirqs last  enabled at (228766): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   77.458782][  T157]  ? check_preemption_disabled+0x34/0xd0
+[   77.480050][ T1096] softirqs last disabled at (228779): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   77.483159][  T157]  ? __local_bh_enable_ip+0x11f/0x210
+[   77.505257][ T1096] ---[ end trace 0715efc00e8b85d2 ]---
+[   77.527518][ T1390] ------------[ cut here ]------------
+[   77.528773][  T157]  ? rate_control_rate_init+0x2fc/0x740
+[   77.545671][  T157]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   77.545808][ T1390] WARNING: CPU: 0 PID: 1390 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   77.560958][  T157]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   77.568135][ T1096] ------------[ cut here ]------------
+[   77.570146][  T158] ------------[ cut here ]------------
+[   77.580556][  T158] WARNING: CPU: 1 PID: 158 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   77.596923][ T1096] WARNING: CPU: 0 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   77.619820][  T157]  ? check_preemption_disabled+0x34/0xd0
+[   77.689405][ T1390] Modules linked in:
+[   77.695747][  T158] Modules linked in:
+[   77.698113][ T1096] Modules linked in:
+[   77.705770][  T157]  ? __local_bh_enable_ip+0x11f/0x210
+[   77.706768][ T1096] 
+[   77.713054][  T158] CPU: 1 PID: 158 Comm: kworker/u4:3 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   77.720342][ T1390] CPU: 0 PID: 1390 Comm: kworker/u4:5 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   77.735840][  T157]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   77.739602][    T7] ------------[ cut here ]------------
+[   77.744625][ T2732] ------------[ cut here ]------------
+[   77.759822][ T2697] ------------[ cut here ]------------
+[   77.770076][  T142] ------------[ cut here ]------------
+[   77.776401][    T7] WARNING: CPU: 0 PID: 7 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   77.777368][  T142] WARNING: CPU: 1 PID: 142 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   77.798097][ T2732] WARNING: CPU: 0 PID: 2732 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   77.813343][ T1096] CPU: 0 PID: 1096 Comm: kworker/u4:4 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   77.818913][  T157]  ieee80211_ibss_work+0x2c7/0xf70
+[   77.829316][ T2697] WARNING: CPU: 0 PID: 2697 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   77.859010][    T7] Modules linked in:
+[   77.874364][ T1390] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   77.886609][ T2732] Modules linked in:
+[   77.891424][ T1096] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   77.905333][    T7] CPU: 0 PID: 7 Comm: kworker/u4:0 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   77.918360][  T158] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   77.923354][ T2732] CPU: 0 PID: 2732 Comm: kworker/u4:7 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   77.933167][  T157]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   77.944319][ T2697] Modules linked in:
+[   77.950980][ T2697] CPU: 0 PID: 2697 Comm: kworker/u4:6 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   77.976421][ T1390] Workqueue: phy16 ieee80211_iface_work
+[   77.983333][  T142] Modules linked in:
+[   77.987389][ T1096] Workqueue: phy18 ieee80211_iface_work
+[   77.992140][  T158] Workqueue: phy17 ieee80211_iface_work
+[   78.000536][    T7] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   78.012728][  T142] CPU: 0 PID: 142 Comm: kworker/u4:1 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   78.016200][  T157]  ? mark_held_locks+0x9f/0xe0
+[   78.026794][ T1390] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   78.037947][ T1096] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   78.045357][ T2697] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   78.057344][  T158] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   78.075500][ T2732] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   78.090265][ T1390] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   78.108195][  T158] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   78.112270][ T1096] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   78.132031][  T157]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   78.161900][  T142] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   78.176757][    T7] Workqueue: phy4 ieee80211_iface_work
+[   78.187077][ T2697] Workqueue: phy8 ieee80211_iface_work
+[   78.195044][ T2732] Workqueue: phy11 ieee80211_iface_work
+[   78.201609][    T7] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   78.213302][ T2697] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   78.221781][ T2732] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   78.229675][  T142] Workqueue: phy7 ieee80211_iface_work
+[   78.255718][    T7] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   78.293220][ T2697] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   78.308894][  T158] RSP: 0018:ffffc90000d579e8 EFLAGS: 00010293
+[   78.339159][ T2732] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   78.346855][  T157]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   78.365550][  T142] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   78.379687][ T1390] RSP: 0018:ffffc9000465f9e8 EFLAGS: 00010293
+[   78.402830][  T158] 
+[   78.405506][  T158] RAX: 0000000000000000 RBX: ffff888172c58c80 RCX: 0000000000000000
+[   78.417476][ T1390] RAX: 0000000000000000 RBX: ffff88817ea00c80 RCX: 0000000000000000
+[   78.430483][  T142] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   78.456613][ T1390] RDX: ffff88810e248300 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   78.465963][    T7] RSP: 0018:ffffc9000028f9e8 EFLAGS: 00010293
+[   78.473497][ T2697] RSP: 0018:ffffc900024579e8 EFLAGS: 00010293
+[   78.482404][ T1096] RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+[   78.496085][    T7] RAX: 0000000000000000 RBX: ffff888178a90c80 RCX: 0000000000000000
+[   78.508768][ T1390] RBP: ffffc9000465faa0 R08: 0000000000000000 R09: 0000000000000001
+[   78.510018][  T158] RDX: ffff888105e8c4c0 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   78.517276][ T1096] RAX: 0000000000000000 RBX: ffff888171790c80 RCX: 0000000000000000
+[   78.535008][ T2697] RAX: 0000000000000000 RBX: ffff888178da0c80 RCX: 0000000000000000
+[   78.543450][ T2732] RSP: 0018:ffffc900027379e8 EFLAGS: 00010293
+[   78.558003][  T157]  ? lockdep_hardirqs_on+0x54/0x100
+[   78.559153][    T7] RDX: ffff8881009fc1c0 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   78.572060][ T1390] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   78.586738][  T157]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   78.587644][ T2732] RAX: 0000000000000000 RBX: ffff8881765e0c80 RCX: 0000000000000000
+[   78.601515][  T142] RSP: 0018:ffffc900005c79e8 EFLAGS: 00010293
+[   78.616657][ T2697] RDX: ffff88817e1ce4c0 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   78.630212][    T7] RBP: ffffc9000028faa0 R08: 0000000000000000 R09: 0000000000000001
+[   78.654596][  T142] RAX: 0000000000000000 RBX: ffff88810eb88c80 RCX: 0000000000000000
+[   78.665894][ T1096] RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   78.674349][ T1390] R13: ffff888172f30048 R14: ffff888172f30000 R15: 0000000000000001
+[   78.683023][  T158] RBP: ffffc90000d57aa0 R08: 0000000000000000 R09: 0000000000000001
+[   78.683047][  T158] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   78.683076][  T158] R13: ffff888172f38048 R14: ffff888172f38000 R15: 0000000000000001
+[   78.683095][  T158] FS:  0000000000000000(0000) GS:ffff8881f6100000(0000) knlGS:0000000000000000
+[   78.683119][  T158] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   78.683139][  T158] CR2: 0000001b31820000 CR3: 00000001105d8003 CR4: 00000000003706e0
+[   78.683163][  T158] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   78.683180][  T158] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   78.683199][  T158] Call Trace:
+[   78.683214][  T158]  ? check_preemption_disabled+0x34/0xd0
+[   78.683252][  T158]  ? __local_bh_enable_ip+0x11f/0x210
+[   78.683291][  T158]  ? rate_control_rate_init+0x2fc/0x740
+[   78.683339][  T158]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   78.695834][ T2697] RBP: ffffc90002457aa0 R08: 0000000000000000 R09: 0000000000000001
+[   78.699448][  T157]  ieee80211_iface_work+0xb7c/0xd20
+[   78.709736][    T7] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   78.806404][ T2732] RDX: ffff888107bd4300 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   78.818594][  T142] RDX: ffff888101d5c0c0 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   78.820150][  T158]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   78.830722][ T1096] RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+[   78.841581][ T1390] FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+[   78.852515][ T1096] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   78.859403][  T157]  process_one_work+0xa11/0x16b0
+[   78.862036][ T2697] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   78.880508][ T2732] RBP: ffffc90002737aa0 R08: 0000000000000000 R09: 0000000000000001
+[   78.892589][  T142] RBP: ffffc900005c7aa0 R08: 0000000000000000 R09: 0000000000000001
+[   78.907981][  T157]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   78.913814][ T1390] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   78.921631][ T1096] R13: ffff888172f34048 R14: ffff888172f34000 R15: 0000000000000001
+[   78.925759][  T158]  ? check_preemption_disabled+0x34/0xd0
+[   78.933751][ T2732] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   78.945860][  T142] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   78.946318][  T157]  ? rwlock_bug.part.0+0x90/0x90
+[   78.955767][ T2697] R13: ffff88816e400048 R14: ffff88816e400000 R15: 0000000000000001
+[   78.969556][ T1390] CR2: 0000000020000040 CR3: 00000001089d4003 CR4: 00000000003706f0
+[   78.987599][ T1096] FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+[   79.000375][  T158]  ? __local_bh_enable_ip+0x11f/0x210
+[   79.012563][  T142] R13: ffff88816e404048 R14: ffff88816e404000 R15: 0000000000000001
+[   79.026356][ T2732] R13: ffff88816e4bc048 R14: ffff88816e4bc000 R15: 0000000000000001
+[   79.041087][ T1390] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   79.042460][  T157]  worker_thread+0x67d/0x1220
+[   79.055990][ T2697] FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+[   79.066394][ T1096] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   79.078846][  T142] FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+[   79.089290][ T2732] FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+[   79.104180][ T1390] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   79.113781][  T158]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   79.118027][ T1096] CR2: 00007ffcf4fa8ce8 CR3: 0000000176173003 CR4: 00000000003706f0
+[   79.126654][  T158]  ieee80211_ibss_work+0x2c7/0xf70
+[   79.142291][ T2697] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   79.149826][  T157]  ? process_one_work+0x16b0/0x16b0
+[   79.152781][  T142] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   79.162177][ T1390] Call Trace:
+[   79.167096][ T2732] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   79.176754][  T142] CR2: 00007f6ae3fa8f80 CR3: 0000000176173005 CR4: 00000000003706f0
+[   79.186109][ T2697] CR2: 00007ffaa404c5e5 CR3: 0000000176173004 CR4: 00000000003706f0
+[   79.187557][  T158]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   79.203544][ T1390]  ? check_preemption_disabled+0x34/0xd0
+[   79.213888][ T1096] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   79.213897][  T157]  kthread+0x3d0/0x4c0
+[   79.227652][ T2732] CR2: 00007f6ae40135e6 CR3: 0000000176173005 CR4: 00000000003706f0
+[   79.239363][ T1390]  ? __local_bh_enable_ip+0x11f/0x210
+[   79.250341][  T142] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   79.256954][  T158]  ? mark_held_locks+0x9f/0xe0
+[   79.263114][ T1096] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   79.275960][ T1390]  ? rate_control_rate_init+0x2fc/0x740
+[   79.286847][  T157]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   79.300817][  T158]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   79.300887][ T2697] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   79.314998][ T2732] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   79.324049][  T157]  ? set_kthread_struct+0x130/0x130
+[   79.329981][  T142] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   79.339431][ T1096] Call Trace:
+[   79.344018][ T1390]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   79.350543][  T158]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   79.352008][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   79.372847][ T2732] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   79.381504][  T142] Call Trace:
+[   79.385288][ T1390]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   79.391465][ T1390]  ? check_preemption_disabled+0x34/0xd0
+[   79.397281][ T2732] Call Trace:
+[   79.402563][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   79.402637][  T157]  ret_from_fork+0x1f/0x30
+[   79.408133][ T2697] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   79.420966][  T157] irq event stamp: 1704109
+[   79.443965][  T142]  ? check_preemption_disabled+0x34/0xd0
+[   79.452069][ T2732]  ? check_preemption_disabled+0x34/0xd0
+[   79.472993][ T1096]  ? rate_control_rate_init+0x2fc/0x740
+[   79.482760][ T1096]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   79.483452][  T158]  ? lockdep_hardirqs_on+0x54/0x100
+[   79.488427][ T1096]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   79.488465][ T1096]  ? check_preemption_disabled+0x34/0xd0
+[   79.498877][  T157] hardirqs last  enabled at (1704139): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+[   79.499814][  T142]  ? __local_bh_enable_ip+0x11f/0x210
+[   79.529086][ T2732]  ? __local_bh_enable_ip+0x11f/0x210
+[   79.534679][ T1390]  ? __local_bh_enable_ip+0x11f/0x210
+[   79.539535][  T158]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   79.540078][ T1390]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   79.540120][ T1390]  ieee80211_ibss_work+0x2c7/0xf70
+[   79.555524][  T157] hardirqs last disabled at (1704404): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+[   79.562706][    T7] R13: ffff888172f10048 R14: ffff888172f10000 R15: 0000000000000001
+[   79.576148][ T2697] Call Trace:
+[   79.579543][ T2697]  ? check_preemption_disabled+0x34/0xd0
+[   79.588912][ T2732]  ? rate_control_rate_init+0x2fc/0x740
+[   79.598722][ T1096]  ? __local_bh_enable_ip+0x11f/0x210
+[   79.605208][  T158]  ieee80211_iface_work+0xb7c/0xd20
+[   79.607915][ T2732]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   79.621381][    T7] FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+[   79.631618][ T2697]  ? __local_bh_enable_ip+0x11f/0x210
+[   79.640723][ T1096]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   79.641894][  T157] softirqs last  enabled at (1704428): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   79.647623][ T2697]  ? rate_control_rate_init+0x2fc/0x740
+[   79.658231][  T158]  process_one_work+0xa11/0x16b0
+[   79.661819][  T142]  ? rate_control_rate_init+0x2fc/0x740
+[   79.673328][ T2732]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   79.680109][ T1096]  ieee80211_ibss_work+0x2c7/0xf70
+[   79.686325][    T7] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   79.696711][ T1390]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   79.704927][ T2732]  ? check_preemption_disabled+0x34/0xd0
+[   79.711919][ T1096]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   79.718770][ T2697]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   79.731931][    T7] CR2: 0000000020000040 CR3: 00000001089d4002 CR4: 00000000003706f0
+[   79.732244][  T158]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   79.741422][ T1390]  ? mark_held_locks+0x9f/0xe0
+[   79.757158][  T142]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   79.765951][ T1096]  ? mark_held_locks+0x9f/0xe0
+[   79.772006][ T2732]  ? __local_bh_enable_ip+0x11f/0x210
+[   79.778059][ T2697]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   79.779781][  T157] softirqs last disabled at (1704453): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   79.784493][ T1390]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   79.802481][  T142]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   79.842785][    T7] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   79.850400][  T158]  ? rwlock_bug.part.0+0x90/0x90
+[   79.859537][ T1096]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   79.871657][ T2732]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   79.882726][ T2697]  ? check_preemption_disabled+0x34/0xd0
+[   79.888395][ T2697]  ? __local_bh_enable_ip+0x11f/0x210
+[   79.894071][    T7] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   79.902070][    T7] Call Trace:
+[   79.909806][ T1390]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   79.915826][  T158]  worker_thread+0x67d/0x1220
+[   79.915883][  T158]  ? process_one_work+0x16b0/0x16b0
+[   79.915917][  T158]  kthread+0x3d0/0x4c0
+[   79.915944][  T158]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   79.915975][  T158]  ? set_kthread_struct+0x130/0x130
+[   79.916009][  T158]  ret_from_fork+0x1f/0x30
+[   79.916064][  T158] irq event stamp: 1557327
+[   79.916075][  T158] hardirqs last  enabled at (1557333): [<ffffffff81635145>] vprintk_emit+0x415/0x520
+[   79.916110][  T158] hardirqs last disabled at (1557338): [<ffffffff81635191>] vprintk_emit+0x461/0x520
+[   79.916148][  T158] softirqs last  enabled at (1557286): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   79.916183][  T158] softirqs last disabled at (1557259): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   79.916217][  T158] ---[ end trace 0715efc00e8b85d3 ]---
+[   79.917406][  T158] ------------[ cut here ]------------
+[   79.923038][  T142]  ? check_preemption_disabled+0x34/0xd0
+[   79.928036][  T157] ---[ end trace 0715efc00e8b85d4 ]---
+[   79.931047][ T1096]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   79.976969][  T157] ------------[ cut here ]------------
+[   79.982741][ T2732]  ieee80211_ibss_work+0x2c7/0xf70
+[   79.991128][  T158] WARNING: CPU: 1 PID: 158 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   80.001083][  T142]  ? __local_bh_enable_ip+0x11f/0x210
+[   80.046418][ T1390]  ? lockdep_hardirqs_on+0x54/0x100
+[   80.051852][ T2697]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   80.061065][    T7]  ? check_preemption_disabled+0x34/0xd0
+[   80.069420][ T1390]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   80.078797][ T2732]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   80.096227][ T2697]  ieee80211_ibss_work+0x2c7/0xf70
+[   80.102862][  T157] WARNING: CPU: 1 PID: 157 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   80.107635][ T2697]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   80.118878][  T158] Modules linked in:
+[   80.122524][    T7]  ? __local_bh_enable_ip+0x11f/0x210
+[   80.135167][ T1390]  ieee80211_iface_work+0xb7c/0xd20
+[   80.146301][    T7]  ? rate_control_rate_init+0x2fc/0x740
+[   80.152020][ T2732]  ? mark_held_locks+0x9f/0xe0
+[   80.163708][ T1390]  process_one_work+0xa11/0x16b0
+[   80.165422][  T158] CPU: 1 PID: 158 Comm: kworker/u4:3 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   80.168824][    T7]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   80.190378][ T2732]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   80.194487][  T157] Modules linked in:
+[   80.206161][ T1390]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   80.207027][  T157] 
+[   80.212472][ T2697]  ? mark_held_locks+0x9f/0xe0
+[   80.225833][ T2732]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   80.246097][ T1390]  ? rwlock_bug.part.0+0x90/0x90
+[   80.251235][ T1390]  worker_thread+0x67d/0x1220
+[   80.256516][ T2732]  ? lockdep_hardirqs_on+0x54/0x100
+[   80.264261][    T7]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   80.271678][ T2697]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   80.281415][ T2732]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   80.288817][ T1390]  ? process_one_work+0x16b0/0x16b0
+[   80.299185][    T7]  ? check_preemption_disabled+0x34/0xd0
+[   80.309012][  T142]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   80.316078][ T2697]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   80.318591][  T157] CPU: 1 PID: 157 Comm: kworker/u4:2 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   80.326627][ T1096]  ? lockdep_hardirqs_on+0x54/0x100
+[   80.333553][  T158] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   80.340223][ T1390]  kthread+0x3d0/0x4c0
+[   80.352854][ T2732]  ieee80211_iface_work+0xb7c/0xd20
+[   80.362373][ T2732]  process_one_work+0xa11/0x16b0
+[   80.382898][    T7]  ? __local_bh_enable_ip+0x11f/0x210
+[   80.388339][    T7]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   80.401006][  T142]  ieee80211_ibss_work+0x2c7/0xf70
+[   80.406555][ T2697]  ? lockdep_hardirqs_on+0x54/0x100
+[   80.411790][ T2697]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   80.421652][ T1096]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   80.431949][ T1390]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   80.432485][  T157] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   80.437725][  T142]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   80.455308][ T2732]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   80.457776][  T158] Workqueue: phy17 ieee80211_iface_work
+[   80.490540][ T1096]  ieee80211_iface_work+0xb7c/0xd20
+[   80.497741][ T1390]  ? set_kthread_struct+0x130/0x130
+[   80.505630][ T2697]  ieee80211_iface_work+0xb7c/0xd20
+[   80.506986][  T158] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   80.510968][ T2732]  ? rwlock_bug.part.0+0x90/0x90
+[   80.532816][    T7]  ieee80211_ibss_work+0x2c7/0xf70
+[   80.537994][    T7]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   80.544902][ T1096]  process_one_work+0xa11/0x16b0
+[   80.549981][ T1390]  ret_from_fork+0x1f/0x30
+[   80.561466][ T2697]  process_one_work+0xa11/0x16b0
+[   80.564065][  T157] Workqueue: phy12 ieee80211_iface_work
+[   80.569067][ T2732]  worker_thread+0x67d/0x1220
+[   80.595885][ T1096]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   80.601426][ T1390] irq event stamp: 793233
+[   80.606655][  T142]  ? mark_held_locks+0x9f/0xe0
+[   80.612965][ T2697]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   80.619608][    T7]  ? mark_held_locks+0x9f/0xe0
+[   80.630556][ T1096]  ? rwlock_bug.part.0+0x90/0x90
+[   80.640431][ T1390] hardirqs last  enabled at (793329): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+[   80.649876][  T158] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   80.653440][ T2732]  ? process_one_work+0x16b0/0x16b0
+[   80.673371][  T157] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   80.677547][  T142]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   80.682830][  T157] Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+[   80.691437][ T2697]  ? rwlock_bug.part.0+0x90/0x90
+[   80.731244][ T1096]  worker_thread+0x67d/0x1220
+[   80.737282][    T7]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   80.746349][ T1096]  ? process_one_work+0x16b0/0x16b0
+[   80.751682][ T1390] hardirqs last disabled at (793356): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+[   80.771613][  T142]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   80.784907][ T1096]  kthread+0x3d0/0x4c0
+[   80.792590][ T1096]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   80.799066][    T7]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   80.799105][    T7]  ? lockdep_hardirqs_on+0x54/0x100
+[   80.799134][    T7]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   80.799179][    T7]  ieee80211_iface_work+0xb7c/0xd20
+[   80.815024][  T142]  ? lockdep_hardirqs_on+0x54/0x100
+[   80.829026][ T2697]  worker_thread+0x67d/0x1220
+[   80.836998][ T1390] softirqs last  enabled at (793406): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   80.840332][  T158] RSP: 0018:ffffc90000d579e8 EFLAGS: 00010293
+[   80.854480][ T2732]  kthread+0x3d0/0x4c0
+[   80.863368][  T158] 
+[   80.866067][ T2697]  ? process_one_work+0x16b0/0x16b0
+[   80.871616][  T158] RAX: 0000000000000000 RBX: ffff888172c58c80 RCX: 0000000000000000
+[   80.873559][ T2697]  kthread+0x3d0/0x4c0
+[   80.885222][  T157] RSP: 0018:ffffc90000d479e8 EFLAGS: 00010293
+[   80.885262][  T157] RAX: 0000000000000000 RBX: ffff888111a28c80 RCX: 0000000000000000
+[   80.885280][  T157] RDX: ffff888101d62480 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   80.885299][  T157] RBP: ffffc90000d47aa0 R08: 0000000000000000 R09: 0000000000000001
+[   80.885317][  T157] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   80.885336][  T157] R13: ffff8881657b4048 R14: ffff8881657b4000 R15: 0000000000000001
+[   80.885355][  T157] FS:  0000000000000000(0000) GS:ffff8881f6100000(0000) knlGS:0000000000000000
+[   80.885378][  T157] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   80.885398][  T157] CR2: 0000000020000040 CR3: 000000017e7af004 CR4: 00000000003706e0
+[   80.885421][  T157] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   80.885437][  T157] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   80.885455][  T157] Call Trace:
+[   80.885470][  T157]  ? check_preemption_disabled+0x34/0xd0
+[   80.885505][  T157]  ? __local_bh_enable_ip+0x11f/0x210
+[   80.885536][  T157]  ? rate_control_rate_init+0x2fc/0x740
+[   80.885585][  T157]  ieee80211_ibss_finish_sta+0x229/0x3a0
+[   80.885617][  T157]  ? ieee80211_ibss_build_presp+0x1800/0x1800
+[   80.885650][  T157]  ? check_preemption_disabled+0x34/0xd0
+[   80.885680][  T157]  ? __local_bh_enable_ip+0x11f/0x210
+[   80.885709][  T157]  ? ieee80211_ibss_work+0x2bf/0xf70
+[   80.885745][  T157]  ieee80211_ibss_work+0x2c7/0xf70
+[   80.885783][  T157]  ? ieee80211_ibss_rx_queued_mgmt+0x1720/0x1720
+[   80.885823][  T157]  ? mark_held_locks+0x9f/0xe0
+[   80.885853][  T157]  ? lockdep_hardirqs_on_prepare+0x17b/0x460
+[   80.888322][  T157]  ? _raw_spin_unlock_irqrestore+0x43/0x90
+[   80.917534][  T142]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   80.938039][    T7]  process_one_work+0xa11/0x16b0
+[   80.945712][ T1390] softirqs last disabled at (793419): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   80.970998][  T158] RDX: ffff888105e8c4c0 RSI: ffffffff87fdf30b RDI: 0000000000000003
+[   80.975809][ T1096]  ? set_kthread_struct+0x130/0x130
+[   81.029788][    T7]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   81.053039][ T2732]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   81.072166][  T158] RBP: ffffc90000d57aa0 R08: 0000000000000000 R09: 0000000000000001
+[   81.082226][ T2697]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   81.140942][ T1390] ---[ end trace 0715efc00e8b85d5 ]---
+[   81.176551][ T1390] ------------[ cut here ]------------
+[   81.182292][  T142]  ieee80211_iface_work+0xb7c/0xd20
+[   81.182865][  T158] R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+[   81.194683][ T2697]  ? set_kthread_struct+0x130/0x130
+[   81.202327][ T1390] WARNING: CPU: 0 PID: 1390 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+[   81.220198][  T142]  process_one_work+0xa11/0x16b0
+[   81.226875][ T2732]  ? set_kthread_struct+0x130/0x130
+[   81.229732][  T157]  ? lockdep_hardirqs_on+0x54/0x100
+[   81.236929][ T2732]  ret_from_fork+0x1f/0x30
+[   81.240004][    T7]  ? rwlock_bug.part.0+0x90/0x90
+[   81.250924][  T142]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   81.257039][  T158] R13: ffff88816e494048 R14: ffff88816e494000 R15: 0000000000000001
+[   81.267446][ T2697]  ret_from_fork+0x1f/0x30
+[   81.270141][    T7]  worker_thread+0x67d/0x1220
+[   81.278977][ T2697] irq event stamp: 111309
+[   81.290141][  T157]  ? _raw_spin_unlock_irqrestore+0x30/0x90
+[   81.302899][ T2732] irq event stamp: 10923
+[   81.307254][  T142]  ? try_to_del_timer_sync+0xbe/0x100
+[   81.316247][ T1390] Modules linked in:
+[   81.330066][  T158] FS:  0000000000000000(0000) GS:ffff8881f6100000(0000) knlGS:0000000000000000
+[   81.339994][ T1390] CPU: 0 PID: 1390 Comm: kworker/u4:5 Tainted: G        W         5.15.0-rc1-syzkaller #0
+[   81.340719][    T7]  ? process_one_work+0x16b0/0x16b0
+[   81.352989][ T2732] hardirqs last  enabled at (10935): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+[   81.371549][ T2697] hardirqs last  enabled at (111711): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+[   81.384915][  T142]  ? lock_is_held_type+0xda/0x130
+[   81.391218][  T142]  worker_thread+0x67d/0x1220
+[   81.399433][ T1096]  ret_from_fork+0x1f/0x30
+[   81.400781][  T157]  ieee80211_iface_work+0xb7c/0xd20
+[   81.408663][ T1096] irq event stamp: 232819
+[   81.418400][  T142]  ? process_one_work+0x16b0/0x16b0
+[   81.428004][ T2697] hardirqs last disabled at (111728): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+[   81.442502][ T1390] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   81.447755][  T157]  process_one_work+0xa11/0x16b0
+[   81.457157][ T1096] hardirqs last  enabled at (232837): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+[   81.462882][  T158] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   81.468600][ T2732] hardirqs last disabled at (11362): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+[   81.501383][  T142]  kthread+0x3d0/0x4c0
+[   81.514606][    T7]  kthread+0x3d0/0x4c0
+[   81.519152][  T157]  ? pwq_dec_nr_in_flight+0x2a0/0x2a0
+[   81.532794][  T142]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   81.541670][ T2697] softirqs last  enabled at (112150): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+[   81.546948][    T7]  ? _raw_spin_unlock_irq+0x1f/0x80
+[   81.563130][ T1390] Workqueue: phy16 ieee80211_iface_work
+[   81.565304][  T158] CR2: 0000555557460938 CR3: 0000000177b1c002 CR4: 00000000003706e0
+[   81.569505][ T1096] hardirqs last disabled at (232876): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+[   81.584089][  T157]  ? rwlock_bug.part.0+0x90/0x90
+[   81.587119][  T142]  ? set_kthread_struct+0x130/0x130
+[   81.591507][  T157]  worker_thread+0x67d/0x1220
+2024/04/16 17:08:22 executed programs: 98
+[   81.598235][ T1390] RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+[   81.631708][ T2732] softirqs last  enabled at (11390): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230

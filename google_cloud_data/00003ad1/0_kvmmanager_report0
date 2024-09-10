@@ -1,0 +1,35 @@
+EXT4-fs warning (device loop4): ext4_da_release_space:1527: ext4_da_release_space: ino 18, to_free 1 with only 0 reserved data blocks
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 85 at fs/ext4/inode.c:1528 ext4_da_release_space+0x3bc/0x640
+Modules linked in:
+CPU: 1 PID: 85 Comm: kworker/u4:4 Not tainted 6.0.0-syzkaller-06477-g17a0bc9bd697 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: writeback wb_workfn (flush-7:4)
+RIP: 0010:ext4_da_release_space+0x3bc/0x640
+Code: ab ff 48 8b 3c 24 4c 8b 03 48 c7 c6 86 e2 ff 8b ba f7 05 00 00 48 c7 c1 c0 9d 7e 8a 45 89 f1 41 57 e8 b8 39 0e 00 48 83 c4 08 <0f> 0b 48 b8 00 00 00 00 00 fc ff df 41 0f b6 04 04 84 c0 0f 85 f6
+RSP: 0018:ffffc900020aecc0 EFLAGS: 00010296
+RAX: c270facac5bdb600 RBX: ffff88806c30d330 RCX: c270facac5bdb600
+RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000000
+RBP: ffff88806c30d2f0 R08: ffffffff8168e6cc R09: fffffbfff1f06c22
+R10: 0000000000000000 R11: dffffc0000000001 R12: 1ffff1100d861b14
+R13: ffff88806c30d8a0 R14: 0000000000000001 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff8880b9b00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fff215e8e68 CR3: 000000006f432000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ ext4_es_remove_extent+0x2bc/0x530
+ mpage_release_unused_pages+0x22c/0xe00
+ ext4_writepages+0x2e3d/0x3e90
+ do_writepages+0x3a2/0x650
+ __writeback_single_inode+0x197/0x12e0
+ writeback_sb_inodes+0xc02/0x1b10
+ wb_writeback+0x48e/0xe80
+ wb_workfn+0x448/0x10c0
+ process_one_work+0x92f/0x12b0
+ worker_thread+0xa5f/0x1210
+ kthread+0x268/0x300
+ ret_from_fork+0x1f/0x30
+ </TASK>

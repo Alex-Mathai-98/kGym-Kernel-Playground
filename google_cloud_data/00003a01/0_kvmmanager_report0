@@ -1,0 +1,67 @@
+EXT4-fs error (device sda1): ext4_validate_inode_bitmap:100: comm syz-execprog: Corrupt inode bitmap - block_group = 0, inode_bitmap = 137
+EXT4-fs error (device sda1): ext4_validate_inode_bitmap:100: comm syz-execprog: Corrupt inode bitmap - block_group = 1, inode_bitmap = 138
+general protection fault, probably for non-canonical address 0xdffffc0000000002: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x0000000000000010-0x0000000000000017]
+CPU: 1 PID: 3958 Comm: syz-execprog Not tainted 5.9.0-rc3-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:__ext4_journal_get_write_access+0x6c/0x2b0
+Code: 48 89 fa 48 c1 ea 03 80 3c 02 00 0f 85 24 02 00 00 48 b8 00 00 00 00 00 fc ff df 4c 8b 75 30 49 8d 7e 10 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 f7 01 00 00 4d 8b 66 10 4d 85 e4 0f 84 fe 00 00
+RSP: 0018:ffffc90000c67af8 EFLAGS: 00010202
+RAX: dffffc0000000000 RBX: ffff8881d2135aa8 RCX: ffff8881e68f24c8
+RDX: 0000000000000002 RSI: ffffffff8a068100 RDI: 0000000000000010
+RBP: ffff8881e68f24c8 R08: 0000000000000000 R09: ffff8881d6584e1b
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: 0000000000000001 R14: 0000000000000000 R15: ffffed103c47b0cd
+FS:  000000c001304490(0000) GS:ffff8881f6100000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00000000012e5790 CR3: 00000001d73f6002 CR4: 00000000003706e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ __ext4_new_inode+0x1c23/0x5380
+ ext4_mkdir+0x27b/0xe00
+ vfs_mkdir+0x408/0x640
+ do_mkdirat+0x26c/0x2e0
+ do_syscall_64+0x2d/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x40720e
+Code: 48 83 ec 38 e8 13 00 00 00 48 83 c4 38 5d c3 cc cc cc cc cc cc cc cc cc cc cc cc cc 49 89 f2 48 89 fa 48 89 ce 48 89 df 0f 05 <48> 3d 01 f0 ff ff 76 15 48 f7 d8 48 89 c1 48 c7 c0 ff ff ff ff 48
+RSP: 002b:000000c00136b730 EFLAGS: 00000212 ORIG_RAX: 0000000000000102
+RAX: ffffffffffffffda RBX: ffffffffffffff9c RCX: 000000000040720e
+RDX: 00000000000001c0 RSI: 000000c0003e83a0 RDI: ffffffffffffff9c
+RBP: 000000c00136b770 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000212 R12: 0000000000000000
+R13: 000000c001304400 R14: 000000c0003ea340 R15: 000000000000001d
+Modules linked in:
+---[ end trace 4467efa516fb3877 ]---
+RIP: 0010:__ext4_journal_get_write_access+0x6c/0x2b0
+Code: 48 89 fa 48 c1 ea 03 80 3c 02 00 0f 85 24 02 00 00 48 b8 00 00 00 00 00 fc ff df 4c 8b 75 30 49 8d 7e 10 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 f7 01 00 00 4d 8b 66 10 4d 85 e4 0f 84 fe 00 00
+RSP: 0018:ffffc90000c67af8 EFLAGS: 00010202
+RAX: dffffc0000000000 RBX: ffff8881d2135aa8 RCX: ffff8881e68f24c8
+RDX: 0000000000000002 RSI: ffffffff8a068100 RDI: 0000000000000010
+RBP: ffff8881e68f24c8 R08: 0000000000000000 R09: ffff8881d6584e1b
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: 0000000000000001 R14: 0000000000000000 R15: ffffed103c47b0cd
+FS:  000000c001304490(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000056024c770b58 CR3: 00000001d73f6005 CR4: 00000000003706f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	48 89 fa             	mov    %rdi,%rdx
+   3:	48 c1 ea 03          	shr    $0x3,%rdx
+   7:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1)
+   b:	0f 85 24 02 00 00    	jne    0x235
+  11:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  18:	fc ff df
+  1b:	4c 8b 75 30          	mov    0x30(%rbp),%r14
+  1f:	49 8d 7e 10          	lea    0x10(%r14),%rdi
+  23:	48 89 fa             	mov    %rdi,%rdx
+  26:	48 c1 ea 03          	shr    $0x3,%rdx
+* 2a:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1) <-- trapping instruction
+  2e:	0f 85 f7 01 00 00    	jne    0x22b
+  34:	4d 8b 66 10          	mov    0x10(%r14),%r12
+  38:	4d 85 e4             	test   %r12,%r12
+  3b:	0f                   	.byte 0xf
+  3c:	84 fe                	test   %bh,%dh

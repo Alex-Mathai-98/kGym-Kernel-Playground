@@ -1,0 +1,98 @@
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+dst_release: dst:0000000075cc7975 refcnt:-1
+dst_release: dst:000000007d1dace3 refcnt:-1
+==================================================================
+BUG: KASAN: use-after-free in dst_release+0x29/0xb0
+Write of size 4 at addr ffff8801d6f59640 by task syz-executor.0/5371
+
+CPU: 1 PID: 5371 Comm: syz-executor.0 Not tainted 4.16.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x1a8/0x27f
+ print_address_description+0xf5/0x2a1
+ kasan_report.part.0.cold+0x17a/0x260
+ kasan_report+0x38/0x3a
+ check_memory_region+0x11c/0x180
+ kasan_check_write+0x14/0x20
+ dst_release+0x29/0xb0
+ sock_setsockopt+0xa34/0x2090
+ __sys_setsockopt+0x2b7/0x370
+ SyS_setsockopt+0x34/0x50
+ do_syscall_64+0x262/0x3f0
+ entry_SYSCALL_64_after_hwframe+0x42/0xb7
+RIP: 0033:0x7fc7f6557f69
+RSP: 002b:00007fc7f60d90c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000036
+RAX: ffffffffffffffda RBX: 00007fc7f6685f80 RCX: 00007fc7f6557f69
+RDX: 0000000000000019 RSI: 0000000000000001 RDI: 0000000000000003
+RBP: 00007fc7f65a44a4 R08: 0000000000000010 R09: 0000000000000000
+R10: 00000000200010c0 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fc7f6685f80 R15: 00007ffcde0e46a8
+
+Allocated by task 5371:
+ save_stack+0x43/0xc0
+ kasan_kmalloc+0xce/0xf0
+ kasan_slab_alloc+0xf/0x20
+ kmem_cache_alloc+0x12e/0x3b0
+ dst_alloc+0x106/0x1d0
+ rt_dst_alloc+0xbe/0x4c0
+ ip_route_output_key_hash_rcu+0xd53/0x30d0
+ ip_route_output_flow+0x22d/0x450
+ pptp_connect+0xcc0/0x11c9
+ __sys_connect+0x234/0x420
+ SyS_connect+0x24/0x30
+ do_syscall_64+0x262/0x3f0
+ entry_SYSCALL_64_after_hwframe+0x42/0xb7
+
+Freed by task 3203:
+ save_stack+0x43/0xc0
+ __kasan_slab_free+0x119/0x160
+ kasan_slab_free+0xe/0x10
+ kmem_cache_free+0xd9/0x270
+ dst_destroy+0x2df/0x420
+ dst_destroy_rcu+0x16/0x20
+ rcu_process_callbacks+0x7f0/0x14e0
+ __do_softirq+0x2e1/0xabb
+
+The buggy address belongs to the object at ffff8801d6f59600
+ which belongs to the cache ip_dst_cache of size 160
+The buggy address is located 64 bytes inside of
+ 160-byte region [ffff8801d6f59600, ffff8801d6f596a0)
+The buggy address belongs to the page:
+page:ffffea00075bd640 count:1 mapcount:0 mapping:ffff8801d6f59000 index:0x0
+flags: 0x2fffc0000000100(slab)
+raw: 02fffc0000000100 ffff8801d6f59000 0000000000000000 0000000100000010
+raw: ffffea000758e5e0 ffffea000749a9a0 ffff8801f1069980 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff8801d6f59500: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8801d6f59580: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff8801d6f59600: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                           ^
+ ffff8801d6f59680: fb fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8801d6f59700: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================
+random: crng init done
+net_ratelimit: 628 callbacks suppressed
+dst_release: dst:00000000f3277c1f refcnt:-1
+dst_release: dst:000000006dd95699 refcnt:-1
+dst_release: dst:000000001588d815 refcnt:-1
+dst_release: dst:000000004283a77a refcnt:-1
+dst_release: dst:00000000c6226a3f refcnt:-1
+dst_release: dst:000000002bbfea3b refcnt:-1
+dst_release: dst:00000000dc4c04de refcnt:-1
+dst_release: dst:00000000cf665df6 refcnt:-1
+dst_release: dst:000000009e25162e refcnt:-1
+dst_release: dst:00000000315ae33b refcnt:-1
+net_ratelimit: 858 callbacks suppressed
+dst_release: dst:00000000f961b2f7 refcnt:-1
+dst_release: dst:00000000b45174f3 refcnt:-1
+dst_release: dst:0000000017edb381 refcnt:-1
+dst_release: dst:000000009ecd0f86 refcnt:-1
+dst_release: dst:000000001515d1df refcnt:-1
+dst_release: dst:0000000062d794f4 refcnt:-1
+dst_release: dst:00000000ce0401c2 refcnt:-1
+dst_release: dst:000000003ce9430b refcnt:-1
+dst_release: dst:00000000b06b0bac refcnt:-1
+dst_release: dst:000000004a509008 refcnt:-1

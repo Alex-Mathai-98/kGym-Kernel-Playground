@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "BUG: corrupted list in rdma_listen",
+    "display-title": "BUG: corrupted list in rdma_listen (2)",
+    "id": "362b5b49fced29361c0ba3007a2b3e5cd13776b5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "RDMA/cma: Do not change route.addr.src_addr outside state checks",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=22e9f71072fa605cbf033158db58e0790101928d",
+            "hash": "22e9f71072fa605cbf033158db58e0790101928d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c3eace05d24f0189@google.com/T/",
+        "https://lore.kernel.org/all/20220228172311.789892158@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220228172347.614588246@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220228172359.567256961@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in rdma_listen",
+            "syz-reproducer": "/text?tag=ReproSyz&x=137e0c77b00000",
+            "c-reproducer": "/text?tag=ReproC&x=140b1eaa700000",
+            "kernel-config": "/text?tag=KernelConfig&x=266de9da75c71a45",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=555f3d7be91a873114c9656069f1a9fa476ec41a",
+            "kernel-source-commit": "555f3d7be91a873114c9656069f1a9fa476ec41a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0b33604d8e2793b82ec89abecf82d92b82e3d410",
+            "syzkaller-commit": "0b33604d8e2793b82ec89abecf82d92b82e3d410",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12c26d78700000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "cma_resolve_ib_addr",
+            "drivers/infiniband/core/cma.c"
+        ]
+    ],
+    "patch_commit_date": "2022-02-23T15:23:57+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "rdma"
+    ],
+    "parent_of_fix_commit": "081bdc9fe05bb23248f5effb6f811da3da4b8252",
+    "patch": "diff --git a/drivers/infiniband/core/cma.c b/drivers/infiniband/core/cma.c\nindex c447526288f4..50c53409ceb6 100644\n--- a/drivers/infiniband/core/cma.c\n+++ b/drivers/infiniband/core/cma.c\n@@ -3370,22 +3370,30 @@ static int cma_resolve_ib_addr(struct rdma_id_private *id_priv)\n static int cma_bind_addr(struct rdma_cm_id *id, struct sockaddr *src_addr,\n \t\t\t const struct sockaddr *dst_addr)\n {\n-\tif (!src_addr || !src_addr->sa_family) {\n-\t\tsrc_addr = (struct sockaddr *) &id->route.addr.src_addr;\n-\t\tsrc_addr->sa_family = dst_addr->sa_family;\n-\t\tif (IS_ENABLED(CONFIG_IPV6) &&\n-\t\t    dst_addr->sa_family == AF_INET6) {\n-\t\t\tstruct sockaddr_in6 *src_addr6 = (struct sockaddr_in6 *) src_addr;\n-\t\t\tstruct sockaddr_in6 *dst_addr6 = (struct sockaddr_in6 *) dst_addr;\n-\t\t\tsrc_addr6->sin6_scope_id = dst_addr6->sin6_scope_id;\n-\t\t\tif (ipv6_addr_type(&dst_addr6->sin6_addr) & IPV6_ADDR_LINKLOCAL)\n-\t\t\t\tid->route.addr.dev_addr.bound_dev_if = dst_addr6->sin6_scope_id;\n-\t\t} else if (dst_addr->sa_family == AF_IB) {\n-\t\t\t((struct sockaddr_ib *) src_addr)->sib_pkey =\n-\t\t\t\t((struct sockaddr_ib *) dst_addr)->sib_pkey;\n-\t\t}\n-\t}\n-\treturn rdma_bind_addr(id, src_addr);\n+\tstruct sockaddr_storage zero_sock = {};\n+\n+\tif (src_addr && src_addr->sa_family)\n+\t\treturn rdma_bind_addr(id, src_addr);\n+\n+\t/*\n+\t * When the src_addr is not specified, automatically supply an any addr\n+\t */\n+\tzero_sock.ss_family = dst_addr->sa_family;\n+\tif (IS_ENABLED(CONFIG_IPV6) && dst_addr->sa_family == AF_INET6) {\n+\t\tstruct sockaddr_in6 *src_addr6 =\n+\t\t\t(struct sockaddr_in6 *)&zero_sock;\n+\t\tstruct sockaddr_in6 *dst_addr6 =\n+\t\t\t(struct sockaddr_in6 *)dst_addr;\n+\n+\t\tsrc_addr6->sin6_scope_id = dst_addr6->sin6_scope_id;\n+\t\tif (ipv6_addr_type(&dst_addr6->sin6_addr) & IPV6_ADDR_LINKLOCAL)\n+\t\t\tid->route.addr.dev_addr.bound_dev_if =\n+\t\t\t\tdst_addr6->sin6_scope_id;\n+\t} else if (dst_addr->sa_family == AF_IB) {\n+\t\t((struct sockaddr_ib *)&zero_sock)->sib_pkey =\n+\t\t\t((struct sockaddr_ib *)dst_addr)->sib_pkey;\n+\t}\n+\treturn rdma_bind_addr(id, (struct sockaddr *)&zero_sock);\n }\n \n /*\n",
+    "patch_modified_files": [
+        "drivers/infiniband/core/cma.c"
+    ]
+}

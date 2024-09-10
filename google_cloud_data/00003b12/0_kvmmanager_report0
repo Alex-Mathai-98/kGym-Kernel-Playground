@@ -1,0 +1,28 @@
+================================================================================
+UBSAN: shift-out-of-bounds in drivers/usb/gadget/udc/dummy_hcd.c:2293:33
+shift exponent 257 is too large for 32-bit type 'int'
+CPU: 1 PID: 5606 Comm: syz-executor.0 Not tainted 5.11.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x107/0x163
+ ubsan_epilogue+0xb/0x58
+ __ubsan_handle_shift_out_of_bounds.cold+0xab/0x178
+ dummy_hub_control.cold+0x19/0xb4
+ usb_hcd_submit_urb+0xd75/0x2020
+ usb_submit_urb+0x6e1/0x1510
+ usb_start_wait_urb+0xfe/0x4c0
+ usb_control_msg+0x31b/0x4a0
+ do_proc_control+0x491/0x940
+ usbdev_ioctl+0x119e/0x3920
+ __x64_sys_ioctl+0x185/0x210
+ do_syscall_64+0x2d/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7fe7c59aff69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fe7c4d300c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007fe7c5addf80 RCX: 00007fe7c59aff69
+RDX: 0000000020000000 RSI: 00000000c0185500 RDI: 0000000000000003
+RBP: 00007fe7c59fc4a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fe7c5addf80 R15: 00007ffcd03546b8
+================================================================================

@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "WARNING in iommufd_test_check_pages",
+    "display-title": "WARNING in iommufd_test_check_pages",
+    "id": "d1975758ab72f25acdc552246472398abe66c7fd",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm/gup: do not return 0 from pin_user_pages_fast() for bad args",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9883c7f84053cec2826ca3c56254601b5ce9cdbe",
+            "hash": "9883c7f84053cec2826ca3c56254601b5ce9cdbe",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0-v1-3d5ed1f20d50+104-gup_overflow_jgg@nvidia.com/T/",
+        "https://lore.kernel.org/all/000000000000094fdd05faa4d3a4@google.com/T/",
+        "https://lore.kernel.org/all/00000000000037ca0d05fe7acde6@google.com/T/",
+        "https://lore.kernel.org/all/000000000000fad0cc05fb34e6be@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in iommufd_test_check_pages",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15779a30280000",
+            "c-reproducer": "/text?tag=ReproC&x=10974ad8280000",
+            "kernel-config": "/text?tag=KernelConfig&x=7ecbb03c21601216",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=825a0714d2b3883d4f8ff64f6933fb73ee3f1834",
+            "kernel-source-commit": "825a0714d2b3883d4f8ff64f6933fb73ee3f1834",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/62df2017e3b1edd786a4c737bd4ccba2b4581d88",
+            "syzkaller-commit": "62df2017e3b1edd786a4c737bd4ccba2b4581d88",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1133ea44280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "internal_get_user_pages_fast",
+            "mm/gup.c"
+        ]
+    ],
+    "patch_commit_date": "2023-06-19T18:27:25+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "iommu"
+    ],
+    "parent_of_fix_commit": "0b52c420350e8f9873ba62768cd8246827184408",
+    "patch": "diff --git a/mm/gup.c b/mm/gup.c\nindex ce14d4d28503..a8336b39d6b5 100644\n--- a/mm/gup.c\n+++ b/mm/gup.c\n@@ -3080,7 +3080,7 @@ static int internal_get_user_pages_fast(unsigned long start,\n \tstart = untagged_addr(start) & PAGE_MASK;\n \tlen = nr_pages << PAGE_SHIFT;\n \tif (check_add_overflow(start, len, &end))\n-\t\treturn 0;\n+\t\treturn -EOVERFLOW;\n \tif (end > TASK_SIZE_MAX)\n \t\treturn -EFAULT;\n \tif (unlikely(!access_ok((void __user *)start, len)))\n",
+    "patch_modified_files": [
+        "mm/gup.c"
+    ]
+}

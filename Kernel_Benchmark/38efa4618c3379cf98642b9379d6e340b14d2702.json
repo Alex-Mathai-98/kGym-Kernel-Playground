@@ -1,0 +1,69 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel NULL pointer dereference in io_do_iopoll",
+    "display-title": "BUG: unable to handle kernel NULL pointer dereference in io_do_iopoll",
+    "id": "38efa4618c3379cf98642b9379d6e340b14d2702",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: don't attempt to IOPOLL for MSG_RING requests",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=aa184e8671f0f911fc2fb3f68cd506e4d7838faa",
+            "hash": "aa184e8671f0f911fc2fb3f68cd506e4d7838faa",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "io_uring: defer msg-ring file validity check until command issue",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3f1d52abf098c85b177b8c6f5b310e8347d1bc42",
+        "hash": "3f1d52abf098c85b177b8c6f5b310e8347d1bc42",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000093a60105df3918eb@google.com/T/",
+        "https://lore.kernel.org/all/38094d23-9f0d-d257-1adc-79f50501b3cd@kernel.dk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "BUG: unable to handle kernel NULL pointer dereference in io_do_iopoll",
+            "syz-reproducer": "/text?tag=ReproSyz&x=149eb59ef00000",
+            "c-reproducer": "/text?tag=ReproC&x=17cc57c6f00000",
+            "kernel-config": "/text?tag=KernelConfig&x=902c5209311d387c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=42226c989789d8da4af1de0c31070c96726d990c",
+            "kernel-source-commit": "42226c989789d8da4af1de0c31070c96726d990c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/744a39e220cece33e207035facce6c5ae161b775",
+            "syzkaller-commit": "744a39e220cece33e207035facce6c5ae161b775",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15f2b659f00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "io_msg_ring",
+            "fs/io_uring.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "io_msg_ring",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_msg_ring_prep",
+            "fs/io_uring.c"
+        ]
+    ],
+    "patch_commit_date": "2022-05-17T18:32:05+00:00",
+    "cause_commit_date": "2022-03-29T16:43:56+00:00",
+    "subsystems": [
+        "fs",
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "2d2d5cb6ca8424fa849ebb4edb8e8022c13860c7",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex 91de361ea9ab..e0823f58f795 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -4481,6 +4481,9 @@ static int io_msg_ring(struct io_kiocb *req, unsigned int issue_flags)\n \tif (ret < 0)\n \t\treq_set_fail(req);\n \t__io_req_complete(req, issue_flags, ret, 0);\n+\t/* put file to avoid an attempt to IOPOLL the req */\n+\tio_put_file(req->file);\n+\treq->file = NULL;\n \treturn 0;\n }\n \n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

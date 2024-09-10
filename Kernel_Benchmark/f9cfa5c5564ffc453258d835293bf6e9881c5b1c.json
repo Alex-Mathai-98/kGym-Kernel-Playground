@@ -1,0 +1,76 @@
+{
+    "version": 1,
+    "title": "general protection fault in sctp_sched_rr_dequeue",
+    "display-title": "general protection fault in sctp_sched_rr_dequeue",
+    "id": "f9cfa5c5564ffc453258d835293bf6e9881c5b1c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "sctp: remove sched init from sctp_stream_init",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2e990dfd13974d9eae493006f42ffb48707970ef",
+            "hash": "2e990dfd13974d9eae493006f42ffb48707970ef",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "sctp: add SCTP_FUTURE_ASOC and SCTP_CURRENT_ASSOC for SCTP_STREAM_SCHEDULER sockopt",
+        "hash": "7efba10d6bd22030fb5931e50bf97496f932f00e"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000cc734405836318dc@google.com/T/",
+        "https://lore.kernel.org/all/20190318083715.877441740@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190318083843.398913295@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190318084013.532280682@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/f6f7a239cbe5a5dc051f605752e03b54d68e878a.1552031356.git.lucien.xin@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11cd9b03200000",
+            "c-reproducer": "/text?tag=ReproC&x=127de8e7200000",
+            "kernel-config": "/text?tag=KernelConfig&x=872be05707464aaa",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=63bdf4284c38a48af21745ceb148a087b190cd21",
+            "kernel-source-commit": "63bdf4284c38a48af21745ceb148a087b190cd21",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/16559f86f52b7da53f9156685e32dde788dbe371",
+            "syzkaller-commit": "16559f86f52b7da53f9156685e32dde788dbe371",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12b3c633200000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "sctp_stream_init",
+            "net/sctp/stream.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "sctp_setsockopt_scheduler",
+            "net/sctp/socket.c"
+        ],
+        [
+            "sctp_init_sock",
+            "net/sctp/socket.c"
+        ],
+        [
+            "sctp_getsockopt_scheduler",
+            "net/sctp/socket.c"
+        ],
+        [
+            "sctp_outq_init",
+            "net/sctp/outqueue.c"
+        ]
+    ],
+    "patch_commit_date": "2019-03-08T07:49:16+00:00",
+    "cause_commit_date": "2019-01-28T07:08:46+00:00",
+    "subsystems": [
+        "sctp"
+    ],
+    "parent_of_fix_commit": "ee60ad219f5c7c4fb2f047f88037770063ef785f",
+    "patch": "diff --git a/net/sctp/stream.c b/net/sctp/stream.c\nindex 2936ed17bf9e..3b47457862cc 100644\n--- a/net/sctp/stream.c\n+++ b/net/sctp/stream.c\n@@ -230,8 +230,6 @@ int sctp_stream_init(struct sctp_stream *stream, __u16 outcnt, __u16 incnt,\n \tfor (i = 0; i < stream->outcnt; i++)\n \t\tSCTP_SO(stream, i)->state = SCTP_STREAM_OPEN;\n \n-\tsched->init(stream);\n-\n in:\n \tsctp_stream_interleave_init(stream);\n \tif (!incnt)\n",
+    "patch_modified_files": [
+        "net/sctp/stream.c"
+    ]
+}

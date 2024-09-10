@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "BUG: corrupted list in kobject_add_internal",
+    "display-title": "BUG: corrupted list in kobject_add_internal",
+    "id": "f0ec9a394925aafbdf13d0a7e6af4cff860f0ed6",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: Fix auto-creation of hci_conn at Conn Complete event",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a46b7ed4d52d09bd6c7ab53b2217d04fc2f02c65",
+            "hash": "a46b7ed4d52d09bd6c7ab53b2217d04fc2f02c65",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Bluetooth: Handle BR/EDR devices during suspend",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4f40afc6c76451daff7d0dcfc8a3d113ccf65bfc",
+        "hash": "4f40afc6c76451daff7d0dcfc8a3d113ccf65bfc",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c57f2d05ac4c5b8e@google.com/T/",
+        "https://lore.kernel.org/all/20200823010022.938532-1-coiby.xu@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14b73afc900000",
+            "c-reproducer": "/text?tag=ReproC&x=124893a4900000",
+            "kernel-config": "/text?tag=KernelConfig&x=c0cfcf935bcc94d2",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=5a30a78924ecd97b0335d2e1d3e01a5023c1a3d8",
+            "kernel-source-commit": "5a30a78924ecd97b0335d2e1d3e01a5023c1a3d8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/196277c4035b5442b7a259953677543566c9b9a9",
+            "syzkaller-commit": "196277c4035b5442b7a259953677543566c9b9a9",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=156bac2a900000"
+        }
+    ],
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "e99f38b81107c572392c3c6b859d063344afd865",
+    "patch": "diff --git a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c\nindex bd306ba3ade5..1df95145f574 100644\n--- a/net/bluetooth/hci_event.c\n+++ b/net/bluetooth/hci_event.c\n@@ -2566,7 +2566,6 @@ static void hci_inquiry_result_evt(struct hci_dev *hdev, struct sk_buff *skb)\n static void hci_conn_complete_evt(struct hci_dev *hdev, struct sk_buff *skb)\n {\n \tstruct hci_ev_conn_complete *ev = (void *) skb->data;\n-\tstruct inquiry_entry *ie;\n \tstruct hci_conn *conn;\n \n \tBT_DBG(\"%s\", hdev->name);\n@@ -2575,13 +2574,19 @@ static void hci_conn_complete_evt(struct hci_dev *hdev, struct sk_buff *skb)\n \n \tconn = hci_conn_hash_lookup_ba(hdev, ev->link_type, &ev->bdaddr);\n \tif (!conn) {\n-\t\t/* Connection may not exist if auto-connected. Check the inquiry\n-\t\t * cache to see if we've already discovered this bdaddr before.\n-\t\t * If found and link is an ACL type, create a connection class\n+\t\t/* Connection may not exist if auto-connected. Check the bredr\n+\t\t * allowlist to see if this device is allowed to auto connect.\n+\t\t * If link is an ACL type, create a connection class\n \t\t * automatically.\n+\t\t *\n+\t\t * Auto-connect will only occur if the event filter is\n+\t\t * programmed with a given address. Right now, event filter is\n+\t\t * only used during suspend.\n \t\t */\n-\t\tie = hci_inquiry_cache_lookup(hdev, &ev->bdaddr);\n-\t\tif (ie && ev->link_type == ACL_LINK) {\n+\t\tif (ev->link_type == ACL_LINK &&\n+\t\t    hci_bdaddr_list_lookup_with_flags(&hdev->whitelist,\n+\t\t\t\t\t\t      &ev->bdaddr,\n+\t\t\t\t\t\t      BDADDR_BREDR)) {\n \t\t\tconn = hci_conn_add(hdev, ev->link_type, &ev->bdaddr,\n \t\t\t\t\t    HCI_ROLE_SLAVE);\n \t\t\tif (!conn) {\n",
+    "patch_modified_files": [
+        "net/bluetooth/hci_event.c"
+    ]
+}

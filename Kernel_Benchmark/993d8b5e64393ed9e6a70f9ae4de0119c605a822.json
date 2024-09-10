@@ -1,0 +1,61 @@
+{
+    "version": 1,
+    "title": "kernel BUG in vhost_get_vq_desc",
+    "display-title": "kernel BUG in vhost_get_vq_desc",
+    "id": "993d8b5e64393ed9e6a70f9ae4de0119c605a822",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "vhost/vsock: don't check owner in vhost_vsock_stop() while releasing",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a58da53ffd70294ebea8ecd0eb45fd0d74add9f9",
+            "hash": "a58da53ffd70294ebea8ecd0eb45fd0d74add9f9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000070ac6505d7d9f7a8@google.com/T/",
+        "https://lore.kernel.org/all/20220220050747-mutt-send-email-mst@kernel.org/T/",
+        "https://lore.kernel.org/all/20220220071446-mutt-send-email-mst@kernel.org/T/",
+        "https://lore.kernel.org/all/20220221041626-mutt-send-email-mst@kernel.org/T/",
+        "https://lore.kernel.org/all/20220221054618-mutt-send-email-mst@kernel.org/T/",
+        "https://lore.kernel.org/all/20220221085709-mutt-send-email-mst@kernel.org/T/",
+        "https://lore.kernel.org/all/20220221114916.107045-1-sgarzare@redhat.com/T/",
+        "https://lore.kernel.org/all/20220221130926.krw4i5x5y4gjnvsg@sgarzare-redhat/T/",
+        "https://lore.kernel.org/all/20220221134516.gmm3a5bjdlnzile2@sgarzare-redhat/T/",
+        "https://lore.kernel.org/all/20220222094742.16359-1-sgarzare@redhat.com/T/",
+        "https://lore.kernel.org/all/20220228172141.744228435@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220228172159.515152296@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220228172207.090703467@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220228172248.232273337@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220228172311.789892158@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220228172347.614588246@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220228172359.567256961@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/CAGxU2F4f0Gx=-4g-r3QHFPsn0WwSW3HyT+MRKj4=TTWp9R+WYw@mail.gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "kernel BUG in vhost_get_vq_desc",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1362e232700000",
+            "c-reproducer": "/text?tag=ReproC&x=11373a6c700000",
+            "kernel-config": "/text?tag=KernelConfig&x=a78b064590b9f912",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f71077a4d84bbe8c7b91b7db7c4ef815755ac5e3",
+            "kernel-source-commit": "f71077a4d84bbe8c7b91b7db7c4ef815755ac5e3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3cd800e43d452c348a66ba475143831d94969a24",
+            "syzkaller-commit": "3cd800e43d452c348a66ba475143831d94969a24",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=154fb354700000"
+        }
+    ],
+    "subsystems": [
+        "kvm",
+        "net",
+        "virt"
+    ],
+    "parent_of_fix_commit": "277f2bb14361790a70e4b3c649e794b75a91a597",
+    "patch": "diff --git a/drivers/vhost/vsock.c b/drivers/vhost/vsock.c\nindex d6ca1c7ad513..37f0b4274113 100644\n--- a/drivers/vhost/vsock.c\n+++ b/drivers/vhost/vsock.c\n@@ -629,16 +629,18 @@ static int vhost_vsock_start(struct vhost_vsock *vsock)\n \treturn ret;\n }\n \n-static int vhost_vsock_stop(struct vhost_vsock *vsock)\n+static int vhost_vsock_stop(struct vhost_vsock *vsock, bool check_owner)\n {\n \tsize_t i;\n-\tint ret;\n+\tint ret = 0;\n \n \tmutex_lock(&vsock->dev.mutex);\n \n-\tret = vhost_dev_check_owner(&vsock->dev);\n-\tif (ret)\n-\t\tgoto err;\n+\tif (check_owner) {\n+\t\tret = vhost_dev_check_owner(&vsock->dev);\n+\t\tif (ret)\n+\t\t\tgoto err;\n+\t}\n \n \tfor (i = 0; i < ARRAY_SIZE(vsock->vqs); i++) {\n \t\tstruct vhost_virtqueue *vq = &vsock->vqs[i];\n@@ -753,7 +755,12 @@ static int vhost_vsock_dev_release(struct inode *inode, struct file *file)\n \t * inefficient.  Room for improvement here. */\n \tvsock_for_each_connected_socket(vhost_vsock_reset_orphans);\n \n-\tvhost_vsock_stop(vsock);\n+\t/* Don't check the owner, because we are in the release path, so we\n+\t * need to stop the vsock device in any case.\n+\t * vhost_vsock_stop() can not fail in this case, so we don't need to\n+\t * check the return code.\n+\t */\n+\tvhost_vsock_stop(vsock, false);\n \tvhost_vsock_flush(vsock);\n \tvhost_dev_stop(&vsock->dev);\n \n@@ -868,7 +875,7 @@ static long vhost_vsock_dev_ioctl(struct file *f, unsigned int ioctl,\n \t\tif (start)\n \t\t\treturn vhost_vsock_start(vsock);\n \t\telse\n-\t\t\treturn vhost_vsock_stop(vsock);\n+\t\t\treturn vhost_vsock_stop(vsock, true);\n \tcase VHOST_GET_FEATURES:\n \t\tfeatures = VHOST_VSOCK_FEATURES;\n \t\tif (copy_to_user(argp, &features, sizeof(features)))\n",
+    "patch_modified_files": [
+        "drivers/vhost/vsock.c"
+    ]
+}

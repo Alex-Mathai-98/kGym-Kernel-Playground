@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "general protection fault in getname_kernel",
+    "display-title": "general protection fault in getname_kernel",
+    "id": "b5d799a2cc619607ed6e322f97f78eaf534451e1",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "gfs2_meta: ->mount() can get NULL dev_name",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3df629d873f8683af6f0d34dfc743f637966d483",
+            "hash": "3df629d873f8683af6f0d34dfc743f637966d483",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000006533a60577ac1419@google.com/T/",
+        "https://lore.kernel.org/all/20181111221619.915519183@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20181111221627.853046496@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20181111221647.665769131@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20181111221707.043394111@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20181119162620.585061184@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20181119162630.031306128@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/lsq.1549201507.384106140@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10688159400000",
+            "c-reproducer": "/text?tag=ReproC&x=1162aa31400000",
+            "kernel-config": "/text?tag=KernelConfig&x=c0af03fe452b65fb",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c1d84a1b42ef70d8ae601df9cadedc7ed4f1beb1",
+            "kernel-source-commit": "c1d84a1b42ef70d8ae601df9cadedc7ed4f1beb1",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8b311eafa7f32ebcae67cdf5e16aa1ab3fc77e7f",
+            "syzkaller-commit": "8b311eafa7f32ebcae67cdf5e16aa1ab3fc77e7f",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16812c91400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "gfs2_mount_meta",
+            "fs/gfs2/ops_fstype.c"
+        ]
+    ],
+    "patch_commit_date": "2018-10-13T04:19:13+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "gfs2"
+    ],
+    "parent_of_fix_commit": "74dd7c97ea2ab08b41925ab2f472db573accda89",
+    "patch": "diff --git a/fs/gfs2/ops_fstype.c b/fs/gfs2/ops_fstype.c\nindex c2469833b4fb..6b84ef6ccff3 100644\n--- a/fs/gfs2/ops_fstype.c\n+++ b/fs/gfs2/ops_fstype.c\n@@ -1333,6 +1333,9 @@ static struct dentry *gfs2_mount_meta(struct file_system_type *fs_type,\n \tstruct path path;\n \tint error;\n \n+\tif (!dev_name || !*dev_name)\n+\t\treturn ERR_PTR(-EINVAL);\n+\n \terror = kern_path(dev_name, LOOKUP_FOLLOW, &path);\n \tif (error) {\n \t\tpr_warn(\"path_lookup on %s returned error %d\\n\",\n",
+    "patch_modified_files": [
+        "fs/gfs2/ops_fstype.c"
+    ]
+}

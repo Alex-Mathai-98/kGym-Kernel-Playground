@@ -1,0 +1,151 @@
+======================================================
+WARNING: possible circular locking dependency detected
+5.18.0-rc3-syzkaller-00064-ga0e286b6a5b6 #0 Not tainted
+------------------------------------------------------
+udevd/3507 is trying to acquire lock:
+ffff888021d1d938 ((wq_completion)loop1){+.+.}-{0:0}, at: flush_workqueue+0xec/0x1300
+
+but task is already holding lock:
+ffff88801c12a918 (&disk->open_mutex){+.+.}-{3:3}, at: blkdev_put+0xae/0x760
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #6 (&disk->open_mutex){+.+.}-{3:3}:
+       __mutex_lock+0x14b/0x1300
+       blkdev_get_by_dev.part.0+0x434/0xb80
+       blkdev_get_by_dev+0x67/0x80
+       swsusp_check+0x95/0x3f0
+       software_resume.part.0+0x129/0x210
+       resume_store+0x162/0x190
+       kobj_attr_store+0x51/0x80
+       sysfs_kf_write+0x113/0x170
+       kernfs_fop_write_iter+0x402/0x610
+       new_sync_write+0x385/0x560
+       vfs_write+0x7c8/0xae0
+       ksys_write+0x12b/0x250
+       do_syscall_64+0x34/0x80
+       entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+-> #5 (system_transition_mutex/1){+.+.}-{3:3}:
+       __mutex_lock+0x14b/0x1300
+       software_resume.part.0+0x18/0x210
+       resume_store+0x162/0x190
+       kobj_attr_store+0x51/0x80
+       sysfs_kf_write+0x113/0x170
+       kernfs_fop_write_iter+0x402/0x610
+       new_sync_write+0x385/0x560
+       vfs_write+0x7c8/0xae0
+       ksys_write+0x12b/0x250
+       do_syscall_64+0x34/0x80
+       entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+-> #4 (&of->mutex){+.+.}-{3:3}:
+       __mutex_lock+0x14b/0x1300
+       kernfs_seq_start+0x47/0x450
+       seq_read_iter+0x2a9/0x1200
+       kernfs_fop_read_iter+0x4fe/0x6d0
+       new_sync_read+0x373/0x5e0
+       vfs_read+0x480/0x5c0
+       ksys_read+0x12b/0x250
+       do_syscall_64+0x34/0x80
+       entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+-> #3 (&p->lock){+.+.}-{3:3}:
+       __mutex_lock+0x14b/0x1300
+       seq_read_iter+0xd6/0x1200
+       generic_file_splice_read+0x3a5/0x5b0
+       do_splice_to+0x1b3/0x240
+       splice_direct_to_actor+0x2c2/0x8f0
+       do_splice_direct+0x1ac/0x280
+       do_sendfile+0xab1/0x1230
+       __x64_sys_sendfile64+0x1c9/0x210
+       do_syscall_64+0x34/0x80
+       entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+-> #2 (sb_writers#6){.+.+}-{0:0}:
+       loop_process_work+0x11ca/0x2230
+       process_one_work+0x9f5/0x1630
+       worker_thread+0x679/0x10d0
+       kthread+0x2e0/0x390
+       ret_from_fork+0x1f/0x30
+
+-> #1 ((work_completion)(&worker->work)){+.+.}-{0:0}:
+       process_one_work+0x964/0x1630
+       worker_thread+0x679/0x10d0
+       kthread+0x2e0/0x390
+       ret_from_fork+0x1f/0x30
+
+-> #0 ((wq_completion)loop1){+.+.}-{0:0}:
+       __lock_acquire+0x29d0/0x5630
+       lock_acquire+0x1a8/0x4f0
+       flush_workqueue+0x114/0x1300
+       drain_workqueue+0x168/0x3a0
+       destroy_workqueue+0x71/0x880
+       __loop_clr_fd+0x115/0x910
+       lo_release+0x184/0x1c0
+       blkdev_put_whole+0xbd/0xf0
+       blkdev_put+0x222/0x760
+       blkdev_close+0x64/0x80
+       __fput+0x264/0x980
+       task_work_run+0xdd/0x1a0
+       exit_to_user_mode_prepare+0x242/0x250
+       syscall_exit_to_user_mode+0x19/0x60
+       do_syscall_64+0x40/0x80
+       entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+other info that might help us debug this:
+
+Chain exists of:
+  (wq_completion)loop1 --> system_transition_mutex/1
+ --> &disk->open_mutex
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&disk->open_mutex);
+                               lock(system_transition_mutex
+/1);
+                               lock(&disk->open_mutex);
+  lock((wq_completion)loop1);
+
+ *** DEADLOCK ***
+
+1 lock held by udevd/3507:
+ #0: ffff88801c12a918 (&disk->open_mutex){+.+.}-{3:3}, at: blkdev_put+0xae/0x760
+
+stack backtrace:
+CPU: 0 PID: 3507 Comm: udevd Not tainted 5.18.0-rc3-syzkaller-00064-ga0e286b6a5b6 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xfc/0x174
+ check_noncircular+0x268/0x310
+ __lock_acquire+0x29d0/0x5630
+ lock_acquire+0x1a8/0x4f0
+ flush_workqueue+0x114/0x1300
+ drain_workqueue+0x168/0x3a0
+ destroy_workqueue+0x71/0x880
+ __loop_clr_fd+0x115/0x910
+ lo_release+0x184/0x1c0
+ blkdev_put_whole+0xbd/0xf0
+ blkdev_put+0x222/0x760
+ blkdev_close+0x64/0x80
+ __fput+0x264/0x980
+ task_work_run+0xdd/0x1a0
+ exit_to_user_mode_prepare+0x242/0x250
+ syscall_exit_to_user_mode+0x19/0x60
+ do_syscall_64+0x40/0x80
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7f87eed170a8
+Code: 48 8b 05 83 9d 0d 00 64 c7 00 16 00 00 00 83 c8 ff 48 83 c4 20 5b c3 64 8b 04 25 18 00 00 00 85 c0 75 20 b8 03 00 00 00 0f 05 <48> 3d 00 f0 ff ff 76 5b 48 8b 15 51 9d 0d 00 f7 d8 64 89 02 48 83
+RSP: 002b:00007ffd36c11e88 EFLAGS: 00000246 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 00007f87eebf8ae0 RCX: 00007f87eed170a8
+RDX: 000055eeb1b8996e RSI: 00007ffd36c11688 RDI: 0000000000000008
+RBP: 000055ebef06f350 R08: 0000000000000006 R09: 1e875d3d85c37994
+R10: 000000000000010f R11: 0000000000000246 R12: 0000000000000002
+R13: 000055ebef06ea50 R14: 0000000000000008 R15: 000055ebef0322c0
+ </TASK>

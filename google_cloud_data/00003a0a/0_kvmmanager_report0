@@ -1,0 +1,97 @@
+general protection fault, probably for non-canonical address 0xdffffc0000000034: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x00000000000001a0-0x00000000000001a7]
+CPU: 1 PID: 5488 Comm: syz-executor.2 Not tainted 5.11.0-rc4-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:ieee80211_subif_start_xmit+0x292/0x1020
+Code: 0f 85 e0 0c 00 00 48 8b 04 24 4c 8b a0 10 17 00 00 48 b8 00 00 00 00 00 fc ff df 49 8d bc 24 a4 01 00 00 48 89 fa 48 c1 ea 03 <0f> b6 04 02 48 89 fa 83 e2 07 38 d0 7f 08 84 c0 0f 85 13 0d 00 00
+RSP: 0018:ffffc90000db0548 EFLAGS: 00010203
+RAX: dffffc0000000000 RBX: 1ffff920001b60b4 RCX: 0000000000000100
+RDX: 0000000000000034 RSI: ffffffff886feb98 RDI: 00000000000001a4
+RBP: ffff888025750a00 R08: ffff888019c23580 R09: ffffffff8aa6a240
+R10: ffffffff886fead4 R11: 0000000000000002 R12: 0000000000000000
+R13: ffff888029270000 R14: ffff88801db15042 R15: ffff888025750ad0
+FS:  0000555557395480(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f2facf9af78 CR3: 000000001a758000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <IRQ>
+ dev_hard_start_xmit+0x192/0x900
+ sch_direct_xmit+0x2e8/0xb70
+ __qdisc_run+0x50f/0x1890
+ __dev_queue_xmit+0x14b8/0x3180
+ ip6_finish_output2+0x867/0x17f0
+ __ip6_finish_output+0x4b1/0xdf0
+ ip6_finish_output+0x35/0x210
+ ip6_output+0x1d5/0x520
+ mld_sendpack+0x9c7/0xdc0
+ mld_ifc_timer_expire+0x623/0xf60
+ call_timer_fn+0x1a5/0x710
+ __run_timers.part.0+0x6b5/0xac0
+ run_timer_softirq+0xb6/0x1d0
+ __do_softirq+0x29d/0xa43
+ asm_call_irq_on_stack+0xf/0x20
+ </IRQ>
+ do_softirq_own_stack+0x95/0xd0
+ __irq_exit_rcu+0x17f/0x200
+ irq_exit_rcu+0x5/0x20
+ sysvec_apic_timer_interrupt+0x48/0xd0
+ asm_sysvec_apic_timer_interrupt+0x12/0x20
+RIP: 0010:__sanitizer_cov_trace_cmp1+0x7/0x80
+Code: a7 50 02 e9 28 fd ff ff be 02 00 00 00 48 89 df e8 ee a6 50 02 e9 16 fd ff ff 66 0f 1f 84 00 00 00 00 00 53 41 89 fb 41 89 f1 <bf> 03 00 00 00 65 48 8b 0c 25 00 f0 01 00 48 89 ce 4c 8b 54 24 08
+RSP: 0018:ffffc90001e97cf0 EFLAGS: 00000246
+RAX: 0000000000000000 RBX: ffffffff8d56b600 RCX: 0000000000000000
+RDX: ffff888019c23580 RSI: 0000000000000002 RDI: 0000000000000002
+RBP: 0000000000000002 R08: 0000000000000001 R09: 0000000000000002
+R10: ffffc90001e97d00 R11: 0000000000000002 R12: dffffc0000000000
+R13: 0000000000000002 R14: 0000000000000041 R15: 00007ffc13b09140
+ nf_sockopt_find.constprop.0+0x9e/0x290
+ nf_getsockopt+0x29/0xd0
+ ip_getsockopt+0x15e/0x1b0
+ tcp_getsockopt+0x85/0xd0
+ __sys_getsockopt+0x21d/0x4b0
+ __x64_sys_getsockopt+0xb9/0x150
+ do_syscall_64+0x2d/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7f8cb2457b0a
+Code: c4 c1 e0 1a 0d 00 00 04 00 89 01 e9 e0 fe ff ff e8 3b 05 00 00 66 2e 0f 1f 84 00 00 00 00 00 90 49 89 ca b8 37 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 06 c3 0f 1f 44 00 00 48 c7 c2 b0 ff ff ff f7
+RSP: 002b:00007ffc13b090b8 EFLAGS: 00000212 ORIG_RAX: 0000000000000037
+RAX: ffffffffffffffda RBX: 00007ffc13b09140 RCX: 00007f8cb2457b0a
+RDX: 0000000000000041 RSI: 0000000000000000 RDI: 0000000000000003
+RBP: 0000000000000003 R08: 00007ffc13b090dc R09: 00007ffc13b094f7
+R10: 00007ffc13b09140 R11: 0000000000000212 R12: 00007f8cb2555a80
+R13: 00007ffc13b090dc R14: 0000000000000000 R15: 00007f8cb2556ec0
+Modules linked in:
+---[ end trace 63a342a8a913bd0a ]---
+RIP: 0010:ieee80211_subif_start_xmit+0x292/0x1020
+Code: 0f 85 e0 0c 00 00 48 8b 04 24 4c 8b a0 10 17 00 00 48 b8 00 00 00 00 00 fc ff df 49 8d bc 24 a4 01 00 00 48 89 fa 48 c1 ea 03 <0f> b6 04 02 48 89 fa 83 e2 07 38 d0 7f 08 84 c0 0f 85 13 0d 00 00
+RSP: 0018:ffffc90000db0548 EFLAGS: 00010203
+RAX: dffffc0000000000 RBX: 1ffff920001b60b4 RCX: 0000000000000100
+RDX: 0000000000000034 RSI: ffffffff886feb98 RDI: 00000000000001a4
+RBP: ffff888025750a00 R08: ffff888019c23580 R09: ffffffff8aa6a240
+R10: ffffffff886fead4 R11: 0000000000000002 R12: 0000000000000000
+R13: ffff888029270000 R14: ffff88801db15042 R15: ffff888025750ad0
+FS:  0000555557395480(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f2facf9af78 CR3: 000000001a758000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	0f 85 e0 0c 00 00    	jne    0xce6
+   6:	48 8b 04 24          	mov    (%rsp),%rax
+   a:	4c 8b a0 10 17 00 00 	mov    0x1710(%rax),%r12
+  11:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  18:	fc ff df
+  1b:	49 8d bc 24 a4 01 00 	lea    0x1a4(%r12),%rdi
+  22:	00
+  23:	48 89 fa             	mov    %rdi,%rdx
+  26:	48 c1 ea 03          	shr    $0x3,%rdx
+* 2a:	0f b6 04 02          	movzbl (%rdx,%rax,1),%eax <-- trapping instruction
+  2e:	48 89 fa             	mov    %rdi,%rdx
+  31:	83 e2 07             	and    $0x7,%edx
+  34:	38 d0                	cmp    %dl,%al
+  36:	7f 08                	jg     0x40
+  38:	84 c0                	test   %al,%al
+  3a:	0f 85 13 0d 00 00    	jne    0xd53

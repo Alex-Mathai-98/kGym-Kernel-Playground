@@ -1,0 +1,44 @@
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 5159 at fs/btrfs/ordered-data.c:1138 btrfs_split_ordered_extent+0x628/0x840
+Modules linked in:
+CPU: 1 PID: 5159 Comm: syz-executor.3 Not tainted 6.3.0-rc7-syzkaller-00174-g79b8ee702c91 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:btrfs_split_ordered_extent+0x628/0x840
+Code: fe 48 c7 c7 e0 56 2a 8b 48 c7 c6 60 52 2a 8b ba 6c 04 00 00 e8 59 c3 12 07 e8 94 17 fe fd 0f 0b e9 21 fb ff ff e8 88 17 fe fd <0f> 0b bb ea ff ff ff eb b0 e8 7a 17 fe fd 0f 0b bb ea ff ff ff eb
+RSP: 0018:ffffc9000445edf8 EFLAGS: 00010293
+RAX: ffffffff838c8748 RBX: 0000000000010000 RCX: ffff888021b60000
+RDX: 0000000000000000 RSI: 0000000000010000 RDI: 0000000000001000
+RBP: 1ffff110058ac801 R08: ffffffff838c8312 R09: fffffbfff1ca78ce
+R10: 0000000000000000 R11: dffffc0000000001 R12: dffffc0000000000
+R13: ffff88802c564008 R14: 0000000000001000 R15: 0000000000000000
+FS:  00007ff1c7bac6c0(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000562512a66000 CR3: 000000002a5a6000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ btrfs_extract_ordered_extent+0x12c/0xb00
+ btrfs_dio_submit_io+0x239/0x340
+ iomap_dio_bio_iter+0xe17/0x1440
+ __iomap_dio_rw+0x121a/0x20d0
+ btrfs_dio_write+0xb6/0x100
+ btrfs_do_write_iter+0x86f/0x1270
+ do_iter_write+0x6ea/0xc50
+ iter_file_splice_write+0x843/0xfe0
+ direct_splice_actor+0xe7/0x1c0
+ splice_direct_to_actor+0x4c4/0xbd0
+ do_splice_direct+0x283/0x3d0
+ do_sendfile+0x620/0xff0
+ __se_sys_sendfile64+0x17c/0x1e0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7ff1c6e7ca19
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ff1c7bac0c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
+RAX: ffffffffffffffda RBX: 00007ff1c6f9c050 RCX: 00007ff1c6e7ca19
+RDX: 0000000000000000 RSI: 0000000000000004 RDI: 0000000000000004
+RBP: 00007ff1c6ed8c88 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000008800000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000006e R14: 00007ff1c6f9c050 R15: 00007ffe53928e68
+ </TASK>

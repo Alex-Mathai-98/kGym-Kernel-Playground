@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "kernel BUG in btrfs_drop_extents",
+    "display-title": "kernel BUG in btrfs_drop_extents",
+    "id": "6e185619b66eae1ef09684c5f6e283d6cfb5ba84",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "btrfs: do not BUG_ON() on ENOMEM when dropping extent items for a range",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=162d053e15fe985f754ef495a96eb3db970c43ed",
+            "hash": "162d053e15fe985f754ef495a96eb3db970c43ed",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000089773e05ee4b9cb4@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "kernel BUG in btrfs_drop_extents",
+            "syz-reproducer": "/text?tag=ReproSyz&x=171a3f2d880000",
+            "c-reproducer": "/text?tag=ReproC&x=17338b55880000",
+            "kernel-config": "/text?tag=KernelConfig&x=8d01b6e3197974dd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c3eb11fbb826879be773c137f281569efce67aa8",
+            "kernel-source-commit": "c3eb11fbb826879be773c137f281569efce67aa8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/74a66371788c1eb22bde25c9c422c7754596d7f5",
+            "syzkaller-commit": "74a66371788c1eb22bde25c9c422c7754596d7f5",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15b5d7e5880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "btrfs_drop_extents",
+            "fs/btrfs/file.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-28T15:07:30+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "btrfs"
+    ],
+    "parent_of_fix_commit": "1742e1c90c3da344f3bb9b1f1309b3f47482756a",
+    "patch": "diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c\nindex 448b143a5cb2..91b00eb2440e 100644\n--- a/fs/btrfs/file.c\n+++ b/fs/btrfs/file.c\n@@ -380,7 +380,10 @@ int btrfs_drop_extents(struct btrfs_trans_handle *trans,\n \t\t\t\t\t\targs->start - extent_offset,\n \t\t\t\t\t\t0, false);\n \t\t\t\tret = btrfs_inc_extent_ref(trans, &ref);\n-\t\t\t\tBUG_ON(ret); /* -ENOMEM */\n+\t\t\t\tif (ret) {\n+\t\t\t\t\tbtrfs_abort_transaction(trans, ret);\n+\t\t\t\t\tbreak;\n+\t\t\t\t}\n \t\t\t}\n \t\t\tkey.offset = args->start;\n \t\t}\n@@ -467,7 +470,10 @@ int btrfs_drop_extents(struct btrfs_trans_handle *trans,\n \t\t\t\t\t\tkey.offset - extent_offset, 0,\n \t\t\t\t\t\tfalse);\n \t\t\t\tret = btrfs_free_extent(trans, &ref);\n-\t\t\t\tBUG_ON(ret); /* -ENOMEM */\n+\t\t\t\tif (ret) {\n+\t\t\t\t\tbtrfs_abort_transaction(trans, ret);\n+\t\t\t\t\tbreak;\n+\t\t\t\t}\n \t\t\t\targs->bytes_found += extent_end - key.offset;\n \t\t\t}\n \n",
+    "patch_modified_files": [
+        "fs/btrfs/file.c"
+    ]
+}

@@ -1,0 +1,27 @@
+=============================
+WARNING: suspicious RCU usage
+5.9.0-rc6-syzkaller #0 Not tainted
+-----------------------------
+include/linux/radix-tree.h:176 suspicious rcu_dereference_check() usage!
+
+other info that might help us debug this:
+
+
+rcu_scheduler_active = 2, debug_locks = 1
+2 locks held by kworker/u4:2/44:
+ #0: ffff8881f4ae0938 ((wq_completion)qrtr_ns_handler){+.+.}-{0:0}, at: process_one_work+0x88e/0x1680
+ #1: ffffc900002c7d98 ((work_completion)(&qrtr_ns.work)){+.+.}-{0:0}, at: process_one_work+0x8c2/0x1680
+
+stack backtrace:
+CPU: 1 PID: 44 Comm: kworker/u4:2 Not tainted 5.9.0-rc6-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: qrtr_ns_handler qrtr_ns_worker
+Call Trace:
+ dump_stack+0x191/0x1f1
+ ctrl_cmd_new_lookup+0x6da/0x7d0
+ qrtr_ns_worker+0x7e7/0x1680
+ process_one_work+0x9ad/0x1680
+ worker_thread+0x676/0x1170
+ kthread+0x3a6/0x490
+ ret_from_fork+0x1f/0x30
+failed to send lookup notification

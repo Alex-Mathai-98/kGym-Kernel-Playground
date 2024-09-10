@@ -1,0 +1,92 @@
+==================================================================
+BUG: KASAN: slab-out-of-bounds in xfs_btree_lookup_get_block+0x162/0x6e0
+Read of size 8 at addr ffff88801dc91258 by task syz-executor.2/5146
+
+CPU: 0 PID: 5146 Comm: syz-executor.2 Not tainted 6.3.0-rc6-syzkaller-00003-gc95356ca8848 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1b5/0x2a0
+ print_report+0x163/0x510
+ kasan_report+0x108/0x140
+ xfs_btree_lookup_get_block+0x162/0x6e0
+ xfs_btree_lookup+0x364/0x12d0
+ xfs_btree_simple_query_range+0xe3/0x690
+ xfs_btree_query_range+0x2e0/0x390
+ xfs_refcount_recover_cow_leftovers+0x2cb/0xc40
+ xfs_reflink_recover_cow+0x8a/0x1e0
+ xlog_recover_finish+0x7f1/0x8f0
+ xfs_log_mount_finish+0x1fd/0x3e0
+ xfs_mountfs+0x1666/0x1f50
+ xfs_fs_fill_super+0xf94/0x11e0
+ get_tree_bdev+0x402/0x620
+ vfs_get_tree+0x8c/0x270
+ do_new_mount+0x28f/0xae0
+ __se_sys_mount+0x2c9/0x3b0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f53b9a7dfda
+Code: d8 64 89 02 48 c7 c0 ff ff ff ff eb a6 e8 de 09 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f53ba87fee8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
+RAX: ffffffffffffffda RBX: 00007f53ba87ff80 RCX: 00007f53b9a7dfda
+RDX: 0000000020000100 RSI: 0000000020009640 RDI: 00007f53ba87ff40
+RBP: 0000000020000100 R08: 00007f53ba87ff80 R09: 0000000000200800
+R10: 0000000000200800 R11: 0000000000000246 R12: 0000000020009640
+R13: 00007f53ba87ff40 R14: 0000000000009712 R15: 0000000020000240
+ </TASK>
+
+The buggy address belongs to the object at ffff88801dc91210
+ which belongs to the cache xfs_refcbt_cur of size 200
+The buggy address is located 72 bytes inside of
+ allocated 200-byte region [ffff88801dc91210, ffff88801dc912d8)
+
+The buggy address belongs to the physical page:
+page:ffffea0000772440 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x1dc91
+flags: 0xfff00000000200(slab|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000000200 ffff88801ad81c80 dead000000000122 0000000000000000
+raw: 0000000000000000 00000000800f000f 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x12c40(GFP_NOFS|__GFP_NOWARN|__GFP_NORETRY), pid 5146, tgid 5145 (syz-executor.2), ts 66275930159, free_ts 62284816356
+ get_page_from_freelist+0x31e9/0x3360
+ __alloc_pages+0x255/0x670
+ alloc_slab_page+0x6a/0x160
+ new_slab+0x84/0x2f0
+ ___slab_alloc+0xa07/0x1000
+ kmem_cache_alloc+0x1b9/0x2e0
+ xfs_refcountbt_init_cursor+0x8a/0x340
+ xfs_refcount_recover_cow_leftovers+0x215/0xc40
+ xfs_reflink_recover_cow+0x8a/0x1e0
+ xlog_recover_finish+0x7f1/0x8f0
+ xfs_log_mount_finish+0x1fd/0x3e0
+ xfs_mountfs+0x1666/0x1f50
+ xfs_fs_fill_super+0xf94/0x11e0
+ get_tree_bdev+0x402/0x620
+ vfs_get_tree+0x8c/0x270
+ do_new_mount+0x28f/0xae0
+page last free stack trace:
+ free_unref_page_prepare+0xe2f/0xe70
+ free_unref_page+0x37/0x3f0
+ qlist_free_all+0x22/0x60
+ kasan_quarantine_reduce+0x14b/0x160
+ __kasan_slab_alloc+0x23/0x70
+ slab_post_alloc_hook+0x69/0x3a0
+ __kmem_cache_alloc_node+0x14c/0x290
+ __kmalloc+0xa8/0x230
+ fib6_info_alloc+0x30/0xd0
+ ip6_route_info_create+0x446/0x12c0
+ ip6_route_add+0x26/0x120
+ addrconf_add_dev+0x354/0x500
+ addrconf_init_auto_addrs+0x85f/0xe90
+ addrconf_notify+0xb59/0xfe0
+ raw_notifier_call_chain+0xd4/0x170
+ netdev_state_change+0x1a7/0x270
+
+Memory state around the buggy address:
+ ffff88801dc91100: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88801dc91180: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff88801dc91200: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+                                                    ^
+ ffff88801dc91280: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88801dc91300: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================

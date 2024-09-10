@@ -1,0 +1,65 @@
+{
+    "version": 1,
+    "title": "UBSAN: array-index-out-of-bounds in f2fs_iget",
+    "display-title": "UBSAN: array-index-out-of-bounds in f2fs_iget",
+    "id": "d58fe2a53afa4ffbfaf3df368acb70d137e46c9f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Revert \"f2fs: fix to do sanity check on extent cache correctly\"",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=958ccbbf1ce716d77c7cfa79ace50a421c1eed73",
+            "hash": "958ccbbf1ce716d77c7cfa79ace50a421c1eed73",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "f2fs: fix to do sanity check on extent cache correctly",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d48a7b3a72f121655d95b5157c32c7d555e44c05",
+        "hash": "d48a7b3a72f121655d95b5157c32c7d555e44c05",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000007673490602502e68@google.com/T/",
+        "https://lore.kernel.org/all/000000000000fcf0690600e4d04d@google.com/T/",
+        "https://lore.kernel.org/all/20230720112953.3764050-1-chao@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "UBSAN: array-index-out-of-bounds in f2fs_iget",
+            "syz-reproducer": "/text?tag=ReproSyz&x=158c0fa2a80000",
+            "c-reproducer": "/text?tag=ReproC&x=151ccab6a80000",
+            "kernel-config": "/text?tag=KernelConfig&x=6d0f369ef5fb88c9",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=831fe284d8275987596b7d640518dddba5735f61",
+            "kernel-source-commit": "831fe284d8275987596b7d640518dddba5735f61",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/35d9ecc508aef508b67ee7986a7abb0864e74f8e",
+            "syzkaller-commit": "35d9ecc508aef508b67ee7986a7abb0864e74f8e",
+            "compiler-description": "Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11c4f646a80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "do_read_inode",
+            "fs/f2fs/inode.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "do_read_inode",
+            "fs/f2fs/inode.c"
+        ]
+    ],
+    "patch_commit_date": "2023-07-20T11:29:53+00:00",
+    "cause_commit_date": "2023-01-09T03:49:20+00:00",
+    "subsystems": [
+        "f2fs"
+    ],
+    "parent_of_fix_commit": "a842a90926b6b96ef38d6a190c27a4a60531a633",
+    "patch": "diff --git a/fs/f2fs/inode.c b/fs/f2fs/inode.c\nindex 09e986b050c6..e81725c922cd 100644\n--- a/fs/f2fs/inode.c\n+++ b/fs/f2fs/inode.c\n@@ -475,6 +475,12 @@ static int do_read_inode(struct inode *inode)\n \t\tfi->i_inline_xattr_size = 0;\n \t}\n \n+\tif (!sanity_check_inode(inode, node_page)) {\n+\t\tf2fs_put_page(node_page, 1);\n+\t\tf2fs_handle_error(sbi, ERROR_CORRUPTED_INODE);\n+\t\treturn -EFSCORRUPTED;\n+\t}\n+\n \t/* check data exist */\n \tif (f2fs_has_inline_data(inode) && !f2fs_exist_data(inode))\n \t\t__recover_inline_status(inode, node_page);\n@@ -544,12 +550,6 @@ static int do_read_inode(struct inode *inode)\n \tf2fs_init_read_extent_tree(inode, node_page);\n \tf2fs_init_age_extent_tree(inode);\n \n-\tif (!sanity_check_inode(inode, node_page)) {\n-\t\tf2fs_put_page(node_page, 1);\n-\t\tf2fs_handle_error(sbi, ERROR_CORRUPTED_INODE);\n-\t\treturn -EFSCORRUPTED;\n-\t}\n-\n \tif (!sanity_check_extent_cache(inode)) {\n \t\tf2fs_put_page(node_page, 1);\n \t\tf2fs_handle_error(sbi, ERROR_CORRUPTED_INODE);\n",
+    "patch_modified_files": [
+        "fs/f2fs/inode.c"
+    ]
+}

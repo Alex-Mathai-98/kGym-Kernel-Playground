@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "memory leak in nf_tables_parse_netdev_hooks",
+    "display-title": "memory leak in nf_tables_parse_netdev_hooks (2)",
+    "id": "ab98490c0e3b48a71b7c203ee51366c99ceeda84",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: nf_tables: free flowtable hooks on hook register error",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2d285f26ecd072800a29c5b71e63437f21ef830a",
+            "hash": "2d285f26ecd072800a29c5b71e63437f21ef830a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ebdc39059fe32327@google.com/T/",
+        "https://lore.kernel.org/all/20200302205850.29365-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20200306181513.656594-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20200317103326.593639086@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15acfa81e00000",
+            "c-reproducer": "/text?tag=ReproC&x=172f9d09e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=6951e37c8d613538",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=63623fd44972d1ed2bfb6e0fb631dfcf547fd1e7",
+            "kernel-source-commit": "63623fd44972d1ed2bfb6e0fb631dfcf547fd1e7",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c88c7b75a4e022b758f4b0f1bf3db8ebb2fb25e6",
+            "syzkaller-commit": "c88c7b75a4e022b758f4b0f1bf3db8ebb2fb25e6",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1114ac55e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nf_tables_newflowtable",
+            "net/netfilter/nf_tables_api.c"
+        ]
+    ],
+    "patch_commit_date": "2020-03-02T20:58:50+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "ee84f19cbbe9cf7cba2958acb03163fed3ecbb0f",
+    "patch": "diff --git a/net/netfilter/nf_tables_api.c b/net/netfilter/nf_tables_api.c\nindex d1318bdf49ca..bb064aa4154b 100644\n--- a/net/netfilter/nf_tables_api.c\n+++ b/net/netfilter/nf_tables_api.c\n@@ -6300,8 +6300,13 @@ static int nf_tables_newflowtable(struct net *net, struct sock *nlsk,\n \t\tgoto err4;\n \n \terr = nft_register_flowtable_net_hooks(ctx.net, table, flowtable);\n-\tif (err < 0)\n+\tif (err < 0) {\n+\t\tlist_for_each_entry_safe(hook, next, &flowtable->hook_list, list) {\n+\t\t\tlist_del_rcu(&hook->list);\n+\t\t\tkfree_rcu(hook, rcu);\n+\t\t}\n \t\tgoto err4;\n+\t}\n \n \terr = nft_trans_flowtable_add(&ctx, NFT_MSG_NEWFLOWTABLE, flowtable);\n \tif (err < 0)\n",
+    "patch_modified_files": [
+        "net/netfilter/nf_tables_api.c"
+    ]
+}

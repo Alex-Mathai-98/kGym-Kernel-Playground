@@ -1,0 +1,673 @@
+Warning: Permanently added '10.128.0.32' (ED25519) to the list of known hosts.
+2024/04/16 16:28:06 ignoring optional flag "sandboxArg"="0"
+2024/04/16 16:28:06 parsed 1 programs
+[   34.258395] kauditd_printk_skb: 4 callbacks suppressed
+[   34.258410] audit: type=1400 audit(1713284886.378:84): avc:  denied  { getattr } for  pid=3699 comm="syz-execprog" path="user:[4026531837]" dev="nsfs" ino=4026531837 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:nsfs_t tclass=file permissive=1
+[   34.287126] audit: type=1400 audit(1713284886.378:85): avc:  denied  { read } for  pid=3699 comm="syz-execprog" dev="nsfs" ino=4026531837 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:nsfs_t tclass=file permissive=1
+[   34.308068] audit: type=1400 audit(1713284886.378:86): avc:  denied  { open } for  pid=3699 comm="syz-execprog" path="user:[4026531837]" dev="nsfs" ino=4026531837 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:nsfs_t tclass=file permissive=1
+[   34.330807] audit: type=1400 audit(1713284886.398:87): avc:  denied  { read } for  pid=3699 comm="syz-execprog" name="vhci" dev="devtmpfs" ino=17612 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:vhost_device_t tclass=chr_file permissive=1
+[   34.353358] audit: type=1400 audit(1713284886.398:88): avc:  denied  { open } for  pid=3699 comm="syz-execprog" path="/dev/vhci" dev="devtmpfs" ino=17612 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:vhost_device_t tclass=chr_file permissive=1
+[   34.376640] audit: type=1400 audit(1713284886.438:89): avc:  denied  { mounton } for  pid=3704 comm="syz-executor" path="/proc/sys/fs/binfmt_misc" dev="binfmt_misc" ino=1 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:binfmt_misc_fs_t tclass=dir permissive=1
+[   34.376671] audit: type=1400 audit(1713284886.438:90): avc:  denied  { mount } for  pid=3704 comm="syz-executor" name="/" dev="binfmt_misc" ino=1 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:binfmt_misc_fs_t tclass=filesystem permissive=1
+[   34.426608] audit: type=1400 audit(1713284886.438:91): avc:  denied  { create } for  pid=3704 comm="syz-executor" scontext=root:sysadm_r:sysadm_t tcontext=root:sysadm_r:sysadm_t tclass=netlink_generic_socket permissive=1
+[   34.438856] SELinux:  Context root:object_r:swapfile_t is not valid (left unmapped).
+[   34.448202] audit: type=1400 audit(1713284886.438:92): avc:  denied  { write } for  pid=3704 comm="syz-executor" scontext=root:sysadm_r:sysadm_t tcontext=root:sysadm_r:sysadm_t tclass=netlink_generic_socket permissive=1
+[   34.474596] audit: type=1400 audit(1713284886.438:93): avc:  denied  { read } for  pid=3704 comm="syz-executor" scontext=root:sysadm_r:sysadm_t tcontext=root:sysadm_r:sysadm_t tclass=netlink_generic_socket permissive=1
+2024/04/16 16:28:06 executed programs: 0
+[   34.600586] Adding 124996k swap on ./swap-file.  Priority:0 extents:1 across:124996k FS
+[   35.153558] IPVS: ftp: loaded support on port[0] = 21
+[   35.236203] IPVS: ftp: loaded support on port[0] = 21
+[   35.286671] IPVS: ftp: loaded support on port[0] = 21
+[   35.320737] IPVS: ftp: loaded support on port[0] = 21
+[   35.334606] IPVS: ftp: loaded support on port[0] = 21
+[   35.348538] IPVS: ftp: loaded support on port[0] = 21
+[   35.463074] IPVS: ftp: loaded support on port[0] = 21
+[   35.481485] IPVS: ftp: loaded support on port[0] = 21
+[   36.086233] bridge0: port 1(bridge_slave_0) entered blocking state
+[   36.094949] bridge0: port 1(bridge_slave_0) entered disabled state
+[   36.103293] device bridge_slave_0 entered promiscuous mode
+[   36.113698] bridge0: port 2(bridge_slave_1) entered blocking state
+[   36.121108] bridge0: port 2(bridge_slave_1) entered disabled state
+[   36.128655] device bridge_slave_1 entered promiscuous mode
+[   36.179996] bridge0: port 1(bridge_slave_0) entered blocking state
+[   36.193942] bridge0: port 1(bridge_slave_0) entered disabled state
+[   36.201686] device bridge_slave_0 entered promiscuous mode
+[   36.244782] bridge0: port 2(bridge_slave_1) entered blocking state
+[   36.253619] bridge0: port 2(bridge_slave_1) entered disabled state
+[   36.264735] device bridge_slave_1 entered promiscuous mode
+[   36.285318] bridge0: port 1(bridge_slave_0) entered blocking state
+[   36.292883] bridge0: port 1(bridge_slave_0) entered disabled state
+[   36.300392] device bridge_slave_0 entered promiscuous mode
+[   36.312293] bridge0: port 2(bridge_slave_1) entered blocking state
+[   36.320278] bridge0: port 2(bridge_slave_1) entered disabled state
+[   36.327550] device bridge_slave_1 entered promiscuous mode
+[   36.335980] bond0: Enslaving bond_slave_0 as an active interface with an up link
+[   36.359712] bond0: Enslaving bond_slave_0 as an active interface with an up link
+[   36.376303] bond0: Enslaving bond_slave_1 as an active interface with an up link
+[   36.406607] bond0: Enslaving bond_slave_1 as an active interface with an up link
+[   36.433361] bond0: Enslaving bond_slave_0 as an active interface with an up link
+[   36.445078] bridge0: port 1(bridge_slave_0) entered blocking state
+[   36.451699] bridge0: port 1(bridge_slave_0) entered disabled state
+[   36.458644] device bridge_slave_0 entered promiscuous mode
+[   36.483867] bridge0: port 1(bridge_slave_0) entered blocking state
+[   36.490981] bridge0: port 1(bridge_slave_0) entered disabled state
+[   36.498228] device bridge_slave_0 entered promiscuous mode
+[   36.505901] bond0: Enslaving bond_slave_1 as an active interface with an up link
+[   36.513883] bridge0: port 1(bridge_slave_0) entered blocking state
+[   36.520455] bridge0: port 1(bridge_slave_0) entered disabled state
+[   36.527357] device bridge_slave_0 entered promiscuous mode
+[   36.534491] bridge0: port 2(bridge_slave_1) entered blocking state
+[   36.541367] bridge0: port 2(bridge_slave_1) entered disabled state
+[   36.548345] device bridge_slave_1 entered promiscuous mode
+[   36.556871] team0: Port device team_slave_0 added
+[   36.562253] bridge0: port 1(bridge_slave_0) entered blocking state
+[   36.568600] bridge0: port 1(bridge_slave_0) entered disabled state
+[   36.576420] device bridge_slave_0 entered promiscuous mode
+[   36.587568] bridge0: port 2(bridge_slave_1) entered blocking state
+[   36.594667] bridge0: port 2(bridge_slave_1) entered disabled state
+[   36.601824] device bridge_slave_1 entered promiscuous mode
+[   36.614394] bridge0: port 2(bridge_slave_1) entered blocking state
+[   36.621612] bridge0: port 2(bridge_slave_1) entered disabled state
+[   36.628932] device bridge_slave_1 entered promiscuous mode
+[   36.647757] team0: Port device team_slave_1 added
+[   36.653136] bridge0: port 2(bridge_slave_1) entered blocking state
+[   36.659642] bridge0: port 2(bridge_slave_1) entered disabled state
+[   36.666608] device bridge_slave_1 entered promiscuous mode
+[   36.673847] team0: Port device team_slave_0 added
+[   36.684584] team0: Port device team_slave_1 added
+[   36.694726] bond0: Enslaving bond_slave_0 as an active interface with an up link
+[   36.728326] bond0: Enslaving bond_slave_1 as an active interface with an up link
+[   36.748689] team0: Port device team_slave_0 added
+[   36.754288] bridge0: port 1(bridge_slave_0) entered blocking state
+[   36.761339] bridge0: port 1(bridge_slave_0) entered disabled state
+[   36.768340] device bridge_slave_0 entered promiscuous mode
+[   36.781093] bond0: Enslaving bond_slave_0 as an active interface with an up link
+[   36.791050] bond0: Enslaving bond_slave_0 as an active interface with an up link
+[   36.815424] team0: Port device team_slave_1 added
+[   36.825476] bond0: Enslaving bond_slave_0 as an active interface with an up link
+[   36.834041] Bluetooth: hci1: command 0x0409 tx timeout
+[   36.840583] Bluetooth: hci0: command 0x0409 tx timeout
+[   36.846300] bridge0: port 2(bridge_slave_1) entered blocking state
+[   36.852921] bridge0: port 2(bridge_slave_1) entered disabled state
+[   36.861228] device bridge_slave_1 entered promiscuous mode
+[   36.868535] bond0: Enslaving bond_slave_1 as an active interface with an up link
+[   36.887333] bond0: Enslaving bond_slave_1 as an active interface with an up link
+[   36.898290] bond0: Enslaving bond_slave_1 as an active interface with an up link
+[   36.909627] Bluetooth: hci4: command 0x0409 tx timeout
+[   36.909766] Bluetooth: hci3: command 0x0409 tx timeout
+[   36.921337] Bluetooth: hci6: command 0x0409 tx timeout
+[   36.946604] team0: Port device team_slave_0 added
+[   36.957482] team0: Port device team_slave_1 added
+[   36.988822] team0: Port device team_slave_0 added
+[   36.993859] Bluetooth: hci7: command 0x0409 tx timeout
+[   36.999404] Bluetooth: hci5: command 0x0409 tx timeout
+[   37.004733] Bluetooth: hci2: command 0x0409 tx timeout
+[   37.022213] team0: Port device team_slave_0 added
+[   37.032865] team0: Port device team_slave_1 added
+[   37.043457] bond0: Enslaving bond_slave_0 as an active interface with an up link
+[   37.052257] team0: Port device team_slave_1 added
+[   37.059459] team0: Port device team_slave_0 added
+[   37.077604] team0: Port device team_slave_1 added
+[   37.090215] bond0: Enslaving bond_slave_1 as an active interface with an up link
+[   37.179909] team0: Port device team_slave_0 added
+[   37.229631] team0: Port device team_slave_1 added
+[   37.601674] 8021q: adding VLAN 0 to HW filter on device bond0
+[   37.676202] 8021q: adding VLAN 0 to HW filter on device team0
+[   37.711304] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   37.718970] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   37.734622] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   37.742679] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   37.750442] bridge0: port 1(bridge_slave_0) entered blocking state
+[   37.757011] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   37.764782] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   37.772759] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   37.780792] bridge0: port 2(bridge_slave_1) entered blocking state
+[   37.787281] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   37.798931] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   37.854593] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   37.862882] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   37.870852] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   37.878577] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   37.888092] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   37.902560] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   37.912993] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   37.921665] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   37.931143] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   37.938566] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   37.946265] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   38.168702] 8021q: adding VLAN 0 to HW filter on device bond0
+[   38.201101] 8021q: adding VLAN 0 to HW filter on device bond0
+[   38.241384] 8021q: adding VLAN 0 to HW filter on device team0
+[   38.250052] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   38.256932] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   38.264843] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   38.274338] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   38.282134] bridge0: port 1(bridge_slave_0) entered blocking state
+[   38.288478] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   38.298837] 8021q: adding VLAN 0 to HW filter on device bond0
+[   38.319890] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   38.328056] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   38.335463] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   38.342881] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   38.351210] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   38.358849] bridge0: port 2(bridge_slave_1) entered blocking state
+[   38.365298] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   38.372331] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   38.380190] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   38.397110] 8021q: adding VLAN 0 to HW filter on device bond0
+[   38.415118] 8021q: adding VLAN 0 to HW filter on device bond0
+[   38.449293] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   38.456339] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   38.466444] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   38.473611] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   38.480948] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   38.489028] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   38.497148] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   38.505598] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   38.513776] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   38.521452] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   38.529596] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   38.538977] 8021q: adding VLAN 0 to HW filter on device team0
+[   38.570289] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   38.578227] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   38.588839] bridge0: port 1(bridge_slave_0) entered blocking state
+[   38.595556] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   38.602678] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   38.610697] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   38.619865] 8021q: adding VLAN 0 to HW filter on device team0
+[   38.635938] 8021q: adding VLAN 0 to HW filter on device team0
+[   38.655397] 8021q: adding VLAN 0 to HW filter on device bond0
+[   38.663413] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   38.673164] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   38.680587] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   38.688239] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   38.696898] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   38.706248] bridge0: port 1(bridge_slave_0) entered blocking state
+[   38.712819] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   38.720222] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   38.728067] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   38.735919] bridge0: port 2(bridge_slave_1) entered blocking state
+[   38.742348] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   38.750152] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   38.757221] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   38.764267] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   38.772864] 8021q: adding VLAN 0 to HW filter on device team0
+[   38.790490] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   38.797997] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   38.806064] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   38.814100] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   38.822309] bridge0: port 2(bridge_slave_1) entered blocking state
+[   38.828809] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   38.836324] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   38.844246] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   38.852735] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   38.860582] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   38.868417] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   38.876230] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   38.886455] 8021q: adding VLAN 0 to HW filter on device bond0
+[   38.909728] Bluetooth: hci0: command 0x041b tx timeout
+[   38.915730] Bluetooth: hci1: command 0x041b tx timeout
+[   38.926470] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   38.940216] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   38.952881] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   38.961616] bridge0: port 1(bridge_slave_0) entered blocking state
+[   38.968064] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   38.975633] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   38.983541] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   38.991840] bridge0: port 2(bridge_slave_1) entered blocking state
+[   38.998434] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   39.005832] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   39.013778] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   39.021696] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   39.029722] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   39.037559] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   39.045704] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   39.053294] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   39.061224] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   39.068848] bridge0: port 1(bridge_slave_0) entered blocking state
+[   39.075333] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   39.082606] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   39.090425] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   39.106234] 8021q: adding VLAN 0 to HW filter on device team0
+[   39.112874] Bluetooth: hci6: command 0x041b tx timeout
+[   39.118206] Bluetooth: hci3: command 0x041b tx timeout
+[   39.124241] Bluetooth: hci4: command 0x041b tx timeout
+[   39.129885] Bluetooth: hci2: command 0x041b tx timeout
+[   39.135284] Bluetooth: hci5: command 0x041b tx timeout
+[   39.141087] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   39.148267] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   39.156461] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   39.163802] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   39.171486] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   39.178561] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   39.187313] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   39.196090] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   39.206612] bridge0: port 2(bridge_slave_1) entered blocking state
+[   39.213245] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   39.221045] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   39.229054] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   39.237153] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   39.244833] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   39.252998] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   39.260841] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   39.268872] IPv6: ADDRCONF(NETDEV_CHANGE): veth1: link becomes ready
+[   39.276135] IPv6: ADDRCONF(NETDEV_CHANGE): veth0: link becomes ready
+[   39.289705] Bluetooth: hci7: command 0x041b tx timeout
+[   39.294246] 8021q: adding VLAN 0 to HW filter on device team0
+[   39.311885] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   39.320846] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   39.328862] bridge0: port 1(bridge_slave_0) entered blocking state
+[   39.335299] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   39.346638] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   39.355147] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   39.363880] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   39.372135] bridge0: port 2(bridge_slave_1) entered blocking state
+[   39.378677] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   39.386655] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   39.395089] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   39.403812] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   39.412179] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   39.448748] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   39.456165] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   39.464890] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   39.473521] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   39.486433] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   39.500513] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   39.510246] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   39.519793] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   39.527819] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   39.535973] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   39.544003] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bridge: link becomes ready
+[   39.552266] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_0: link becomes ready
+[   39.560120] bridge0: port 1(bridge_slave_0) entered blocking state
+[   39.566443] bridge0: port 1(bridge_slave_0) entered forwarding state
+[   39.573633] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   39.581398] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   39.588938] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bridge: link becomes ready
+[   39.596936] IPv6: ADDRCONF(NETDEV_CHANGE): bridge_slave_1: link becomes ready
+[   39.604789] bridge0: port 2(bridge_slave_1) entered blocking state
+[   39.611421] bridge0: port 2(bridge_slave_1) entered forwarding state
+[   39.618603] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   39.626629] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   39.634948] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_bond: link becomes ready
+[   39.642957] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   39.650746] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   39.658542] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   39.666198] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   39.673933] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   39.681712] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   39.689099] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   39.697113] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   39.731544] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   39.738832] IPv6: ADDRCONF(NETDEV_CHANGE): bridge0: link becomes ready
+[   39.750675] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   39.758124] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   39.767169] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   39.775192] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_bond: link becomes ready
+[   39.784143] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_team: link becomes ready
+[   39.793027] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_0: link becomes ready
+[   39.800871] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_team: link becomes ready
+[   39.808867] IPv6: ADDRCONF(NETDEV_CHANGE): team_slave_1: link becomes ready
+[   39.827507] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_hsr: link becomes ready
+[   39.846878] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_0: link becomes ready
+[   39.855076] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_hsr: link becomes ready
+[   39.863144] IPv6: ADDRCONF(NETDEV_CHANGE): hsr_slave_1: link becomes ready
+[   39.871493] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   39.878424] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   39.887817] IPv6: ADDRCONF(NETDEV_CHANGE): team0: link becomes ready
+[   40.000696] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   40.007447] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   40.048555] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   40.056461] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   40.243766] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   40.259610] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   40.291780] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   40.316995] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   40.345205] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   40.383640] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   40.402611] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   40.445970] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   40.458935] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan1: link becomes ready
+[   40.477594] IPv6: ADDRCONF(NETDEV_CHANGE): vxcan0: link becomes ready
+[   40.613121] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   40.626461] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   40.648856] device veth0_vlan entered promiscuous mode
+[   40.668958] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   40.679748] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   40.705154] device veth1_vlan entered promiscuous mode
+[   40.740762] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan0: link becomes ready
+[   40.748663] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan1: link becomes ready
+[   40.822211] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   40.835226] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   40.857795] device veth0_macvtap entered promiscuous mode
+[   40.885768] device veth1_macvtap entered promiscuous mode
+[   40.976165] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   40.984293] IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+[   40.990691] Bluetooth: hci1: command 0x040f tx timeout
+[   40.996931] Bluetooth: hci0: command 0x040f tx timeout
+[   41.002003] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   41.011120] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   41.030098] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   41.040425] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   41.162276] Bluetooth: hci2: command 0x040f tx timeout
+[   41.171477] Bluetooth: hci4: command 0x040f tx timeout
+[   41.171814] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   41.208770] Bluetooth: hci3: command 0x040f tx timeout
+[   41.218848] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   41.234723] Bluetooth: hci6: command 0x040f tx timeout
+[   41.258078] Bluetooth: hci5: command 0x040f tx timeout
+[   41.310882] Bluetooth: hci7: command 0x040f tx timeout
+[   41.506328] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   41.528468] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   41.581387] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   41.590450] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   41.598794] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   41.610470] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   41.666596] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   41.680119] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   41.702785] device veth0_vlan entered promiscuous mode
+[   41.711587] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   41.718685] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   41.758362] device veth1_vlan entered promiscuous mode
+[   41.778874] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   41.792275] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   41.866694] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   41.880002] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   41.923349] device veth0_vlan entered promiscuous mode
+[   41.941358] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   41.951841] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   41.960760] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   41.967823] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   41.977220] device veth0_macvtap entered promiscuous mode
+[   42.005721] device veth0_vlan entered promiscuous mode
+[   42.014284] device veth1_vlan entered promiscuous mode
+[   42.027239] device veth1_macvtap entered promiscuous mode
+[   42.044545] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   42.058030] IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+[   42.065820] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan0: link becomes ready
+[   42.073275] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan1: link becomes ready
+[   42.080884] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   42.090496] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   42.097951] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   42.105845] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   42.114226] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   42.121511] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   42.128367] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   42.136064] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   42.178027] device veth0_vlan entered promiscuous mode
+[   42.198868] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   42.212025] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   42.220726] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+[   42.228646] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready
+[   42.236614] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   42.244498] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   42.257665] device veth1_vlan entered promiscuous mode
+[   42.266900] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan0: link becomes ready
+[   42.274772] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   42.283167] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   42.292011] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   42.299349] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   42.309075] device veth0_macvtap entered promiscuous mode
+[   42.324527] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   42.339935] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   42.365607] device veth0_vlan entered promiscuous mode
+[   42.379800] device veth1_vlan entered promiscuous mode
+[   42.385766] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan1: link becomes ready
+[   42.393680] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan0: link becomes ready
+[   42.401368] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   42.408655] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   42.417236] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   42.425388] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   42.439056] device veth1_macvtap entered promiscuous mode
+[   42.454944] device veth0_macvtap entered promiscuous mode
+[   42.461488] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   42.468939] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   42.476300] device veth1_macvtap entered promiscuous mode
+[   42.486752] device veth1_vlan entered promiscuous mode
+[   42.512037] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan1: link becomes ready
+[   42.520192] IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+[   42.527641] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan0: link becomes ready
+[   42.536131] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   42.544233] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   42.552432] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   42.559527] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   42.567174] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   42.575958] IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+[   42.619823] IPv6: ADDRCONF(NETDEV_CHANGE): macvlan1: link becomes ready
+[   42.627291] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   42.635262] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   42.643100] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   42.651113] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   42.659014] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   42.668049] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   42.675827] kauditd_printk_skb: 14 callbacks suppressed
+[   42.675843] audit: type=1400 audit(1713284894.788:108): avc:  denied  { mounton } for  pid=3720 comm="syz-executor.7" path="/dev/binderfs" dev="devtmpfs" ino=22510 scontext=root:sysadm_r:sysadm_t tcontext=root:object_r:device_t tclass=dir permissive=1
+[   42.705215] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   42.719490] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   42.727086] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   42.747235] device veth0_vlan entered promiscuous mode
+[   42.755631] audit: type=1400 audit(1713284894.888:109): avc:  denied  { read write } for  pid=3720 comm="syz-executor.7" name="loop7" dev="devtmpfs" ino=15776 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fixed_disk_device_t tclass=blk_file permissive=1
+[   42.781846] device veth0_vlan entered promiscuous mode
+[   42.785544] audit: type=1400 audit(1713284894.908:110): avc:  denied  { open } for  pid=3720 comm="syz-executor.7" path="/dev/loop7" dev="devtmpfs" ino=15776 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fixed_disk_device_t tclass=blk_file permissive=1
+[   42.812182] audit: type=1400 audit(1713284894.908:111): avc:  denied  { ioctl } for  pid=3720 comm="syz-executor.7" path="/dev/loop7" dev="devtmpfs" ino=15776 ioctlcmd=0x4c01 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fixed_disk_device_t tclass=blk_file permissive=1
+[   42.846462] device veth0_macvtap entered promiscuous mode
+[   42.854407] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   42.855173] audit: type=1400 audit(1713284894.968:112): avc:  denied  { read } for  pid=4275 comm="syz-executor.7" name="video3" dev="devtmpfs" ino=17585 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:v4l_device_t tclass=chr_file permissive=1
+[   42.864312] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   42.885115] audit: type=1400 audit(1713284894.968:113): avc:  denied  { open } for  pid=4275 comm="syz-executor.7" path="/dev/video3" dev="devtmpfs" ino=17585 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:v4l_device_t tclass=chr_file permissive=1
+[   42.917006] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   42.924996] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   42.933283] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   42.941771] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_vlan: link becomes ready
+[   42.949352] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_vlan: link becomes ready
+[   42.960172] IPv6: ADDRCONF(NETDEV_CHANGE): vlan0: link becomes ready
+[   42.967158] IPv6: ADDRCONF(NETDEV_CHANGE): vlan1: link becomes ready
+[   42.987172] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   43.007543] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   43.024433] device veth1_vlan entered promiscuous mode
+[   43.034617] device veth1_macvtap entered promiscuous mode
+[   43.048310] device veth0_macvtap entered promiscuous mode
+[   43.057658] device veth1_vlan entered promiscuous mode
+2024/04/16 16:28:15 executed programs: 8
+[   43.070954] audit: type=1400 audit(1713284895.198:114): avc:  denied  { write } for  pid=3699 comm="syz-execprog" path="pipe:[19334]" dev="pipefs" ino=19334 scontext=root:sysadm_r:sysadm_t tcontext=system_u:system_r:sshd_t tclass=fifo_file permissive=1
+[   43.071807] Bluetooth: hci0: command 0x0419 tx timeout
+[   43.119419] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   43.127272] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   43.152395] device veth1_macvtap entered promiscuous mode
+[   43.180003] Bluetooth: hci1: command 0x0419 tx timeout
+[   43.192791] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   43.200898] IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+[   43.235850] device veth0_macvtap entered promiscuous mode
+[   43.258384] Bluetooth: hci4: command 0x0419 tx timeout
+[   43.264232] Bluetooth: hci2: command 0x0419 tx timeout
+[   43.274760] device veth1_macvtap entered promiscuous mode
+[   43.285750] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   43.295199] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   43.304962] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   43.309293] Bluetooth: hci5: command 0x0419 tx timeout
+[   43.313843] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   43.317549] Bluetooth: hci6: command 0x0419 tx timeout
+[   43.325607] IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+[   43.330194] Bluetooth: hci3: command 0x0419 tx timeout
+[   43.343011] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   43.351207] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   43.361265] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   43.374931] device veth0_macvtap entered promiscuous mode
+[   43.389512] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+[   43.389971] Bluetooth: hci7: command 0x0419 tx timeout
+[   43.397412] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+[   43.422504] device veth1_macvtap entered promiscuous mode
+[   43.440095] IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+[   43.448082] IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+[   43.455966] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   43.467595] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   43.492521] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   43.504230] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   43.512902] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   43.521255] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   43.551901] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   43.561866] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   43.584078] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+[   43.592914] IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+[   43.602035] IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+[   43.610603] IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+[   43.762532] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   43.773428] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   43.789278] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   43.882690] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   43.890866] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   43.920947] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   44.113496] neighbour: ndisc_cache: neighbor table overflow!
+[   44.275796] neighbour: ndisc_cache: neighbor table overflow!
+[   44.290415] neighbour: ndisc_cache: neighbor table overflow!
+[   44.297536] neighbour: ndisc_cache: neighbor table overflow!
+[   44.317313] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   44.328500] neighbour: ndisc_cache: neighbor table overflow!
+[   44.339501] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   44.362687] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   44.373182] neighbour: ndisc_cache: neighbor table overflow!
+[   44.388238] neighbour: ndisc_cache: neighbor table overflow!
+[   44.409241] neighbour: ndisc_cache: neighbor table overflow!
+[   44.416849] neighbour: ndisc_cache: neighbor table overflow!
+[   44.430470] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   44.437800] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   44.485239] neighbour: ndisc_cache: neighbor table overflow!
+[   44.493173] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   44.505699] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   44.510863] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   44.519239] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   44.539510] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   44.569055] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   44.583961] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   44.710193] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   44.721117] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   44.744130] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   44.765216] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   44.773185] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   44.784421] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   44.793889] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   44.800839] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   44.812926] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   44.858966] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   44.870445] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   44.873237] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   44.916066] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   44.924555] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   44.944028] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   44.948668] wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   44.951861] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   44.965790] wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   44.976439] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   45.006036] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   45.023481] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   45.094294] wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+[   45.102132] wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+[   45.111639] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[   45.246130] hrtimer: interrupt took 25867 ns
+2024/04/16 16:28:20 executed programs: 119
+[   49.933084] ==================================================================
+[   49.940799] BUG: KASAN: use-after-free in __vb2_perform_fileio+0x1062/0x1130
+[   49.947977] Read of size 4 at addr ffff8881f2b1a35c by task syz-executor.5/4805
+[   49.955405] 
+[   49.957047] CPU: 0 PID: 4805 Comm: syz-executor.5 Not tainted 5.1.0-rc1-syzkaller #0
+[   49.964930] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+[   49.974287] Call Trace:
+[   49.976902]  dump_stack+0x16c/0x1ef
+[   49.980563]  print_address_description.cold+0x4b/0x2a1
+[   49.985836]  ? __vb2_perform_fileio+0x1062/0x1130
+[   49.990676]  kasan_report.cold+0x1b/0x3f
+[   49.994737]  ? __vb2_perform_fileio+0x1062/0x1130
+[   49.999582]  __asan_report_load4_noabort+0x14/0x20
+[   50.004520]  __vb2_perform_fileio+0x1062/0x1130
+[   50.009196]  ? mutex_lock_io_nested+0xf50/0xf50
+[   50.013857]  ? vb2_thread_start+0x370/0x370
+[   50.018177]  ? __fsnotify_update_child_dentry_flags+0x370/0x370
+[   50.024297]  ? __might_sleep+0x95/0x190
+[   50.028271]  ? fsnotify_first_mark+0x210/0x210
+[   50.032850]  vb2_read+0x3b/0x50
+[   50.036126]  ? vb2_fop_write+0x3f0/0x3f0
+[   50.040266]  vb2_fop_read+0x203/0x3f0
+[   50.044056]  ? vb2_fop_write+0x3f0/0x3f0
+[   50.048142]  v4l2_read+0x1cf/0x230
+[   50.051691]  do_iter_read+0x49e/0x670
+[   50.055499]  vfs_readv+0xf0/0x160
+[   50.058944]  ? compat_rw_copy_check_uvector+0x3f0/0x3f0
+[   50.064437]  ? free_fdtable_rcu+0x80/0x80
+[   50.068685]  ? putname+0xef/0x130
+[   50.072161]  ? __fget_light+0xc0/0x230
+[   50.076047]  do_readv+0xf7/0x300
+[   50.079419]  ? vfs_readv+0x160/0x160
+[   50.083130]  ? trace_hardirqs_off+0x56/0x80
+[   50.087449]  ? trace_irq_disable_rcuidle+0x2b/0x1c0
+[   50.092471]  ? entry_SYSCALL_64_after_hwframe+0x3e/0xbe
+[   50.097830]  __x64_sys_readv+0x75/0xb0
+[   50.101706]  ? trace_hardirqs_on+0x5b/0x80
+[   50.105944]  do_syscall_64+0xff/0x190
+[   50.109738]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[   50.114923] RIP: 0033:0x7feb73816f69
+[   50.118623] Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+[   50.137599] RSP: 002b:00007feb72b970c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000013
+[   50.145305] RAX: ffffffffffffffda RBX: 00007feb73944f80 RCX: 00007feb73816f69
+[   50.152570] RDX: 0000000000000001 RSI: 0000000020000280 RDI: 0000000000000003
+[   50.159853] RBP: 00007feb738634a4 R08: 0000000000000000 R09: 0000000000000000
+[   50.167115] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+[   50.174406] R13: 000000000000000b R14: 00007feb73944f80 R15: 00007ffcee8d7168
+[   50.181680] 
+[   50.183345] Allocated by task 4804:
+[   50.186980]  save_stack+0x43/0xc0
+[   50.190510]  __kasan_kmalloc.constprop.0+0xea/0x100
+[   50.195513]  kasan_kmalloc+0x9/0x10
+[   50.199130]  kmem_cache_alloc_trace+0x13b/0x2a0
+[   50.203826]  __vb2_init_fileio+0x1eb/0xbe0
+[   50.208151]  __vb2_perform_fileio+0xc59/0x1130
+[   50.212718]  vb2_read+0x3b/0x50
+[   50.216005]  vb2_fop_read+0x203/0x3f0
+[   50.219813]  v4l2_read+0x1cf/0x230
+[   50.223364]  do_iter_read+0x49e/0x670
+[   50.227182]  vfs_readv+0xf0/0x160
+[   50.230621]  do_readv+0xf7/0x300
+[   50.234077]  __x64_sys_readv+0x75/0xb0
+[   50.237969]  do_syscall_64+0xff/0x190
+[   50.241790]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[   50.246965] 
+[   50.248670] Freed by task 4799:
+[   50.251936]  save_stack+0x43/0xc0
+[   50.255383]  __kasan_slab_free+0xfe/0x140
+[   50.259637]  kasan_slab_free+0xe/0x10
+[   50.263428]  kfree+0xcd/0x220
+[   50.266532]  __vb2_cleanup_fileio+0xf8/0x160
+[   50.270958]  vb2_core_queue_release+0x1e/0x80
+[   50.275440]  _vb2_fop_release+0x1d2/0x2b0
+[   50.279584]  vb2_fop_release+0x75/0xc0
+[   50.283645]  vivid_fop_release+0x18e/0x6e1
+[   50.287870]  v4l2_release+0x224/0x3a0
+[   50.291691]  __fput+0x2d5/0x8c0
+[   50.295070]  ____fput+0x15/0x20
+[   50.298438]  task_work_run+0x158/0x1d0
+[   50.302416]  prepare_exit_to_usermode+0x4ee/0x560
+[   50.307247]  syscall_return_slowpath+0xfe/0x720
+[   50.311922]  do_syscall_64+0x12d/0x190
+[   50.315810]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[   50.320984] 
+[   50.322642] The buggy address belongs to the object at ffff8881f2b1a040
+[   50.322642]  which belongs to the cache kmalloc-1k of size 1024
+[   50.335288] The buggy address is located 796 bytes inside of
+[   50.335288]  1024-byte region [ffff8881f2b1a040, ffff8881f2b1a440)
+[   50.347231] The buggy address belongs to the page:
+[   50.352165] page:ffffea0007cac680 count:1 mapcount:0 mapping:ffff8881f6000ac0 index:0x0 compound_mapcount: 0
+[   50.362272] flags: 0x2fffc0000010200(slab|head)
+[   50.366952] raw: 02fffc0000010200 ffffea0007cab488 ffffea0007c8dc88 ffff8881f6000ac0
+[   50.374935] raw: 0000000000000000 ffff8881f2b1a040 0000000100000007 0000000000000000
+[   50.382804] page dumped because: kasan: bad access detected
+[   50.388510] 
+[   50.390122] Memory state around the buggy address:
+[   50.395045]  ffff8881f2b1a200: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[   50.402539]  ffff8881f2b1a280: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[   50.409904] >ffff8881f2b1a300: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[   50.417350]                                                     ^
+[   50.423684]  ffff8881f2b1a380: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[   50.431152]  ffff8881f2b1a400: fb fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+[   50.438515] ==================================================================
+[   50.445953] Disabling lock debugging due to kernel taint
+2024/04/16 16:28:25 executed programs: 304
+2024/04/16 16:28:30 executed programs: 583

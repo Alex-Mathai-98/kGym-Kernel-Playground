@@ -1,0 +1,59 @@
+{
+    "version": 1,
+    "title": "memory leak in dvb_create_media_graph",
+    "display-title": "memory leak in dvb_create_media_graph",
+    "id": "9bbe4b842c98f0ed05c5eed77a226e9de33bf298",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: dvbdev: Fix memory leak in dvb_media_device_free()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bf9a40ae8d722f281a2721779595d6df1c33a0bf",
+            "hash": "bf9a40ae8d722f281a2721779595d6df1c33a0bf",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c5eece05b3d5256c@google.com/T/",
+        "https://lore.kernel.org/all/20201211083039.521617-1-yepeilin.cs@gmail.com/T/",
+        "https://lore.kernel.org/all/20210510101950.200777181@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210510102004.821838356@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210510102010.096403571@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210510102014.849075526@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210520092108.587553970@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210520092120.115153432@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210520092131.308959589@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1496773a500000",
+            "c-reproducer": "/text?tag=ReproC&x=11f5d04e500000",
+            "kernel-config": "/text?tag=KernelConfig&x=a3f13716fa0212fd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=407ab579637ced6dc32cfb2295afb7259cca4b22",
+            "kernel-source-commit": "407ab579637ced6dc32cfb2295afb7259cca4b22",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/cca8798699baeeccbf80af23d234ac19a5d667aa",
+            "syzkaller-commit": "cca8798699baeeccbf80af23d234ac19a5d667aa",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16977952500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "dvb_media_device_free",
+            "drivers/media/dvb-core/dvbdev.c"
+        ]
+    ],
+    "patch_commit_date": "2020-12-11T08:30:39+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "usb",
+        "media"
+    ],
+    "parent_of_fix_commit": "23817e5c4bb8ac28cd6bbf463d07fb3120a08660",
+    "patch": "diff --git a/drivers/media/dvb-core/dvbdev.c b/drivers/media/dvb-core/dvbdev.c\nindex 5ff7bedee247..3862ddc86ec4 100644\n--- a/drivers/media/dvb-core/dvbdev.c\n+++ b/drivers/media/dvb-core/dvbdev.c\n@@ -241,6 +241,7 @@ static void dvb_media_device_free(struct dvb_device *dvbdev)\n \n \tif (dvbdev->adapter->conn) {\n \t\tmedia_device_unregister_entity(dvbdev->adapter->conn);\n+\t\tkfree(dvbdev->adapter->conn);\n \t\tdvbdev->adapter->conn = NULL;\n \t\tkfree(dvbdev->adapter->conn_pads);\n \t\tdvbdev->adapter->conn_pads = NULL;\n",
+    "patch_modified_files": [
+        "drivers/media/dvb-core/dvbdev.c"
+    ]
+}

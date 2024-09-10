@@ -1,0 +1,39 @@
+{
+    "version": 1,
+    "title": "kernel BUG in fou_build_udp",
+    "display-title": "kernel BUG in fou_build_udp",
+    "id": "5d5821ad053bbbd4a11174989f2bf9d111873c52",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "UPSTREAM: sit: update dev->needed_headroom in ipip6_tunnel_bind_dev()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c88f8d5cd95fd039cff95d682b8e71100c001df0",
+            "hash": "c88f8d5cd95fd039cff95d682b8e71100c001df0",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "kernel BUG in fou_build_udp",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14943588280000",
+            "c-reproducer": "/text?tag=ReproC&x=175b5b3c280000",
+            "kernel-config": "/text?tag=KernelConfig&x=a498c8d56f06ff6c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=89b7fd5d7f3ceda236cc1d0026986a5f57ecaf4a",
+            "kernel-source-commit": "89b7fd5d7f3ceda236cc1d0026986a5f57ecaf4a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/b591883083486fa625ad707452e97a9a8f282a64",
+            "syzkaller-commit": "b591883083486fa625ad707452e97a9a8f282a64",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16a77938280000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "da94a7781fc3c92e7df7832bc2746f4d39bc624e",
+    "patch": "diff --git a/net/ipv6/sit.c b/net/ipv6/sit.c\nindex 063560e2cb1a..cc24cefdb85c 100644\n--- a/net/ipv6/sit.c\n+++ b/net/ipv6/sit.c\n@@ -1095,12 +1095,13 @@ static netdev_tx_t sit_tunnel_xmit(struct sk_buff *skb,\n \n static void ipip6_tunnel_bind_dev(struct net_device *dev)\n {\n+\tstruct ip_tunnel *tunnel = netdev_priv(dev);\n+\tint t_hlen = tunnel->hlen + sizeof(struct iphdr);\n \tstruct net_device *tdev = NULL;\n-\tstruct ip_tunnel *tunnel;\n+\tint hlen = LL_MAX_HEADER;\n \tconst struct iphdr *iph;\n \tstruct flowi4 fl4;\n \n-\ttunnel = netdev_priv(dev);\n \tiph = &tunnel->parms.iph;\n \n \tif (iph->daddr) {\n@@ -1123,14 +1124,15 @@ static void ipip6_tunnel_bind_dev(struct net_device *dev)\n \t\ttdev = __dev_get_by_index(tunnel->net, tunnel->parms.link);\n \n \tif (tdev && !netif_is_l3_master(tdev)) {\n-\t\tint t_hlen = tunnel->hlen + sizeof(struct iphdr);\n \t\tint mtu;\n \n \t\tmtu = tdev->mtu - t_hlen;\n \t\tif (mtu < IPV6_MIN_MTU)\n \t\t\tmtu = IPV6_MIN_MTU;\n \t\tWRITE_ONCE(dev->mtu, mtu);\n+\t\thlen = tdev->hard_header_len + tdev->needed_headroom;\n \t}\n+\tdev->needed_headroom = t_hlen + hlen;\n }\n \n static void ipip6_tunnel_update(struct ip_tunnel *t, struct ip_tunnel_parm *p,\n",
+    "patch_modified_files": [
+        "net/ipv6/sit.c"
+    ]
+}

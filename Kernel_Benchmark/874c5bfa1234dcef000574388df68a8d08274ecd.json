@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in hfsplus_release_folio",
+    "display-title": "KASAN: use-after-free Read in hfsplus_release_folio",
+    "id": "874c5bfa1234dcef000574388df68a8d08274ecd",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs: hfsplus: fix UAF issue in hfsplus_put_super",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=07db5e247ab5858439b14dd7cc1fe538b9efcf32",
+            "hash": "07db5e247ab5858439b14dd7cc1fe538b9efcf32",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000089a42105effef437@google.com/T/",
+        "https://lore.kernel.org/all/20230226124948.3175736-1-mudongliangabcd@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in hfsplus_release_folio",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16d9a63f880000",
+            "c-reproducer": "/text?tag=ReproC&x=16335357880000",
+            "kernel-config": "/text?tag=KernelConfig&x=5a194ed4fc682723",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=830b3c68c1fb1e9176028d02ef86f3cf76aa2476",
+            "kernel-source-commit": "830b3c68c1fb1e9176028d02ef86f3cf76aa2476",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/67be1ae742603edad9c97d30b6ed69f9bbe2ffa8",
+            "syzkaller-commit": "67be1ae742603edad9c97d30b6ed69f9bbe2ffa8",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1292b207880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "hfsplus_put_super",
+            "fs/hfsplus/super.c"
+        ]
+    ],
+    "patch_commit_date": "2023-02-26T12:49:47+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "hfs"
+    ],
+    "parent_of_fix_commit": "b905039e428d639adeebb719b76f98865ea38d4d",
+    "patch": "diff --git a/fs/hfsplus/super.c b/fs/hfsplus/super.c\nindex 122ed89ebf9f..1986b4f18a90 100644\n--- a/fs/hfsplus/super.c\n+++ b/fs/hfsplus/super.c\n@@ -295,11 +295,11 @@ static void hfsplus_put_super(struct super_block *sb)\n \t\thfsplus_sync_fs(sb, 1);\n \t}\n \n+\tiput(sbi->alloc_file);\n+\tiput(sbi->hidden_dir);\n \thfs_btree_close(sbi->attr_tree);\n \thfs_btree_close(sbi->cat_tree);\n \thfs_btree_close(sbi->ext_tree);\n-\tiput(sbi->alloc_file);\n-\tiput(sbi->hidden_dir);\n \tkfree(sbi->s_vhdr_buf);\n \tkfree(sbi->s_backup_vhdr_buf);\n \tunload_nls(sbi->nls);\n",
+    "patch_modified_files": [
+        "fs/hfsplus/super.c"
+    ]
+}

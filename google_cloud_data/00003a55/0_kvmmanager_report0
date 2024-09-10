@@ -1,0 +1,101 @@
+==================================================================
+BUG: KASAN: slab-out-of-bounds in io_uring_show_fdinfo+0x6a4/0x1a34
+Read of size 8 at addr ffff88806b0fff20 by task syz-executor.2/3657
+
+CPU: 1 PID: 3657 Comm: syz-executor.2 Not tainted 6.0.0-syzkaller-06771-gc86416c6ff5b #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xfc/0x174
+ print_report.cold+0x2c3/0x752
+ kasan_report+0xb1/0x1d0
+ io_uring_show_fdinfo+0x6a4/0x1a34
+ seq_show+0x589/0x820
+ seq_read_iter+0x4e1/0x1200
+ seq_read+0x165/0x210
+ vfs_read+0x249/0x950
+ __x64_sys_pread64+0x1ff/0x250
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7ff893c7adf9
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ff894e5a0c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000011
+RAX: ffffffffffffffda RBX: 00007ff893d9bf80 RCX: 00007ff893c7adf9
+RDX: 0000000000000011 RSI: 0000000020002140 RDI: 0000000000000005
+RBP: 00007ff893cd7567 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007ff893d9bf80 R15: 00007ffe7cb93608
+ </TASK>
+
+Allocated by task 3601:
+ kasan_save_stack+0x1c/0x40
+ __kasan_kmalloc+0xa7/0xd0
+ __alloc_skb+0xd4/0x2f0
+ nsim_dev_trap_report_work+0x2a8/0xc50
+ process_one_work+0xa03/0x1620
+ worker_thread+0x679/0x10d0
+ kthread+0x2e0/0x390
+ ret_from_fork+0x1f/0x30
+
+Freed by task 3601:
+ kasan_save_stack+0x1c/0x40
+ kasan_set_track+0x21/0x30
+ kasan_set_free_info+0x20/0x30
+ ____kasan_slab_free+0x160/0x1b0
+ slab_free_freelist_hook+0x10b/0x1e0
+ kfree+0xdf/0x580
+ skb_free_head+0xac/0x110
+ skb_release_data+0x712/0x850
+ consume_skb+0xc2/0x160
+ nsim_dev_trap_report_work+0x881/0xc50
+ process_one_work+0xa03/0x1620
+ worker_thread+0x679/0x10d0
+ kthread+0x2e0/0x390
+ ret_from_fork+0x1f/0x30
+
+The buggy address belongs to the object at ffff88806b0fe000
+ which belongs to the cache kmalloc-4k of size 4096
+The buggy address is located 3872 bytes to the right of
+ 4096-byte region [ffff88806b0fe000, ffff88806b0ff000)
+
+The buggy address belongs to the physical page:
+page:ffffea0001ac3e00 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x6b0f8
+head:ffffea0001ac3e00 order:3 compound_mapcount:0 compound_pincount:0
+flags: 0xfff00000010200(slab|head|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000010200 0000000000000000 dead000000000122 ffff888011842140
+raw: 0000000000000000 0000000000040004 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 3, migratetype Unmovable, gfp_mask 0xd2a20(GFP_ATOMIC|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC), pid 3601, tgid 3601 (kworker/0:5), ts 61676729725, free_ts 13149904187
+ get_page_from_freelist+0x10e3/0x2d70
+ __alloc_pages+0x1c4/0x510
+ alloc_pages+0x1a5/0x270
+ allocate_slab+0x26c/0x3c0
+ ___slab_alloc+0x76d/0xd70
+ __slab_alloc.constprop.0+0x4d/0xa0
+ __kmalloc_node_track_caller+0x300/0x3b0
+ __alloc_skb+0xd4/0x2f0
+ nsim_dev_trap_report_work+0x2a8/0xc50
+ process_one_work+0xa03/0x1620
+ worker_thread+0x679/0x10d0
+ kthread+0x2e0/0x390
+ ret_from_fork+0x1f/0x30
+page last free stack trace:
+ free_pcp_prepare+0x42d/0xb30
+ free_unref_page+0x19/0x510
+ free_contig_range+0xb2/0x180
+ destroy_args+0xa8/0x64b
+ debug_vm_pgtable+0x2738/0x2990
+ do_one_initcall+0x100/0x650
+ kernel_init_freeable+0x6bc/0x743
+ kernel_init+0x18/0x1d0
+ ret_from_fork+0x1f/0x30
+
+Memory state around the buggy address:
+ ffff88806b0ffe00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88806b0ffe80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff88806b0fff00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+                               ^
+ ffff88806b0fff80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88806b100000: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================

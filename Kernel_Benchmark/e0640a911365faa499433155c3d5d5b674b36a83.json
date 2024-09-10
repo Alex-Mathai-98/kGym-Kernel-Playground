@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "WARNING in cttimeout_default_get",
+    "display-title": "WARNING in cttimeout_default_get",
+    "id": "e0640a911365faa499433155c3d5d5b674b36a83",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: nfnetlink_cttimeout: fetch timeouts for udplite and gre, too",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=89259088c1b7fecb43e8e245dc931909132a4e03",
+            "hash": "89259088c1b7fecb43e8e245dc931909132a4e03",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000004f5883057acf6af2@google.com/T/",
+        "https://lore.kernel.org/all/20181117103229.24678-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20181128101741.20924-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20190415183740.341577907@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=129e0893400000",
+            "c-reproducer": "/text?tag=ReproC&x=125f66a3400000",
+            "kernel-config": "/text?tag=KernelConfig&x=4a0a89f12ca9b0f5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=da5322e65940e4e8426613a8ff3d99a08b350a52",
+            "kernel-source-commit": "da5322e65940e4e8426613a8ff3d99a08b350a52",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3a41052e6ac804456a3db6fcbf2f8b43b5c00b4f",
+            "syzkaller-commit": "3a41052e6ac804456a3db6fcbf2f8b43b5c00b4f",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13ae6533400000"
+        }
+    ],
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "2a31e4bd9ad255ee40809b5c798c4b1c2b09703b",
+    "patch": "diff --git a/include/linux/netfilter/nf_conntrack_proto_gre.h b/include/linux/netfilter/nf_conntrack_proto_gre.h\nindex b8d95564bd53..14edb795ab43 100644\n--- a/include/linux/netfilter/nf_conntrack_proto_gre.h\n+++ b/include/linux/netfilter/nf_conntrack_proto_gre.h\n@@ -21,6 +21,19 @@ struct nf_ct_gre_keymap {\n \tstruct nf_conntrack_tuple tuple;\n };\n \n+enum grep_conntrack {\n+\tGRE_CT_UNREPLIED,\n+\tGRE_CT_REPLIED,\n+\tGRE_CT_MAX\n+};\n+\n+struct netns_proto_gre {\n+\tstruct nf_proto_net\tnf;\n+\trwlock_t\t\tkeymap_lock;\n+\tstruct list_head\tkeymap_list;\n+\tunsigned int\t\tgre_timeouts[GRE_CT_MAX];\n+};\n+\n /* add new tuple->key_reply pair to keymap */\n int nf_ct_gre_keymap_add(struct nf_conn *ct, enum ip_conntrack_dir dir,\n \t\t\t struct nf_conntrack_tuple *t);\ndiff --git a/net/netfilter/nf_conntrack_proto_gre.c b/net/netfilter/nf_conntrack_proto_gre.c\nindex 9b48dc8b4b88..2a5e56c6d8d9 100644\n--- a/net/netfilter/nf_conntrack_proto_gre.c\n+++ b/net/netfilter/nf_conntrack_proto_gre.c\n@@ -43,24 +43,12 @@\n #include <linux/netfilter/nf_conntrack_proto_gre.h>\n #include <linux/netfilter/nf_conntrack_pptp.h>\n \n-enum grep_conntrack {\n-\tGRE_CT_UNREPLIED,\n-\tGRE_CT_REPLIED,\n-\tGRE_CT_MAX\n-};\n-\n static const unsigned int gre_timeouts[GRE_CT_MAX] = {\n \t[GRE_CT_UNREPLIED]\t= 30*HZ,\n \t[GRE_CT_REPLIED]\t= 180*HZ,\n };\n \n static unsigned int proto_gre_net_id __read_mostly;\n-struct netns_proto_gre {\n-\tstruct nf_proto_net\tnf;\n-\trwlock_t\t\tkeymap_lock;\n-\tstruct list_head\tkeymap_list;\n-\tunsigned int\t\tgre_timeouts[GRE_CT_MAX];\n-};\n \n static inline struct netns_proto_gre *gre_pernet(struct net *net)\n {\n@@ -402,6 +390,8 @@ static int __init nf_ct_proto_gre_init(void)\n {\n \tint ret;\n \n+\tBUILD_BUG_ON(offsetof(struct netns_proto_gre, nf) != 0);\n+\n \tret = register_pernet_subsys(&proto_gre_net_ops);\n \tif (ret < 0)\n \t\tgoto out_pernet;\ndiff --git a/net/netfilter/nfnetlink_cttimeout.c b/net/netfilter/nfnetlink_cttimeout.c\nindex a518eb162344..109b0d27345a 100644\n--- a/net/netfilter/nfnetlink_cttimeout.c\n+++ b/net/netfilter/nfnetlink_cttimeout.c\n@@ -455,7 +455,8 @@ static int cttimeout_default_get(struct net *net, struct sock *ctnl,\n \tcase IPPROTO_TCP:\n \t\ttimeouts = nf_tcp_pernet(net)->timeouts;\n \t\tbreak;\n-\tcase IPPROTO_UDP:\n+\tcase IPPROTO_UDP: /* fallthrough */\n+\tcase IPPROTO_UDPLITE:\n \t\ttimeouts = nf_udp_pernet(net)->timeouts;\n \t\tbreak;\n \tcase IPPROTO_DCCP:\n@@ -469,13 +470,23 @@ static int cttimeout_default_get(struct net *net, struct sock *ctnl,\n \tcase IPPROTO_SCTP:\n #ifdef CONFIG_NF_CT_PROTO_SCTP\n \t\ttimeouts = nf_sctp_pernet(net)->timeouts;\n+#endif\n+\t\tbreak;\n+\tcase IPPROTO_GRE:\n+#ifdef CONFIG_NF_CT_PROTO_GRE\n+\t\tif (l4proto->net_id) {\n+\t\t\tstruct netns_proto_gre *net_gre;\n+\n+\t\t\tnet_gre = net_generic(net, *l4proto->net_id);\n+\t\t\ttimeouts = net_gre->gre_timeouts;\n+\t\t}\n #endif\n \t\tbreak;\n \tcase 255:\n \t\ttimeouts = &nf_generic_pernet(net)->timeout;\n \t\tbreak;\n \tdefault:\n-\t\tWARN_ON_ONCE(1);\n+\t\tWARN_ONCE(1, \"Missing timeouts for proto %d\", l4proto->l4proto);\n \t\tbreak;\n \t}\n \n",
+    "patch_modified_files": [
+        "include/linux/netfilter/nf_conntrack_proto_gre.h",
+        "net/netfilter/nf_conntrack_proto_gre.c",
+        "net/netfilter/nfnetlink_cttimeout.c"
+    ]
+}

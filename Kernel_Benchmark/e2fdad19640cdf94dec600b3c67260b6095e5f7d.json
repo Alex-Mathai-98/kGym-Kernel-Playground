@@ -1,0 +1,65 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in io_uring_show_fdinfo",
+    "display-title": "KASAN: slab-out-of-bounds Read in io_uring_show_fdinfo",
+    "id": "e2fdad19640cdf94dec600b3c67260b6095e5f7d",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: fix fdinfo sqe offsets calculation",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=00927931cb630bbf8edb6d7f4dadb25139fc5e16",
+            "hash": "00927931cb630bbf8edb6d7f4dadb25139fc5e16",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "io_uring/fdinfo: fix sqe dumping for IORING_SETUP_SQE128",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3b8fdd1dc35e395d19efbc8391a809a5b954ecf4",
+        "hash": "3b8fdd1dc35e395d19efbc8391a809a5b954ecf4",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000009b01b805eaa8eda8@google.com/T/",
+        "https://lore.kernel.org/all/20221019083249.951566199@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/8b41287cb75d5efb8fcb5cccde845ddbbadd8372.1665449983.git.asml.silence@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in io_uring_show_fdinfo",
+            "syz-reproducer": "/text?tag=ReproSyz&x=108b448a880000",
+            "c-reproducer": "/text?tag=ReproC&x=13a0403a880000",
+            "kernel-config": "/text?tag=KernelConfig&x=e2021a61197ebe02",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a6afa4199d3d038fbfdff5511f7523b0e30cb774",
+            "kernel-source-commit": "a6afa4199d3d038fbfdff5511f7523b0e30cb774",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/aea5da898f473385f3b66c94f8aa49ca9a1c9744",
+            "syzkaller-commit": "aea5da898f473385f3b66c94f8aa49ca9a1c9744",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12d6807c880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__io_uring_show_fdinfo",
+            "io_uring/fdinfo.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "__io_uring_show_fdinfo",
+            "io_uring/fdinfo.c"
+        ]
+    ],
+    "patch_commit_date": "2022-10-11T00:59:57+00:00",
+    "cause_commit_date": "2022-09-11T12:40:37+00:00",
+    "subsystems": [
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "c86416c6ff5ba7f7e5f3ff1dd8a9d1b3d0be827c",
+    "patch": "diff --git a/io_uring/fdinfo.c b/io_uring/fdinfo.c\nindex 4eae088046d0..2e04850a657b 100644\n--- a/io_uring/fdinfo.c\n+++ b/io_uring/fdinfo.c\n@@ -94,7 +94,7 @@ static __cold void __io_uring_show_fdinfo(struct io_ring_ctx *ctx,\n \t\tsq_idx = READ_ONCE(ctx->sq_array[entry & sq_mask]);\n \t\tif (sq_idx > sq_mask)\n \t\t\tcontinue;\n-\t\tsqe = &ctx->sq_sqes[sq_idx << 1];\n+\t\tsqe = &ctx->sq_sqes[sq_idx << sq_shift];\n \t\tseq_printf(m, \"%5u: opcode:%s, fd:%d, flags:%x, off:%llu, \"\n \t\t\t      \"addr:0x%llx, rw_flags:0x%x, buf_index:%d \"\n \t\t\t      \"user_data:%llu\",\n",
+    "patch_modified_files": [
+        "io_uring/fdinfo.c"
+    ]
+}

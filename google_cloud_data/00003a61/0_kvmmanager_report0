@@ -1,0 +1,54 @@
+==================================================================
+BUG: KASAN: slab-out-of-bounds in record_print_text+0x353/0x390
+Write of size 1 at addr ffff888039b0ff64 by task klogd/4873
+
+CPU: 0 PID: 4873 Comm: klogd Not tainted 5.10.0-rc5-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x107/0x163
+ print_address_description.constprop.0.cold+0x72/0x513
+ kasan_report.cold+0x1f/0x37
+ record_print_text+0x353/0x390
+ syslog_print+0x304/0x4e0
+ do_syslog.part.0+0x34b/0x7f0
+ __x64_sys_syslog+0x9c/0xd0
+ do_syscall_64+0x2d/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7faf564fcfa7
+Code: 73 01 c3 48 8b 0d 81 ce 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 b8 67 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 51 ce 0c 00 f7 d8 64 89 01 48
+RSP: 002b:00007ffd64ca89a8 EFLAGS: 00000206 ORIG_RAX: 0000000000000067
+RAX: ffffffffffffffda RBX: 00007faf5669b4a0 RCX: 00007faf564fcfa7
+RDX: 00000000000003ff RSI: 00007faf5669b4a0 RDI: 0000000000000002
+RBP: 0000000000000000 R08: 0000000000000007 R09: 7f62f526be5a3761
+R10: 0000000000004000 R11: 0000000000000206 R12: 00007faf5669b4a0
+R13: 00007faf5668b212 R14: 00007faf5669b4fb R15: 00007faf5669b4fb
+
+Allocated by task 4873:
+ kasan_save_stack+0x19/0x40
+ __kasan_kmalloc.constprop.0+0xda/0xe0
+ syslog_print+0xb4/0x4e0
+ do_syslog.part.0+0x34b/0x7f0
+ __x64_sys_syslog+0x9c/0xd0
+ do_syscall_64+0x2d/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+The buggy address belongs to the object at ffff888039b0f800
+ which belongs to the cache kmalloc-1k of size 1024
+The buggy address is located 868 bytes to the right of
+ 1024-byte region [ffff888039b0f800, ffff888039b0fc00)
+The buggy address belongs to the page:
+page:00000000e3973e11 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x39b08
+head:00000000e3973e11 order:3 compound_mapcount:0 compound_pincount:0
+flags: 0xfff00000010200(slab|head)
+raw: 00fff00000010200 ffffea0000e69e00 0000000500000005 ffff888011041140
+raw: 0000000000000000 0000000080100010 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff888039b0fe00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff888039b0fe80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff888039b0ff00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+                                                       ^
+ ffff888039b0ff80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff888039b10000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+==================================================================

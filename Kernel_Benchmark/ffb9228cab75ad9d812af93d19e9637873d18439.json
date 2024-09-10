@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "WARNING in ipgre_xmit",
+    "display-title": "WARNING in ipgre_xmit",
+    "id": "ffb9228cab75ad9d812af93d19e9637873d18439",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ip_gre: test csum_start instead of transport header",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8d21e9963bec1aad2280cdd034c8993033ef2948",
+            "hash": "8d21e9963bec1aad2280cdd034c8993033ef2948",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "net: warn if transport header was not set",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf.git/commit/?id=66e4c8d950083df8e12981babca788e1635c92b6",
+        "hash": "66e4c8d950083df8e12981babca788e1635c92b6",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "WARNING in ipgre_xmit",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1770c94df00000",
+            "c-reproducer": "/text?tag=ReproC&x=13b09efbf00000",
+            "kernel-config": "/text?tag=KernelConfig&x=b2eecf68227151e3",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=17d8e3d90b6989419806c1926b894d7d7483a25b",
+            "kernel-source-commit": "17d8e3d90b6989419806c1926b894d7d7483a25b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/02dddea803b3dcfa0e472bb94d3e540e8f1b457b",
+            "syzkaller-commit": "02dddea803b3dcfa0e472bb94d3e540e8f1b457b",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1704c04ff00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ipgre_xmit",
+            "net/ipv4/ip_gre.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "skb_transport_header_was_set",
+            "include/linux/skbuff.h"
+        ]
+    ],
+    "patch_commit_date": "2022-06-06T13:21:07+00:00",
+    "cause_commit_date": "2022-05-10T03:57:39+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "d5d4c36398ba66c033602b117b4be6174b7b8533",
+    "patch": "diff --git a/net/ipv4/ip_gre.c b/net/ipv4/ip_gre.c\nindex 7e474a85deaf..3b9cd487075a 100644\n--- a/net/ipv4/ip_gre.c\n+++ b/net/ipv4/ip_gre.c\n@@ -629,21 +629,20 @@ static netdev_tx_t ipgre_xmit(struct sk_buff *skb,\n \t}\n \n \tif (dev->header_ops) {\n-\t\tconst int pull_len = tunnel->hlen + sizeof(struct iphdr);\n-\n \t\tif (skb_cow_head(skb, 0))\n \t\t\tgoto free_skb;\n \n \t\ttnl_params = (const struct iphdr *)skb->data;\n \n-\t\tif (pull_len > skb_transport_offset(skb))\n-\t\t\tgoto free_skb;\n-\n \t\t/* Pull skb since ip_tunnel_xmit() needs skb->data pointing\n \t\t * to gre header.\n \t\t */\n-\t\tskb_pull(skb, pull_len);\n+\t\tskb_pull(skb, tunnel->hlen + sizeof(struct iphdr));\n \t\tskb_reset_mac_header(skb);\n+\n+\t\tif (skb->ip_summed == CHECKSUM_PARTIAL &&\n+\t\t    skb_checksum_start(skb) < skb->data)\n+\t\t\tgoto free_skb;\n \t} else {\n \t\tif (skb_cow_head(skb, dev->needed_headroom))\n \t\t\tgoto free_skb;\n",
+    "patch_modified_files": [
+        "net/ipv4/ip_gre.c"
+    ]
+}

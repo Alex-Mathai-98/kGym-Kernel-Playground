@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "general protection fault in __drop_extent_tree",
+    "display-title": "general protection fault in __drop_extent_tree",
+    "id": "f080ff8eb73ae6a29960594307de8e732db389d3",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "f2fs: don't reset unchangable mount option in f2fs_remount()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=458c15dfbce62c35fefd9ca637b20a051309c9f1",
+            "hash": "458c15dfbce62c35fefd9ca637b20a051309c9f1",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000007c47b505f909f71d@google.com/T/",
+        "https://lore.kernel.org/all/20230523035822.578123-1-chao@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in __drop_extent_tree",
+            "syz-reproducer": "/text?tag=ReproSyz&x=157567a6280000",
+            "c-reproducer": "/text?tag=ReproC&x=13d301f9280000",
+            "kernel-config": "/text?tag=KernelConfig&x=bda401fa9c6b4502",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d635f6cc934bcd467c5d67148ece74632fd96abf",
+            "kernel-source-commit": "d635f6cc934bcd467c5d67148ece74632fd96abf",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4bce1a3e705a8b62de8194bdb28f5eef89c8feec",
+            "syzkaller-commit": "4bce1a3e705a8b62de8194bdb28f5eef89c8feec",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16aa2e91280000"
+        }
+    ],
+    "subsystems": [
+        "f2fs"
+    ],
+    "parent_of_fix_commit": "d8189834d4348ae608083e1f1f53792cfcc2a9bc",
+    "patch": "diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c\nindex 8eb17cc73941..6e770f82d39f 100644\n--- a/fs/f2fs/super.c\n+++ b/fs/f2fs/super.c\n@@ -2086,9 +2086,22 @@ static int f2fs_show_options(struct seq_file *seq, struct dentry *root)\n \treturn 0;\n }\n \n-static void default_options(struct f2fs_sb_info *sbi)\n+static void default_options(struct f2fs_sb_info *sbi, bool remount)\n {\n \t/* init some FS parameters */\n+\tif (!remount) {\n+\t\tset_opt(sbi, READ_EXTENT_CACHE);\n+\t\tclear_opt(sbi, DISABLE_CHECKPOINT);\n+\n+\t\tif (f2fs_hw_support_discard(sbi) || f2fs_hw_should_discard(sbi))\n+\t\t\tset_opt(sbi, DISCARD);\n+\n+\t\tif (f2fs_sb_has_blkzoned(sbi))\n+\t\t\tF2FS_OPTION(sbi).discard_unit = DISCARD_UNIT_SECTION;\n+\t\telse\n+\t\t\tF2FS_OPTION(sbi).discard_unit = DISCARD_UNIT_BLOCK;\n+\t}\n+\n \tif (f2fs_sb_has_readonly(sbi))\n \t\tF2FS_OPTION(sbi).active_logs = NR_CURSEG_RO_TYPE;\n \telse\n@@ -2118,23 +2131,16 @@ static void default_options(struct f2fs_sb_info *sbi)\n \tset_opt(sbi, INLINE_XATTR);\n \tset_opt(sbi, INLINE_DATA);\n \tset_opt(sbi, INLINE_DENTRY);\n-\tset_opt(sbi, READ_EXTENT_CACHE);\n \tset_opt(sbi, NOHEAP);\n-\tclear_opt(sbi, DISABLE_CHECKPOINT);\n \tset_opt(sbi, MERGE_CHECKPOINT);\n \tF2FS_OPTION(sbi).unusable_cap = 0;\n \tsbi->sb->s_flags |= SB_LAZYTIME;\n \tif (!f2fs_is_readonly(sbi))\n \t\tset_opt(sbi, FLUSH_MERGE);\n-\tif (f2fs_hw_support_discard(sbi) || f2fs_hw_should_discard(sbi))\n-\t\tset_opt(sbi, DISCARD);\n-\tif (f2fs_sb_has_blkzoned(sbi)) {\n+\tif (f2fs_sb_has_blkzoned(sbi))\n \t\tF2FS_OPTION(sbi).fs_mode = FS_MODE_LFS;\n-\t\tF2FS_OPTION(sbi).discard_unit = DISCARD_UNIT_SECTION;\n-\t} else {\n+\telse\n \t\tF2FS_OPTION(sbi).fs_mode = FS_MODE_ADAPTIVE;\n-\t\tF2FS_OPTION(sbi).discard_unit = DISCARD_UNIT_BLOCK;\n-\t}\n \n #ifdef CONFIG_F2FS_FS_XATTR\n \tset_opt(sbi, XATTR_USER);\n@@ -2306,7 +2312,7 @@ static int f2fs_remount(struct super_block *sb, int *flags, char *data)\n \t\t\tclear_sbi_flag(sbi, SBI_NEED_SB_WRITE);\n \t}\n \n-\tdefault_options(sbi);\n+\tdefault_options(sbi, true);\n \n \t/* parse mount options */\n \terr = parse_options(sb, data, true);\n@@ -4346,7 +4352,7 @@ static int f2fs_fill_super(struct super_block *sb, void *data, int silent)\n \t\tsbi->s_chksum_seed = f2fs_chksum(sbi, ~0, raw_super->uuid,\n \t\t\t\t\t\tsizeof(raw_super->uuid));\n \n-\tdefault_options(sbi);\n+\tdefault_options(sbi, false);\n \t/* parse mount options */\n \toptions = kstrdup((const char *)data, GFP_KERNEL);\n \tif (data && !options) {\n",
+    "patch_modified_files": [
+        "fs/f2fs/super.c"
+    ]
+}

@@ -1,0 +1,71 @@
+ntfs3: Unknown parameter 'iochvrset'
+general protection fault, probably for non-canonical address 0xdffffc0000000003: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x0000000000000018-0x000000000000001f]
+CPU: 1 PID: 3666 Comm: syz-executor.3 Not tainted 5.18.0-syzkaller-00025-ge4d2f4fd5341 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:ntfs_update_mftmirr+0x52/0x6b0
+Code: c1 e8 03 42 80 3c 30 00 74 08 4c 89 ff e8 a6 bd 19 ff 49 8b 07 48 89 44 24 18 48 8d 58 18 48 89 d8 48 c1 e8 03 48 89 44 24 40 <42> 80 3c 30 00 74 08 48 89 df e8 7f bd 19 ff 48 89 5c 24 28 48 8b
+RSP: 0018:ffffc900037afc40 EFLAGS: 00010206
+RAX: 0000000000000003 RBX: 0000000000000018 RCX: ffff88807de8d880
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff88806b3ee000
+RBP: 0000000000010000 R08: dffffc0000000000 R09: ffff88806b3ee290
+R10: 0000000000000000 R11: dffffc0000000001 R12: ffff88806b3ee558
+R13: dffffc0000000000 R14: dffffc0000000000 R15: ffff88806b3ee000
+FS:  00007f294093b6c0(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f294093af28 CR3: 0000000023cfb000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ put_ntfs+0x206/0x2b0
+ ntfs_fs_free+0x6a/0xe0
+ put_fs_context+0x11a/0x7a0
+ do_new_mount+0x2b6/0xad0
+ __se_sys_mount+0x2d5/0x3c0
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7f293f87ae4a
+Code: d8 64 89 02 48 c7 c0 ff ff ff ff eb a6 e8 de 09 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f294093aee8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
+RAX: ffffffffffffffda RBX: 00007f294093af80 RCX: 00007f293f87ae4a
+RDX: 0000000020001480 RSI: 00000000200014c0 RDI: 00007f294093af40
+RBP: 0000000020001480 R08: 00007f294093af80 R09: 0000000020001480
+R10: 0000000000000008 R11: 0000000000000246 R12: 00000000200014c0
+R13: 0000000020002940 R14: 00007f294093af40 R15: 0000000020001280
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:ntfs_update_mftmirr+0x52/0x6b0
+Code: c1 e8 03 42 80 3c 30 00 74 08 4c 89 ff e8 a6 bd 19 ff 49 8b 07 48 89 44 24 18 48 8d 58 18 48 89 d8 48 c1 e8 03 48 89 44 24 40 <42> 80 3c 30 00 74 08 48 89 df e8 7f bd 19 ff 48 89 5c 24 28 48 8b
+RSP: 0018:ffffc900037afc40 EFLAGS: 00010206
+RAX: 0000000000000003 RBX: 0000000000000018 RCX: ffff88807de8d880
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff88806b3ee000
+RBP: 0000000000010000 R08: dffffc0000000000 R09: ffff88806b3ee290
+R10: 0000000000000000 R11: dffffc0000000001 R12: ffff88806b3ee558
+R13: dffffc0000000000 R14: dffffc0000000000 R15: ffff88806b3ee000
+FS:  00007f294093b6c0(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f293f98d090 CR3: 0000000023cfb000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	c1 e8 03             	shr    $0x3,%eax
+   3:	42 80 3c 30 00       	cmpb   $0x0,(%rax,%r14,1)
+   8:	74 08                	je     0x12
+   a:	4c 89 ff             	mov    %r15,%rdi
+   d:	e8 a6 bd 19 ff       	call   0xff19bdb8
+  12:	49 8b 07             	mov    (%r15),%rax
+  15:	48 89 44 24 18       	mov    %rax,0x18(%rsp)
+  1a:	48 8d 58 18          	lea    0x18(%rax),%rbx
+  1e:	48 89 d8             	mov    %rbx,%rax
+  21:	48 c1 e8 03          	shr    $0x3,%rax
+  25:	48 89 44 24 40       	mov    %rax,0x40(%rsp)
+* 2a:	42 80 3c 30 00       	cmpb   $0x0,(%rax,%r14,1) <-- trapping instruction
+  2f:	74 08                	je     0x39
+  31:	48 89 df             	mov    %rbx,%rdi
+  34:	e8 7f bd 19 ff       	call   0xff19bdb8
+  39:	48 89 5c 24 28       	mov    %rbx,0x28(%rsp)
+  3e:	48                   	rex.W
+  3f:	8b                   	.byte 0x8b

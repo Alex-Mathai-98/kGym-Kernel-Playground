@@ -1,0 +1,182 @@
+INFO: task syz-executor.0:5191 blocked for more than 143 seconds.
+      Not tainted 6.3.0-rc1-syzkaller-00005-g89a004508081 #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor.0  state:D stack:25952 pid:5191  ppid:5007   flags:0x00004002
+Call Trace:
+ <TASK>
+ __schedule+0x17e4/0x47c0
+ schedule+0xc3/0x180
+ schedule_preempt_disabled+0x13/0x20
+ rwsem_down_read_slowpath+0x5f4/0x950
+ __down_read_common+0x61/0x2c0
+ exit_mm+0xd3/0x310
+ do_exit+0x612/0x2290
+ do_group_exit+0x206/0x2c0
+ __x64_sys_exit_group+0x3f/0x40
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f7394c7c999
+RSP: 002b:00007ffec831fea8 EFLAGS: 00000246 ORIG_RAX: 00000000000000e7
+RAX: ffffffffffffffda RBX: 000000000000001e RCX: 00007f7394c7c999
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
+RBP: 0000000000000001 R08: 0000000000000010 R09: 0000000000000000
+R10: 0000001b33a60000 R11: 0000000000000246 R12: 0000000000000000
+R13: 0000000000000000 R14: 0000000000000001 R15: 0000000000000000
+ </TASK>
+INFO: task syz-executor.0:5192 blocked for more than 143 seconds.
+      Not tainted 6.3.0-rc1-syzkaller-00005-g89a004508081 #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor.0  state:D stack:24808 pid:5192  ppid:5007   flags:0x00004006
+Call Trace:
+ <TASK>
+ __schedule+0x17e4/0x47c0
+ schedule+0xc3/0x180
+ io_schedule+0x8c/0x100
+ folio_wait_bit_common+0x86c/0x12b0
+ write_cache_pages+0x58f/0x1450
+ mpage_writepages+0x107/0x1d0
+ do_writepages+0x3a6/0x670
+ filemap_fdatawrite_wbc+0x125/0x180
+ file_write_and_wait_range+0x20f/0x300
+ __generic_file_fsync+0x72/0x190
+ fat_file_fsync+0x7e/0x190
+ generic_file_write_iter+0x2a1/0x310
+ vfs_write+0x7b2/0xbb0
+ ksys_write+0x1a0/0x2c0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f7394c7c999
+RSP: 002b:00007f7395ac50c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007f7394d9bf80 RCX: 00007f7394c7c999
+RDX: 000000000208e24b RSI: 0000000020000080 RDI: 0000000000000004
+RBP: 00007f7394cd8ad0 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f7394d9bf80 R15: 00007ffec831fbb8
+ </TASK>
+INFO: task syz-executor.0:5196 blocked for more than 144 seconds.
+      Not tainted 6.3.0-rc1-syzkaller-00005-g89a004508081 #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor.0  state:D stack:26504 pid:5196  ppid:5007   flags:0x00004006
+Call Trace:
+ <TASK>
+ __schedule+0x17e4/0x47c0
+ schedule+0xc3/0x180
+ io_schedule+0x8c/0x100
+ folio_wait_bit_common+0x86c/0x12b0
+ folio_wait_writeback+0xec/0x1f0
+ migrate_pages+0x2d5c/0x6670
+ __se_sys_mbind+0x75a/0x9c0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f7394c7c999
+RSP: 002b:00007f7395aa40c8 EFLAGS: 00000246 ORIG_RAX: 00000000000000ed
+RAX: ffffffffffffffda RBX: 00007f7394d9c050 RCX: 00007f7394c7c999
+RDX: 0000000000000000 RSI: 0000000000800000 RDI: 0000000020001000
+RBP: 00007f7394cd8ad0 R08: 0000000000000000 R09: 0000000000000002
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000006e R14: 00007f7394d9c050 R15: 00007ffec831fbb8
+ </TASK>
+
+Showing all locks held in the system:
+2 locks held by kworker/u4:0/9:
+ #0: ffff8880b993be98 (&rq->__lock){-.-.}-{2:2}, at: raw_spin_rq_lock_nested+0x2a/0x140
+ #1: ffff8880b9928788 (&per_cpu_ptr(group->pcpu, cpu)->seq){-.-.}-{0:0}, at: psi_task_switch+0x3a7/0x770
+3 locks held by kworker/u4:1/11:
+ #0: ffff88814526c138 ((wq_completion)writeback){+.+.}-{0:0}, at: process_one_work+0x77f/0x13a0
+ #1: ffffc90000107d20 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_one_work+0x7c6/0x13a0
+ #2: ffff8880770780e0 (&type->s_umount_key#49){++++}-{3:3}, at: trylock_super+0x1f/0xf0
+1 lock held by rcu_tasks_kthre/12:
+ #0: ffffffff8d125e70 (rcu_tasks.tasks_gp_mutex){+.+.}-{3:3}, at: rcu_tasks_one_gp+0x29/0xd20
+1 lock held by rcu_tasks_trace/13:
+ #0: ffffffff8d126670 (rcu_tasks_trace.tasks_gp_mutex){+.+.}-{3:3}, at: rcu_tasks_one_gp+0x29/0xd20
+1 lock held by khungtaskd/28:
+ #0: ffffffff8d125ca0 (rcu_read_lock){....}-{1:2}, at: rcu_lock_acquire+0x0/0x30
+3 locks held by kworker/u4:2/41:
+ #0: ffff88814526c138 ((wq_completion)writeback){+.+.}-{0:0}, at: process_one_work+0x77f/0x13a0
+ #1: ffffc90000b27d20 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_one_work+0x7c6/0x13a0
+ #2: ffff88802a36a0e0 (&type->s_umount_key#49){++++}-{3:3}, at: trylock_super+0x1f/0xf0
+2 locks held by kworker/u4:7/2853:
+ #0: ffff8880b983be98 (&rq->__lock){-.-.}-{2:2}, at: raw_spin_rq_lock_nested+0x2a/0x140
+ #1: ffffc9000be9fd20 ((work_completion)(&(&bat_priv->nc.work)->work)){+.+.}-{0:0}, at: process_one_work+0x7c6/0x13a0
+2 locks held by getty/4734:
+ #0: ffff8880282cf098 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x25/0x70
+ #1: ffffc900015b02f0 (&ldata->atomic_read_lock){+.+.}-{3:3}, at: n_tty_read+0x6ab/0x1db0
+1 lock held by syz-executor.0/5191:
+ #0: ffff88807879a598 (&mm->mmap_lock){++++}-{3:3}, at: exit_mm+0xd3/0x310
+2 locks held by syz-executor.0/5192:
+ #0: ffff88802abf0ae8 (&f->f_pos_lock){+.+.}-{3:3}, at: __fdget_pos+0x254/0x2f0
+ #1: ffff88802a36a460 (sb_writers#13){.+.+}-{0:0}, at: vfs_write+0x26d/0xbb0
+1 lock held by syz-executor.0/5196:
+ #0: ffff88807879a598 (&mm->mmap_lock){++++}-{3:3}, at: __se_sys_mbind+0x47d/0x9c0
+1 lock held by syz-executor.1/5240:
+ #0: ffff88807aa2b798 (&mm->mmap_lock){++++}-{3:3}, at: exit_mm+0xd3/0x310
+2 locks held by syz-executor.1/5244:
+ #0: ffff88802a4a54e8 (&f->f_pos_lock){+.+.}-{3:3}, at: __fdget_pos+0x254/0x2f0
+ #1: ffff888077078460 (sb_writers#13){.+.+}-{0:0}, at: vfs_write+0x26d/0xbb0
+1 lock held by syz-executor.1/5256:
+ #0: ffff88807aa2b798 (&mm->mmap_lock){++++}-{3:3}, at: __se_sys_mbind+0x47d/0x9c0
+1 lock held by syz-executor.7/5434:
+ #0: ffff88807a170198 (&mm->mmap_lock){++++}-{3:3}, at: exit_mm+0xd3/0x310
+2 locks held by syz-executor.7/5436:
+ #0: ffff88802ba42d68 (&f->f_pos_lock){+.+.}-{3:3}, at: __fdget_pos+0x254/0x2f0
+ #1: ffff888020518460 (sb_writers#13){.+.+}-{0:0}, at: vfs_write+0x26d/0xbb0
+1 lock held by syz-executor.7/5448:
+ #0: ffff88807a170198 (&mm->mmap_lock){++++}-{3:3}, at: __se_sys_mbind+0x47d/0x9c0
+1 lock held by syz-executor.6/5439:
+ #0: ffff888078697698 (&mm->mmap_lock){++++}-{3:3}, at: exit_mm+0xd3/0x310
+2 locks held by syz-executor.6/5441:
+ #0: ffff88805eb720e8 (&f->f_pos_lock){+.+.}-{3:3}, at: __fdget_pos+0x254/0x2f0
+ #1: ffff888063f1c460 (sb_writers#13){.+.+}-{0:0}, at: vfs_write+0x26d/0xbb0
+1 lock held by syz-executor.6/5452:
+ #0: ffff888078697698 (&mm->mmap_lock){++++}-{3:3}, at: __se_sys_mbind+0x47d/0x9c0
+1 lock held by syz-executor.5/5458:
+ #0: ffff88807879db98 (&mm->mmap_lock){++++}-{3:3}, at: exit_mm+0xd3/0x310
+2 locks held by syz-executor.5/5459:
+ #0: ffff888029bde0e8 (&f->f_pos_lock){+.+.}-{3:3}, at: __fdget_pos+0x254/0x2f0
+ #1: ffff88806f72a460 (sb_writers#13){.+.+}-{0:0}, at: vfs_write+0x26d/0xbb0
+1 lock held by syz-executor.5/5467:
+ #0: ffff88807879db98 (&mm->mmap_lock){++++}-{3:3}, at: __se_sys_mbind+0x47d/0x9c0
+
+=============================================
+
+NMI backtrace for cpu 0
+CPU: 0 PID: 28 Comm: khungtaskd Not tainted 6.3.0-rc1-syzkaller-00005-g89a004508081 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1e7/0x2d0
+ nmi_cpu_backtrace+0x4e5/0x560
+ nmi_trigger_cpumask_backtrace+0x1bb/0x380
+ watchdog+0x1024/0x1070
+ kthread+0x270/0x300
+ ret_from_fork+0x1f/0x30
+ </TASK>
+Sending NMI from CPU 0 to CPUs 1:
+NMI backtrace for cpu 1
+CPU: 1 PID: 1127 Comm: kworker/u4:6 Not tainted 6.3.0-rc1-syzkaller-00005-g89a004508081 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: bat_events batadv_nc_worker
+RIP: 0010:check_preemption_disabled+0x37/0x110
+Code: 8b 04 25 28 00 00 00 48 89 44 24 08 65 8b 1d 8c f2 4c 75 65 8b 05 81 f2 4c 75 a9 ff ff ff 7f 74 22 65 48 8b 04 25 28 00 00 00 <48> 3b 44 24 08 0f 85 c7 00 00 00 89 d8 48 83 c4 10 5b 41 5c 41 5e
+RSP: 0018:ffffc9000520f9a0 EFLAGS: 00000002
+RAX: ca115f89d8f0f700 RBX: 0000000000000001 RCX: 0000000080000001
+RDX: 0000000000000000 RSI: ffffffff8b0a9b20 RDI: ffffffff8b5872a0
+RBP: 0000000000000000 R08: dffffc0000000000 R09: fffffbfff1ce7fee
+R10: 0000000000000000 R11: dffffc0000000001 R12: 0000000000000246
+R13: ffff888020cc1d40 R14: 00000000ffffffff R15: ffffffff8d125c20
+FS:  0000000000000000(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f1655719866 CR3: 000000000cf30000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ lock_is_held_type+0x101/0x190
+ rcu_read_lock_sched_held+0x8d/0x130
+ lock_release+0x10f/0xab0
+ batadv_nc_worker+0x23d/0x5c0
+ process_one_work+0x915/0x13a0
+ worker_thread+0xa63/0x1210
+ kthread+0x270/0x300
+ ret_from_fork+0x1f/0x30
+ </TASK>

@@ -1,0 +1,81 @@
+==================================================================
+BUG: KASAN: use-after-free in ethnl_update_bitset32+0x17d7/0x1850
+Read of size 4 at addr ffff8881ebafcc3c by task syz-executor.4/4480
+
+CPU: 1 PID: 4480 Comm: syz-executor.4 Not tainted 5.6.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x191/0x20f
+ print_address_description.constprop.0.cold+0x72/0x369
+ __kasan_report.cold+0x1b/0x32
+ kasan_report+0x12/0x20
+ __asan_report_load4_noabort+0x14/0x20
+ ethnl_update_bitset32+0x17d7/0x1850
+ ethnl_update_bitset+0x41/0x50
+ ethnl_set_linkmodes+0x50d/0xc40
+ genl_rcv_msg+0x71f/0xf80
+ netlink_rcv_skb+0x186/0x470
+ genl_rcv+0x28/0x40
+ netlink_unicast+0x589/0x880
+ netlink_sendmsg+0x922/0xe90
+ sock_sendmsg+0xd2/0x120
+ ____sys_sendmsg+0x679/0x880
+ ___sys_sendmsg+0x11d/0x1b0
+ __x64_sys_sendmsg+0x149/0x230
+ do_syscall_64+0xf6/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f8ffce63f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f8ffc1e40c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f8ffcf91f80 RCX: 00007f8ffce63f69
+RDX: 0000000000000000 RSI: 0000000020000240 RDI: 0000000000000003
+RBP: 00007f8ffceb04a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f8ffcf91f80 R15: 00007ffd5e263e68
+
+Allocated by task 4409:
+ save_stack+0x21/0x80
+ __kasan_kmalloc.constprop.0+0xea/0x100
+ kasan_slab_alloc+0xf/0x20
+ kmem_cache_alloc+0x11a/0x3b0
+ getname_flags.part.0+0x53/0x4e0
+ user_path_at_empty+0xac/0x110
+ vfs_statx+0x130/0x220
+ __do_sys_newfstatat+0xad/0x130
+ __x64_sys_newfstatat+0x96/0xf0
+ do_syscall_64+0xf6/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+Freed by task 4409:
+ save_stack+0x21/0x80
+ __kasan_slab_free+0xfe/0x140
+ kasan_slab_free+0xe/0x10
+ kmem_cache_free+0x83/0x310
+ putname+0xef/0x130
+ filename_lookup+0x3a1/0x540
+ user_path_at_empty+0xc7/0x110
+ vfs_statx+0x130/0x220
+ __do_sys_newfstatat+0xad/0x130
+ __x64_sys_newfstatat+0x96/0xf0
+ do_syscall_64+0xf6/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+The buggy address belongs to the object at ffff8881ebafc840
+ which belongs to the cache names_cache of size 4096
+The buggy address is located 1020 bytes inside of
+ 4096-byte region [ffff8881ebafc840, ffff8881ebafd840)
+The buggy address belongs to the page:
+page:ffffea0007aebf00 refcount:1 mapcount:0 mapping:ffff8881f55faa80 index:0x0 compound_mapcount: 0
+flags: 0x17ffe0000010200(slab|head)
+raw: 017ffe0000010200 ffffea0007b02c08 ffffea0007aec208 ffff8881f55faa80
+raw: 0000000000000000 ffff8881ebafc840 0000000100000001 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff8881ebafcb00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8881ebafcb80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>ffff8881ebafcc00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                        ^
+ ffff8881ebafcc80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8881ebafcd00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================

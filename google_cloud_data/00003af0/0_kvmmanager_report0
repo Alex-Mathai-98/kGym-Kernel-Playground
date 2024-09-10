@@ -1,0 +1,39 @@
+EXT4-fs (loop3): mounted filesystem without journal. Quota mode: writeback.
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 3689 at fs/ext4/xattr.c:2070 ext4_xattr_block_set+0x308f/0x3840
+Modules linked in:
+CPU: 1 PID: 3689 Comm: syz-executor.3 Not tainted 6.1.0-rc4-syzkaller-00026-g8805dbcb3e83 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:ext4_xattr_block_set+0x308f/0x3840
+Code: fa 45 ff 48 8b 7c 24 50 4c 89 fe e8 5b 26 c3 ff 45 31 f6 e9 13 f5 ff ff e8 8e fa 45 ff 45 31 f6 e9 06 f5 ff ff e8 81 fa 45 ff <0f> 0b e9 30 f2 ff ff e8 75 fa 45 ff 0f 0b e9 7a df ff ff 89 f9 80
+RSP: 0018:ffffc900043bf0a0 EFLAGS: 00010293
+RAX: ffffffff823fb13f RBX: 1ffff1100dc97215 RCX: ffff88801ff7d7c0
+RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000001
+RBP: ffffc900043bf2f0 R08: ffffffff82063b8c R09: ffffed100f604b23
+R10: 0000000000000000 R11: dffffc0000000001 R12: ffff88806841a0f0
+R13: dffffc0000000000 R14: 0000000000000000 R15: ffffc900043bf1e0
+FS:  00007f602be2a6c0(0000) GS:ffff8880b9b00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f602b198000 CR3: 0000000073a7c000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ ext4_expand_extra_isize_ea+0x12e9/0x1c30
+ __ext4_expand_extra_isize+0x291/0x3e0
+ __ext4_mark_inode_dirty+0x5d3/0x9a0
+ ext4_rename2+0x2a1d/0x4540
+ vfs_rename+0xc4d/0x1190
+ do_renameat2+0xb39/0x1330
+ __x64_sys_rename+0x82/0x90
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f602b07adb9
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f602be2a0c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000052
+RAX: ffffffffffffffda RBX: 00007f602b19bf80 RCX: 00007f602b07adb9
+RDX: 0000000000000000 RSI: 00000000200000c0 RDI: 0000000020000080
+RBP: 00007f602b0d7797 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f602b19bf80 R15: 00007ffd0da6faf8
+ </TASK>

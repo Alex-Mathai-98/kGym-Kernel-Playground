@@ -1,0 +1,129 @@
+NILFS (loop6): disposed unprocessed dirty file(s) when detaching log writer
+==================================================================
+BUG: KASAN: slab-use-after-free in nilfs_load_inode_block+0x11e/0x280
+Read of size 8 at addr ffff88802c856c30 by task syz-executor.6/5048
+
+CPU: 1 PID: 5048 Comm: syz-executor.6 Not tainted 6.5.0-rc4-syzkaller-00012-gfac2650276ec #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1e7/0x2d0
+ print_report+0x163/0x540
+ kasan_report+0x175/0x1b0
+ nilfs_load_inode_block+0x11e/0x280
+ __nilfs_mark_inode_dirty+0xa5/0x280
+ nilfs_dirty_inode+0x164/0x200
+ __mark_inode_dirty+0x305/0xd90
+ iput+0x1f2/0x8f0
+ nilfs_dispose_list+0x51d/0x5c0
+ nilfs_detach_log_writer+0xaf1/0xbb0
+ nilfs_put_super+0x4d/0x160
+ generic_shutdown_super+0x134/0x340
+ kill_block_super+0x68/0xa0
+ deactivate_locked_super+0xa4/0x110
+ cleanup_mnt+0x426/0x4c0
+ task_work_run+0x24a/0x300
+ exit_to_user_mode_loop+0xd9/0x100
+ exit_to_user_mode_prepare+0xb1/0x140
+ syscall_exit_to_user_mode+0x64/0x280
+ do_syscall_64+0x4d/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f07d507ded7
+Code: b0 ff ff ff f7 d8 64 89 01 48 83 c8 ff c3 0f 1f 44 00 00 31 f6 e9 09 00 00 00 66 0f 1f 84 00 00 00 00 00 b8 a6 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 01 c3 48 c7 c2 b0 ff ff ff f7 d8 64 89 02 b8
+RSP: 002b:00007ffdfdbea358 EFLAGS: 00000246 ORIG_RAX: 00000000000000a6
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 00007f07d507ded7
+RDX: 0000000000000000 RSI: 000000000000000a RDI: 00007ffdfdbea410
+RBP: 00007ffdfdbea410 R08: 0000000000000000 R09: 0000000000000000
+R10: 00000000ffffffff R11: 0000000000000246 R12: 00007ffdfdbeb4d0
+R13: 00007f07d50c73b9 R14: 0000000000013941 R15: 0000000000000007
+ </TASK>
+
+Allocated by task 5339:
+ kasan_set_track+0x4f/0x70
+ __kasan_kmalloc+0x98/0xb0
+ nilfs_find_or_create_root+0x137/0x4e0
+ nilfs_attach_checkpoint+0x123/0x4d0
+ nilfs_fill_super+0x321/0x600
+ nilfs_mount+0x637/0x950
+ legacy_get_tree+0xef/0x190
+ vfs_get_tree+0x8c/0x270
+ do_new_mount+0x28f/0xae0
+ __se_sys_mount+0x2d9/0x3c0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Freed by task 5048:
+ kasan_set_track+0x4f/0x70
+ kasan_save_free_info+0x28/0x40
+ ____kasan_slab_free+0xd6/0x120
+ __kmem_cache_free+0x25f/0x3b0
+ nilfs_detach_log_writer+0x8c1/0xbb0
+ nilfs_put_super+0x4d/0x160
+ generic_shutdown_super+0x134/0x340
+ kill_block_super+0x68/0xa0
+ deactivate_locked_super+0xa4/0x110
+ cleanup_mnt+0x426/0x4c0
+ task_work_run+0x24a/0x300
+ exit_to_user_mode_loop+0xd9/0x100
+ exit_to_user_mode_prepare+0xb1/0x140
+ syscall_exit_to_user_mode+0x64/0x280
+ do_syscall_64+0x4d/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+The buggy address belongs to the object at ffff88802c856c00
+ which belongs to the cache kmalloc-256 of size 256
+The buggy address is located 48 bytes inside of
+ freed 256-byte region [ffff88802c856c00, ffff88802c856d00)
+
+The buggy address belongs to the physical page:
+page:ffffea0000b21580 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x2c856
+head:ffffea0000b21580 order:1 entire_mapcount:0 nr_pages_mapped:0 pincount:0
+ksm flags: 0xfff00000010200(slab|head|node=0|zone=1|lastcpupid=0x7ff)
+page_type: 0xffffffff()
+raw: 00fff00000010200 ffff888012841b40 ffffea00009ad300 dead000000000003
+raw: 0000000000000000 0000000000100010 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 1, migratetype Unmovable, gfp_mask 0xd2040(__GFP_IO|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC), pid 4482, tgid 4482 (udevadm), ts 27068590534, free_ts 26981180033
+ post_alloc_hook+0x1e6/0x210
+ get_page_from_freelist+0x31e8/0x3370
+ __alloc_pages+0x255/0x670
+ alloc_slab_page+0x6a/0x160
+ new_slab+0x84/0x2f0
+ ___slab_alloc+0xade/0x1100
+ __kmem_cache_alloc_node+0x1af/0x270
+ kmalloc_trace+0x2a/0xe0
+ smk_fetch+0x92/0x140
+ smack_d_instantiate+0x6d9/0xb40
+ security_d_instantiate+0x9b/0xf0
+ d_splice_alias+0x6f/0x330
+ __lookup_slow+0x282/0x3e0
+ lookup_slow+0x53/0x70
+ link_path_walk+0x9c8/0xe70
+ path_lookupat+0xa9/0x450
+page last free stack trace:
+ free_unref_page_prepare+0x903/0xa30
+ free_unref_page+0x37/0x3f0
+ __slab_free+0x2f6/0x390
+ qlist_free_all+0x22/0x60
+ kasan_quarantine_reduce+0x14b/0x160
+ __kasan_slab_alloc+0x23/0x70
+ slab_post_alloc_hook+0x6c/0x3b0
+ __kmem_cache_alloc_node+0x141/0x270
+ kmalloc_trace+0x2a/0xe0
+ smk_fetch+0x92/0x140
+ smack_d_instantiate+0x868/0xb40
+ security_d_instantiate+0x9b/0xf0
+ d_splice_alias+0x6f/0x330
+ __lookup_slow+0x282/0x3e0
+ lookup_slow+0x53/0x70
+ walk_component+0x2d0/0x400
+
+Memory state around the buggy address:
+ ffff88802c856b00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88802c856b80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff88802c856c00: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                     ^
+ ffff88802c856c80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88802c856d00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================

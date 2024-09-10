@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "general protection fault in virtio_transport_purge_skbs",
+    "display-title": "general protection fault in virtio_transport_purge_skbs",
+    "id": "cfaa72b0f8cf807081aad90d4fe7c2442f0bf12b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "vsock/loopback: use only sk_buff_head.lock to protect the packet queue",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b465518dc27da1ed74b8cbada4659708aac35adb",
+            "hash": "b465518dc27da1ed74b8cbada4659708aac35adb",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "virtio/vsock: replace virtio_vsock_pkt with sk_buff",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=71dc9ec9ac7d3eee785cdc986c3daeb821381e20",
+        "hash": "71dc9ec9ac7d3eee785cdc986c3daeb821381e20",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000708b1005f79acf5c@google.com/T/",
+        "https://lore.kernel.org/all/00000000000075bebb05f79acfde@google.com/T/",
+        "https://lore.kernel.org/all/20230324115450.11268-1-sgarzare@redhat.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in virtio_transport_purge_skbs",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14365781c80000",
+            "c-reproducer": "/text?tag=ReproC&x=12eebc66c80000",
+            "kernel-config": "/text?tag=KernelConfig&x=aaa4b45720ca0519",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=fff5a5e7f528b2ed2c335991399a766c2cf01103",
+            "kernel-source-commit": "fff5a5e7f528b2ed2c335991399a766c2cf01103",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f94b4a29b579b3de9aab3b41915e3663e6f7094e",
+            "syzkaller-commit": "f94b4a29b579b3de9aab3b41915e3663e6f7094e",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=137704f6c80000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "622035847f5e8661be7c0b9d6222391ccd8022bc",
+    "patch": "diff --git a/net/vmw_vsock/vsock_loopback.c b/net/vmw_vsock/vsock_loopback.c\nindex 671e03240fc5..89905c092645 100644\n--- a/net/vmw_vsock/vsock_loopback.c\n+++ b/net/vmw_vsock/vsock_loopback.c\n@@ -15,7 +15,6 @@\n struct vsock_loopback {\n \tstruct workqueue_struct *workqueue;\n \n-\tspinlock_t pkt_list_lock; /* protects pkt_list */\n \tstruct sk_buff_head pkt_queue;\n \tstruct work_struct pkt_work;\n };\n@@ -32,9 +31,7 @@ static int vsock_loopback_send_pkt(struct sk_buff *skb)\n \tstruct vsock_loopback *vsock = &the_vsock_loopback;\n \tint len = skb->len;\n \n-\tspin_lock_bh(&vsock->pkt_list_lock);\n \tskb_queue_tail(&vsock->pkt_queue, skb);\n-\tspin_unlock_bh(&vsock->pkt_list_lock);\n \n \tqueue_work(vsock->workqueue, &vsock->pkt_work);\n \n@@ -113,9 +110,9 @@ static void vsock_loopback_work(struct work_struct *work)\n \n \tskb_queue_head_init(&pkts);\n \n-\tspin_lock_bh(&vsock->pkt_list_lock);\n+\tspin_lock_bh(&vsock->pkt_queue.lock);\n \tskb_queue_splice_init(&vsock->pkt_queue, &pkts);\n-\tspin_unlock_bh(&vsock->pkt_list_lock);\n+\tspin_unlock_bh(&vsock->pkt_queue.lock);\n \n \twhile ((skb = __skb_dequeue(&pkts))) {\n \t\tvirtio_transport_deliver_tap_pkt(skb);\n@@ -132,7 +129,6 @@ static int __init vsock_loopback_init(void)\n \tif (!vsock->workqueue)\n \t\treturn -ENOMEM;\n \n-\tspin_lock_init(&vsock->pkt_list_lock);\n \tskb_queue_head_init(&vsock->pkt_queue);\n \tINIT_WORK(&vsock->pkt_work, vsock_loopback_work);\n \n@@ -156,9 +152,7 @@ static void __exit vsock_loopback_exit(void)\n \n \tflush_work(&vsock->pkt_work);\n \n-\tspin_lock_bh(&vsock->pkt_list_lock);\n \tvirtio_vsock_skb_queue_purge(&vsock->pkt_queue);\n-\tspin_unlock_bh(&vsock->pkt_list_lock);\n \n \tdestroy_workqueue(vsock->workqueue);\n }\n",
+    "patch_modified_files": [
+        "net/vmw_vsock/vsock_loopback.c"
+    ]
+}

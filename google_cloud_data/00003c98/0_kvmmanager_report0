@@ -1,0 +1,75 @@
+IPv6: ADDRCONF(NETDEV_UP): veth0_to_batadv: link is not ready
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_1: link is not ready
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+==================================================================
+BUG: KASAN: slab-out-of-bounds in pfkey_add+0x1ea2/0x2ee0
+Read of size 8192 at addr ffff8801d68e3d00 by task syz-executor.4/5163
+
+CPU: 1 PID: 5163 Comm: syz-executor.4 Not tainted 4.16.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x1a8/0x27f
+ print_address_description+0xf5/0x2a1
+IPv6: ADDRCONF(NETDEV_UP): veth1_to_batadv: link is not ready
+ kasan_report.part.0.cold+0x17a/0x260
+ kasan_report+0x38/0x3a
+ check_memory_region+0x11c/0x180
+ memcpy+0x23/0x50
+ pfkey_add+0x1ea2/0x2ee0
+ pfkey_process+0x6fe/0x7b0
+ pfkey_sendmsg+0x511/0x9d0
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_0: link is not ready
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_1: link is not ready
+ sock_sendmsg+0xd5/0x120
+ ___sys_sendmsg+0x76c/0x960
+ SyS_sendmsg+0xea/0x230
+ do_syscall_64+0x262/0x3f0
+ entry_SYSCALL_64_after_hwframe+0x42/0xb7
+RIP: 0033:0x7f2b360daf69
+RSP: 002b:00007f2b35c5c0c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f2b36208f80 RCX: 00007f2b360daf69
+RDX: 0000000000000000 RSI: 0000000020196fe4 RDI: 0000000000000003
+RBP: 00007f2b361274a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f2b36208f80 R15: 00007ffd83bd8a18
+
+Allocated by task 5163:
+ save_stack+0x43/0xc0
+ kasan_kmalloc+0xce/0xf0
+ __kmalloc_node_track_caller+0x47/0x70
+ __alloc_skb+0x128/0x830
+ pfkey_sendmsg+0x213/0x9d0
+ sock_sendmsg+0xd5/0x120
+ ___sys_sendmsg+0x76c/0x960
+ SyS_sendmsg+0xea/0x230
+ do_syscall_64+0x262/0x3f0
+ entry_SYSCALL_64_after_hwframe+0x42/0xb7
+
+Freed by task 0:
+(stack is not available)
+
+The buggy address belongs to the object at ffff8801d68e3cc0
+ which belongs to the cache kmalloc-512 of size 512
+The buggy address is located 64 bytes inside of
+ 512-byte region [ffff8801d68e3cc0, ffff8801d68e3ec0)
+The buggy address belongs to the page:
+page:ffffea00075a38c0 count:1 mapcount:0 mapping:ffff8801d68e3040 index:0x0
+flags: 0x2fffc0000000100(slab)
+raw: 02fffc0000000100 ffff8801d68e3040 0000000000000000 0000000100000006
+raw: ffffea00075a6da0 ffffea000758b020 ffff8801f6000940 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff8801d68e3d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff8801d68e3e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff8801d68e3e80: 00 00 00 00 00 00 00 00 fc fc fc fc fc fc fc fc
+                                           ^
+ ffff8801d68e3f00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8801d68e3f80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+random: crng init done
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready

@@ -1,0 +1,294 @@
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 4083 at net/core/dev.c:8992 rollback_registered_many+0xc02/0xf90
+Modules linked in:
+CPU: 1 PID: 4083 Comm: syz-executor.1 Not tainted 5.8.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:rollback_registered_many+0xc02/0xf90
+Code: 00 00 31 f6 4c 89 f7 e8 dc ca fc ff e9 4e fe ff ff 4c 89 e7 e9 4c fd ff ff e8 0a 80 5f fb 0f 0b e9 d9 fd ff ff e8 fe 7f 5f fb <0f> 0b e9 17 fe ff ff e8 f2 7f 5f fb 0f b6 2d 01 f4 97 04 31 ff 89
+RSP: 0018:ffffc9000165ef38 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: dffffc0000000000 RCX: ffffffff8611a4fb
+RDX: ffff8881e1c1a440 RSI: ffffffff8611a712 RDI: 0000000000000005
+RBP: ffff8881ce7ee0b8 R08: 0000000000000000 R09: ffffffff8a7b4027
+R10: 0000000000000000 R11: 0000000000000000 R12: ffff8881e9020000
+R13: ffff8881e9020000 R14: ffff8881ce7ee000 R15: 0000000000000000
+FS:  00007f0e360c56c0(0000) GS:ffff8881f6300000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000055d689e4d910 CR3: 00000001cee0a006 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ unregister_netdevice_queue+0x2dd/0x570
+ hsr_dev_finalize+0x5bd/0x740
+ hsr_newlink+0x278/0x4f0
+ __rtnl_newlink+0x1065/0x16e0
+ rtnl_newlink+0x63/0x90
+ rtnetlink_rcv_msg+0x449/0xab0
+ netlink_rcv_skb+0x15b/0x430
+ netlink_unicast+0x527/0x7e0
+ netlink_sendmsg+0x85a/0xd70
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x62e/0x800
+ ___sys_sendmsg+0x100/0x170
+ __sys_sendmsg+0xe5/0x1b0
+ do_syscall_64+0x60/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7f0e36d44f69
+Code: Bad RIP value.
+RSP: 002b:00007f0e360c50c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f0e36e72f80 RCX: 00007f0e36d44f69
+RDX: 0000000000000000 RSI: 00000000200000c0 RDI: 0000000000000003
+RBP: 00007f0e36d914a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f0e36e72f80 R15: 00007fff82c02f08
+irq event stamp: 2587
+hardirqs last  enabled at (2587): [<ffffffff81b03ae8>] kfree+0x1c8/0x2b0
+hardirqs last disabled at (2586): [<ffffffff81b0398f>] kfree+0x6f/0x2b0
+softirqs last  enabled at (2584): [<ffffffff8611a21d>] rollback_registered_many+0x70d/0xf90
+softirqs last disabled at (2582): [<ffffffff861206b9>] dev_mc_flush+0x19/0x30
+---[ end trace ef2c55c563d71884 ]---
+WARNING: CPU: 1 PID: 4083 at fs/kernfs/dir.c:1507 kernfs_remove_by_name_ns+0x9d/0xb0
+Modules linked in:
+CPU: 1 PID: 4083 Comm: syz-executor.1 Tainted: G        W         5.8.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:kernfs_remove_by_name_ns+0x9d/0xb0
+Code: e8 28 20 05 06 e8 e3 a7 8c ff bb fe ff ff ff 89 d8 5b 5d 41 5c c3 e8 d2 a7 8c ff 48 89 ee 48 c7 c7 a0 15 5a 88 e8 06 0e db 05 <0f> 0b eb d7 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 41 57 41
+RSP: 0018:ffffc9000165ee88 EFLAGS: 00010282
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: ffff8881e1c1a440 RSI: ffffffff815b0d96 RDI: fffff520002cbdc3
+RBP: ffffc9000165eed8 R08: 0000000000000000 R09: 0000000000000001
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: ffff8881d1394000 R14: 0000000000000001 R15: ffff8881ce7ee000
+FS:  00007f0e360c56c0(0000) GS:ffff8881f6300000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000055d689e4d910 CR3: 00000001cee0a006 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ __netdev_adjacent_dev_remove+0x3de/0x500
+ netdev_upper_dev_unlink+0x143/0x620
+ hsr_del_port+0x218/0x2e0
+ hsr_del_ports+0x2c/0x90
+ hsr_dev_finalize+0x5ca/0x740
+ hsr_newlink+0x278/0x4f0
+ __rtnl_newlink+0x1065/0x16e0
+ rtnl_newlink+0x63/0x90
+ rtnetlink_rcv_msg+0x449/0xab0
+ netlink_rcv_skb+0x15b/0x430
+ netlink_unicast+0x527/0x7e0
+ netlink_sendmsg+0x85a/0xd70
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x62e/0x800
+ ___sys_sendmsg+0x100/0x170
+ __sys_sendmsg+0xe5/0x1b0
+ do_syscall_64+0x60/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7f0e36d44f69
+Code: Bad RIP value.
+RSP: 002b:00007f0e360c50c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f0e36e72f80 RCX: 00007f0e36d44f69
+RDX: 0000000000000000 RSI: 00000000200000c0 RDI: 0000000000000003
+RBP: 00007f0e36d914a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f0e36e72f80 R15: 00007fff82c02f08
+irq event stamp: 6791
+hardirqs last  enabled at (6791): [<ffffffff815aae79>] console_unlock+0xcb9/0xf30
+hardirqs last disabled at (6790): [<ffffffff815aa30d>] console_unlock+0x14d/0xf30
+softirqs last  enabled at (6788): [<ffffffff88200717>] __do_softirq+0x717/0xa7d
+softirqs last disabled at (6781): [<ffffffff88000f0f>] asm_call_on_stack+0xf/0x20
+---[ end trace ef2c55c563d71885 ]---
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 4088 at net/core/dev.c:8992 rollback_registered_many+0xc02/0xf90
+Modules linked in:
+CPU: 1 PID: 4088 Comm: syz-executor.2 Tainted: G        W         5.8.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:rollback_registered_many+0xc02/0xf90
+Code: 00 00 31 f6 4c 89 f7 e8 dc ca fc ff e9 4e fe ff ff 4c 89 e7 e9 4c fd ff ff e8 0a 80 5f fb 0f 0b e9 d9 fd ff ff e8 fe 7f 5f fb <0f> 0b e9 17 fe ff ff e8 f2 7f 5f fb 0f b6 2d 01 f4 97 04 31 ff 89
+RSP: 0018:ffffc90000436f38 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: dffffc0000000000 RCX: ffffffff8611a4fb
+RDX: ffff8881d6e560c0 RSI: ffffffff8611a712 RDI: 0000000000000005
+RBP: ffff8881e1c420b8 R08: 0000000000000000 R09: ffffffff8a7b4027
+R10: 0000000000000000 R11: 0000000000000000 R12: ffff8881dd6bb880
+R13: ffff8881dd6bb880 R14: ffff8881e1c42000 R15: 0000000000000000
+FS:  00007f469d0f66c0(0000) GS:ffff8881f6300000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007ffedac7ebe8 CR3: 00000001de741006 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ unregister_netdevice_queue+0x2dd/0x570
+ hsr_dev_finalize+0x5bd/0x740
+ hsr_newlink+0x278/0x4f0
+ __rtnl_newlink+0x1065/0x16e0
+ rtnl_newlink+0x63/0x90
+ rtnetlink_rcv_msg+0x449/0xab0
+ netlink_rcv_skb+0x15b/0x430
+ netlink_unicast+0x527/0x7e0
+ netlink_sendmsg+0x85a/0xd70
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x62e/0x800
+ ___sys_sendmsg+0x100/0x170
+ __sys_sendmsg+0xe5/0x1b0
+ do_syscall_64+0x60/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7f469dd75f69
+Code: Bad RIP value.
+RSP: 002b:00007f469d0f60c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f469dea3f80 RCX: 00007f469dd75f69
+RDX: 0000000000000000 RSI: 00000000200000c0 RDI: 0000000000000003
+RBP: 00007f469ddc24a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f469dea3f80 R15: 00007ffedac80128
+irq event stamp: 4599
+hardirqs last  enabled at (4599): [<ffffffff81b03ae8>] kfree+0x1c8/0x2b0
+hardirqs last disabled at (4598): [<ffffffff81b0398f>] kfree+0x6f/0x2b0
+softirqs last  enabled at (4596): [<ffffffff8611a21d>] rollback_registered_many+0x70d/0xf90
+softirqs last disabled at (4594): [<ffffffff861206b9>] dev_mc_flush+0x19/0x30
+---[ end trace ef2c55c563d71886 ]---
+WARNING: CPU: 1 PID: 4088 at fs/kernfs/dir.c:1507 kernfs_remove_by_name_ns+0x9d/0xb0
+Modules linked in:
+CPU: 1 PID: 4088 Comm: syz-executor.2 Tainted: G        W         5.8.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:kernfs_remove_by_name_ns+0x9d/0xb0
+Code: e8 28 20 05 06 e8 e3 a7 8c ff bb fe ff ff ff 89 d8 5b 5d 41 5c c3 e8 d2 a7 8c ff 48 89 ee 48 c7 c7 a0 15 5a 88 e8 06 0e db 05 <0f> 0b eb d7 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 41 57 41
+RSP: 0018:ffffc90000436e88 EFLAGS: 00010282
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: ffff8881d6e560c0 RSI: ffffffff815b0d96 RDI: fffff52000086dc3
+RBP: ffffc90000436ed8 R08: 0000000000000001 R09: ffff8881f63318e7
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: ffff8881cee66000 R14: 0000000000000001 R15: ffff8881e1c42000
+FS:  00007f469d0f66c0(0000) GS:ffff8881f6300000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007ffedac7ebe8 CR3: 00000001de741006 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ __netdev_adjacent_dev_remove+0x3de/0x500
+ netdev_upper_dev_unlink+0x143/0x620
+ hsr_del_port+0x218/0x2e0
+ hsr_del_ports+0x2c/0x90
+ hsr_dev_finalize+0x5ca/0x740
+ hsr_newlink+0x278/0x4f0
+ __rtnl_newlink+0x1065/0x16e0
+ rtnl_newlink+0x63/0x90
+ rtnetlink_rcv_msg+0x449/0xab0
+ netlink_rcv_skb+0x15b/0x430
+ netlink_unicast+0x527/0x7e0
+ netlink_sendmsg+0x85a/0xd70
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x62e/0x800
+ ___sys_sendmsg+0x100/0x170
+ __sys_sendmsg+0xe5/0x1b0
+ do_syscall_64+0x60/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7f469dd75f69
+Code: Bad RIP value.
+RSP: 002b:00007f469d0f60c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f469dea3f80 RCX: 00007f469dd75f69
+RDX: 0000000000000000 RSI: 00000000200000c0 RDI: 0000000000000003
+RBP: 00007f469ddc24a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f469dea3f80 R15: 00007ffedac80128
+irq event stamp: 6299
+hardirqs last  enabled at (6299): [<ffffffff87ea5a2f>] _raw_spin_unlock_irq+0x1f/0x80
+hardirqs last disabled at (6298): [<ffffffff87e94daf>] __schedule+0x21f/0x1e50
+softirqs last  enabled at (6280): [<ffffffff88200717>] __do_softirq+0x717/0xa7d
+softirqs last disabled at (6269): [<ffffffff88000f0f>] asm_call_on_stack+0xf/0x20
+---[ end trace ef2c55c563d71887 ]---
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 4098 at net/core/dev.c:8992 rollback_registered_many+0xc02/0xf90
+Modules linked in:
+CPU: 1 PID: 4098 Comm: syz-executor.1 Tainted: G        W         5.8.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:rollback_registered_many+0xc02/0xf90
+Code: 00 00 31 f6 4c 89 f7 e8 dc ca fc ff e9 4e fe ff ff 4c 89 e7 e9 4c fd ff ff e8 0a 80 5f fb 0f 0b e9 d9 fd ff ff e8 fe 7f 5f fb <0f> 0b e9 17 fe ff ff e8 f2 7f 5f fb 0f b6 2d 01 f4 97 04 31 ff 89
+RSP: 0018:ffffc9000168ef38 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: dffffc0000000000 RCX: ffffffff8611a4fb
+RDX: ffff8881d5ccc5c0 RSI: ffffffff8611a712 RDI: 0000000000000005
+RBP: ffff8881d401a0b8 R08: 0000000000000000 R09: ffffffff8a7b4027
+R10: 0000000000000000 R11: 0000000000000000 R12: ffff8881deb32000
+R13: ffff8881deb32000 R14: ffff8881d401a000 R15: 0000000000000000
+FS:  00007f0e360c56c0(0000) GS:ffff8881f6300000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007ffe69596ee4 CR3: 00000001dcc3f001 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ unregister_netdevice_queue+0x2dd/0x570
+ hsr_dev_finalize+0x5bd/0x740
+ hsr_newlink+0x278/0x4f0
+ __rtnl_newlink+0x1065/0x16e0
+ rtnl_newlink+0x63/0x90
+ rtnetlink_rcv_msg+0x449/0xab0
+ netlink_rcv_skb+0x15b/0x430
+ netlink_unicast+0x527/0x7e0
+ netlink_sendmsg+0x85a/0xd70
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x62e/0x800
+ ___sys_sendmsg+0x100/0x170
+ __sys_sendmsg+0xe5/0x1b0
+ do_syscall_64+0x60/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7f0e36d44f69
+Code: Bad RIP value.
+RSP: 002b:00007f0e360c50c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f0e36e72f80 RCX: 00007f0e36d44f69
+RDX: 0000000000000000 RSI: 00000000200000c0 RDI: 0000000000000003
+RBP: 00007f0e36d914a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f0e36e72f80 R15: 00007fff82c02f08
+irq event stamp: 2821
+hardirqs last  enabled at (2821): [<ffffffff81b03ae8>] kfree+0x1c8/0x2b0
+hardirqs last disabled at (2820): [<ffffffff81b0398f>] kfree+0x6f/0x2b0
+softirqs last  enabled at (2818): [<ffffffff8611a21d>] rollback_registered_many+0x70d/0xf90
+softirqs last disabled at (2816): [<ffffffff861206b9>] dev_mc_flush+0x19/0x30
+---[ end trace ef2c55c563d71888 ]---
+WARNING: CPU: 1 PID: 4098 at fs/kernfs/dir.c:1507 kernfs_remove_by_name_ns+0x9d/0xb0
+Modules linked in:
+CPU: 1 PID: 4098 Comm: syz-executor.1 Tainted: G        W         5.8.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:kernfs_remove_by_name_ns+0x9d/0xb0
+Code: e8 28 20 05 06 e8 e3 a7 8c ff bb fe ff ff ff 89 d8 5b 5d 41 5c c3 e8 d2 a7 8c ff 48 89 ee 48 c7 c7 a0 15 5a 88 e8 06 0e db 05 <0f> 0b eb d7 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 41 57 41
+RSP: 0018:ffffc9000168ee88 EFLAGS: 00010282
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: ffff8881d5ccc5c0 RSI: ffffffff815b0d96 RDI: fffff520002d1dc3
+RBP: ffffc9000168eed8 R08: 0000000000000001 R09: ffff8881f63318e7
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: ffff8881df380000 R14: 0000000000000001 R15: ffff8881d401a000
+FS:  00007f0e360c56c0(0000) GS:ffff8881f6300000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007ffe69596ee4 CR3: 00000001dcc3f001 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ __netdev_adjacent_dev_remove+0x3de/0x500
+ netdev_upper_dev_unlink+0x143/0x620
+ hsr_del_port+0x218/0x2e0
+ hsr_del_ports+0x2c/0x90
+ hsr_dev_finalize+0x5ca/0x740
+ hsr_newlink+0x278/0x4f0
+ __rtnl_newlink+0x1065/0x16e0
+ rtnl_newlink+0x63/0x90
+ rtnetlink_rcv_msg+0x449/0xab0
+ netlink_rcv_skb+0x15b/0x430
+ netlink_unicast+0x527/0x7e0
+ netlink_sendmsg+0x85a/0xd70
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x62e/0x800
+ ___sys_sendmsg+0x100/0x170
+ __sys_sendmsg+0xe5/0x1b0
+ do_syscall_64+0x60/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7f0e36d44f69
+Code: Bad RIP value.
+RSP: 002b:00007f0e360c50c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f0e36e72f80 RCX: 00007f0e36d44f69
+RDX: 0000000000000000 RSI: 00000000200000c0 RDI: 0000000000000003
+RBP: 00007f0e36d914a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f0e36e72f80 R15: 00007fff82c02f08
+irq event stamp: 5515
+hardirqs last  enabled at (5515): [<ffffffff815aae79>] console_unlock+0xcb9/0xf30
+hardirqs last disabled at (5514): [<ffffffff815aa30d>] console_unlock+0x14d/0xf30
+softirqs last  enabled at (5512): [<ffffffff88200717>] __do_softirq+0x717/0xa7d
+softirqs last disabled at (5027): [<ffffffff88000f0f>] asm_call_on_stack+0xf/0x20
+---[ end trace ef2c55c563d71889 ]---

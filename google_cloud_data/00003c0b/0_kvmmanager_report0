@@ -1,0 +1,26 @@
+UBSAN: shift-out-of-bounds in fs/ntfs3/super.c:673:16
+shift exponent -192 is negative
+CPU: 1 PID: 3681 Comm: syz-executor.1 Not tainted 5.18.0-rc4-syzkaller-00243-gcd290a9839ce #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xfc/0x174
+ ubsan_epilogue+0xb/0x50
+ __ubsan_handle_shift_out_of_bounds.cold+0xab/0x17e
+ ntfs_fill_super.cold+0x2e4/0x4dd
+ get_tree_bdev+0x440/0x750
+ vfs_get_tree+0x84/0x2e0
+ path_mount+0x14e8/0x1f40
+ __x64_sys_mount+0x27e/0x300
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7fd1f807ae4a
+Code: d8 64 89 02 48 c7 c0 ff ff ff ff eb a6 e8 de 09 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fd1f9195ee8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
+RAX: ffffffffffffffda RBX: 00007fd1f9195f80 RCX: 00007fd1f807ae4a
+RDX: 0000000020000000 RSI: 0000000020000100 RDI: 00007fd1f9195f40
+RBP: 0000000020000000 R08: 00007fd1f9195f80 R09: 0000000020000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000020000100
+R13: 0000000020000200 R14: 00007fd1f9195f40 R15: 000000002007aa80
+ </TASK>
+================================================================================

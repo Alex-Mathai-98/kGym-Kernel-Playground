@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "WARNING in corrupted",
+    "display-title": "WARNING in corrupted (3)",
+    "id": "35dd38010e383ee37d27b39f6b50eb25b4c92dd2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: usb: siano: Fix warning due to null work_func_t function pointer",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6f489a966fbeb0da63d45c2c66a8957eab604bf6",
+            "hash": "6f489a966fbeb0da63d45c2c66a8957eab604bf6",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "media: usb: siano: Fix use after free bugs caused by do_submit_urb",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ebad8e731c1c06adf04621d6fd327b860c0861b5",
+        "hash": "ebad8e731c1c06adf04621d6fd327b860c0861b5",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000007ef71705fc4ea3ad@google.com/T/",
+        "https://lore.kernel.org/all/20230522235932.5927-1-duoming@zju.edu.cn/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in corrupted",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12bc26ee280000",
+            "c-reproducer": "/text?tag=ReproC&x=17684629280000",
+            "kernel-config": "/text?tag=KernelConfig&x=ac0db1213414a978",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4d6d4c7f541d7027beed4fb86eb2c451bd8d6fff",
+            "kernel-source-commit": "4d6d4c7f541d7027beed4fb86eb2c451bd8d6fff",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3bb7af1def6b7b99e4c1c9573162eb41b5893cd3",
+            "syzkaller-commit": "3bb7af1def6b7b99e4c1c9573162eb41b5893cd3",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16338fa1280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "smsusb_stop_streaming",
+            "drivers/media/usb/siano/smsusb.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "smsusb_stop_streaming",
+            "drivers/media/usb/siano/smsusb.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-22T23:59:32+00:00",
+    "cause_commit_date": "2023-01-23T02:04:38+00:00",
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "da4ede4b7fd6aa341b69e3a9d2517b8df5e744fd",
+    "patch": "diff --git a/drivers/media/usb/siano/smsusb.c b/drivers/media/usb/siano/smsusb.c\nindex 6f443c542c6d..640737d3b8ae 100644\n--- a/drivers/media/usb/siano/smsusb.c\n+++ b/drivers/media/usb/siano/smsusb.c\n@@ -179,7 +179,8 @@ static void smsusb_stop_streaming(struct smsusb_device_t *dev)\n \n \tfor (i = 0; i < MAX_URBS; i++) {\n \t\tusb_kill_urb(&dev->surbs[i].urb);\n-\t\tcancel_work_sync(&dev->surbs[i].wq);\n+\t\tif (dev->surbs[i].wq.func)\n+\t\t\tcancel_work_sync(&dev->surbs[i].wq);\n \n \t\tif (dev->surbs[i].cb) {\n \t\t\tsmscore_putbuffer(dev->coredev, dev->surbs[i].cb);\n",
+    "patch_modified_files": [
+        "drivers/media/usb/siano/smsusb.c"
+    ]
+}

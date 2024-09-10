@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "general protection fault in __ext4_journal_get_write_access",
+    "display-title": "general protection fault in __ext4_journal_get_write_access",
+    "id": "19526c104e66c633a05949201c4c09a3ec8c5644",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "block: Do not discard buffers under a mounted filesystem",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=384d87ef2c954fc58e6c5fd8253e4a1984f5fe02",
+            "hash": "384d87ef2c954fc58e6c5fd8253e4a1984f5fe02",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "usb: gadget: legacy: printer: Remove unused variable 'driver_desc'",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=89dd9a8c27f841704b527810f9180f06c351b89b",
+        "hash": "89dd9a8c27f841704b527810f9180f06c351b89b",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1655f8ad900000",
+            "c-reproducer": "/text?tag=ReproC&x=10fe9c03900000",
+            "kernel-config": "/text?tag=KernelConfig&x=5f4c828c9e3cef97",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=98477740630f270aecf648f1d6a9dbc6027d4ff1",
+            "kernel-source-commit": "98477740630f270aecf648f1d6a9dbc6027d4ff1",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9e1fa68ee1625a7f0ef03906ee1abb40cb987fbf",
+            "syzkaller-commit": "9e1fa68ee1625a7f0ef03906ee1abb40cb987fbf",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=130f3cc3900000"
+        }
+    ],
+    "subsystems": [
+        "fuse",
+        "ext4"
+    ],
+    "parent_of_fix_commit": "6dbf7bb555981fb5faf7b691e8f6169fc2b2e63b",
+    "patch": "diff --git a/block/ioctl.c b/block/ioctl.c\nindex bdb3bbb253d9..ae74d0409afa 100644\n--- a/block/ioctl.c\n+++ b/block/ioctl.c\n@@ -112,8 +112,7 @@ static int blk_ioctl_discard(struct block_device *bdev, fmode_t mode,\n \tuint64_t range[2];\n \tuint64_t start, len;\n \tstruct request_queue *q = bdev_get_queue(bdev);\n-\tstruct address_space *mapping = bdev->bd_inode->i_mapping;\n-\n+\tint err;\n \n \tif (!(mode & FMODE_WRITE))\n \t\treturn -EBADF;\n@@ -134,7 +133,11 @@ static int blk_ioctl_discard(struct block_device *bdev, fmode_t mode,\n \n \tif (start + len > i_size_read(bdev->bd_inode))\n \t\treturn -EINVAL;\n-\ttruncate_inode_pages_range(mapping, start, start + len - 1);\n+\n+\terr = truncate_bdev_range(bdev, mode, start, start + len - 1);\n+\tif (err)\n+\t\treturn err;\n+\n \treturn blkdev_issue_discard(bdev, start >> 9, len >> 9,\n \t\t\t\t    GFP_KERNEL, flags);\n }\n@@ -143,8 +146,8 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,\n \t\tunsigned long arg)\n {\n \tuint64_t range[2];\n-\tstruct address_space *mapping;\n \tuint64_t start, end, len;\n+\tint err;\n \n \tif (!(mode & FMODE_WRITE))\n \t\treturn -EBADF;\n@@ -166,8 +169,9 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,\n \t\treturn -EINVAL;\n \n \t/* Invalidate the page cache, including dirty pages */\n-\tmapping = bdev->bd_inode->i_mapping;\n-\ttruncate_inode_pages_range(mapping, start, end);\n+\terr = truncate_bdev_range(bdev, mode, start, end);\n+\tif (err)\n+\t\treturn err;\n \n \treturn blkdev_issue_zeroout(bdev, start >> 9, len >> 9, GFP_KERNEL,\n \t\t\tBLKDEV_ZERO_NOUNMAP);\ndiff --git a/fs/block_dev.c b/fs/block_dev.c\nindex 9cb205405f9d..c70c41ecba48 100644\n--- a/fs/block_dev.c\n+++ b/fs/block_dev.c\n@@ -103,6 +103,35 @@ void invalidate_bdev(struct block_device *bdev)\n }\n EXPORT_SYMBOL(invalidate_bdev);\n \n+/*\n+ * Drop all buffers & page cache for given bdev range. This function bails\n+ * with error if bdev has other exclusive owner (such as filesystem).\n+ */\n+int truncate_bdev_range(struct block_device *bdev, fmode_t mode,\n+\t\t\tloff_t lstart, loff_t lend)\n+{\n+\tstruct block_device *claimed_bdev = NULL;\n+\tint err;\n+\n+\t/*\n+\t * If we don't hold exclusive handle for the device, upgrade to it\n+\t * while we discard the buffer cache to avoid discarding buffers\n+\t * under live filesystem.\n+\t */\n+\tif (!(mode & FMODE_EXCL)) {\n+\t\tclaimed_bdev = bdev->bd_contains;\n+\t\terr = bd_prepare_to_claim(bdev, claimed_bdev,\n+\t\t\t\t\t  truncate_bdev_range);\n+\t\tif (err)\n+\t\t\treturn err;\n+\t}\n+\ttruncate_inode_pages_range(bdev->bd_inode->i_mapping, lstart, lend);\n+\tif (claimed_bdev)\n+\t\tbd_abort_claiming(bdev, claimed_bdev, truncate_bdev_range);\n+\treturn 0;\n+}\n+EXPORT_SYMBOL(truncate_bdev_range);\n+\n static void set_init_blocksize(struct block_device *bdev)\n {\n \tbdev->bd_inode->i_blkbits = blksize_bits(bdev_logical_block_size(bdev));\n@@ -1968,7 +1997,6 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,\n \t\t\t     loff_t len)\n {\n \tstruct block_device *bdev = I_BDEV(bdev_file_inode(file));\n-\tstruct address_space *mapping;\n \tloff_t end = start + len - 1;\n \tloff_t isize;\n \tint error;\n@@ -1996,8 +2024,9 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,\n \t\treturn -EINVAL;\n \n \t/* Invalidate the page cache, including dirty pages. */\n-\tmapping = bdev->bd_inode->i_mapping;\n-\ttruncate_inode_pages_range(mapping, start, end);\n+\terror = truncate_bdev_range(bdev, file->f_mode, start, end);\n+\tif (error)\n+\t\treturn error;\n \n \tswitch (mode) {\n \tcase FALLOC_FL_ZERO_RANGE:\n@@ -2024,7 +2053,7 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,\n \t * the caller will be given -EBUSY.  The third argument is\n \t * inclusive, so the rounding here is safe.\n \t */\n-\treturn invalidate_inode_pages2_range(mapping,\n+\treturn invalidate_inode_pages2_range(bdev->bd_inode->i_mapping,\n \t\t\t\t\t     start >> PAGE_SHIFT,\n \t\t\t\t\t     end >> PAGE_SHIFT);\n }\ndiff --git a/include/linux/blkdev.h b/include/linux/blkdev.h\nindex 7d82959e7b86..37ec5a73d027 100644\n--- a/include/linux/blkdev.h\n+++ b/include/linux/blkdev.h\n@@ -1987,11 +1987,18 @@ void bdput(struct block_device *);\n \n #ifdef CONFIG_BLOCK\n void invalidate_bdev(struct block_device *bdev);\n+int truncate_bdev_range(struct block_device *bdev, fmode_t mode, loff_t lstart,\n+\t\t\tloff_t lend);\n int sync_blockdev(struct block_device *bdev);\n #else\n static inline void invalidate_bdev(struct block_device *bdev)\n {\n }\n+static inline int truncate_bdev_range(struct block_device *bdev, fmode_t mode,\n+\t\t\t\t      loff_t lstart, loff_t lend)\n+{\n+\treturn 0;\n+}\n static inline int sync_blockdev(struct block_device *bdev)\n {\n \treturn 0;\n",
+    "patch_modified_files": [
+        "block/ioctl.c",
+        "fs/block_dev.c",
+        "include/linux/blkdev.h"
+    ]
+}

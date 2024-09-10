@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "WARNING in j1939_xtp_rx_abort_one",
+    "display-title": "WARNING in j1939_xtp_rx_abort_one",
+    "id": "64bdf1f25f8db3d754e7b56c4d0f63a17edd8839",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "can: j1939: fix errant WARN_ON_ONCE in j1939_session_deactivate",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d0553680f94c49bbe0e39eb50d033ba563b4212d",
+            "hash": "d0553680f94c49bbe0e39eb50d033ba563b4212d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "can: add support of SAE J1939 protocol",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9d71dd0c70099914fcd063135da3c580865e924c",
+        "hash": "9d71dd0c70099914fcd063135da3c580865e924c",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000bc4eb305c8b76ab5@google.com/T/",
+        "https://lore.kernel.org/all/20210906094200.95868-1-william.xuanziyang@huawei.com/T/",
+        "https://lore.kernel.org/all/20230202094135.2293939-1-mkl@pengutronix.de/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in j1939_xtp_rx_abort_one",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15874fda300000",
+            "c-reproducer": "/text?tag=ReproC&x=10a507b6300000",
+            "kernel-config": "/text?tag=KernelConfig&x=6cc86e19161c9d37",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c7d102232649226a69dddd58a4942cf13cff4f7c",
+            "kernel-source-commit": "c7d102232649226a69dddd58a4942cf13cff4f7c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/6c236867ce33c0c16b102e02a08226d7eb9b2046",
+            "syzkaller-commit": "6c236867ce33c0c16b102e02a08226d7eb9b2046",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16c5ccae300000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "j1939_session_deactivate",
+            "net/can/j1939/transport.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2021-09-06T09:42:00+00:00",
+    "cause_commit_date": "2018-10-08T09:48:36+00:00",
+    "subsystems": [],
+    "parent_of_fix_commit": "917d5e04d4dd2bbbf36fc6976ba442e284ccc42d",
+    "patch": "diff --git a/net/can/j1939/transport.c b/net/can/j1939/transport.c\nindex 5c722b55fe23..fce9b9ebf13f 100644\n--- a/net/can/j1939/transport.c\n+++ b/net/can/j1939/transport.c\n@@ -1092,10 +1092,6 @@ static bool j1939_session_deactivate(struct j1939_session *session)\n \tbool active;\n \n \tj1939_session_list_lock(priv);\n-\t/* This function should be called with a session ref-count of at\n-\t * least 2.\n-\t */\n-\tWARN_ON_ONCE(kref_read(&session->kref) < 2);\n \tactive = j1939_session_deactivate_locked(session);\n \tj1939_session_list_unlock(priv);\n \n",
+    "patch_modified_files": [
+        "net/can/j1939/transport.c"
+    ]
+}

@@ -1,0 +1,29 @@
+BTRFS: Transaction aborted (error -28)
+WARNING: CPU: 1 PID: 47 at fs/btrfs/block-group.c:3845 btrfs_chunk_alloc+0xe44/0x1020
+Modules linked in:
+CPU: 1 PID: 47 Comm: kworker/u4:3 Not tainted 6.5.0-rc7-syzkaller-00085-g84af994b85b8 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: events_unbound btrfs_async_reclaim_metadata_space
+RIP: 0010:btrfs_chunk_alloc+0xe44/0x1020
+Code: fd 48 c7 c7 e0 ef 2e 8b 44 89 e6 e8 c6 33 a6 fd 0f 0b e9 1d fe ff ff e8 3a 5e de fd 48 c7 c7 e0 ef 2e 8b 89 ee e8 ac 33 a6 fd <0f> 0b e9 28 fe ff ff e8 20 5e de fd 48 c7 c7 e0 ef 2e 8b 44 89 e6
+RSP: 0018:ffffc90000b87988 EFLAGS: 00010246
+RAX: 28806780668ef900 RBX: ffff88807b164001 RCX: ffff888017919dc0
+RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000000
+RBP: ffffffffffffffe4 R08: ffffffff8152d964 R09: 1ffff92000170ee4
+R10: dffffc0000000000 R11: fffff52000170ee5 R12: ffff888146e24000
+R13: dffffc0000000000 R14: ffff88802a978800 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fee10b94000 CR3: 0000000028d91000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ flush_space+0x526/0xd70
+ btrfs_async_reclaim_metadata_space+0x29f/0x350
+ process_one_work+0x981/0x1330
+ worker_thread+0xa63/0x1210
+ kthread+0x2b2/0x350
+ ret_from_fork+0x2e/0x60
+ ret_from_fork_asm+0x11/0x20
+ </TASK>

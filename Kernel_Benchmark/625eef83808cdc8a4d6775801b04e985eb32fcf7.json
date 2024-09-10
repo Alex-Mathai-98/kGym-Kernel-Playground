@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "WARNING in btrfs_split_ordered_extent",
+    "display-title": "WARNING in btrfs_split_ordered_extent",
+    "id": "625eef83808cdc8a4d6775801b04e985eb32fcf7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "btrfs: fix iomap_begin length for nocow writes",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7833b865953c8e62abc76a3261c04132b2fb69de",
+            "hash": "7833b865953c8e62abc76a3261c04132b2fb69de",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "btrfs: split partial dio bios before submit",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b73a6fd1b1efd799c6e3d14a922887f4453fea17",
+        "hash": "b73a6fd1b1efd799c6e3d14a922887f4453fea17",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000009ee1005fc425b4b@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in btrfs_split_ordered_extent",
+            "syz-reproducer": "/text?tag=ReproSyz&x=120b88fd280000",
+            "c-reproducer": "/text?tag=ReproC&x=17e6a23b280000",
+            "kernel-config": "/text?tag=KernelConfig&x=7474de833c217bf4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a27648c742104a833a01c54becc24429898d85bf",
+            "kernel-source-commit": "a27648c742104a833a01c54becc24429898d85bf",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/058b3a5a6a945a55767811552eb7b9f4a20307f8",
+            "syzkaller-commit": "058b3a5a6a945a55767811552eb7b9f4a20307f8",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=123d5ba5280000"
+        }
+    ],
+    "subsystems": [
+        "btrfs"
+    ],
+    "parent_of_fix_commit": "79b8ee702c918f1936e17cc53e14bec388ce1045",
+    "patch": "diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c\nindex 19c707bc8801..3f99f02dc1fe 100644\n--- a/fs/btrfs/inode.c\n+++ b/fs/btrfs/inode.c\n@@ -7264,7 +7264,7 @@ static struct extent_map *create_io_em(struct btrfs_inode *inode, u64 start,\n static int btrfs_get_blocks_direct_write(struct extent_map **map,\n \t\t\t\t\t struct inode *inode,\n \t\t\t\t\t struct btrfs_dio_data *dio_data,\n-\t\t\t\t\t u64 start, u64 len,\n+\t\t\t\t\t u64 start, u64 *lenp,\n \t\t\t\t\t unsigned int iomap_flags)\n {\n \tconst bool nowait = (iomap_flags & IOMAP_NOWAIT);\n@@ -7275,6 +7275,7 @@ static int btrfs_get_blocks_direct_write(struct extent_map **map,\n \tstruct btrfs_block_group *bg;\n \tbool can_nocow = false;\n \tbool space_reserved = false;\n+\tu64 len = *lenp;\n \tu64 prev_len;\n \tint ret = 0;\n \n@@ -7345,15 +7346,19 @@ static int btrfs_get_blocks_direct_write(struct extent_map **map,\n \t\tfree_extent_map(em);\n \t\t*map = NULL;\n \n-\t\tif (nowait)\n-\t\t\treturn -EAGAIN;\n+\t\tif (nowait) {\n+\t\t\tret = -EAGAIN;\n+\t\t\tgoto out;\n+\t\t}\n \n \t\t/*\n \t\t * If we could not allocate data space before locking the file\n \t\t * range and we can't do a NOCOW write, then we have to fail.\n \t\t */\n-\t\tif (!dio_data->data_space_reserved)\n-\t\t\treturn -ENOSPC;\n+\t\tif (!dio_data->data_space_reserved) {\n+\t\t\tret = -ENOSPC;\n+\t\t\tgoto out;\n+\t\t}\n \n \t\t/*\n \t\t * We have to COW and we have already reserved data space before,\n@@ -7394,6 +7399,7 @@ static int btrfs_get_blocks_direct_write(struct extent_map **map,\n \t\tbtrfs_delalloc_release_extents(BTRFS_I(inode), len);\n \t\tbtrfs_delalloc_release_metadata(BTRFS_I(inode), len, true);\n \t}\n+\t*lenp = len;\n \treturn ret;\n }\n \n@@ -7570,7 +7576,7 @@ static int btrfs_dio_iomap_begin(struct inode *inode, loff_t start,\n \n \tif (write) {\n \t\tret = btrfs_get_blocks_direct_write(&em, inode, dio_data,\n-\t\t\t\t\t\t    start, len, flags);\n+\t\t\t\t\t\t    start, &len, flags);\n \t\tif (ret < 0)\n \t\t\tgoto unlock_err;\n \t\tunlock_extents = true;\n",
+    "patch_modified_files": [
+        "fs/btrfs/inode.c"
+    ]
+}

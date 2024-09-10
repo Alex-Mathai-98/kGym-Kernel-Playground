@@ -1,0 +1,105 @@
+==================================================================
+BUG: KASAN: use-after-free in mas_next_entry+0x342/0x11f0
+Read of size 8 at addr ffff88801e1b2020 by task syz-executor.0/3669
+
+CPU: 0 PID: 3669 Comm: syz-executor.0 Not tainted 6.1.0-rc4-syzkaller-00010-ga1de832bd324 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1e3/0x2cb
+ print_report+0x15f/0x4f0
+ kasan_report+0x136/0x160
+ mas_next_entry+0x342/0x11f0
+ userfaultfd_ioctl+0x4150/0x5810
+ __se_sys_ioctl+0xf1/0x160
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f425427ae39
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f425543d0c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007f425439bf80 RCX: 00007f425427ae39
+RDX: 0000000020000000 RSI: 000000008010aa01 RDI: 0000000000000003
+RBP: 00007f42542d7797 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f425439bf80 R15: 00007ffca19d6978
+ </TASK>
+
+Allocated by task 3668:
+ kasan_set_track+0x4b/0x70
+ __kasan_slab_alloc+0x65/0x70
+ slab_post_alloc_hook+0x50/0x360
+ kmem_cache_alloc_bulk+0x338/0x3f0
+ mas_alloc_nodes+0x381/0x640
+ mas_preallocate+0x12d/0x350
+ mmap_region+0x1343/0x1e00
+ do_mmap+0x8c0/0xf70
+ vm_mmap_pgoff+0x1ca/0x2d0
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Freed by task 3669:
+ kasan_set_track+0x4b/0x70
+ kasan_save_free_info+0x27/0x40
+ ____kasan_slab_free+0xd6/0x120
+ kmem_cache_free_bulk+0x4fa/0x750
+ mas_destroy+0x288c/0x3330
+ mas_store_prealloc+0x34a/0x450
+ __vma_adjust+0x149f/0x1d70
+ __split_vma+0x374/0x4f0
+ userfaultfd_ioctl+0x4032/0x5810
+ __se_sys_ioctl+0xf1/0x160
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+The buggy address belongs to the object at ffff88801e1b2000
+ which belongs to the cache maple_node of size 256
+The buggy address is located 32 bytes inside of
+ 256-byte region [ffff88801e1b2000, ffff88801e1b2100)
+
+The buggy address belongs to the physical page:
+page:ffffea0000786c80 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x1e1b2
+head:ffffea0000786c80 order:1 compound_mapcount:0 compound_pincount:0
+flags: 0xfff00000010200(slab|head|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000010200 0000000000000000 dead000000000122 ffff888011c4fdc0
+raw: 0000000000000000 0000000000100010 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 1, migratetype Unmovable, gfp_mask 0xd20c0(__GFP_IO|__GFP_FS|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC), pid 3668, tgid 3668 (syz-executor.0), ts 65174333300, free_ts 64984879921
+ get_page_from_freelist+0x3542/0x36d0
+ __alloc_pages+0x28d/0x7e0
+ alloc_slab_page+0x3b/0xe0
+ new_slab+0x84/0x2d0
+ ___slab_alloc+0xa71/0x1080
+ kmem_cache_alloc_bulk+0x152/0x3f0
+ mas_alloc_nodes+0x381/0x640
+ mas_preallocate+0x12d/0x350
+ mmap_region+0x1343/0x1e00
+ do_mmap+0x8c0/0xf70
+ vm_mmap_pgoff+0x1ca/0x2d0
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+page last free stack trace:
+ free_unref_page_prepare+0xfb8/0x1160
+ free_unref_page+0x98/0x570
+ __unfreeze_partials+0x1b7/0x210
+ put_cpu_partial+0x116/0x180
+ qlist_free_all+0x22/0x60
+ kasan_quarantine_reduce+0x162/0x180
+ __kasan_slab_alloc+0x1f/0x70
+ slab_post_alloc_hook+0x50/0x360
+ kmem_cache_alloc_node+0x142/0x2a0
+ __alloc_skb+0xde/0x620
+ netlink_sendmsg+0x795/0xd10
+ __sys_sendto+0x471/0x5f0
+ __x64_sys_sendto+0xda/0xf0
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Memory state around the buggy address:
+ ffff88801e1b1f00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88801e1b1f80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff88801e1b2000: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                               ^
+ ffff88801e1b2080: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88801e1b2100: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================

@@ -1,0 +1,142 @@
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+==================================================================
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+BUG: KASAN: slab-out-of-bounds in process_preds+0x1a9f/0x1bf0
+Write of size 4 at addr ffff8801d51903f0 by task syz-executor.5/5262
+
+CPU: 0 PID: 5262 Comm: syz-executor.5 Not tainted 4.18.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x1ca/0x2bd
+ print_address_description+0xf5/0x2a1
+ kasan_report.part.0.cold+0x192/0x27d
+ __asan_report_store4_noabort+0x43/0x50
+ process_preds+0x1a9f/0x1bf0
+ create_filter+0x153/0x230
+ ftrace_profile_set_filter+0x11c/0x2d0
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+ _perf_ioctl+0x1033/0x2c30
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+ perf_ioctl+0x59/0x80
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+ do_vfs_ioctl+0x1021/0x1760
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+ ksys_ioctl+0xad/0xd0
+ __x64_sys_ioctl+0x72/0xb0
+ do_syscall_64+0x183/0x270
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f83b8df7f69
+Code: 28 00 00 00 75 05 48 83 c4 
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48 
+RSP: 002b:00007f83b89790c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007f83b8f25f80 RCX: 00007f83b8df7f69
+RDX: 0000000020000040 RSI: 0000000040082406 RDI: 0000000000000003
+RBP: 00007f83b8e444a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f83b8f25f80 R15: 00007ffda8a60738
+
+Allocated by task 0:
+(stack is not available)
+
+Freed by task 0:
+(stack is not available)
+
+The buggy address belongs to the object at ffff8801d5190380
+ which belongs to the cache kmalloc-64 of size 64
+The buggy address is located 48 bytes to the right of
+ 64-byte region [ffff8801d5190380, ffff8801d51903c0)
+The buggy address belongs to the page:
+page:ffffea0007546400 count:1 mapcount:0 mapping:ffff8801f6000340 index:0x0
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+flags: 0x2fffc0000000100(slab)
+raw: 02fffc0000000100 ffffea0007540848 ffffea000754f848 ffff8801f6000340
+raw: 0000000000000000 ffff8801d5190000 0000000100000020 0000000000000000
+page dumped because: kasan: bad access detected
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+
+Memory state around the buggy address:
+ ffff8801d5190280: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8801d5190300: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff8801d5190380: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+                                                             ^
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+ ffff8801d5190400: 00 00 00 00 00 00 fc fc fc fc fc fc fc fc fc fc
+ ffff8801d5190480: fb fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+==================================================================
+BUG: unable to handle kernel paging request at ffffed0121180880
+PGD 23ffee067 P4D 23ffee067 PUD 0 
+Oops: 0000 [#1] SMP KASAN
+CPU: 0 PID: 5262 Comm: syz-executor.5 Tainted: G    B             4.18.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:process_preds+0x16e1/0x1bf0
+Code: 03 38 ca 7c 08 84 c9 0f 85 bf 03 00 00 48 8b 85 68 ff ff ff 49 c1 e5 04 45 8b 7e 04 49 01 c5 49 8d 7d 04 48 89 fa 48 c1 ea 03 <42> 0f b6 34 22 48 89 fa 83 e2 07 83 c2 03 40 38 f2 7c 09 40 84 f6 
+RSP: 0018:ffff8801d57e76e8 EFLAGS: 00010213
+RAX: ffff8801d5190400 RBX: 00000000fffffe74 RCX: ffffffff8181ba78
+RDX: 1ffff10121180880 RSI: ffffffff8181b661 RDI: ffff880908c04404
+RBP: ffff8801d57e77e0 R08: 00000000fffffe75 R09: 0000000000000005
+R10: 0000000000000000 R11: ffff88023fff8003 R12: dffffc0000000000
+R13: ffff880908c04400 R14: ffff8801d518eb40 R15: 0000000011000030
+FS:  00007f83b89796c0(0000) GS:ffff8801f6400000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: ffffed0121180880 CR3: 00000001d58f2000 CR4: 00000000003406f0
+Call Trace:
+ create_filter+0x153/0x230
+ ftrace_profile_set_filter+0x11c/0x2d0
+ _perf_ioctl+0x1033/0x2c30
+ perf_ioctl+0x59/0x80
+ do_vfs_ioctl+0x1021/0x1760
+ ksys_ioctl+0xad/0xd0
+ __x64_sys_ioctl+0x72/0xb0
+ do_syscall_64+0x183/0x270
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f83b8df7f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48 
+RSP: 002b:00007f83b89790c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007f83b8f25f80 RCX: 00007f83b8df7f69
+RDX: 0000000020000040 RSI: 0000000040082406 RDI: 0000000000000003
+RBP: 00007f83b8e444a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f83b8f25f80 R15: 00007ffda8a60738
+Modules linked in:
+CR2: ffffed0121180880
+---[ end trace f6add60f943f78d4 ]---
+RIP: 0010:process_preds+0x16e1/0x1bf0
+Code: 03 38 ca 7c 08 84 c9 0f 85 bf 03 00 00 48 8b 85 68 ff ff ff 49 c1 e5 04 45 8b 7e 04 49 01 c5 49 8d 7d 04 48 89 fa 48 c1 ea 03 <42> 0f b6 34 22 48 89 fa 83 e2 07 83 c2 03 40 38 f2 7c 09 40 84 f6 
+RSP: 0018:ffff8801d57e76e8 EFLAGS: 00010213
+RAX: ffff8801d5190400 RBX: 00000000fffffe74 RCX: ffffffff8181ba78
+RDX: 1ffff10121180880 RSI: ffffffff8181b661 RDI: ffff880908c04404
+RBP: ffff8801d57e77e0 R08: 00000000fffffe75 R09: 0000000000000005
+R10: 0000000000000000 R11: ffff88023fff8003 R12: dffffc0000000000
+R13: ffff880908c04400 R14: ffff8801d518eb40 R15: 0000000011000030
+FS:  00007f83b89796c0(0000) GS:ffff8801f6400000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: ffffed0121180880 CR3: 00000001d58f2000 CR4: 00000000003406f0
+----------------
+Code disassembly (best guess):
+   0:	03 38                	add    (%rax),%edi
+   2:	ca 7c 08             	lret   $0x87c
+   5:	84 c9                	test   %cl,%cl
+   7:	0f 85 bf 03 00 00    	jne    0x3cc
+   d:	48 8b 85 68 ff ff ff 	mov    -0x98(%rbp),%rax
+  14:	49 c1 e5 04          	shl    $0x4,%r13
+  18:	45 8b 7e 04          	mov    0x4(%r14),%r15d
+  1c:	49 01 c5             	add    %rax,%r13
+  1f:	49 8d 7d 04          	lea    0x4(%r13),%rdi
+  23:	48 89 fa             	mov    %rdi,%rdx
+  26:	48 c1 ea 03          	shr    $0x3,%rdx
+* 2a:	42 0f b6 34 22       	movzbl (%rdx,%r12,1),%esi <-- trapping instruction
+  2f:	48 89 fa             	mov    %rdi,%rdx
+  32:	83 e2 07             	and    $0x7,%edx
+  35:	83 c2 03             	add    $0x3,%edx
+  38:	40 38 f2             	cmp    %sil,%dl
+  3b:	7c 09                	jl     0x46
+  3d:	40 84 f6             	test   %sil,%sil

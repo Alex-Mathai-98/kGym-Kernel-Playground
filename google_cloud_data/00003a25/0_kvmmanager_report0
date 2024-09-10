@@ -1,0 +1,69 @@
+==================================================================
+BUG: KASAN: slab-out-of-bounds in fl6_update_dst+0x2b4/0x2c0
+Read of size 16 at addr ffff8881e10ec258 by task syz-executor.2/4076
+
+CPU: 1 PID: 4076 Comm: syz-executor.2 Not tainted 5.7.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x181/0x1f8
+ print_address_description.constprop.0.cold+0x72/0x47e
+ kasan_report.cold+0x1f/0x37
+ fl6_update_dst+0x2b4/0x2c0
+ sctp_v6_get_dst+0x5bd/0x1c80
+ sctp_transport_route+0x128/0x350
+ sctp_assoc_add_peer+0x62f/0x10b0
+ sctp_connect_new_asoc+0x1f7/0x750
+ sctp_sendmsg+0x157e/0x1e10
+ inet_sendmsg+0x99/0xe0
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x261/0x800
+ ___sys_sendmsg+0x100/0x170
+ __sys_sendmmsg+0x194/0x450
+ __x64_sys_sendmmsg+0x98/0x100
+ do_syscall_64+0xf1/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xb3
+RIP: 0033:0x7f3fc3ed4f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f3fc32550c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000133
+RAX: ffffffffffffffda RBX: 00007f3fc4002f80 RCX: 00007f3fc3ed4f69
+RDX: 0000000000000001 RSI: 0000000020000140 RDI: 0000000000000003
+RBP: 00007f3fc3f214a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f3fc4002f80 R15: 00007ffc83357678
+
+Allocated by task 4076:
+ save_stack+0x19/0x40
+ __kasan_kmalloc.constprop.0+0xda/0xe0
+ __kmalloc+0x157/0x300
+ sock_kmalloc+0xb5/0x100
+ ipv6_renew_options+0x31c/0xb40
+ do_ipv6_setsockopt.constprop.0+0x275b/0x3df0
+ ipv6_setsockopt+0xbc/0x180
+ sctp_setsockopt+0x13d/0x7060
+ __sys_setsockopt+0x248/0x4b0
+ __x64_sys_setsockopt+0xb9/0x150
+ do_syscall_64+0xf1/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xb3
+
+Freed by task 0:
+(stack is not available)
+
+The buggy address belongs to the object at ffff8881e10ec200
+ which belongs to the cache kmalloc-96 of size 96
+The buggy address is located 88 bytes inside of
+ 96-byte region [ffff8881e10ec200, ffff8881e10ec260)
+The buggy address belongs to the page:
+page:ffffea0007843b00 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0
+flags: 0x17ffe0000000200(slab)
+raw: 017ffe0000000200 ffffea00075d5288 ffffea00072d5e48 ffff8881f5000540
+raw: 0000000000000000 ffff8881e10ec000 0000000100000020 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff8881e10ec100: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8881e10ec180: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff8881e10ec200: 00 00 00 00 00 00 00 00 00 00 00 fc fc fc fc fc
+                                                    ^
+ ffff8881e10ec280: 00 00 00 00 00 00 00 00 00 fc fc fc fc fc fc fc
+ ffff8881e10ec300: 00 00 00 00 00 00 00 00 00 fc fc fc fc fc fc fc
+==================================================================

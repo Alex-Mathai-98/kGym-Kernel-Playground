@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "WARNING in btrfs_commit_transaction",
+    "display-title": "WARNING in btrfs_commit_transaction",
+    "id": "11acaa6d5c31d0b655997957f725da4a3cc05435",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "btrfs: don't print stack trace when transaction is aborted due to ENOMEM",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8bb808c6ad91ec3d332f072ce8f8aa4b16e307e0",
+            "hash": "8bb808c6ad91ec3d332f072ce8f8aa4b16e307e0",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000000c379205ec806d6e@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in btrfs_commit_transaction",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17401632880000",
+            "c-reproducer": "/text?tag=ReproC&x=13176716880000",
+            "kernel-config": "/text?tag=KernelConfig&x=a66c6c673fb555e8",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b229b6ca5abbd63ff40c1396095b1b36b18139c3",
+            "kernel-source-commit": "b229b6ca5abbd63ff40c1396095b1b36b18139c3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/899d812af3e2fe5f67a21d1d82babcb48f87f97a",
+            "syzkaller-commit": "899d812af3e2fe5f67a21d1d82babcb48f87f97a",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=102f63d2880000"
+        }
+    ],
+    "subsystems": [
+        "btrfs"
+    ],
+    "parent_of_fix_commit": "9b2f20344d450137d015b380ff0c2e2a6a170135",
+    "patch": "diff --git a/fs/btrfs/ctree.c b/fs/btrfs/ctree.c\nindex b39b339fbf96..a9543f01184c 100644\n--- a/fs/btrfs/ctree.c\n+++ b/fs/btrfs/ctree.c\n@@ -113,6 +113,22 @@ noinline void btrfs_release_path(struct btrfs_path *p)\n \t}\n }\n \n+/*\n+ * We want the transaction abort to print stack trace only for errors where the\n+ * cause could be a bug, eg. due to ENOSPC, and not for common errors that are\n+ * caused by external factors.\n+ */\n+bool __cold abort_should_print_stack(int errno)\n+{\n+\tswitch (errno) {\n+\tcase -EIO:\n+\tcase -EROFS:\n+\tcase -ENOMEM:\n+\t\treturn false;\n+\t}\n+\treturn true;\n+}\n+\n /*\n  * safely gets a reference on the root node of a tree.  A lock\n  * is not taken, so a concurrent writer may put a different node\ndiff --git a/fs/btrfs/ctree.h b/fs/btrfs/ctree.h\nindex f677b49df8ae..9e6d48ff4597 100644\n--- a/fs/btrfs/ctree.h\n+++ b/fs/btrfs/ctree.h\n@@ -3796,9 +3796,11 @@ void __btrfs_abort_transaction(struct btrfs_trans_handle *trans,\n \t\t\t       const char *function,\n \t\t\t       unsigned int line, int errno, bool first_hit);\n \n+bool __cold abort_should_print_stack(int errno);\n+\n /*\n  * Call btrfs_abort_transaction as early as possible when an error condition is\n- * detected, that way the exact line number is reported.\n+ * detected, that way the exact stack trace is reported for some errors.\n  */\n #define btrfs_abort_transaction(trans, errno)\t\t\\\n do {\t\t\t\t\t\t\t\t\\\n@@ -3807,10 +3809,11 @@ do {\t\t\t\t\t\t\t\t\\\n \tif (!test_and_set_bit(BTRFS_FS_STATE_TRANS_ABORTED,\t\\\n \t\t\t&((trans)->fs_info->fs_state))) {\t\\\n \t\tfirst = true;\t\t\t\t\t\\\n-\t\tif ((errno) != -EIO && (errno) != -EROFS) {\t\t\\\n-\t\t\tWARN(1, KERN_DEBUG\t\t\t\t\\\n+\t\tif (WARN(abort_should_print_stack(errno), \t\\\n+\t\t\tKERN_DEBUG\t\t\t\t\\\n \t\t\t\"BTRFS: Transaction aborted (error %d)\\n\",\t\\\n-\t\t\t(errno));\t\t\t\t\t\\\n+\t\t\t(errno))) {\t\t\t\t\t\\\n+\t\t\t/* Stack trace printed. */\t\t\t\\\n \t\t} else {\t\t\t\t\t\t\\\n \t\t\tbtrfs_debug((trans)->fs_info,\t\t\t\\\n \t\t\t\t    \"Transaction aborted (error %d)\", \\\n",
+    "patch_modified_files": [
+        "fs/btrfs/ctree.c",
+        "fs/btrfs/ctree.h"
+    ]
+}

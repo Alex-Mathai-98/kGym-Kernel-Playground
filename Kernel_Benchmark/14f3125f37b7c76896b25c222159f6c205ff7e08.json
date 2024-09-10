@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "UBSAN: array-index-out-of-bounds in ieee80211_del_key",
+    "display-title": "UBSAN: array-index-out-of-bounds in ieee80211_del_key (2)",
+    "id": "14f3125f37b7c76896b25c222159f6c205ff7e08",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nl80211: validate key indexes for cfg80211_registered_device",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2d9463083ce92636a1bdd3e30d1236e3e95d859e",
+            "hash": "2d9463083ce92636a1bdd3e30d1236e3e95d859e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000d1d6c605b55562ee@google.com/T/",
+        "https://lore.kernel.org/all/20201201095639.63936-1-anant.thazhemadam@gmail.com/T/",
+        "https://lore.kernel.org/all/20201204215825.129879-1-anant.thazhemadam@gmail.com/T/",
+        "https://lore.kernel.org/all/20201223150515.553836647@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210608175932.263480586@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210608175935.254388043@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1440c58d500000",
+            "c-reproducer": "/text?tag=ReproC&x=1743351d500000",
+            "kernel-config": "/text?tag=KernelConfig&x=cb8d1a3819ba4356",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=aae5ab854e38151e69f261dbf0e3b7e396403178",
+            "kernel-source-commit": "aae5ab854e38151e69f261dbf0e3b7e396403178",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a0092f9dfdd33924abe5cf5565e4ec4748217c7b",
+            "syzkaller-commit": "a0092f9dfdd33924abe5cf5565e4ec4748217c7b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12c6fae9500000"
+        }
+    ],
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "669b84134a2be14d333d4f82b65943d467404f87",
+    "patch": "diff --git a/net/wireless/core.h b/net/wireless/core.h\nindex e3e9686859d4..7df91f940212 100644\n--- a/net/wireless/core.h\n+++ b/net/wireless/core.h\n@@ -433,6 +433,8 @@ void cfg80211_sme_abandon_assoc(struct wireless_dev *wdev);\n \n /* internal helpers */\n bool cfg80211_supported_cipher_suite(struct wiphy *wiphy, u32 cipher);\n+bool cfg80211_valid_key_idx(struct cfg80211_registered_device *rdev,\n+\t\t\t    int key_idx, bool pairwise);\n int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,\n \t\t\t\t   struct key_params *params, int key_idx,\n \t\t\t\t   bool pairwise, const u8 *mac_addr);\ndiff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c\nindex c8d31181a660..910872974f2d 100644\n--- a/net/wireless/nl80211.c\n+++ b/net/wireless/nl80211.c\n@@ -4239,9 +4239,6 @@ static int nl80211_del_key(struct sk_buff *skb, struct genl_info *info)\n \tif (err)\n \t\treturn err;\n \n-\tif (key.idx < 0)\n-\t\treturn -EINVAL;\n-\n \tif (info->attrs[NL80211_ATTR_MAC])\n \t\tmac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);\n \n@@ -4257,6 +4254,10 @@ static int nl80211_del_key(struct sk_buff *skb, struct genl_info *info)\n \t    key.type != NL80211_KEYTYPE_GROUP)\n \t\treturn -EINVAL;\n \n+\tif (!cfg80211_valid_key_idx(rdev, key.idx,\n+\t\t\t\t    key.type == NL80211_KEYTYPE_PAIRWISE))\n+\t\treturn -EINVAL;\n+\n \tif (!rdev->ops->del_key)\n \t\treturn -EOPNOTSUPP;\n \ndiff --git a/net/wireless/util.c b/net/wireless/util.c\nindex 79c5780e3033..b4acc805114b 100644\n--- a/net/wireless/util.c\n+++ b/net/wireless/util.c\n@@ -272,18 +272,53 @@ bool cfg80211_supported_cipher_suite(struct wiphy *wiphy, u32 cipher)\n \treturn false;\n }\n \n-int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,\n-\t\t\t\t   struct key_params *params, int key_idx,\n-\t\t\t\t   bool pairwise, const u8 *mac_addr)\n+static bool\n+cfg80211_igtk_cipher_supported(struct cfg80211_registered_device *rdev)\n {\n-\tint max_key_idx = 5;\n+\tstruct wiphy *wiphy = &rdev->wiphy;\n+\tint i;\n+\n+\tfor (i = 0; i < wiphy->n_cipher_suites; i++) {\n+\t\tswitch (wiphy->cipher_suites[i]) {\n+\t\tcase WLAN_CIPHER_SUITE_AES_CMAC:\n+\t\tcase WLAN_CIPHER_SUITE_BIP_CMAC_256:\n+\t\tcase WLAN_CIPHER_SUITE_BIP_GMAC_128:\n+\t\tcase WLAN_CIPHER_SUITE_BIP_GMAC_256:\n+\t\t\treturn true;\n+\t\t}\n+\t}\n+\n+\treturn false;\n+}\n \n-\tif (wiphy_ext_feature_isset(&rdev->wiphy,\n-\t\t\t\t    NL80211_EXT_FEATURE_BEACON_PROTECTION) ||\n-\t    wiphy_ext_feature_isset(&rdev->wiphy,\n-\t\t\t\t    NL80211_EXT_FEATURE_BEACON_PROTECTION_CLIENT))\n+bool cfg80211_valid_key_idx(struct cfg80211_registered_device *rdev,\n+\t\t\t    int key_idx, bool pairwise)\n+{\n+\tint max_key_idx;\n+\n+\tif (pairwise)\n+\t\tmax_key_idx = 3;\n+\telse if (wiphy_ext_feature_isset(&rdev->wiphy,\n+\t\t\t\t\t NL80211_EXT_FEATURE_BEACON_PROTECTION) ||\n+\t\t wiphy_ext_feature_isset(&rdev->wiphy,\n+\t\t\t\t\t NL80211_EXT_FEATURE_BEACON_PROTECTION_CLIENT))\n \t\tmax_key_idx = 7;\n+\telse if (cfg80211_igtk_cipher_supported(rdev))\n+\t\tmax_key_idx = 5;\n+\telse\n+\t\tmax_key_idx = 3;\n+\n \tif (key_idx < 0 || key_idx > max_key_idx)\n+\t\treturn false;\n+\n+\treturn true;\n+}\n+\n+int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,\n+\t\t\t\t   struct key_params *params, int key_idx,\n+\t\t\t\t   bool pairwise, const u8 *mac_addr)\n+{\n+\tif (!cfg80211_valid_key_idx(rdev, key_idx, pairwise))\n \t\treturn -EINVAL;\n \n \tif (!pairwise && mac_addr && !(rdev->wiphy.flags & WIPHY_FLAG_IBSS_RSN))\n",
+    "patch_modified_files": [
+        "net/wireless/core.h",
+        "net/wireless/nl80211.c",
+        "net/wireless/util.c"
+    ]
+}

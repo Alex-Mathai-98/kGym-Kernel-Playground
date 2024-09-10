@@ -1,0 +1,119 @@
+==================================================================
+BUG: KASAN: slab-use-after-free in hfsplus_release_folio+0x493/0x550
+Read of size 4 at addr ffff88802aa0e038 by task syz-executor.5/5012
+
+CPU: 0 PID: 5012 Comm: syz-executor.5 Not tainted 6.2.0-syzkaller-12030-gb905039e428d #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1b5/0x2a0
+ print_report+0x163/0x510
+ kasan_report+0x108/0x140
+ hfsplus_release_folio+0x493/0x550
+ block_invalidate_folio+0x681/0xa10
+ truncate_cleanup_folio+0x1e3/0x5f0
+ truncate_inode_pages_range+0x291/0x1180
+ hfsplus_evict_inode+0x27/0xd0
+ evict+0x2a4/0x620
+ hfsplus_put_super+0x20f/0x330
+ generic_shutdown_super+0x134/0x340
+ kill_block_super+0x7e/0xe0
+ deactivate_locked_super+0xa4/0x110
+ cleanup_mnt+0x490/0x520
+ task_work_run+0x24a/0x300
+ exit_to_user_mode_loop+0xd1/0xf0
+ exit_to_user_mode_prepare+0xb1/0x140
+ syscall_exit_to_user_mode+0x54/0x2d0
+ do_syscall_64+0x4d/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f3a81e7dc47
+Code: b0 ff ff ff f7 d8 64 89 01 48 83 c8 ff c3 0f 1f 44 00 00 31 f6 e9 09 00 00 00 66 0f 1f 84 00 00 00 00 00 b8 a6 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 01 c3 48 c7 c2 b0 ff ff ff f7 d8 64 89 02 b8
+RSP: 002b:00007ffcc0316c18 EFLAGS: 00000246 ORIG_RAX: 00000000000000a6
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 00007f3a81e7dc47
+RDX: 0000000000000000 RSI: 000000000000000a RDI: 00007ffcc0316cd0
+RBP: 00007ffcc0316cd0 R08: 0000000000000000 R09: 0000000000000000
+R10: 00000000ffffffff R11: 0000000000000246 R12: 00007ffcc0317d90
+R13: 00007f3a81ed7aa2 R14: 00000000000108b8 R15: 0000000000000001
+ </TASK>
+
+Allocated by task 5154:
+ kasan_set_track+0x40/0x60
+ __kasan_kmalloc+0x98/0xb0
+ hfsplus_btree_open+0x5e/0xd10
+ hfsplus_fill_super+0xab6/0x1b80
+ mount_bdev+0x271/0x3a0
+ legacy_get_tree+0xef/0x190
+ vfs_get_tree+0x8c/0x270
+ do_new_mount+0x28f/0xae0
+ __se_sys_mount+0x2c9/0x3b0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Freed by task 5012:
+ kasan_set_track+0x40/0x60
+ kasan_save_free_info+0x2b/0x40
+ ____kasan_slab_free+0xd6/0x120
+ __kmem_cache_free+0x263/0x3c0
+ hfsplus_put_super+0x1cf/0x330
+ generic_shutdown_super+0x134/0x340
+ kill_block_super+0x7e/0xe0
+ deactivate_locked_super+0xa4/0x110
+ cleanup_mnt+0x490/0x520
+ task_work_run+0x24a/0x300
+ exit_to_user_mode_loop+0xd1/0xf0
+ exit_to_user_mode_prepare+0xb1/0x140
+ syscall_exit_to_user_mode+0x54/0x2d0
+ do_syscall_64+0x4d/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+The buggy address belongs to the object at ffff88802aa0e000
+ which belongs to the cache kmalloc-4k of size 4096
+The buggy address is located 56 bytes inside of
+ freed 4096-byte region [ffff88802aa0e000, ffff88802aa0f000)
+
+The buggy address belongs to the physical page:
+page:ffffea0000aa8200 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x2aa08
+head:ffffea0000aa8200 order:3 entire_mapcount:0 nr_pages_mapped:0 pincount:0
+flags: 0xfff00000010200(slab|head|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000010200 ffff888012442140 dead000000000122 0000000000000000
+raw: 0000000000000000 0000000000040004 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 3, migratetype Unmovable, gfp_mask 0xd2820(GFP_ATOMIC|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC), pid 5093, tgid 5093 (kworker/0:8), ts 70959827408, free_ts 70874045330
+ get_page_from_freelist+0x3792/0x3910
+ __alloc_pages+0x291/0x7f0
+ alloc_slab_page+0x6a/0x160
+ new_slab+0x84/0x2f0
+ ___slab_alloc+0xa07/0x1000
+ __kmem_cache_alloc_node+0x1b8/0x290
+ __kmalloc_node_track_caller+0xa0/0x190
+ kmalloc_reserve+0x120/0x220
+ __alloc_skb+0x19f/0x3d0
+ nsim_dev_trap_report_work+0x250/0xa90
+ process_one_work+0x987/0x1420
+ worker_thread+0xa63/0x1210
+ kthread+0x270/0x300
+ ret_from_fork+0x1f/0x30
+page last free stack trace:
+ free_unref_page_prepare+0xf0e/0xf70
+ free_unref_page+0x37/0x3f0
+ __unfreeze_partials+0x1b1/0x1f0
+ put_cpu_partial+0x106/0x170
+ qlist_free_all+0x22/0x60
+ kasan_quarantine_reduce+0x14b/0x160
+ __kasan_slab_alloc+0x23/0x70
+ slab_post_alloc_hook+0x69/0x3a0
+ kmem_cache_alloc+0x12c/0x280
+ getname_flags+0xbc/0x4e0
+ __x64_sys_newfstatat+0x113/0x1c0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Memory state around the buggy address:
+ ffff88802aa0df00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88802aa0df80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff88802aa0e000: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                        ^
+ ffff88802aa0e080: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88802aa0e100: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================

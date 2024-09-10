@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in batadv_interface_tx",
+    "display-title": "KASAN: slab-out-of-bounds Read in batadv_interface_tx",
+    "id": "b7575418eb496c7def8d76caff2c1c8755682e90",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "batman-adv: Force mac header to start of data on xmit",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9114daa825fc3f335f9bea3313ce667090187280",
+            "hash": "9114daa825fc3f335f9bea3313ce667090187280",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000000f098d057e4e3662@google.com/T/",
+        "https://lore.kernel.org/all/20190201111412.13807-1-sw@simonwunderlich.de/T/",
+        "https://lore.kernel.org/all/20190213183647.333441569@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190213183651.648060257@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190213183655.747168774@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190213183706.176685027@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190218133519.525507231@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190218133529.099444112@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/lsq.1556377988.384060557@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14c3eabf400000",
+            "c-reproducer": "/text?tag=ReproC&x=164bfbfb400000",
+            "kernel-config": "/text?tag=KernelConfig&x=c255c77ba370fe7c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f346b0becb1bc62e45495f9cdbae3eef35d0b635",
+            "kernel-source-commit": "f346b0becb1bc62e45495f9cdbae3eef35d0b635",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e33ad0f1875349ef73a89aad2473594de21ad9c0",
+            "syzkaller-commit": "e33ad0f1875349ef73a89aad2473594de21ad9c0",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15b2cbdd400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "batadv_interface_tx",
+            "net/batman-adv/soft-interface.c"
+        ]
+    ],
+    "patch_commit_date": "2018-12-31T21:31:01+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "batman"
+    ],
+    "parent_of_fix_commit": "955d3411a17f590364238bd0d3329b61f20c1cd2",
+    "patch": "diff --git a/net/batman-adv/soft-interface.c b/net/batman-adv/soft-interface.c\nindex 5db5a0a4c959..b85ca809e509 100644\n--- a/net/batman-adv/soft-interface.c\n+++ b/net/batman-adv/soft-interface.c\n@@ -221,6 +221,8 @@ static netdev_tx_t batadv_interface_tx(struct sk_buff *skb,\n \n \tnetif_trans_update(soft_iface);\n \tvid = batadv_get_vid(skb, 0);\n+\n+\tskb_reset_mac_header(skb);\n \tethhdr = eth_hdr(skb);\n \n \tswitch (ntohs(ethhdr->h_proto)) {\n",
+    "patch_modified_files": [
+        "net/batman-adv/soft-interface.c"
+    ]
+}

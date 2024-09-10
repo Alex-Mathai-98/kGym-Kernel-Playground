@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "memory leak in garp_request_join",
+    "display-title": "memory leak in garp_request_join",
+    "id": "e93dddbf164fb5dea44a6e6dbdec8fece1613543",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/802/garp: fix memleak in garp_request_join()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=42ca63f980842918560b25f0244307fd83b4777c",
+            "hash": "42ca63f980842918560b25f0244307fd83b4777c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e63046059d2417e8@google.com/T/",
+        "https://lore.kernel.org/all/20210718210006.26212-1-paskripkin@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15d86b35e00000",
+            "c-reproducer": "/text?tag=ReproC&x=1043d769e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=698d5ad38dda6cb6",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d5226fa6dbae0569ee43ecfc08bdcd6770fc4755",
+            "kernel-source-commit": "d5226fa6dbae0569ee43ecfc08bdcd6770fc4755",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/dd56146d2611f7de0fbb7d8db6c016d3dcdc6371",
+            "syzkaller-commit": "dd56146d2611f7de0fbb7d8db6c016d3dcdc6371",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=123a0111e00000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "a34dcbfa1475f18a8f1b1dc3dedb76d746874e61",
+    "patch": "diff --git a/net/802/garp.c b/net/802/garp.c\nindex 400bd857e5f5..f6012f8e59f0 100644\n--- a/net/802/garp.c\n+++ b/net/802/garp.c\n@@ -203,6 +203,19 @@ static void garp_attr_destroy(struct garp_applicant *app, struct garp_attr *attr\n \tkfree(attr);\n }\n \n+static void garp_attr_destroy_all(struct garp_applicant *app)\n+{\n+\tstruct rb_node *node, *next;\n+\tstruct garp_attr *attr;\n+\n+\tfor (node = rb_first(&app->gid);\n+\t     next = node ? rb_next(node) : NULL, node != NULL;\n+\t     node = next) {\n+\t\tattr = rb_entry(node, struct garp_attr, node);\n+\t\tgarp_attr_destroy(app, attr);\n+\t}\n+}\n+\n static int garp_pdu_init(struct garp_applicant *app)\n {\n \tstruct sk_buff *skb;\n@@ -609,6 +622,7 @@ void garp_uninit_applicant(struct net_device *dev, struct garp_application *appl\n \n \tspin_lock_bh(&app->lock);\n \tgarp_gid_event(app, GARP_EVENT_TRANSMIT_PDU);\n+\tgarp_attr_destroy_all(app);\n \tgarp_pdu_queue(app);\n \tspin_unlock_bh(&app->lock);\n \n",
+    "patch_modified_files": [
+        "net/802/garp.c"
+    ]
+}

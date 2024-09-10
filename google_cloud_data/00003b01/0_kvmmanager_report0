@@ -1,0 +1,34 @@
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 3488 at fs/read_write.c:427 __kernel_read+0x41a/0x4d0
+Modules linked in:
+CPU: 0 PID: 3488 Comm: kworker/0:9 Not tainted 5.8.0-rc5-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: events p9_read_work
+RIP: 0010:__kernel_read+0x41a/0x4d0
+Code: ff ff e8 39 11 b6 ff 45 31 c9 45 31 c0 b9 01 00 00 00 4c 89 ea 44 89 e6 4c 89 f7 e8 b0 13 12 00 e9 40 ff ff ff e8 16 11 b6 ff <0f> 0b 48 c7 c5 ea ff ff ff e9 02 fe ff ff 4c 89 ef e8 a0 71 f5 ff
+RSP: 0018:ffffc90001af7bb8 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: ffff8881e2720080 RCX: ffffffff81bb7bde
+RDX: ffff8881e2fce240 RSI: ffffffff81bb7f5a RDI: 0000000000000005
+RBP: 00000000081d801e R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000001
+R13: ffff8881e2720104 R14: ffffffffffffffff R15: 0000000000000007
+FS:  0000000000000000(0000) GS:ffff8881f6200000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000558e66fc2508 CR3: 00000001e0ea3001 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ kernel_read+0x51/0x70
+ p9_read_work+0x2a0/0xf70
+ process_one_work+0x9ad/0x1680
+ worker_thread+0x676/0x1170
+ kthread+0x3a6/0x490
+ ret_from_fork+0x1f/0x30
+irq event stamp: 430535
+hardirqs last  enabled at (430779): [<ffffffff815b16d9>] console_unlock+0xcb9/0xf30
+hardirqs last disabled at (430862): [<ffffffff87e9b1ef>] __schedule+0x21f/0x1e50
+softirqs last  enabled at (430972): [<ffffffff88200717>] __do_softirq+0x717/0xa7d
+softirqs last disabled at (431007): [<ffffffff88000f0f>] asm_call_on_stack+0xf/0x20
+---[ end trace 6f271cb5dbd71978 ]---
+IPv6: ADDRCONF(NETDEV_CHANGE): veth1_virt_wifi: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth0_virt_wifi: link becomes ready

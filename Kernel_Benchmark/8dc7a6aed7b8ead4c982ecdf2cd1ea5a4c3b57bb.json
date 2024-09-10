@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "WARNING in notify_change",
+    "display-title": "WARNING in notify_change (2)",
+    "id": "8dc7a6aed7b8ead4c982ecdf2cd1ea5a4c3b57bb",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fuse: lock inode unconditionally in fuse_fallocate()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=44361e8cf9ddb23f17bdcc40ca944abf32e83e79",
+            "hash": "44361e8cf9ddb23f17bdcc40ca944abf32e83e79",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "crypto: powepc/sha1 - remove unneeded semicolon",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=da3c6c836fb1a0b9f08a7efabbfb7e31a0c816f7",
+        "hash": "da3c6c836fb1a0b9f08a7efabbfb7e31a0c816f7",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000066965b05ee07692d@google.com/T/",
+        "https://lore.kernel.org/all/20221123104336.1030702-1-mszeredi@redhat.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in notify_change",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11a17fe9880000",
+            "c-reproducer": "/text?tag=ReproC&x=13e6c4c3880000",
+            "kernel-config": "/text?tag=KernelConfig&x=8232c7627e3f923",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=eb7081409f94a9a8608593d0fb63a1aa3d6f95d8",
+            "kernel-source-commit": "eb7081409f94a9a8608593d0fb63a1aa3d6f95d8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/1c576c232f825266983096180b3603005edc458e",
+            "syzkaller-commit": "1c576c232f825266983096180b3603005edc458e",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17ae5c39880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "fuse_file_fallocate",
+            "fs/fuse/file.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "ppc_spe_sha1_update",
+            "arch/powerpc/crypto/sha1-spe-glue.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-23T08:10:42+00:00",
+    "cause_commit_date": "2021-02-08T09:10:38+00:00",
+    "subsystems": [
+        "fuse"
+    ],
+    "parent_of_fix_commit": "eb7081409f94a9a8608593d0fb63a1aa3d6f95d8",
+    "patch": "diff --git a/fs/fuse/file.c b/fs/fuse/file.c\nindex 71bfb663aac5..89f4741728ba 100644\n--- a/fs/fuse/file.c\n+++ b/fs/fuse/file.c\n@@ -2963,11 +2963,9 @@ static long fuse_file_fallocate(struct file *file, int mode, loff_t offset,\n \t\t.mode = mode\n \t};\n \tint err;\n-\tbool lock_inode = !(mode & FALLOC_FL_KEEP_SIZE) ||\n-\t\t\t   (mode & (FALLOC_FL_PUNCH_HOLE |\n-\t\t\t\t    FALLOC_FL_ZERO_RANGE));\n-\n-\tbool block_faults = FUSE_IS_DAX(inode) && lock_inode;\n+\tbool block_faults = FUSE_IS_DAX(inode) &&\n+\t\t(!(mode & FALLOC_FL_KEEP_SIZE) ||\n+\t\t (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE)));\n \n \tif (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |\n \t\t     FALLOC_FL_ZERO_RANGE))\n@@ -2976,22 +2974,20 @@ static long fuse_file_fallocate(struct file *file, int mode, loff_t offset,\n \tif (fm->fc->no_fallocate)\n \t\treturn -EOPNOTSUPP;\n \n-\tif (lock_inode) {\n-\t\tinode_lock(inode);\n-\t\tif (block_faults) {\n-\t\t\tfilemap_invalidate_lock(inode->i_mapping);\n-\t\t\terr = fuse_dax_break_layouts(inode, 0, 0);\n-\t\t\tif (err)\n-\t\t\t\tgoto out;\n-\t\t}\n+\tinode_lock(inode);\n+\tif (block_faults) {\n+\t\tfilemap_invalidate_lock(inode->i_mapping);\n+\t\terr = fuse_dax_break_layouts(inode, 0, 0);\n+\t\tif (err)\n+\t\t\tgoto out;\n+\t}\n \n-\t\tif (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE)) {\n-\t\t\tloff_t endbyte = offset + length - 1;\n+\tif (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE)) {\n+\t\tloff_t endbyte = offset + length - 1;\n \n-\t\t\terr = fuse_writeback_range(inode, offset, endbyte);\n-\t\t\tif (err)\n-\t\t\t\tgoto out;\n-\t\t}\n+\t\terr = fuse_writeback_range(inode, offset, endbyte);\n+\t\tif (err)\n+\t\t\tgoto out;\n \t}\n \n \tif (!(mode & FALLOC_FL_KEEP_SIZE) &&\n@@ -3039,8 +3035,7 @@ static long fuse_file_fallocate(struct file *file, int mode, loff_t offset,\n \tif (block_faults)\n \t\tfilemap_invalidate_unlock(inode->i_mapping);\n \n-\tif (lock_inode)\n-\t\tinode_unlock(inode);\n+\tinode_unlock(inode);\n \n \tfuse_flush_time_update(inode);\n \n",
+    "patch_modified_files": [
+        "fs/fuse/file.c"
+    ]
+}

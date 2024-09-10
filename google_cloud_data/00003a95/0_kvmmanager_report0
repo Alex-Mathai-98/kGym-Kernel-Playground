@@ -1,0 +1,118 @@
+EXT4-fs (loop1): mounted filesystem 00000000-0000-0000-0000-000000000000 without journal. Quota mode: none.
+==================================================================
+BUG: KASAN: slab-use-after-free in ext4_find_extent+0x7a5/0xde0
+Read of size 4 at addr ffff88806cd204e8 by task syz-executor.1/5138
+
+CPU: 1 PID: 5138 Comm: syz-executor.1 Not tainted 6.3.0-rc3-syzkaller-00106-g1dedde690303 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1b5/0x2a0
+ print_report+0x163/0x510
+ kasan_report+0x108/0x140
+ ext4_find_extent+0x7a5/0xde0
+ ext4_clu_mapped+0x11c/0x970
+ ext4_da_get_block_prep+0xa6d/0x14c0
+ ext4_block_write_begin+0x526/0x1590
+ ext4_da_write_begin+0x5e1/0xa40
+ generic_perform_write+0x2ca/0x5c0
+ ext4_buffered_write_iter+0x122/0x3a0
+ ext4_file_write_iter+0x1d6/0x1920
+ vfs_write+0x7dd/0xc50
+ ksys_write+0x17c/0x2a0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7ff2b207c8d9
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ff2b2ec40c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007ff2b219bf80 RCX: 00007ff2b207c8d9
+RDX: 00000000175d9003 RSI: 0000000020000200 RDI: 0000000000000004
+RBP: 00007ff2b20d8ad0 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007ff2b219bf80 R15: 00007ffe8d0147e8
+ </TASK>
+
+Allocated by task 5013:
+ kasan_set_track+0x40/0x60
+ __kasan_slab_alloc+0x66/0x70
+ slab_post_alloc_hook+0x69/0x3a0
+ kmem_cache_alloc_lru+0x11f/0x2e0
+ sock_alloc_inode+0x28/0xc0
+ new_inode_pseudo+0x65/0x1d0
+ __sock_create+0x123/0x8d0
+ __sys_socket+0x11c/0x370
+ __x64_sys_socket+0x7a/0x90
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Freed by task 1154:
+ kasan_set_track+0x40/0x60
+ kasan_save_free_info+0x2b/0x40
+ ____kasan_slab_free+0xd6/0x120
+ kmem_cache_free+0x296/0x520
+ rcu_core+0x9fb/0x15d0
+ __do_softirq+0x2ab/0x8ea
+
+Last potentially related work creation:
+ kasan_save_stack+0x2f/0x50
+ __kasan_record_aux_stack+0xb0/0xc0
+ call_rcu+0x167/0xa30
+ __dentry_kill+0x436/0x650
+ dentry_kill+0xbb/0x290
+ dput+0x1f3/0x420
+ __fput+0x5e4/0x890
+ task_work_run+0x24a/0x300
+ exit_to_user_mode_loop+0xd1/0xf0
+ exit_to_user_mode_prepare+0xb1/0x140
+ syscall_exit_to_user_mode+0x54/0x270
+ do_syscall_64+0x4d/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+The buggy address belongs to the object at ffff88806cd20000
+ which belongs to the cache sock_inode_cache of size 1408
+The buggy address is located 1256 bytes inside of
+ freed 1408-byte region [ffff88806cd20000, ffff88806cd20580)
+
+The buggy address belongs to the physical page:
+page:ffffea0001b34800 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x6cd20
+head:ffffea0001b34800 order:3 entire_mapcount:0 nr_pages_mapped:0 pincount:0
+flags: 0xfff00000010200(slab|head|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000010200 ffff888144b0ea00 dead000000000122 0000000000000000
+raw: 0000000000000000 0000000000150015 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 3, migratetype Reclaimable, gfp_mask 0xd20d0(__GFP_IO|__GFP_FS|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC|__GFP_RECLAIMABLE), pid 5013, tgid 5013 (syz-executor.2), ts 61768433045, free_ts 13281128884
+ get_page_from_freelist+0x31e9/0x3360
+ __alloc_pages+0x255/0x670
+ alloc_slab_page+0x6a/0x160
+ new_slab+0x84/0x2f0
+ ___slab_alloc+0xa07/0x1000
+ kmem_cache_alloc_lru+0x1b9/0x2e0
+ sock_alloc_inode+0x28/0xc0
+ new_inode_pseudo+0x65/0x1d0
+ __sock_create+0x123/0x8d0
+ __sys_socket+0x11c/0x370
+ __x64_sys_socket+0x7a/0x90
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+page last free stack trace:
+ free_unref_page_prepare+0xe2f/0xe70
+ free_unref_page+0x37/0x3f0
+ free_contig_range+0x9e/0x150
+ destroy_args+0x102/0x930
+ debug_vm_pgtable+0x441/0x4d0
+ do_one_initcall+0x224/0x780
+ do_initcall_level+0x157/0x210
+ do_initcalls+0x6d/0xd0
+ kernel_init_freeable+0x42e/0x5e0
+ kernel_init+0x1d/0x2a0
+ ret_from_fork+0x1f/0x30
+
+Memory state around the buggy address:
+ ffff88806cd20380: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88806cd20400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>ffff88806cd20480: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                                          ^
+ ffff88806cd20500: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88806cd20580: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================

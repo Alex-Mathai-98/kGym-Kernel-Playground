@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "memory leak in copy_process",
+    "display-title": "memory leak in copy_process (5)",
+    "id": "6cd217d3878763ebef28a8fd279c88e791c1c9ef",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "af_unix: fix struct pid leaks in OOB support",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2aab4b96900272885bc157f8b236abf1cdc02e08",
+            "hash": "2aab4b96900272885bc157f8b236abf1cdc02e08",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000087942f05f64e8201@google.com/T/",
+        "https://lore.kernel.org/all/20230307164530.771896-1-edumazet@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in copy_process",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14cb6df2c80000",
+            "c-reproducer": "/text?tag=ReproC&x=177b81e4c80000",
+            "kernel-config": "/text?tag=KernelConfig&x=f5733ca1757172ad",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=2eb29d59ddf02e39774abfb60b2030b0b7e27c1f",
+            "kernel-source-commit": "2eb29d59ddf02e39774abfb60b2030b0b7e27c1f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f8902b5747fbe3d5b860bd782eec63fc9c7da6e7",
+            "syzkaller-commit": "f8902b5747fbe3d5b860bd782eec63fc9c7da6e7",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16544754c80000"
+        }
+    ],
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "8f14820801042c221bb9fe51643a2585cac5dec2",
+    "patch": "diff --git a/net/unix/af_unix.c b/net/unix/af_unix.c\nindex 347122c3575e..0b0f18ecce44 100644\n--- a/net/unix/af_unix.c\n+++ b/net/unix/af_unix.c\n@@ -2105,7 +2105,8 @@ static int unix_dgram_sendmsg(struct socket *sock, struct msghdr *msg,\n #define UNIX_SKB_FRAGS_SZ (PAGE_SIZE << get_order(32768))\n \n #if IS_ENABLED(CONFIG_AF_UNIX_OOB)\n-static int queue_oob(struct socket *sock, struct msghdr *msg, struct sock *other)\n+static int queue_oob(struct socket *sock, struct msghdr *msg, struct sock *other,\n+\t\t     struct scm_cookie *scm, bool fds_sent)\n {\n \tstruct unix_sock *ousk = unix_sk(other);\n \tstruct sk_buff *skb;\n@@ -2116,6 +2117,11 @@ static int queue_oob(struct socket *sock, struct msghdr *msg, struct sock *other\n \tif (!skb)\n \t\treturn err;\n \n+\terr = unix_scm_to_skb(scm, skb, !fds_sent);\n+\tif (err < 0) {\n+\t\tkfree_skb(skb);\n+\t\treturn err;\n+\t}\n \tskb_put(skb, 1);\n \terr = skb_copy_datagram_from_iter(skb, 0, &msg->msg_iter, 1);\n \n@@ -2243,7 +2249,7 @@ static int unix_stream_sendmsg(struct socket *sock, struct msghdr *msg,\n \n #if IS_ENABLED(CONFIG_AF_UNIX_OOB)\n \tif (msg->msg_flags & MSG_OOB) {\n-\t\terr = queue_oob(sock, msg, other);\n+\t\terr = queue_oob(sock, msg, other, &scm, fds_sent);\n \t\tif (err)\n \t\t\tgoto out_err;\n \t\tsent++;\n",
+    "patch_modified_files": [
+        "net/unix/af_unix.c"
+    ]
+}

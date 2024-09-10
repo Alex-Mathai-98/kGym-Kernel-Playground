@@ -1,0 +1,44 @@
+------------[ cut here ]------------
+jump label: negative count!
+WARNING: CPU: 0 PID: 3665 at kernel/jump_label.c:235 static_key_slow_try_dec+0xf2/0x110
+Modules linked in:
+CPU: 0 PID: 3665 Comm: syz-executor.3 Not tainted 6.0.0-rc4-syzkaller-00192-g76b907ee00c4 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:static_key_slow_try_dec+0xf2/0x110
+Code: d9 ff e8 41 11 d9 ff 44 89 e8 5b 5d 41 5c 41 5d c3 44 89 e5 e9 66 ff ff ff e8 2a 11 d9 ff 48 c7 c7 e0 74 f6 89 e8 94 02 98 07 <0f> 0b eb ae 48 89 df e8 52 e0 25 00 e9 42 ff ff ff 66 66 2e 0f 1f
+RSP: 0018:ffffc9000406f050 EFLAGS: 00010286
+RAX: 0000000000000000 RBX: ffffffff9151c3a0 RCX: 0000000000000000
+RDX: ffff88807c249d80 RSI: ffffffff8162436c RDI: fffff5200080ddfc
+RBP: 00000000ffffffff R08: 0000000000000005 R09: 0000000000000000
+R10: 0000000080000000 R11: 62616c20706d756a R12: 00000000ffffffff
+R13: ffff888025626201 R14: ffff888025626228 R15: ffff888016bb9c88
+FS:  00007f01929156c0(0000) GS:ffff8880b9b00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fb1f3949440 CR3: 00000000222ec000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ static_key_slow_dec+0x5c/0xc0
+ nf_tables_chain_destroy+0x281/0x630
+ nf_tables_addchain.constprop.0+0x75c/0x1830
+ nf_tables_newchain+0x167a/0x1fa0
+ nfnetlink_rcv_batch+0x180b/0x2760
+ nfnetlink_rcv+0x3a7/0x420
+ netlink_unicast+0x52c/0x7f0
+ netlink_sendmsg+0x8f4/0xe00
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x631/0x810
+ ___sys_sendmsg+0x11d/0x1b0
+ __sys_sendmsg+0xf6/0x1c0
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f0191879ae9
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f01929150c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f019198bf80 RCX: 00007f0191879ae9
+RDX: 0000000000000000 RSI: 000000002000c2c0 RDI: 0000000000000004
+RBP: 00007f01918d52d0 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f019198bf80 R15: 00007ffd4c2af568
+ </TASK>

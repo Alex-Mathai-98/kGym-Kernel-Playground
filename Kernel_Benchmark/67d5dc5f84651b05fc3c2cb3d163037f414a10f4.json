@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "WARNING in qrtr_tun_write_iter",
+    "display-title": "WARNING in qrtr_tun_write_iter",
+    "id": "67d5dc5f84651b05fc3c2cb3d163037f414a10f4",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/qrtr: restrict user-controlled length in qrtr_tun_write_iter()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2a80c15812372e554474b1dba0b1d8e467af295d",
+            "hash": "2a80c15812372e554474b1dba0b1d8e467af295d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000dbefbb05b883a826@google.com/T/",
+        "https://lore.kernel.org/all/20210202092059.1361381-1-snovitoll@gmail.com/T/",
+        "https://lore.kernel.org/all/20210215152715.401453874@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210215152719.459796636@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210222121019.925481519@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=169c0d0b500000",
+            "c-reproducer": "/text?tag=ReproC&x=152fe7a8d00000",
+            "kernel-config": "/text?tag=KernelConfig&x=8aa30b9da402d224",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=6207214a70bfaec7b41f39502353fd3ca89df68c",
+            "kernel-source-commit": "6207214a70bfaec7b41f39502353fd3ca89df68c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/b1c228e1773559f05fa98950902ab025d6ab946e",
+            "syzkaller-commit": "b1c228e1773559f05fa98950902ab025d6ab946e",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=149a0fc0d00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "qrtr_tun_write_iter",
+            "net/qrtr/tun.c"
+        ]
+    ],
+    "patch_commit_date": "2021-02-02T09:20:59+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "a4dc7eee9106a9d2a6e08b442db19677aa9699c7",
+    "patch": "diff --git a/net/qrtr/tun.c b/net/qrtr/tun.c\nindex 15ce9b642b25..b238c40a9984 100644\n--- a/net/qrtr/tun.c\n+++ b/net/qrtr/tun.c\n@@ -80,6 +80,12 @@ static ssize_t qrtr_tun_write_iter(struct kiocb *iocb, struct iov_iter *from)\n \tssize_t ret;\n \tvoid *kbuf;\n \n+\tif (!len)\n+\t\treturn -EINVAL;\n+\n+\tif (len > KMALLOC_MAX_SIZE)\n+\t\treturn -ENOMEM;\n+\n \tkbuf = kzalloc(len, GFP_KERNEL);\n \tif (!kbuf)\n \t\treturn -ENOMEM;\n",
+    "patch_modified_files": [
+        "net/qrtr/tun.c"
+    ]
+}

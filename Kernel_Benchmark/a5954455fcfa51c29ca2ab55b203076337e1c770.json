@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "INFO: trying to register non-static key in __flush_work",
+    "display-title": "INFO: trying to register non-static key in __flush_work",
+    "id": "a5954455fcfa51c29ca2ab55b203076337e1c770",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "drm/vkms: Fix flush_work() without INIT_WORK().",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b30b61ff6b1dc37f276cf56a8328b80086a3ffca",
+            "hash": "b30b61ff6b1dc37f276cf56a8328b80086a3ffca",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f4fe3e057e25b276@google.com/T/",
+        "https://lore.kernel.org/all/1547829823-9877-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp/T/",
+        "https://lore.kernel.org/all/1547831098-7930-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp/T/",
+        "https://lore.kernel.org/all/20190326042700.963224437@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190327180158.10245-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1174a1dd400000",
+            "c-reproducer": "/text?tag=ReproC&x=1336e38b400000",
+            "kernel-config": "/text?tag=KernelConfig&x=91a256823ef17263",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=5694cecdb092656a822287a6691aa7ce668c8160",
+            "kernel-source-commit": "5694cecdb092656a822287a6691aa7ce668c8160",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8a41a0ad8ed91a6c7a65663b1bacaf6d79cde558",
+            "syzkaller-commit": "8a41a0ad8ed91a6c7a65663b1bacaf6d79cde558",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1268c93b400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "vkms_atomic_crtc_reset",
+            "drivers/gpu/drm/vkms/vkms_crtc.c"
+        ]
+    ],
+    "patch_commit_date": "2019-01-18T16:43:43+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "dri"
+    ],
+    "parent_of_fix_commit": "46f3ceaffa81e846677bca8668e0ad40e643cffd",
+    "patch": "diff --git a/drivers/gpu/drm/vkms/vkms_crtc.c b/drivers/gpu/drm/vkms/vkms_crtc.c\nindex 177bbcb38306..3c37d8c41d4a 100644\n--- a/drivers/gpu/drm/vkms/vkms_crtc.c\n+++ b/drivers/gpu/drm/vkms/vkms_crtc.c\n@@ -104,6 +104,7 @@ static void vkms_atomic_crtc_reset(struct drm_crtc *crtc)\n \tvkms_state = kzalloc(sizeof(*vkms_state), GFP_KERNEL);\n \tif (!vkms_state)\n \t\treturn;\n+\tINIT_WORK(&vkms_state->crc_work, vkms_crc_work_handle);\n \n \tcrtc->state = &vkms_state->base;\n \tcrtc->state->crtc = crtc;\n",
+    "patch_modified_files": [
+        "drivers/gpu/drm/vkms/vkms_crtc.c"
+    ]
+}

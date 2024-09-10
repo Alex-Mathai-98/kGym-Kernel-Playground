@@ -1,0 +1,81 @@
+==================================================================
+BUG: KASAN: use-after-free in tipc_nl_node_dump_link+0xde7/0xe00
+Read of size 2 at addr ffff8881e86d9814 by task syz-executor.5/4796
+
+CPU: 1 PID: 4796 Comm: syz-executor.5 Not tainted 5.8.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x188/0x1ff
+ print_address_description.constprop.0.cold+0x72/0x47e
+ kasan_report.cold+0x1f/0x37
+ tipc_nl_node_dump_link+0xde7/0xe00
+ genl_lock_dumpit+0x84/0xb0
+ netlink_dump+0x4d5/0xf60
+ __netlink_dump_start+0x64f/0x910
+ genl_family_rcv_msg_dumpit+0x2b1/0x310
+ genl_rcv_msg+0x776/0x9b0
+ netlink_rcv_skb+0x15b/0x430
+ genl_rcv+0x24/0x40
+ netlink_unicast+0x527/0x7e0
+ netlink_sendmsg+0x85a/0xd70
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x62e/0x800
+ ___sys_sendmsg+0x100/0x170
+ __sys_sendmsg+0xe5/0x1b0
+ do_syscall_64+0x60/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7f5c7279df69
+Code: Bad RIP value.
+RSP: 002b:00007f5c71b1e0c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f5c728cbf80 RCX: 00007f5c7279df69
+RDX: 0000000020004014 RSI: 00000000200000c0 RDI: 0000000000000003
+RBP: 00007f5c727ea4a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f5c728cbf80 R15: 00007fff70b321a8
+
+Allocated by task 4795:
+ save_stack+0x19/0x40
+ __kasan_kmalloc.constprop.0+0xda/0xe0
+ __alloc_skb+0xaa/0x550
+ netlink_sendmsg+0x950/0xd70
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x62e/0x800
+ ___sys_sendmsg+0x100/0x170
+ __sys_sendmsg+0xe5/0x1b0
+ do_syscall_64+0x60/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+Freed by task 4795:
+ save_stack+0x19/0x40
+ __kasan_slab_free+0xf9/0x140
+ kfree+0x103/0x2b0
+ skb_release_data+0x6d4/0x900
+ consume_skb+0xc2/0x160
+ netlink_unicast+0x52f/0x7e0
+ netlink_sendmsg+0x85a/0xd70
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x62e/0x800
+ ___sys_sendmsg+0x100/0x170
+ __sys_sendmsg+0xe5/0x1b0
+ do_syscall_64+0x60/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+The buggy address belongs to the object at ffff8881e86d9800
+ which belongs to the cache kmalloc-1k of size 1024
+The buggy address is located 20 bytes inside of
+ 1024-byte region [ffff8881e86d9800, ffff8881e86d9c00)
+The buggy address belongs to the page:
+page:ffffea0007a1b640 refcount:1 mapcount:0 mapping:0000000000000000 index:0xffff8881e86d9000
+flags: 0x17ffe0000000200(slab)
+raw: 017ffe0000000200 ffffea0007a1b608 ffffea00079f2588 ffff8881f5000c40
+raw: ffff8881e86d9000 ffff8881e86d9000 0000000100000001 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff8881e86d9700: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8881e86d9780: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff8881e86d9800: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                         ^
+ ffff8881e86d9880: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8881e86d9900: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================

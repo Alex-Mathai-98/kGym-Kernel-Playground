@@ -1,0 +1,66 @@
+{
+    "version": 1,
+    "title": "INFO: task hung in pipe_release",
+    "display-title": "INFO: task hung in pipe_release (4)",
+    "id": "738a1a0b5b9b8ece2bbf714f2e244358be2523c3",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "udp: Fix __ip_append_data()'s handling of MSG_SPLICE_PAGES",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0f71c9caf26726efea674646f566984e735cc3b9",
+            "hash": "0f71c9caf26726efea674646f566984e735cc3b9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "udp: Convert udp_sendpage() to use MSG_SPLICE_PAGES",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7ac7c987850c3ec617c778f7bd871804dc1c648d",
+        "hash": "7ac7c987850c3ec617c778f7bd871804dc1c648d",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000881d0606004541d1@google.com/T/",
+        "https://lore.kernel.org/all/1420063.1690904933@warthog.procyon.org.uk/T/",
+        "https://lore.kernel.org/all/1569149.1690924207@warthog.procyon.org.uk/T/",
+        "https://lore.kernel.org/all/1580952.1690961810@warthog.procyon.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "INFO: task hung in pipe_release",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12a86682a80000",
+            "c-reproducer": "/text?tag=ReproC&x=1520ab6ca80000",
+            "kernel-config": "/text?tag=KernelConfig&x=150188feee7071a7",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3f01e9fed8454dcd89727016c3e5b2fbb8f8e50c",
+            "kernel-source-commit": "3f01e9fed8454dcd89727016c3e5b2fbb8f8e50c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2f19aa4f873578acf44b3bf4d4ae98e52c2817ca",
+            "syzkaller-commit": "2f19aa4f873578acf44b3bf4d4ae98e52c2817ca",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15d7ddf8a80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__ip_append_data",
+            "net/ipv4/ip_output.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "EXPORT_SYMBOL",
+            "net/ipv4/udp.c"
+        ]
+    ],
+    "patch_commit_date": "2023-08-01T15:48:53+00:00",
+    "cause_commit_date": "2023-05-22T12:11:22+00:00",
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "a2d9831dab3ea9e2f45f37956d32fbdde6dc7053",
+    "patch": "diff --git a/net/ipv4/ip_output.c b/net/ipv4/ip_output.c\nindex 54d2d3a2d850..6ba1a0fafbaa 100644\n--- a/net/ipv4/ip_output.c\n+++ b/net/ipv4/ip_output.c\n@@ -1158,10 +1158,15 @@ static int __ip_append_data(struct sock *sk,\n \t\t\t}\n \n \t\t\tcopy = datalen - transhdrlen - fraggap - pagedlen;\n+\t\t\t/* [!] NOTE: copy will be negative if pagedlen>0\n+\t\t\t * because then the equation reduces to -fraggap.\n+\t\t\t */\n \t\t\tif (copy > 0 && getfrag(from, data + transhdrlen, offset, copy, fraggap, skb) < 0) {\n \t\t\t\terr = -EFAULT;\n \t\t\t\tkfree_skb(skb);\n \t\t\t\tgoto error;\n+\t\t\t} else if (flags & MSG_SPLICE_PAGES) {\n+\t\t\t\tcopy = 0;\n \t\t\t}\n \n \t\t\toffset += copy;\n@@ -1209,6 +1214,10 @@ static int __ip_append_data(struct sock *sk,\n \t\t} else if (flags & MSG_SPLICE_PAGES) {\n \t\t\tstruct msghdr *msg = from;\n \n+\t\t\terr = -EIO;\n+\t\t\tif (WARN_ON_ONCE(copy > msg->msg_iter.count))\n+\t\t\t\tgoto error;\n+\n \t\t\terr = skb_splice_from_iter(skb, &msg->msg_iter, copy,\n \t\t\t\t\t\t   sk->sk_allocation);\n \t\t\tif (err < 0)\n",
+    "patch_modified_files": [
+        "net/ipv4/ip_output.c"
+    ]
+}

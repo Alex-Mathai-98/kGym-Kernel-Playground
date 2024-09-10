@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in snd_usbmidi_get_ms_info",
+    "display-title": "UBSAN: shift-out-of-bounds in snd_usbmidi_get_ms_info",
+    "id": "52eac4b79cfb13db9907627c1afc185252168cdc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ALSA: usb-audio: Fix UBSAN warnings for MIDI jacks",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c06ccf3ebb7503706ea49fd248e709287ef385a3",
+            "hash": "c06ccf3ebb7503706ea49fd248e709287ef385a3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000000555a005b7153b7a@google.com/T/",
+        "https://lore.kernel.org/all/20210111130032.469630231@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130033.676306636@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130033.715773309@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130036.414620026@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130039.165470698@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130048.499958175@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1421ec47500000",
+            "c-reproducer": "/text?tag=ReproC&x=12bfa077500000",
+            "kernel-config": "/text?tag=KernelConfig&x=98408202fed1f636",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=8653b778e454a7708847aeafe689bce07aeeb94e",
+            "kernel-source-commit": "8653b778e454a7708847aeafe689bce07aeeb94e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/04201c0669446145fd9c347c5538da0ca13ff29b",
+            "syzkaller-commit": "04201c0669446145fd9c347c5538da0ca13ff29b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16822ea3500000"
+        }
+    ],
+    "subsystems": [
+        "alsa",
+        "usb"
+    ],
+    "parent_of_fix_commit": "c1e8952395c1f44a6304c71401519d19ed2ac56a",
+    "patch": "diff --git a/sound/usb/midi.c b/sound/usb/midi.c\nindex c8213652470c..0c23fa6d8525 100644\n--- a/sound/usb/midi.c\n+++ b/sound/usb/midi.c\n@@ -1889,6 +1889,8 @@ static int snd_usbmidi_get_ms_info(struct snd_usb_midi *umidi,\n \t\tms_ep = find_usb_ms_endpoint_descriptor(hostep);\n \t\tif (!ms_ep)\n \t\t\tcontinue;\n+\t\tif (ms_ep->bNumEmbMIDIJack > 0x10)\n+\t\t\tcontinue;\n \t\tif (usb_endpoint_dir_out(ep)) {\n \t\t\tif (endpoints[epidx].out_ep) {\n \t\t\t\tif (++epidx >= MIDI_MAX_ENDPOINTS) {\n@@ -2141,6 +2143,8 @@ static int snd_usbmidi_detect_roland(struct snd_usb_midi *umidi,\n \t\t    cs_desc[1] == USB_DT_CS_INTERFACE &&\n \t\t    cs_desc[2] == 0xf1 &&\n \t\t    cs_desc[3] == 0x02) {\n+\t\t\tif (cs_desc[4] > 0x10 || cs_desc[5] > 0x10)\n+\t\t\t\tcontinue;\n \t\t\tendpoint->in_cables  = (1 << cs_desc[4]) - 1;\n \t\t\tendpoint->out_cables = (1 << cs_desc[5]) - 1;\n \t\t\treturn snd_usbmidi_detect_endpoints(umidi, endpoint, 1);\n",
+    "patch_modified_files": [
+        "sound/usb/midi.c"
+    ]
+}

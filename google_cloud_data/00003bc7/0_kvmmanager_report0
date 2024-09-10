@@ -1,0 +1,138 @@
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+BUG: GPF in non-whitelisted uaccess (non-canonical address?)
+BUG: GPF in non-whitelisted uaccess (non-canonical address?)
+kasan: CONFIG_KASAN_INLINE enabled
+kasan: CONFIG_KASAN_INLINE enabled
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+kasan: GPF could be caused by NULL-ptr deref or user memory access
+kasan: GPF could be caused by NULL-ptr deref or user memory access
+general protection fault: 0000 [#1] PREEMPT SMP KASAN
+kobject: 'wlan0' (00000000bca34192): kobject_uevent_env
+CPU: 1 PID: 4350 Comm: syz-executor.5 Not tainted 4.19.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:copy_user_enhanced_fast_string+0xe/0x20
+Code: 89 d1 c1 e9 03 83 e2 07 f3 48 a5 89 d1 f3 a4 31 c0 0f 01 ca c3 0f 1f 80 00 00 00 00 0f 01 cb 83 fa 40 0f 82 70 ff ff ff 89 d1 <f3> a4 31 c0 0f 01 ca c3 66 2e 0f 1f 84 00 00 00 00 00 0f 01 cb 83
+RSP: 0018:ffff8801cbd673d0 EFLAGS: 00050206
+RAX: ffffed00397c5229 RBX: 241037f828e5769d RCX: 0000000000000109
+RDX: 0000000000000109 RSI: 241037f828e5769d RDI: ffff8801cbe29038
+RBP: ffff8801cbd67408 R08: 0000000000000001 R09: ffffed00397c5228
+R10: ffff8801cbe29140 R11: 0000000000000000 R12: 0000000000000109
+R13: 0000000000000000 R14: 241037f828e577a6 R15: ffff8801cbe29038
+FS:  00007fda689406c0(0000) GS:ffff8801f6700000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fe2e826d770 CR3: 00000001cbc88001 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ uhid_dev_create+0x1fb/0xb30
+ uhid_char_write+0xa86/0xf70
+ __vfs_write+0x11b/0xa90
+ __kernel_write+0x10b/0x370
+ write_pipe_buf+0x181/0x240
+ __splice_from_pipe+0x3f5/0x970
+ default_file_splice_write+0x1d8/0x2f0
+ direct_splice_actor+0x11f/0x170
+ splice_direct_to_actor+0x305/0x900
+ do_splice_direct+0x2d8/0x440
+ do_sendfile+0x558/0xe70
+ __x64_sys_sendfile64+0x15a/0x250
+ do_syscall_64+0x183/0x270
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7fda695bff69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fda689400c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
+RAX: ffffffffffffffda RBX: 00007fda696edf80 RCX: 00007fda695bff69
+RDX: 0000000020d83ff8 RSI: 0000000000000004 RDI: 0000000000000003
+RBP: 00007fda6960c4a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 00008000fffffffe R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fda696edf80 R15: 00007ffcc9c9db58
+Modules linked in:
+general protection fault: 0000 [#2] PREEMPT SMP KASAN
+CPU: 0 PID: 4349 Comm: syz-executor.3 Tainted: G      D           4.19.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:copy_user_enhanced_fast_string+0xe/0x20
+Code: 89 d1 c1 e9 03 83 e2 07 f3 48 a5 89 d1 f3 a4 31 c0 0f 01 ca c3 0f 1f 80 00 00 00 00 0f 01 cb 83 fa 40 0f 82 70 ff ff ff 89 d1 <f3> a4 31 c0 0f 01 ca c3 66 2e 0f 1f 84 00 00 00 00 00 0f 01 cb 83
+---[ end trace 44e55cdda218f7c1 ]---
+RSP: 0018:ffff8801cbe573d0 EFLAGS: 00050206
+RAX: ffffed00397ad231 RBX: 241037f828e5769d RCX: 0000000000000109
+RDX: 0000000000000109 RSI: 241037f828e5769d RDI: ffff8801cbd69078
+RBP: ffff8801cbe57408 R08: 0000000000000001 R09: ffffed00397ad230
+R10: ffff8801cbd69180 R11: 0000000000000000 R12: 0000000000000109
+R13: 0000000000000000 R14: 241037f828e577a6 R15: ffff8801cbd69078
+FS:  00007fdb9bebc6c0(0000) GS:ffff8801f6600000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f4899cef57c CR3: 00000001efc8a002 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+RIP: 0010:copy_user_enhanced_fast_string+0xe/0x20
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ uhid_dev_create+0x1fb/0xb30
+Code: 89 d1 c1 e9 03 83 e2 07 f3 48 a5 89 d1 f3 a4 31 c0 0f 01 ca c3 0f 1f 80 00 00 00 00 0f 01 cb 83 fa 40 0f 82 70 ff ff ff 89 d1 <f3> a4 31 c0 0f 01 ca c3 66 2e 0f 1f 84 00 00 00 00 00 0f 01 cb 83
+RSP: 0018:ffff8801cbd673d0 EFLAGS: 00050206
+ uhid_char_write+0xa86/0xf70
+ __vfs_write+0x11b/0xa90
+RAX: ffffed00397c5229 RBX: 241037f828e5769d RCX: 0000000000000109
+ __kernel_write+0x10b/0x370
+RDX: 0000000000000109 RSI: 241037f828e5769d RDI: ffff8801cbe29038
+ write_pipe_buf+0x181/0x240
+kobject: 'wlan0' (00000000bca34192): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim8/net/wlan0'
+ __splice_from_pipe+0x3f5/0x970
+RBP: ffff8801cbd67408 R08: 0000000000000001 R09: ffffed00397c5228
+kobject: 'queues' (00000000d57ca579): kobject_add_internal: parent: 'wlan0', set: '<NULL>'
+ default_file_splice_write+0x1d8/0x2f0
+R10: ffff8801cbe29140 R11: 0000000000000000 R12: 0000000000000109
+ direct_splice_actor+0x11f/0x170
+R13: 0000000000000000 R14: 241037f828e577a6 R15: ffff8801cbe29038
+ splice_direct_to_actor+0x305/0x900
+ do_splice_direct+0x2d8/0x440
+kobject: 'loop4' (000000003348ebc8): kobject_uevent_env
+FS:  00007fda689406c0(0000) GS:ffff8801f6700000(0000) knlGS:0000000000000000
+ do_sendfile+0x558/0xe70
+kobject: 'loop4' (000000003348ebc8): fill_kobj_path: path = '/devices/virtual/block/loop4'
+ __x64_sys_sendfile64+0x15a/0x250
+kobject: 'queues' (00000000d57ca579): kobject_uevent_env
+ do_syscall_64+0x183/0x270
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f4899cce440 CR3: 00000001cbc88005 CR4: 00000000003606e0
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7fdb9cb3bf69
+kobject: 'queues' (00000000d57ca579): kobject_uevent_env: filter function caused the event to drop!
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fdb9bebc0c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
+RAX: ffffffffffffffda RBX: 00007fdb9cc69f80 RCX: 00007fdb9cb3bf69
+RDX: 0000000020d83ff8 RSI: 0000000000000004 RDI: 0000000000000003
+RBP: 00007fdb9cb884a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 00008000fffffffe R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fdb9cc69f80 R15: 00007ffc56a7c668
+Modules linked in:
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+kobject: 'rx-0' (00000000ec6fc13e): kobject_add_internal: parent: 'queues', set: 'queues'
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+kobject: 'rx-0' (00000000ec6fc13e): kobject_uevent_env
+----------------
+Code disassembly (best guess):
+   0:	89 d1                	mov    %edx,%ecx
+   2:	c1 e9 03             	shr    $0x3,%ecx
+   5:	83 e2 07             	and    $0x7,%edx
+   8:	f3 48 a5             	rep movsq %ds:(%rsi),%es:(%rdi)
+   b:	89 d1                	mov    %edx,%ecx
+   d:	f3 a4                	rep movsb %ds:(%rsi),%es:(%rdi)
+   f:	31 c0                	xor    %eax,%eax
+  11:	0f 01 ca             	clac
+  14:	c3                   	ret
+  15:	0f 1f 80 00 00 00 00 	nopl   0x0(%rax)
+  1c:	0f 01 cb             	stac
+  1f:	83 fa 40             	cmp    $0x40,%edx
+  22:	0f 82 70 ff ff ff    	jb     0xffffff98
+  28:	89 d1                	mov    %edx,%ecx
+* 2a:	f3 a4                	rep movsb %ds:(%rsi),%es:(%rdi) <-- trapping instruction
+  2c:	31 c0                	xor    %eax,%eax
+  2e:	0f 01 ca             	clac
+  31:	c3                   	ret
+  32:	66 2e 0f 1f 84 00 00 	cs nopw 0x0(%rax,%rax,1)
+  39:	00 00 00
+  3c:	0f 01 cb             	stac
+  3f:	83                   	.byte 0x83

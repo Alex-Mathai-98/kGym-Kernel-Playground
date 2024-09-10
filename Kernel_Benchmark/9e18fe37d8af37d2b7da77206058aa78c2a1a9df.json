@@ -1,0 +1,42 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel paging request in bitfill_aligned",
+    "display-title": "BUG: unable to handle kernel paging request in bitfill_aligned (2)",
+    "id": "9e18fe37d8af37d2b7da77206058aa78c2a1a9df",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "video: vga16fb: Only probe for EGA and VGA 16 color graphic cards",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0499f419b76f94ede08304aad5851144813ac55c",
+            "hash": "0499f419b76f94ede08304aad5851144813ac55c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ab6df705b453993a@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "BUG: unable to handle kernel paging request in bitfill_aligned",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16671badb00000",
+            "c-reproducer": "/text?tag=ReproC&x=122beabdb00000",
+            "kernel-config": "/text?tag=KernelConfig&x=7d5e878e3399b6cc",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=2a987e65025e2b79c6d453b78cb5985ac6e5eb26",
+            "kernel-source-commit": "2a987e65025e2b79c6d453b78cb5985ac6e5eb26",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/b54aa474a6b13cc9b8c0a68f07d71873f30dfa02",
+            "syzkaller-commit": "b54aa474a6b13cc9b8c0a68f07d71873f30dfa02",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15b049bdb00000"
+        }
+    ],
+    "subsystems": [
+        "fbdev"
+    ],
+    "parent_of_fix_commit": "c71af3dae3e34d2fde0c19623cf7f8483321f0e3",
+    "patch": "diff --git a/drivers/video/fbdev/vga16fb.c b/drivers/video/fbdev/vga16fb.c\nindex e2757ff1c23d..96e312a3eac7 100644\n--- a/drivers/video/fbdev/vga16fb.c\n+++ b/drivers/video/fbdev/vga16fb.c\n@@ -184,6 +184,25 @@ static inline void setindex(int index)\n \tvga_io_w(VGA_GFX_I, index);\n }\n \n+/* Check if the video mode is supported by the driver */\n+static inline int check_mode_supported(void)\n+{\n+\t/* non-x86 architectures treat orig_video_isVGA as a boolean flag */\n+#if defined(CONFIG_X86)\n+\t/* only EGA and VGA in 16 color graphic mode are supported */\n+\tif (screen_info.orig_video_isVGA != VIDEO_TYPE_EGAC &&\n+\t    screen_info.orig_video_isVGA != VIDEO_TYPE_VGAC)\n+\t\treturn -ENODEV;\n+\n+\tif (screen_info.orig_video_mode != 0x0D &&\t/* 320x200/4 (EGA) */\n+\t    screen_info.orig_video_mode != 0x0E &&\t/* 640x200/4 (EGA) */\n+\t    screen_info.orig_video_mode != 0x10 &&\t/* 640x350/4 (EGA) */\n+\t    screen_info.orig_video_mode != 0x12)\t/* 640x480/4 (VGA) */\n+\t\treturn -ENODEV;\n+#endif\n+\treturn 0;\n+}\n+\n static void vga16fb_pan_var(struct fb_info *info, \n \t\t\t    struct fb_var_screeninfo *var)\n {\n@@ -1422,6 +1441,11 @@ static int __init vga16fb_init(void)\n \n \tvga16fb_setup(option);\n #endif\n+\n+\tret = check_mode_supported();\n+\tif (ret)\n+\t\treturn ret;\n+\n \tret = platform_driver_register(&vga16fb_driver);\n \n \tif (!ret) {\n",
+    "patch_modified_files": [
+        "drivers/video/fbdev/vga16fb.c"
+    ]
+}

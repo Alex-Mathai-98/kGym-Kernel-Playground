@@ -1,0 +1,63 @@
+BUG: memory leak
+unreferenced object 0xffff8881191186c0 (size 32):
+  comm "syz-executor.0", pid 5097, jiffies 4294942595 (age 11.680s)
+  hex dump (first 32 bytes):
+    01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<00000000432dec33>] gadget_bind+0x225/0x330
+    [<00000000cb938364>] udc_bind_to_driver+0x65/0x150
+    [<00000000c8c45bf6>] usb_gadget_probe_driver+0x1b9/0x1e0
+    [<000000006b014d2f>] raw_ioctl+0x5d7/0xf30
+    [<0000000031bee033>] __x64_sys_ioctl+0xeb/0x140
+    [<000000008ce58ccb>] do_syscall_64+0x2d/0x70
+    [<00000000d3e24015>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+BUG: memory leak
+unreferenced object 0xffff888119287cc0 (size 32):
+  comm "softirq", pid 0, jiffies 4294942624 (age 11.390s)
+  hex dump (first 32 bytes):
+    02 00 00 00 08 00 00 00 80 06 00 01 00 00 40 00  ..............@.
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<00000000b8f0a7b0>] gadget_setup+0xf4/0x210
+    [<000000007e28ee0e>] dummy_timer+0xfbc/0x1560
+    [<00000000b2f56e77>] call_timer_fn+0x39/0x200
+    [<0000000008f44c0c>] __run_timers.part.0+0x323/0x410
+    [<0000000037940ed0>] run_timer_softirq+0x3d/0x80
+    [<00000000e2f4022c>] __do_softirq+0xba/0x2a7
+    [<0000000043ed0c2b>] asm_call_irq_on_stack+0xf/0x20
+    [<00000000e3c96365>] do_softirq_own_stack+0x2d/0x40
+    [<000000005d34f800>] irq_exit_rcu+0x91/0xc0
+    [<0000000005282388>] sysvec_apic_timer_interrupt+0x34/0x80
+    [<0000000067ccde35>] asm_sysvec_apic_timer_interrupt+0x12/0x20
+    [<00000000b0f8cdb2>] acpi_idle_do_entry+0xb5/0xd0
+    [<00000000092a0c1f>] acpi_idle_enter+0x131/0x200
+    [<0000000048147a64>] cpuidle_enter_state+0xc9/0x660
+    [<00000000b6fa0de3>] cpuidle_enter+0x29/0x40
+    [<000000005deb8e4d>] do_idle+0x1ce/0x250
+
+BUG: memory leak
+unreferenced object 0xffff88811937f680 (size 32):
+  comm "softirq", pid 0, jiffies 4294942628 (age 11.350s)
+  hex dump (first 32 bytes):
+    02 00 00 00 08 00 00 00 80 06 00 01 00 00 40 00  ..............@.
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<00000000b8f0a7b0>] gadget_setup+0xf4/0x210
+    [<000000007e28ee0e>] dummy_timer+0xfbc/0x1560
+    [<00000000b2f56e77>] call_timer_fn+0x39/0x200
+    [<0000000008f44c0c>] __run_timers.part.0+0x323/0x410
+    [<0000000037940ed0>] run_timer_softirq+0x3d/0x80
+    [<00000000e2f4022c>] __do_softirq+0xba/0x2a7
+    [<0000000043ed0c2b>] asm_call_irq_on_stack+0xf/0x20
+    [<00000000e3c96365>] do_softirq_own_stack+0x2d/0x40
+    [<000000005d34f800>] irq_exit_rcu+0x91/0xc0
+    [<0000000005282388>] sysvec_apic_timer_interrupt+0x34/0x80
+    [<0000000067ccde35>] asm_sysvec_apic_timer_interrupt+0x12/0x20
+    [<00000000608573ec>] write_comp_data+0x2f/0x80
+    [<00000000f594fd16>] tomoyo_domain_quota_is_ok+0xe4/0x1e0
+    [<000000005bfc953b>] tomoyo_supervisor+0x16c/0x8e0
+    [<00000000589fcea9>] tomoyo_path_permission+0x92/0xc0
+    [<0000000092214f38>] tomoyo_path_perm+0x19c/0x260
+

@@ -1,0 +1,73 @@
+{
+    "version": 1,
+    "title": "BUG: bad usercopy in con_font_op",
+    "display-title": "BUG: bad usercopy in con_font_op",
+    "id": "637351e3088fc2aed419d941674f2774f4162ea2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "tty: vt: protect KD_FONT_OP_GET_TALL from unbound access",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=18365ebf23f3e713e5dd8e295c9a639295250f3c",
+            "hash": "18365ebf23f3e713e5dd8e295c9a639295250f3c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "VT: Add KD_FONT_OP_SET/GET_TALL operations",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=24d69384bcd34b9dcaf5dab744bf7096e84d1abd",
+        "hash": "24d69384bcd34b9dcaf5dab744bf7096e84d1abd",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001d1fb505f605c295@google.com/T/",
+        "https://lore.kernel.org/all/20230306094921.tik5ewne4ft6mfpo@begin/T/"
+    ],
+    "crashes": [
+        {
+            "title": "BUG: bad usercopy in con_font_op",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10b71504c80000",
+            "c-reproducer": "/text?tag=ReproC&x=16f02d9cc80000",
+            "kernel-config": "/text?tag=KernelConfig&x=cab35c936731a347",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=2eb29d59ddf02e39774abfb60b2030b0b7e27c1f",
+            "kernel-source-commit": "2eb29d59ddf02e39774abfb60b2030b0b7e27c1f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f8902b5747fbe3d5b860bd782eec63fc9c7da6e7",
+            "syzkaller-commit": "f8902b5747fbe3d5b860bd782eec63fc9c7da6e7",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16d6d282c80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "con_font_get",
+            "drivers/tty/vt/vt.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "con_font_set",
+            "drivers/tty/vt/vt.c"
+        ],
+        [
+            "con_font_op",
+            "drivers/tty/vt/vt.c"
+        ],
+        [
+            "con_font_get",
+            "drivers/tty/vt/vt.c"
+        ]
+    ],
+    "patch_commit_date": "2023-03-06T09:49:21+00:00",
+    "cause_commit_date": "2023-01-19T15:19:16+00:00",
+    "subsystems": [
+        "hardening",
+        "mm"
+    ],
+    "parent_of_fix_commit": "b6a7bac184472b5b79286a71a61c2f16ea4e86ad",
+    "patch": "diff --git a/drivers/tty/vt/vt.c b/drivers/tty/vt/vt.c\nindex 57a5c23b51d4..3c2ea9c098f7 100644\n--- a/drivers/tty/vt/vt.c\n+++ b/drivers/tty/vt/vt.c\n@@ -4545,6 +4545,9 @@ static int con_font_get(struct vc_data *vc, struct console_font_op *op)\n \tint c;\n \tunsigned int vpitch = op->op == KD_FONT_OP_GET_TALL ? op->height : 32;\n \n+\tif (vpitch > max_font_height)\n+\t\treturn -EINVAL;\n+\n \tif (op->data) {\n \t\tfont.data = kvmalloc(max_font_size, GFP_KERNEL);\n \t\tif (!font.data)\n",
+    "patch_modified_files": [
+        "drivers/tty/vt/vt.c"
+    ]
+}

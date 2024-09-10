@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "title": "KASAN: vmalloc-out-of-bounds Read in __ebt_unregister_table",
+    "display-title": "KASAN: vmalloc-out-of-bounds Read in __ebt_unregister_table",
+    "id": "95277dbea9484baea60662d0243a93011a21ceb5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: ebtables: fix table blob use-after-free",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e58a171d35e32e6e8c37cfe0e8a94406732a331f",
+            "hash": "e58a171d35e32e6e8c37cfe0e8a94406732a331f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000866d0e05f4e8be87@google.com/T/",
+        "https://lore.kernel.org/all/20230217222006.169428-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20230222092137.88637-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/CACT4Y+bQaAB5Z0J2=GV7MepYs6gRopMw-qGRSv7ufMe9xQ5Z6w@mail.gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: vmalloc-out-of-bounds Read in __ebt_unregister_table",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14123acf480000",
+            "c-reproducer": "/text?tag=ReproC&x=143058d7480000",
+            "kernel-config": "/text?tag=KernelConfig&x=fe56f7d193926860",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3ac88fa4605ec98e545fb3ad0154f575fda2de5f",
+            "kernel-source-commit": "3ac88fa4605ec98e545fb3ad0154f575fda2de5f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/851bc19a3c4615f6653414b6deec9b9e84c8ca58",
+            "syzkaller-commit": "851bc19a3c4615f6653414b6deec9b9e84c8ca58",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11f667db480000"
+        }
+    ],
+    "subsystems": [
+        "bridge",
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "efb056e5f1f0036179b2f92c1c15f5ea7a891d70",
+    "patch": "diff --git a/net/bridge/netfilter/ebtables.c b/net/bridge/netfilter/ebtables.c\nindex ce5dfa3babd2..757ec46fc45a 100644\n--- a/net/bridge/netfilter/ebtables.c\n+++ b/net/bridge/netfilter/ebtables.c\n@@ -1090,7 +1090,7 @@ static int do_replace_finish(struct net *net, struct ebt_replace *repl,\n \n \taudit_log_nfcfg(repl->name, AF_BRIDGE, repl->nentries,\n \t\t\tAUDIT_XT_OP_REPLACE, GFP_KERNEL);\n-\treturn ret;\n+\treturn 0;\n \n free_unlock:\n \tmutex_unlock(&ebt_mutex);\ndiff --git a/net/ipv4/netfilter/ip_tables.c b/net/ipv4/netfilter/ip_tables.c\nindex 2ed7c58b471a..aae5fd51dfd7 100644\n--- a/net/ipv4/netfilter/ip_tables.c\n+++ b/net/ipv4/netfilter/ip_tables.c\n@@ -1045,7 +1045,6 @@ __do_replace(struct net *net, const char *name, unsigned int valid_hooks,\n \tstruct xt_counters *counters;\n \tstruct ipt_entry *iter;\n \n-\tret = 0;\n \tcounters = xt_counters_alloc(num_counters);\n \tif (!counters) {\n \t\tret = -ENOMEM;\n@@ -1091,7 +1090,7 @@ __do_replace(struct net *net, const char *name, unsigned int valid_hooks,\n \t\tnet_warn_ratelimited(\"iptables: counters copy to user failed while replacing table\\n\");\n \t}\n \tvfree(counters);\n-\treturn ret;\n+\treturn 0;\n \n  put_module:\n \tmodule_put(t->me);\ndiff --git a/net/ipv6/netfilter/ip6_tables.c b/net/ipv6/netfilter/ip6_tables.c\nindex 2d816277f2c5..ac902f7bca47 100644\n--- a/net/ipv6/netfilter/ip6_tables.c\n+++ b/net/ipv6/netfilter/ip6_tables.c\n@@ -1062,7 +1062,6 @@ __do_replace(struct net *net, const char *name, unsigned int valid_hooks,\n \tstruct xt_counters *counters;\n \tstruct ip6t_entry *iter;\n \n-\tret = 0;\n \tcounters = xt_counters_alloc(num_counters);\n \tif (!counters) {\n \t\tret = -ENOMEM;\n@@ -1108,7 +1107,7 @@ __do_replace(struct net *net, const char *name, unsigned int valid_hooks,\n \t\tnet_warn_ratelimited(\"ip6tables: counters copy to user failed while replacing table\\n\");\n \t}\n \tvfree(counters);\n-\treturn ret;\n+\treturn 0;\n \n  put_module:\n \tmodule_put(t->me);\n",
+    "patch_modified_files": [
+        "net/bridge/netfilter/ebtables.c",
+        "net/ipv4/netfilter/ip_tables.c",
+        "net/ipv6/netfilter/ip6_tables.c"
+    ]
+}

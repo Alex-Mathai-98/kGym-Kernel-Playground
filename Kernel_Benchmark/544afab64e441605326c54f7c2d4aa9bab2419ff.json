@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "memory leak in nr_create",
+    "display-title": "memory leak in nr_create (2)",
+    "id": "544afab64e441605326c54f7c2d4aa9bab2419ff",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netrom: Fix use-after-free caused by accept on already connected socket",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=611792920925fb088ddccbe2783c7f92fdfb6b64",
+            "hash": "611792920925fb088ddccbe2783c7f92fdfb6b64",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in nr_create",
+            "syz-reproducer": "/text?tag=ReproSyz&x=161b4535480000",
+            "c-reproducer": "/text?tag=ReproC&x=12e167e1480000",
+            "kernel-config": "/text?tag=KernelConfig&x=f834da413c16c4aa",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c96618275234ad03d44eafe9f8844305bb44fda4",
+            "kernel-source-commit": "c96618275234ad03d44eafe9f8844305bb44fda4",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9dfcf09cf38eb123a007af28c5ee2562718893a0",
+            "syzkaller-commit": "9dfcf09cf38eb123a007af28c5ee2562718893a0",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13e4fad1480000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nr_listen",
+            "net/netrom/af_netrom.c"
+        ]
+    ],
+    "patch_commit_date": "2023-01-27T02:32:50+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "hams"
+    ],
+    "parent_of_fix_commit": "54aa39a513dbf2164ca462a19f04519b2407a224",
+    "patch": "diff --git a/net/netrom/af_netrom.c b/net/netrom/af_netrom.c\nindex 6f7f4392cffb..5a4cb796150f 100644\n--- a/net/netrom/af_netrom.c\n+++ b/net/netrom/af_netrom.c\n@@ -400,6 +400,11 @@ static int nr_listen(struct socket *sock, int backlog)\n \tstruct sock *sk = sock->sk;\n \n \tlock_sock(sk);\n+\tif (sock->state != SS_UNCONNECTED) {\n+\t\trelease_sock(sk);\n+\t\treturn -EINVAL;\n+\t}\n+\n \tif (sk->sk_state != TCP_LISTEN) {\n \t\tmemset(&nr_sk(sk)->user_addr, 0, AX25_ADDR_LEN);\n \t\tsk->sk_max_ack_backlog = backlog;\n",
+    "patch_modified_files": [
+        "net/netrom/af_netrom.c"
+    ]
+}

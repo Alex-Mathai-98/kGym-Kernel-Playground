@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "general protection fault in nilfs_clear_dirty_page",
+    "display-title": "general protection fault in nilfs_clear_dirty_page",
+    "id": "4b5b6bdc090752dbcdd7e220a4703fed752cdfe7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: prevent general protection fault in nilfs_clear_dirty_page()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=782e53d0c14420858dbf0f8f797973c150d3b6d7",
+            "hash": "782e53d0c14420858dbf0f8f797973c150d3b6d7",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "btrfs: don't merge pages into bio if their page offset is not contiguous",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4a445b7b6178d88956192c0202463063f52e8667",
+        "hash": "4a445b7b6178d88956192c0202463063f52e8667",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000da4f6b05eb9bf593@google.com/T/",
+        "https://lore.kernel.org/all/20230612021456.3682-1-konishi.ryusuke@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in nilfs_clear_dirty_page",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13e9d48b280000",
+            "c-reproducer": "/text?tag=ReproC&x=12d7fa63280000",
+            "kernel-config": "/text?tag=KernelConfig&x=7474de833c217bf4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=022ce8862dff83c859089cd14bc4dca0733e2f90",
+            "kernel-source-commit": "022ce8862dff83c859089cd14bc4dca0733e2f90",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/49519f067f7fc9bfbf869e6851a4d398a9f7863f",
+            "syzkaller-commit": "49519f067f7fc9bfbf869e6851a4d398a9f7863f",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12b59663280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nilfs_clear_dirty_pages",
+            "fs/nilfs2/page.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "btrfs_bio_add_page",
+            "fs/btrfs/extent_io.c"
+        ]
+    ],
+    "patch_commit_date": "2023-06-12T02:14:56+00:00",
+    "cause_commit_date": "2022-08-13T08:06:53+00:00",
+    "subsystems": [
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "71c3ad65fabec9620d3f548b2da948c79c7ad9d5",
+    "patch": "diff --git a/fs/nilfs2/page.c b/fs/nilfs2/page.c\nindex 5cf30827f244..b4e54d079b7d 100644\n--- a/fs/nilfs2/page.c\n+++ b/fs/nilfs2/page.c\n@@ -370,7 +370,15 @@ void nilfs_clear_dirty_pages(struct address_space *mapping, bool silent)\n \t\t\tstruct folio *folio = fbatch.folios[i];\n \n \t\t\tfolio_lock(folio);\n-\t\t\tnilfs_clear_dirty_page(&folio->page, silent);\n+\n+\t\t\t/*\n+\t\t\t * This folio may have been removed from the address\n+\t\t\t * space by truncation or invalidation when the lock\n+\t\t\t * was acquired.  Skip processing in that case.\n+\t\t\t */\n+\t\t\tif (likely(folio->mapping == mapping))\n+\t\t\t\tnilfs_clear_dirty_page(&folio->page, silent);\n+\n \t\t\tfolio_unlock(folio);\n \t\t}\n \t\tfolio_batch_release(&fbatch);\n",
+    "patch_modified_files": [
+        "fs/nilfs2/page.c"
+    ]
+}

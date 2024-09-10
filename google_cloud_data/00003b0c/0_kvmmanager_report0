@@ -1,0 +1,239 @@
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+Modules linked in:
+CPU: 1 PID: 1096 Comm: kworker/u4:4 Not tainted 5.15.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: phy4 ieee80211_iface_work
+RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: ffff888178a90c80 RCX: 0000000000000000
+RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+R13: ffff888177990048 R14: ffff888177990000 R15: 0000000000000001
+FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000020000040 CR3: 000000010a801006 CR4: 00000000003706f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ ieee80211_ibss_finish_sta+0x229/0x3a0
+ ieee80211_ibss_work+0x2c7/0xf70
+ ieee80211_iface_work+0xb7c/0xd20
+ process_one_work+0xa11/0x16b0
+ worker_thread+0x67d/0x1220
+ kthread+0x3d0/0x4c0
+ ret_from_fork+0x1f/0x30
+irq event stamp: 127647
+hardirqs last  enabled at (127653): [<ffffffff81635145>] vprintk_emit+0x415/0x520
+hardirqs last disabled at (127658): [<ffffffff81635191>] vprintk_emit+0x461/0x520
+softirqs last  enabled at (127542): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+softirqs last disabled at (127427): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+---[ end trace 0715efc00e8b85cc ]---
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+Modules linked in:
+CPU: 0 PID: 1096 Comm: kworker/u4:4 Tainted: G        W         5.15.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: phy4 ieee80211_iface_work
+RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: ffff888178a90c80 RCX: 0000000000000000
+RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+R13: ffff888179258048 R14: ffff888179258000 R15: 0000000000000001
+FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f30eb097d58 CR3: 0000000168362003 CR4: 00000000003706f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ ieee80211_ibss_finish_sta+0x229/0x3a0
+ ieee80211_ibss_work+0x2c7/0xf70
+ ieee80211_iface_work+0xb7c/0xd20
+ process_one_work+0xa11/0x16b0
+ worker_thread+0x67d/0x1220
+ kthread+0x3d0/0x4c0
+ ret_from_fork+0x1f/0x30
+irq event stamp: 129215
+hardirqs last  enabled at (129223): [<ffffffff81631518>] __up_console_sem+0xe8/0x170
+hardirqs last disabled at (129306): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+softirqs last  enabled at (129484): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+softirqs last disabled at (129499): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+---[ end trace 0715efc00e8b85cd ]---
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+Modules linked in:
+CPU: 1 PID: 1096 Comm: kworker/u4:4 Tainted: G        W         5.15.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: phy4 ieee80211_iface_work
+RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: ffff888178a90c80 RCX: 0000000000000000
+RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+R13: ffff8881790e0048 R14: ffff8881790e0000 R15: 0000000000000001
+FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f30eb097d58 CR3: 000000010a801001 CR4: 00000000003706f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ ieee80211_ibss_finish_sta+0x229/0x3a0
+ ieee80211_ibss_work+0x2c7/0xf70
+ ieee80211_iface_work+0xb7c/0xd20
+ process_one_work+0xa11/0x16b0
+ worker_thread+0x67d/0x1220
+ kthread+0x3d0/0x4c0
+ ret_from_fork+0x1f/0x30
+irq event stamp: 132139
+hardirqs last  enabled at (132239): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+hardirqs last disabled at (132396): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+softirqs last  enabled at (132424): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+softirqs last disabled at (132437): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+---[ end trace 0715efc00e8b85ce ]---
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+Modules linked in:
+CPU: 1 PID: 1096 Comm: kworker/u4:4 Tainted: G        W         5.15.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: phy4 ieee80211_iface_work
+RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+
+RAX: 0000000000000000 RBX: ffff888178a90c80 RCX: 0000000000000000
+RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+R13: ffff888177d00048 R14: ffff888177d00000 R15: 0000000000000001
+FS:  0000000000000000(0000) GS:ffff8881f6100000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f8252129038 CR3: 000000010a801006 CR4: 00000000003706e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ ieee80211_ibss_finish_sta+0x229/0x3a0
+ ieee80211_ibss_work+0x2c7/0xf70
+ ieee80211_iface_work+0xb7c/0xd20
+ process_one_work+0xa11/0x16b0
+ worker_thread+0x67d/0x1220
+ kthread+0x3d0/0x4c0
+ ret_from_fork+0x1f/0x30
+irq event stamp: 134553
+hardirqs last  enabled at (134563): [<ffffffff81631518>] __up_console_sem+0xe8/0x170
+hardirqs last disabled at (134598): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+softirqs last  enabled at (134644): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+softirqs last disabled at (134695): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+---[ end trace 0715efc00e8b85d0 ]---
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+Modules linked in:
+
+CPU: 1 PID: 1096 Comm: kworker/u4:4 Tainted: G        W         5.15.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: phy4 ieee80211_iface_work
+
+RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+
+RAX: 0000000000000000 RBX: ffff888178a90c80 RCX: 0000000000000000
+RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+R13: ffff88817ddf4048 R14: ffff88817ddf4000 R15: 0000000000000001
+FS:  0000000000000000(0000) GS:ffff8881f6100000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000555e8d95ea30 CR3: 000000010d0e5003 CR4: 00000000003706e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ ieee80211_ibss_finish_sta+0x229/0x3a0
+ ieee80211_ibss_work+0x2c7/0xf70
+ ieee80211_iface_work+0xb7c/0xd20
+ process_one_work+0xa11/0x16b0
+ worker_thread+0x67d/0x1220
+ kthread+0x3d0/0x4c0
+ ret_from_fork+0x1f/0x30
+irq event stamp: 137185
+hardirqs last  enabled at (137205): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+hardirqs last disabled at (137248): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+softirqs last  enabled at (137278): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+softirqs last disabled at (137355): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+---[ end trace 0715efc00e8b85d1 ]---
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+Modules linked in:
+CPU: 0 PID: 1096 Comm: kworker/u4:4 Tainted: G        W         5.15.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: phy11 ieee80211_iface_work
+RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: ffff8881765e0c80 RCX: 0000000000000000
+RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+R13: ffff888172818048 R14: ffff888172818000 R15: 0000000000000001
+FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007faf45ac7ba8 CR3: 000000010a801003 CR4: 00000000003706f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ ieee80211_ibss_finish_sta+0x229/0x3a0
+ ieee80211_ibss_work+0x2c7/0xf70
+ ieee80211_iface_work+0xb7c/0xd20
+ process_one_work+0xa11/0x16b0
+ worker_thread+0x67d/0x1220
+ kthread+0x3d0/0x4c0
+ ret_from_fork+0x1f/0x30
+irq event stamp: 228683
+hardirqs last  enabled at (228695): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+hardirqs last disabled at (228720): [<ffffffff88aedadf>] __schedule+0x11df/0x2390
+softirqs last  enabled at (228766): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+softirqs last disabled at (228779): [<ffffffff814ba2e8>] __irq_exit_rcu+0x158/0x230
+---[ end trace 0715efc00e8b85d2 ]---
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 1096 at net/mac80211/sta_info.c:545 sta_info_insert_rcu+0x21b/0x2970
+Modules linked in:
+
+CPU: 0 PID: 1096 Comm: kworker/u4:4 Tainted: G        W         5.15.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: phy18 ieee80211_iface_work
+RIP: 0010:sta_info_insert_rcu+0x21b/0x2970
+Code: 45 85 ff 74 20 e8 55 33 7e f9 44 89 e0 31 ff 83 e0 01 41 89 c7 89 c6 e8 f3 35 7e f9 45 84 ff 0f 84 82 00 00 00 e8 35 33 7e f9 <0f> 0b 41 bc ea ff ff ff e8 28 33 7e f9 48 8b 7d b0 4c 89 f6 e8 ec
+RSP: 0018:ffffc90003b8f9e8 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: ffff888171790c80 RCX: 0000000000000000
+RDX: ffff88810b782440 RSI: ffffffff87fdf30b RDI: 0000000000000003
+RBP: ffffc90003b8faa0 R08: 0000000000000000 R09: 0000000000000001
+R10: ffffffff87fdf2fd R11: 0000000000000000 R12: 00000000501066e9
+R13: ffff888172f34048 R14: ffff888172f34000 R15: 0000000000000001
+FS:  0000000000000000(0000) GS:ffff8881f6000000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007ffcf4fa8ce8 CR3: 0000000176173003 CR4: 00000000003706f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ ieee80211_ibss_finish_sta+0x229/0x3a0
+ ieee80211_ibss_work+0x2c7/0xf70
+ ieee80211_iface_work+0xb7c/0xd20
+ process_one_work+0xa11/0x16b0
+ worker_thread+0x67d/0x1220
+ kthread+0x3d0/0x4c0
+ ret_from_fork+0x1f/0x30
+irq event stamp: 232819
+hardirqs last  enabled at (232837): [<ffffffff81556ab0>] finish_task_switch.isra.0+0x230/0xa40
+hardirqs last disabled at (232876): [<ffffffff88aedadf>] __schedule+0x11df/0x2390

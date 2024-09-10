@@ -1,0 +1,65 @@
+BUG: unable to handle page fault for address: fffff521016bfff9
+#PF: supervisor read access in kernel mode
+#PF: error_code(0x0000) - not-present page
+PGD 23ffed067 P4D 23ffed067 PUD 0 
+Oops: 0000 [#1] PREEMPT SMP KASAN
+CPU: 0 PID: 5025 Comm: kworker/u5:6 Not tainted 6.3.0-rc6-syzkaller-00008-g12c2987e896b #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: erofs_worker z_erofs_decompressqueue_work
+RIP: 0010:z_erofs_decompress_queue+0xb7e/0x2b40
+Code: 0a 48 8b 7c 24 68 e8 b1 d1 00 fe 89 db 48 c1 e3 03 48 03 9c 24 20 03 00 00 49 89 de 49 c1 ee 03 48 b8 00 00 00 00 00 fc ff df <41> 80 3c 06 00 74 08 48 89 df e8 83 d1 00 fe 48 83 3b 00 0f 84 a1
+RSP: 0018:ffffc9000424f7c0 EFLAGS: 00010a06
+RAX: dffffc0000000000 RBX: ffffc9080b5fffc8 RCX: 1ffff92000849f5c
+RDX: ffff88807e089d40 RSI: 0000000000000000 RDI: 0000000000000000
+RBP: ffffc9000424fbb0 R08: ffffffff83de199a R09: fffff520016c0000
+R10: 0000000000000000 R11: dffffc0000000001 R12: 00000000ffff8f00
+R13: ffff88807451f0b8 R14: 1ffff921016bfff9 R15: ffffea0001c6dec0
+FS:  0000000000000000(0000) GS:ffff8880b9a00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: fffff521016bfff9 CR3: 000000007132b000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ z_erofs_decompressqueue_work+0x99/0xe0
+ process_one_work+0x8f6/0x1170
+ worker_thread+0xa63/0x1210
+ kthread+0x270/0x300
+ ret_from_fork+0x1f/0x30
+ </TASK>
+Modules linked in:
+CR2: fffff521016bfff9
+---[ end trace 0000000000000000 ]---
+RIP: 0010:z_erofs_decompress_queue+0xb7e/0x2b40
+Code: 0a 48 8b 7c 24 68 e8 b1 d1 00 fe 89 db 48 c1 e3 03 48 03 9c 24 20 03 00 00 49 89 de 49 c1 ee 03 48 b8 00 00 00 00 00 fc ff df <41> 80 3c 06 00 74 08 48 89 df e8 83 d1 00 fe 48 83 3b 00 0f 84 a1
+RSP: 0018:ffffc9000424f7c0 EFLAGS: 00010a06
+RAX: dffffc0000000000 RBX: ffffc9080b5fffc8 RCX: 1ffff92000849f5c
+RDX: ffff88807e089d40 RSI: 0000000000000000 RDI: 0000000000000000
+RBP: ffffc9000424fbb0 R08: ffffffff83de199a R09: fffff520016c0000
+R10: 0000000000000000 R11: dffffc0000000001 R12: 00000000ffff8f00
+R13: ffff88807451f0b8 R14: 1ffff921016bfff9 R15: ffffea0001c6dec0
+FS:  0000000000000000(0000) GS:ffff8880b9a00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: fffff521016bfff9 CR3: 000000007132b000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess), 1 bytes skipped:
+   0:	48 8b 7c 24 68       	mov    0x68(%rsp),%rdi
+   5:	e8 b1 d1 00 fe       	call   0xfe00d1bb
+   a:	89 db                	mov    %ebx,%ebx
+   c:	48 c1 e3 03          	shl    $0x3,%rbx
+  10:	48 03 9c 24 20 03 00 	add    0x320(%rsp),%rbx
+  17:	00
+  18:	49 89 de             	mov    %rbx,%r14
+  1b:	49 c1 ee 03          	shr    $0x3,%r14
+  1f:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  26:	fc ff df
+* 29:	41 80 3c 06 00       	cmpb   $0x0,(%r14,%rax,1) <-- trapping instruction
+  2e:	74 08                	je     0x38
+  30:	48 89 df             	mov    %rbx,%rdi
+  33:	e8 83 d1 00 fe       	call   0xfe00d1bb
+  38:	48 83 3b 00          	cmpq   $0x0,(%rbx)
+  3c:	0f                   	.byte 0xf
+  3d:	84                   	.byte 0x84
+  3e:	a1                   	.byte 0xa1

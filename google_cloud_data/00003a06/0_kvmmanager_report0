@@ -1,0 +1,62 @@
+divide error: 0000 [#1] PREEMPT SMP KASAN
+CPU: 1 PID: 2822 Comm: kworker/1:68 Not tainted 5.6.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: wg-crypt-wg1 wg_packet_encrypt_worker
+RIP: 0010:encrypt_packet+0xec/0x8d0
+Code: 48 89 fa 48 c1 ea 03 0f b6 14 02 48 89 f8 83 e0 07 83 c0 03 38 d0 7c 08 84 d2 0f 85 23 06 00 00 8b 4b 3c 89 f0 31 d2 48 89 df <f7> f1 44 8d 7a 0f 41 83 e7 f0 41 39 cf 44 0f 47 f9 41 29 d7 42 8d
+RSP: 0018:ffffc90007a4f790 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: ffff8881dbf5f300 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8881dbf5f300
+RBP: ffffc90007a4fbe8 R08: 0000000000000000 R09: fffffbfff16a2793
+R10: ffffffff8b513c9f R11: 0000000000000000 R12: 1ffff92000f49ef8
+R13: ffff8881dc32a800 R14: ffffc90007a4fbc0 R15: dffffc0000000000
+FS:  0000000000000000(0000) GS:ffff8881f6500000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fec1e1882e0 CR3: 00000001e66c8002 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ wg_packet_encrypt_worker+0x33a/0xad0
+ process_one_work+0xa3d/0x1750
+ worker_thread+0x6a1/0x11e0
+ kthread+0x35c/0x430
+ ret_from_fork+0x24/0x30
+Modules linked in:
+---[ end trace efa7d2725364ce93 ]---
+RIP: 0010:encrypt_packet+0xec/0x8d0
+Code: 48 89 fa 48 c1 ea 03 0f b6 14 02 48 89 f8 83 e0 07 83 c0 03 38 d0 7c 08 84 d2 0f 85 23 06 00 00 8b 4b 3c 89 f0 31 d2 48 89 df <f7> f1 44 8d 7a 0f 41 83 e7 f0 41 39 cf 44 0f 47 f9 41 29 d7 42 8d
+RSP: 0018:ffffc90007a4f790 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: ffff8881dbf5f300 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8881dbf5f300
+RBP: ffffc90007a4fbe8 R08: 0000000000000000 R09: fffffbfff16a2793
+R10: ffffffff8b513c9f R11: 0000000000000000 R12: 1ffff92000f49ef8
+R13: ffff8881dc32a800 R14: ffffc90007a4fbc0 R15: dffffc0000000000
+FS:  0000000000000000(0000) GS:ffff8881f6500000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f78e22f8fb8 CR3: 00000001e66c8006 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	48 89 fa             	mov    %rdi,%rdx
+   3:	48 c1 ea 03          	shr    $0x3,%rdx
+   7:	0f b6 14 02          	movzbl (%rdx,%rax,1),%edx
+   b:	48 89 f8             	mov    %rdi,%rax
+   e:	83 e0 07             	and    $0x7,%eax
+  11:	83 c0 03             	add    $0x3,%eax
+  14:	38 d0                	cmp    %dl,%al
+  16:	7c 08                	jl     0x20
+  18:	84 d2                	test   %dl,%dl
+  1a:	0f 85 23 06 00 00    	jne    0x643
+  20:	8b 4b 3c             	mov    0x3c(%rbx),%ecx
+  23:	89 f0                	mov    %esi,%eax
+  25:	31 d2                	xor    %edx,%edx
+  27:	48 89 df             	mov    %rbx,%rdi
+* 2a:	f7 f1                	div    %ecx <-- trapping instruction
+  2c:	44 8d 7a 0f          	lea    0xf(%rdx),%r15d
+  30:	41 83 e7 f0          	and    $0xfffffff0,%r15d
+  34:	41 39 cf             	cmp    %ecx,%r15d
+  37:	44 0f 47 f9          	cmova  %ecx,%r15d
+  3b:	41 29 d7             	sub    %edx,%r15d
+  3e:	42                   	rex.X
+  3f:	8d                   	.byte 0x8d

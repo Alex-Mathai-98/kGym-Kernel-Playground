@@ -1,0 +1,46 @@
+{
+    "version": 1,
+    "title": "memory leak in qrtr_create",
+    "display-title": "memory leak in qrtr_create",
+    "id": "7c512c7b421b211e4408a4bc7ac759e3a3eb0d44",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: qrtr: fix memory leaks",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=52f3456a96c06760b9bfae460e39596fec7af22e",
+            "hash": "52f3456a96c06760b9bfae460e39596fec7af22e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000d6d06a05bad13604@google.com/T/",
+        "https://lore.kernel.org/all/20210722161625.6956-1-paskripkin@gmail.com/T/",
+        "https://lore.kernel.org/all/20210802134339.023067817@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210802134344.028226640@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in qrtr_create",
+            "syz-reproducer": "/text?tag=ReproSyz&x=103c58a0d00000",
+            "c-reproducer": "/text?tag=ReproC&x=1040bc54d00000",
+            "kernel-config": "/text?tag=KernelConfig&x=e7e6ee96c9292f22",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=13391c60da3308ed9980de0168f74cce6c62ac1d",
+            "kernel-source-commit": "13391c60da3308ed9980de0168f74cce6c62ac1d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/55a7d4dfd9532ea2839895ddd562d1f9253f46d2",
+            "syzkaller-commit": "55a7d4dfd9532ea2839895ddd562d1f9253f46d2",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14f87d44d00000"
+        }
+    ],
+    "subsystems": [
+        "arm-msm",
+        "net"
+    ],
+    "parent_of_fix_commit": "200bd5668c04d35510d152aa2f74c659f705a5b3",
+    "patch": "diff --git a/net/qrtr/qrtr.c b/net/qrtr/qrtr.c\nindex e6f4a6202f82..171b7f3be6ef 100644\n--- a/net/qrtr/qrtr.c\n+++ b/net/qrtr/qrtr.c\n@@ -518,8 +518,10 @@ int qrtr_endpoint_post(struct qrtr_endpoint *ep, const void *data, size_t len)\n \t\tif (!ipc)\n \t\t\tgoto err;\n \n-\t\tif (sock_queue_rcv_skb(&ipc->sk, skb))\n+\t\tif (sock_queue_rcv_skb(&ipc->sk, skb)) {\n+\t\t\tqrtr_port_put(ipc);\n \t\t\tgoto err;\n+\t\t}\n \n \t\tqrtr_port_put(ipc);\n \t}\n@@ -839,6 +841,8 @@ static int qrtr_local_enqueue(struct qrtr_node *node, struct sk_buff *skb,\n \n \tipc = qrtr_port_lookup(to->sq_port);\n \tif (!ipc || &ipc->sk == skb->sk) { /* do not send to self */\n+\t\tif (ipc)\n+\t\t\tqrtr_port_put(ipc);\n \t\tkfree_skb(skb);\n \t\treturn -ENODEV;\n \t}\n",
+    "patch_modified_files": [
+        "net/qrtr/qrtr.c"
+    ]
+}

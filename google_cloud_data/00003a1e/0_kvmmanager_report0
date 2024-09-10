@@ -1,0 +1,110 @@
+INFO: task syz-executor.5:3735 blocked for more than 143 seconds.
+      Not tainted 5.17.0-rc6-syzkaller-00008-gb9d102dafec6 #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor.5  state:D stack:28016 pid: 3735 ppid:  3522 flags:0x00004006
+Call Trace:
+ <TASK>
+ __schedule+0xdd8/0x4c00
+ schedule+0xdb/0x270
+ schedule_preempt_disabled+0xf/0x20
+ __mutex_lock+0x90f/0x1300
+ vhost_vsock_stop+0x46/0x110
+ vhost_vsock_dev_release+0x183/0x4b0
+ __fput+0x273/0x990
+ task_work_run+0xdd/0x1a0
+ exit_to_user_mode_prepare+0x27c/0x290
+ syscall_exit_to_user_mode+0x19/0x60
+ do_syscall_64+0x40/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x5618227d88ca
+RSP: 002b:00007ffefa5d6450 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 0000000000000005 RCX: 00005618227d88ca
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000004
+RBP: ffffffffffffffff R08: 00005618228ebf60 R09: 00005618228ebf6c
+R10: 00007ffefa5d65d0 R11: 0000000000000293 R12: 000000000001049f
+R13: 00005618228ebf60 R14: 00000000000104ee R15: 0000561822cf0000
+ </TASK>
+INFO: task syz-executor.7:3757 blocked for more than 144 seconds.
+      Not tainted 5.17.0-rc6-syzkaller-00008-gb9d102dafec6 #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor.7  state:D stack:27856 pid: 3757 ppid:  3526 flags:0x00004006
+Call Trace:
+ <TASK>
+ __schedule+0xdd8/0x4c00
+ schedule+0xdb/0x270
+ schedule_preempt_disabled+0xf/0x20
+ __mutex_lock+0x90f/0x1300
+ vhost_vsock_stop+0x46/0x110
+ vhost_vsock_dev_release+0x183/0x4b0
+ __fput+0x273/0x990
+ task_work_run+0xdd/0x1a0
+ exit_to_user_mode_prepare+0x27c/0x290
+ syscall_exit_to_user_mode+0x19/0x60
+ do_syscall_64+0x40/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x556cba0988ca
+RSP: 002b:00007ffed1ff6f30 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 0000000000000005 RCX: 0000556cba0988ca
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000004
+RBP: ffffffffffffffff R08: 0000556cba1abf60 R09: 0000556cba1abf6c
+R10: 00007ffed1ff70b0 R11: 0000000000000293 R12: 0000000000010526
+R13: 0000556cba1abf60 R14: 0000000000010556 R15: 0000556cba5b0000
+ </TASK>
+
+Showing all locks held in the system:
+1 lock held by khungtaskd/26:
+ #0: ffffffff8bb851a0 (rcu_read_lock){....}-{1:2}, at: debug_show_all_locks+0x53/0x260
+2 locks held by getty/3268:
+ #0: ffff88814af0b098 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x20/0x80
+ #1: ffffc90002b662e8 (&ldata->atomic_read_lock){+.+.}-{3:3}, at: n_tty_read+0xd7b/0x1480
+1 lock held by kworker/1:5/3588:
+ #0: ffff8880b9d39c58 (&rq->__lock){-.-.}-{2:2}, at: raw_spin_rq_lock_nested+0x25/0x130
+2 locks held by syz-executor.5/3735:
+ #0: ffff888067260070 (&dev->mutex#4){+.+.}-{3:3}, at: vhost_vsock_stop+0x1e/0x110
+ #1: ffff888067260218 (&vq->mutex){+.+.}-{3:3}, at: vhost_vsock_stop+0x46/0x110
+1 lock held by vhost-3746/3747:
+2 locks held by syz-executor.7/3757:
+ #0: ffff888067360070 (&dev->mutex#4){+.+.}-{3:3}, at: vhost_vsock_stop+0x1e/0x110
+ #1: ffff888067360218 (&vq->mutex){+.+.}-{3:3}, at: vhost_vsock_stop+0x46/0x110
+1 lock held by vhost-3758/3760:
+
+=============================================
+
+NMI backtrace for cpu 0
+CPU: 0 PID: 26 Comm: khungtaskd Not tainted 5.17.0-rc6-syzkaller-00008-gb9d102dafec6 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xfc/0x174
+ nmi_cpu_backtrace.cold+0x22/0x16f
+ nmi_trigger_cpumask_backtrace+0x1ea/0x230
+ watchdog+0xcda/0x1030
+ kthread+0x2e0/0x390
+ ret_from_fork+0x1f/0x30
+ </TASK>
+Sending NMI from CPU 0 to CPUs 1:
+NMI backtrace for cpu 1
+CPU: 1 PID: 3747 Comm: vhost-3746 Not tainted 5.17.0-rc6-syzkaller-00008-gb9d102dafec6 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:__sanitizer_cov_trace_pc+0x37/0x60
+Code: 81 e1 00 01 00 00 65 48 8b 14 25 00 70 02 00 a9 00 01 ff 00 74 0e 85 c9 74 35 8b 82 a4 15 00 00 85 c0 74 2b 8b 82 80 15 00 00 <83> f8 02 75 20 48 8b 8a 88 15 00 00 8b 92 84 15 00 00 48 8b 01 48
+RSP: 0018:ffffc9000348fc68 EFLAGS: 00000246
+RAX: 0000000000000000 RBX: ffff88807d871280 RCX: 0000000000000000
+RDX: ffff88801b098000 RSI: ffffffff86d65672 RDI: 0000000000000003
+RBP: 0000000000000010 R08: 0000000000000010 R09: ffffc9000348fc57
+R10: ffffffff86d6577a R11: 0000000000000000 R12: 0000000000000000
+R13: 0000000000000000 R14: dffffc0000000000 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f7bfdc0e100 CR3: 000000001ac9c000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ iotlb_access_ok+0x1b2/0x3c0
+ vq_meta_prefetch+0xbb/0x270
+ vhost_transport_do_send_pkt+0xd9/0x1090
+ vhost_worker+0x223/0x3e0
+ kthread+0x2e0/0x390
+ ret_from_fork+0x1f/0x30
+ </TASK>

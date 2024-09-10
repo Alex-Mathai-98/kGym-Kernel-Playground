@@ -1,0 +1,154 @@
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+==================================================================
+BUG: KASAN: null-ptr-deref in refcount_sub_and_test_checked+0x96/0x2d0
+Read of size 4 at addr 0000000000000020 by task syz-executor.6/4328
+
+CPU: 0 PID: 4328 Comm: syz-executor.6 Not tainted 4.20.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+ dump_stack+0x1c2/0x2af
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+ kasan_report_error.cold+0x176/0x213
+ kasan_report+0x92/0x99
+ check_memory_region+0x11c/0x180
+ kasan_check_read+0x11/0x20
+ refcount_sub_and_test_checked+0x96/0x2d0
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+ refcount_dec_and_test_checked+0x1a/0x20
+ vb2_vmalloc_put+0x19/0x80
+ __vb2_buf_mem_free+0x11d/0x210
+ __vb2_queue_free+0x83d/0xa30
+ vb2_core_queue_release+0x62/0x80
+ _vb2_fop_release+0x1d2/0x2b0
+ vb2_fop_release+0x75/0xc0
+ vivid_fop_release+0x21b/0xcdc
+kobject: 'hwsim5' (00000000491cf283): kobject_uevent_env
+ v4l2_release+0x224/0x3a0
+kobject: 'hwsim5' (00000000491cf283): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim5'
+ __fput+0x37e/0xa30
+ ____fput+0x15/0x20
+ task_work_run+0x1fc/0x2b0
+ exit_to_usermode_loop+0x321/0x380
+ syscall_return_slowpath+0x695/0xbc0
+ do_syscall_64+0x1b5/0x270
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f0aa1fb8e5a
+Code: 48 3d 00 f0 ff ff 77 48 c3 0f 1f 80 00 00 00 00 48 83 ec 18 89 7c 24 0c e8 13 7f 02 00 8b 7c 24 0c 89 c2 b8 03 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 36 89 d7 89 44 24 0c e8 73 7f 02 00 8b 44 24
+RSP: 002b:00007ffc4b92d2d0 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 0000000000000004 RCX: 00007f0aa1fb8e5a
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000003
+RBP: 00007f0aa20e9980 R08: 00007f0aa1f3c000 R09: 0000000000000001
+R10: 0000000000000001 R11: 0000000000000293 R12: 000000000000e867
+R13: 000000000000e835 R14: 00007ffc4b92d490 R15: 00007f0aa1f70cb0
+==================================================================
+kobject: 'ieee80211' (00000000d20070ce): kobject_add_internal: parent: 'hwsim5', set: '(null)'
+kobject: 'phy5' (0000000094294ada): kobject_add_internal: parent: 'ieee80211', set: 'devices'
+kasan: CONFIG_KASAN_INLINE enabled
+kobject: 'phy5' (0000000094294ada): kobject_uevent_env
+kasan: GPF could be caused by NULL-ptr deref or user memory access
+kobject: 'phy5' (0000000094294ada): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim5/ieee80211/phy5'
+general protection fault: 0000 [#1] PREEMPT SMP KASAN
+kobject: 'rfkill15' (0000000038eccc4a): kobject_add_internal: parent: 'phy5', set: 'devices'
+CPU: 0 PID: 4328 Comm: syz-executor.6 Tainted: G    B             4.20.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:refcount_sub_and_test_checked+0x9d/0x2d0
+Code: f3 f3 65 48 8b 04 25 28 00 00 00 48 89 45 d0 31 c0 e8 d7 a1 eb fd be 04 00 00 00 48 89 df e8 da ad 2f fe 48 89 d8 48 c1 e8 03 <42> 0f b6 14 28 48 89 d8 83 e0 07 83 c0 03 38 d0 7c 08 84 d2 0f 85
+RSP: 0018:ffff8801cc287680 EFLAGS: 00010202
+kobject: 'rfkill15' (0000000038eccc4a): kobject_uevent_env
+RAX: 0000000000000004 RBX: 0000000000000020 RCX: 0000000000000000
+RDX: 0000000000000004 RSI: ffffffff818553e4 RDI: 0000000000000001
+RBP: ffff8801cc287738 R08: 0000000000000000 R09: 0000000000000005
+R10: 0000000000000000 R11: ffffffff8a527003 R12: ffff8801cc287710
+R13: dffffc0000000000 R14: ffffffff85544520 R15: 0000000000000000
+FS:  00007f0aa36f8480(0000) GS:ffff8801f6600000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f936a5f5440 CR3: 00000001cc236005 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+kobject: 'rfkill15' (0000000038eccc4a): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim5/ieee80211/phy5/rfkill15'
+ refcount_dec_and_test_checked+0x1a/0x20
+ vb2_vmalloc_put+0x19/0x80
+ __vb2_buf_mem_free+0x11d/0x210
+ __vb2_queue_free+0x83d/0xa30
+ieee80211 phy5: Selected rate control algorithm 'minstrel_ht'
+ vb2_core_queue_release+0x62/0x80
+kobject: 'net' (00000000aa244958): kobject_add_internal: parent: 'hwsim5', set: '(null)'
+ _vb2_fop_release+0x1d2/0x2b0
+ vb2_fop_release+0x75/0xc0
+kobject: 'wlan1' (00000000d2d6bfae): kobject_add_internal: parent: 'net', set: 'devices'
+ vivid_fop_release+0x21b/0xcdc
+ v4l2_release+0x224/0x3a0
+ __fput+0x37e/0xa30
+kobject: 'wlan1' (00000000d2d6bfae): kobject_uevent_env
+ ____fput+0x15/0x20
+ task_work_run+0x1fc/0x2b0
+kobject: 'wlan1' (00000000d2d6bfae): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim5/net/wlan1'
+ exit_to_usermode_loop+0x321/0x380
+ syscall_return_slowpath+0x695/0xbc0
+kobject: 'queues' (00000000e0dbddca): kobject_add_internal: parent: 'wlan1', set: '<NULL>'
+ do_syscall_64+0x1b5/0x270
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f0aa1fb8e5a
+Code: 48 3d 00 f0 ff ff 77 48 c3 0f 1f 80 00 00 00 00 48 83 ec 18 89 7c 24 0c e8 13 7f 02 00 8b 7c 24 0c 89 c2 b8 03 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 36 89 d7 89 44 24 0c e8 73 7f 02 00 8b 44 24
+RSP: 002b:00007ffc4b92d2d0 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 0000000000000004 RCX: 00007f0aa1fb8e5a
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000003
+RBP: 00007f0aa20e9980 R08: 00007f0aa1f3c000 R09: 0000000000000001
+R10: 0000000000000001 R11: 0000000000000293 R12: 000000000000e867
+kobject: 'queues' (00000000e0dbddca): kobject_uevent_env
+R13: 000000000000e835 R14: 00007ffc4b92d490 R15: 00007f0aa1f70cb0
+Modules linked in:
+---[ end trace e159148e9dc36185 ]---
+kobject: 'queues' (00000000e0dbddca): kobject_uevent_env: filter function caused the event to drop!
+RIP: 0010:refcount_sub_and_test_checked+0x9d/0x2d0
+kobject: 'rx-0' (000000000fe1e235): kobject_add_internal: parent: 'queues', set: 'queues'
+Code: f3 f3 65 48 8b 04 25 28 00 00 00 48 89 45 d0 31 c0 e8 d7 a1 eb fd be 04 00 00 00 48 89 df e8 da ad 2f fe 48 89 d8 48 c1 e8 03 <42> 0f b6 14 28 48 89 d8 83 e0 07 83 c0 03 38 d0 7c 08 84 d2 0f 85
+kobject: 'rx-0' (000000000fe1e235): kobject_uevent_env
+RSP: 0018:ffff8801cc287680 EFLAGS: 00010202
+kobject: 'rx-0' (000000000fe1e235): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim5/net/wlan1/queues/rx-0'
+RAX: 0000000000000004 RBX: 0000000000000020 RCX: 0000000000000000
+kobject: 'tx-0' (00000000063c2bd9): kobject_add_internal: parent: 'queues', set: 'queues'
+RDX: 0000000000000004 RSI: ffffffff818553e4 RDI: 0000000000000001
+kobject: 'tx-0' (00000000063c2bd9): kobject_uevent_env
+RBP: ffff8801cc287738 R08: 0000000000000000 R09: 0000000000000005
+kobject: 'tx-0' (00000000063c2bd9): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim5/net/wlan1/queues/tx-0'
+R10: 0000000000000000 R11: ffffffff8a527003 R12: ffff8801cc287710
+kobject: 'tx-1' (000000005b186c66): kobject_add_internal: parent: 'queues', set: 'queues'
+R13: dffffc0000000000 R14: ffffffff85544520 R15: 0000000000000000
+kobject: 'tx-1' (000000005b186c66): kobject_uevent_env
+FS:  00007f0aa36f8480(0000) GS:ffff8801f6600000(0000) knlGS:0000000000000000
+kobject: 'tx-1' (000000005b186c66): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim5/net/wlan1/queues/tx-1'
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+kobject: 'tx-2' (00000000b39c558e): kobject_add_internal: parent: 'queues', set: 'queues'
+CR2: 00007f936a5f5440 CR3: 00000001cc236005 CR4: 00000000003606f0
+kobject: 'tx-2' (00000000b39c558e): kobject_uevent_env
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+kobject: 'tx-2' (00000000b39c558e): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim5/net/wlan1/queues/tx-2'
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+kobject: 'tx-3' (00000000bf2fd3b1): kobject_add_internal: parent: 'queues', set: 'queues'
+----------------
+Code disassembly (best guess):
+   0:	f3 f3 65 48 8b 04 25 	repz repz mov %gs:0x28,%rax
+   7:	28 00 00 00
+   b:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+   f:	31 c0                	xor    %eax,%eax
+  11:	e8 d7 a1 eb fd       	call   0xfdeba1ed
+  16:	be 04 00 00 00       	mov    $0x4,%esi
+  1b:	48 89 df             	mov    %rbx,%rdi
+  1e:	e8 da ad 2f fe       	call   0xfe2fadfd
+  23:	48 89 d8             	mov    %rbx,%rax
+  26:	48 c1 e8 03          	shr    $0x3,%rax
+* 2a:	42 0f b6 14 28       	movzbl (%rax,%r13,1),%edx <-- trapping instruction
+  2f:	48 89 d8             	mov    %rbx,%rax
+  32:	83 e0 07             	and    $0x7,%eax
+  35:	83 c0 03             	add    $0x3,%eax
+  38:	38 d0                	cmp    %dl,%al
+  3a:	7c 08                	jl     0x44
+  3c:	84 d2                	test   %dl,%dl
+  3e:	0f                   	.byte 0xf
+  3f:	85                   	.byte 0x85

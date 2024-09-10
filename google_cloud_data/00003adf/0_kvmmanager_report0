@@ -1,0 +1,72 @@
+general protection fault, probably for non-canonical address 0xdffffc0000000000: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+CPU: 1 PID: 5194 Comm: syz-executor.6 Not tainted 6.5.0-syzkaller-04810-gb484a40dc1f1 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:io_uring_show_fdinfo+0x391/0x1790
+Code: 00 00 00 42 80 3c 28 00 74 0f 48 8b 7c 24 30 e8 25 f2 24 f7 48 8b 4c 24 30 44 21 f3 48 c1 e3 02 48 03 19 48 89 d8 48 c1 e8 03 <42> 8a 04 28 84 c0 0f 85 64 02 00 00 8b 1b 89 df 44 89 f6 e8 c7 39
+RSP: 0018:ffffc90004b77c20 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffff88802a0740d0
+RDX: ffff888027dfd940 RSI: 0000000000000001 RDI: 0000000000000000
+RBP: ffffc90004b77d98 R08: ffffffff8ac23adf R09: 1ffff110051bcc13
+R10: dffffc0000000000 R11: ffffed10051bcc14 R12: ffff888023bb3940
+R13: dffffc0000000000 R14: 0000000000003fff R15: 0000000000000001
+FS:  00007f1d923a16c0(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f1d916d756b CR3: 0000000020e5f000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ seq_show+0x57d/0x6a0
+ traverse+0x1d5/0x530
+ seq_lseek+0x129/0x240
+ __x64_sys_lseek+0x14f/0x1d0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f1d9167cba9
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f1d923a10c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000008
+RAX: ffffffffffffffda RBX: 00007f1d9179bf80 RCX: 00007f1d9167cba9
+RDX: 0000000000000000 RSI: 0000000000000004 RDI: 0000000000000005
+RBP: 00007f1d916c847a R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f1d9179bf80 R15: 00007fff783101a8
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:io_uring_show_fdinfo+0x391/0x1790
+Code: 00 00 00 42 80 3c 28 00 74 0f 48 8b 7c 24 30 e8 25 f2 24 f7 48 8b 4c 24 30 44 21 f3 48 c1 e3 02 48 03 19 48 89 d8 48 c1 e8 03 <42> 8a 04 28 84 c0 0f 85 64 02 00 00 8b 1b 89 df 44 89 f6 e8 c7 39
+RSP: 0018:ffffc90004b77c20 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffff88802a0740d0
+RDX: ffff888027dfd940 RSI: 0000000000000001 RDI: 0000000000000000
+RBP: ffffc90004b77d98 R08: ffffffff8ac23adf R09: 1ffff110051bcc13
+R10: dffffc0000000000 R11: ffffed10051bcc14 R12: ffff888023bb3940
+R13: dffffc0000000000 R14: 0000000000003fff R15: 0000000000000001
+FS:  00007f1d923a16c0(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f1d916d756b CR3: 0000000020e5f000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	00 00                	add    %al,(%rax)
+   2:	00 42 80             	add    %al,-0x80(%rdx)
+   5:	3c 28                	cmp    $0x28,%al
+   7:	00 74 0f 48          	add    %dh,0x48(%rdi,%rcx,1)
+   b:	8b 7c 24 30          	mov    0x30(%rsp),%edi
+   f:	e8 25 f2 24 f7       	call   0xf724f239
+  14:	48 8b 4c 24 30       	mov    0x30(%rsp),%rcx
+  19:	44 21 f3             	and    %r14d,%ebx
+  1c:	48 c1 e3 02          	shl    $0x2,%rbx
+  20:	48 03 19             	add    (%rcx),%rbx
+  23:	48 89 d8             	mov    %rbx,%rax
+  26:	48 c1 e8 03          	shr    $0x3,%rax
+* 2a:	42 8a 04 28          	mov    (%rax,%r13,1),%al <-- trapping instruction
+  2e:	84 c0                	test   %al,%al
+  30:	0f 85 64 02 00 00    	jne    0x29a
+  36:	8b 1b                	mov    (%rbx),%ebx
+  38:	89 df                	mov    %ebx,%edi
+  3a:	44 89 f6             	mov    %r14d,%esi
+  3d:	e8                   	.byte 0xe8
+  3e:	c7                   	(bad)
+  3f:	39                   	.byte 0x39

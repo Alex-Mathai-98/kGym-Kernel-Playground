@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in pfkey_add",
+    "display-title": "KASAN: slab-out-of-bounds Read in pfkey_add",
+    "id": "26cb120b31cd24d984fc16da67f50fb375c432a7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "af_key: Always verify length of provided sadb_key",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4b66af2d6356a00e94bcdea3e7fea324e8b5c6f4",
+            "hash": "4b66af2d6356a00e94bcdea3e7fea324e8b5c6f4",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/20180507084323.22165-2-steffen.klassert@secunet.com/T/",
+        "https://lore.kernel.org/all/20180614132135.111973468@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180614132157.333004166@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180614132600.255515394@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180614132724.483802160@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180701153122.365061142@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/cover.1522063171.git.kevin@guarana.org/T/",
+        "https://lore.kernel.org/all/cover.1523115061.git.kevin@guarana.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15025687800000",
+            "c-reproducer": "/text?tag=ReproC&x=15704d27800000",
+            "kernel-config": "/text?tag=KernelConfig&x=8525b44abc777c17",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=18b7fd1c93e5204355ddbf2608a097d64df81b88",
+            "kernel-source-commit": "18b7fd1c93e5204355ddbf2608a097d64df81b88",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/7a67784ca8bdc3b26cce2f0ec9a40d2dd9ec9396",
+            "syzkaller-commit": "7a67784ca8bdc3b26cce2f0ec9a40d2dd9ec9396",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=152fce87800000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "76327a35caabd1a932e83d6a42b967aa08584e5d",
+    "patch": "diff --git a/net/key/af_key.c b/net/key/af_key.c\nindex 7e2e7188e7f4..e62e52e8f141 100644\n--- a/net/key/af_key.c\n+++ b/net/key/af_key.c\n@@ -437,6 +437,24 @@ static int verify_address_len(const void *p)\n \treturn 0;\n }\n \n+static inline int sadb_key_len(const struct sadb_key *key)\n+{\n+\tint key_bytes = DIV_ROUND_UP(key->sadb_key_bits, 8);\n+\n+\treturn DIV_ROUND_UP(sizeof(struct sadb_key) + key_bytes,\n+\t\t\t    sizeof(uint64_t));\n+}\n+\n+static int verify_key_len(const void *p)\n+{\n+\tconst struct sadb_key *key = p;\n+\n+\tif (sadb_key_len(key) > key->sadb_key_len)\n+\t\treturn -EINVAL;\n+\n+\treturn 0;\n+}\n+\n static inline int pfkey_sec_ctx_len(const struct sadb_x_sec_ctx *sec_ctx)\n {\n \treturn DIV_ROUND_UP(sizeof(struct sadb_x_sec_ctx) +\n@@ -533,16 +551,25 @@ static int parse_exthdrs(struct sk_buff *skb, const struct sadb_msg *hdr, void *\n \t\t\t\treturn -EINVAL;\n \t\t\tif (ext_hdrs[ext_type-1] != NULL)\n \t\t\t\treturn -EINVAL;\n-\t\t\tif (ext_type == SADB_EXT_ADDRESS_SRC ||\n-\t\t\t    ext_type == SADB_EXT_ADDRESS_DST ||\n-\t\t\t    ext_type == SADB_EXT_ADDRESS_PROXY ||\n-\t\t\t    ext_type == SADB_X_EXT_NAT_T_OA) {\n+\t\t\tswitch (ext_type) {\n+\t\t\tcase SADB_EXT_ADDRESS_SRC:\n+\t\t\tcase SADB_EXT_ADDRESS_DST:\n+\t\t\tcase SADB_EXT_ADDRESS_PROXY:\n+\t\t\tcase SADB_X_EXT_NAT_T_OA:\n \t\t\t\tif (verify_address_len(p))\n \t\t\t\t\treturn -EINVAL;\n-\t\t\t}\n-\t\t\tif (ext_type == SADB_X_EXT_SEC_CTX) {\n+\t\t\t\tbreak;\n+\t\t\tcase SADB_X_EXT_SEC_CTX:\n \t\t\t\tif (verify_sec_ctx_len(p))\n \t\t\t\t\treturn -EINVAL;\n+\t\t\t\tbreak;\n+\t\t\tcase SADB_EXT_KEY_AUTH:\n+\t\t\tcase SADB_EXT_KEY_ENCRYPT:\n+\t\t\t\tif (verify_key_len(p))\n+\t\t\t\t\treturn -EINVAL;\n+\t\t\t\tbreak;\n+\t\t\tdefault:\n+\t\t\t\tbreak;\n \t\t\t}\n \t\t\text_hdrs[ext_type-1] = (void *) p;\n \t\t}\n@@ -1104,14 +1131,12 @@ static struct xfrm_state * pfkey_msg2xfrm_state(struct net *net,\n \tkey = ext_hdrs[SADB_EXT_KEY_AUTH - 1];\n \tif (key != NULL &&\n \t    sa->sadb_sa_auth != SADB_X_AALG_NULL &&\n-\t    ((key->sadb_key_bits+7) / 8 == 0 ||\n-\t     (key->sadb_key_bits+7) / 8 > key->sadb_key_len * sizeof(uint64_t)))\n+\t    key->sadb_key_bits == 0)\n \t\treturn ERR_PTR(-EINVAL);\n \tkey = ext_hdrs[SADB_EXT_KEY_ENCRYPT-1];\n \tif (key != NULL &&\n \t    sa->sadb_sa_encrypt != SADB_EALG_NULL &&\n-\t    ((key->sadb_key_bits+7) / 8 == 0 ||\n-\t     (key->sadb_key_bits+7) / 8 > key->sadb_key_len * sizeof(uint64_t)))\n+\t    key->sadb_key_bits == 0)\n \t\treturn ERR_PTR(-EINVAL);\n \n \tx = xfrm_state_alloc(net);\n",
+    "patch_modified_files": [
+        "net/key/af_key.c"
+    ]
+}

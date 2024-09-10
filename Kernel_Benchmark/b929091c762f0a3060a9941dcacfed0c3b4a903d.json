@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "possible deadlock in j1939_sk_errqueue",
+    "display-title": "possible deadlock in j1939_sk_errqueue",
+    "id": "b929091c762f0a3060a9941dcacfed0c3b4a903d",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "can: j1939: prevent deadlock by moving j1939_sk_errqueue()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d1366b283d94ac4537a4b3a1e8668da4df7ce7e9",
+            "hash": "d1366b283d94ac4537a4b3a1e8668da4df7ce7e9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "octeontx2-af: cn10k: Setting up lmtst map table",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=873a1e3d207ae587a7a1cc1d84545146b449ea5d",
+        "hash": "873a1e3d207ae587a7a1cc1d84545146b449ea5d",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f3e56405cdcf14cd@google.com/T/",
+        "https://lore.kernel.org/all/20230324130141.2132787-1-o.rempel@pengutronix.de/T/",
+        "https://lore.kernel.org/all/20230327124807.1157134-1-mkl@pengutronix.de/T/"
+    ],
+    "crashes": [
+        {
+            "title": "possible deadlock in j1939_sk_errqueue",
+            "syz-reproducer": "/text?tag=ReproSyz&x=163611bff00000",
+            "c-reproducer": "/text?tag=ReproC&x=157d01e7f00000",
+            "kernel-config": "/text?tag=KernelConfig&x=70e1a4d352a3c6ae",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=24625f7d91fb86b91e14749633a7f022f5866116",
+            "kernel-source-commit": "24625f7d91fb86b91e14749633a7f022f5866116",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/127d1fafc7d808f8bfcbb50170aa1f00b0209dad",
+            "syzkaller-commit": "127d1fafc7d808f8bfcbb50170aa1f00b0209dad",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16dbd1d7f00000"
+        }
+    ],
+    "subsystems": [
+        "can"
+    ],
+    "parent_of_fix_commit": "45977e58ce65ed0459edc9a0466d9dfea09463f5",
+    "patch": "diff --git a/net/can/j1939/transport.c b/net/can/j1939/transport.c\nindex fce9b9ebf13f..fb92c3609e17 100644\n--- a/net/can/j1939/transport.c\n+++ b/net/can/j1939/transport.c\n@@ -1124,8 +1124,6 @@ static void __j1939_session_cancel(struct j1939_session *session,\n \n \tif (session->sk)\n \t\tj1939_sk_send_loop_abort(session->sk, session->err);\n-\telse\n-\t\tj1939_sk_errqueue(session, J1939_ERRQUEUE_RX_ABORT);\n }\n \n static void j1939_session_cancel(struct j1939_session *session,\n@@ -1140,6 +1138,9 @@ static void j1939_session_cancel(struct j1939_session *session,\n \t}\n \n \tj1939_session_list_unlock(session->priv);\n+\n+\tif (!session->sk)\n+\t\tj1939_sk_errqueue(session, J1939_ERRQUEUE_RX_ABORT);\n }\n \n static enum hrtimer_restart j1939_tp_txtimer(struct hrtimer *hrtimer)\n@@ -1253,6 +1254,9 @@ static enum hrtimer_restart j1939_tp_rxtimer(struct hrtimer *hrtimer)\n \t\t\t__j1939_session_cancel(session, J1939_XTP_ABORT_TIMEOUT);\n \t\t}\n \t\tj1939_session_list_unlock(session->priv);\n+\n+\t\tif (!session->sk)\n+\t\t\tj1939_sk_errqueue(session, J1939_ERRQUEUE_RX_ABORT);\n \t}\n \n \tj1939_session_put(session);\n",
+    "patch_modified_files": [
+        "net/can/j1939/transport.c"
+    ]
+}

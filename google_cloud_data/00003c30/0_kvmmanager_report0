@@ -1,0 +1,37 @@
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 148 at net/netfilter/core.c:468 __nf_unregister_net_hook+0x49f/0x5f0
+Modules linked in:
+CPU: 0 PID: 148 Comm: kworker/u4:2 Not tainted 5.15.0-rc3-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: netns cleanup_net
+RIP: 0010:__nf_unregister_net_hook+0x49f/0x5f0
+Code: bf 05 00 00 00 e8 a1 b1 14 fa 83 fd 05 74 5f e8 97 a9 14 fa 89 ee bf 05 00 00 00 e8 8b b1 14 fa e9 04 fe ff ff e8 81 a9 14 fa <0f> 0b 48 c7 c7 a0 61 18 8d e8 c3 75 d9 01 e9 c4 fe ff ff 4c 89 ff
+RSP: 0018:ffffc9000146f5f8 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: ffff888074441498 RCX: 0000000000000000
+RDX: ffff8880129d9c80 RSI: ffffffff8761d21f RDI: 0000000000000003
+RBP: 0000000000000001 R08: 0000000000000000 R09: ffffc9000146f527
+R10: ffffffff8761ce3c R11: 000000000000001b R12: ffff888077659a40
+R13: ffff88805f89c3d8 R14: 0000000000000000 R15: ffff8880744414b4
+FS:  0000000000000000(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007ff8a192aba8 CR3: 000000000b68e000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ nf_unregister_net_hook+0xd1/0x110
+ nf_tables_unregister_hook.part.0+0x1ab/0x200
+ __nft_release_basechain+0x138/0x7b0
+ nf_tables_netdev_event+0x52a/0x8e0
+ notifier_call_chain+0xb5/0x1e0
+ call_netdevice_notifiers_info+0xb5/0x130
+ unregister_netdevice_many+0xa03/0x17b0
+ ieee80211_remove_interfaces+0x389/0x810
+ ieee80211_unregister_hw+0x47/0x1f0
+ mac80211_hwsim_del_radio+0x252/0x380
+ hwsim_exit_net+0x441/0xb40
+ ops_exit_list+0xb0/0x160
+ cleanup_net+0x501/0xb10
+ process_one_work+0xa11/0x1680
+ worker_thread+0x67d/0x1220
+ kthread+0x3d0/0x4c0
+ ret_from_fork+0x1f/0x30

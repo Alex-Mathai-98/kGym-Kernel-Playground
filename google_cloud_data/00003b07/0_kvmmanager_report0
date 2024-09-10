@@ -1,0 +1,127 @@
+======================================================
+WARNING: possible circular locking dependency detected
+6.2.0-rc3-syzkaller-00208-g506d9b4099a0 #0 Not tainted
+------------------------------------------------------
+syz-executor.6/5094 is trying to acquire lock:
+ffff88801e8c9130 (sk_lock-AF_BLUETOOTH-BTPROTO_RFCOMM
+){+.+.}-{0:0}, at: rfcomm_sk_state_change+0x5b/0x300
+
+but task is already holding lock:
+ffff8880721ef128 (&d->lock){+.+.}-{3:3}, at: __rfcomm_dlc_close+0x222/0x690
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #2 (&d->lock){+.+.}-{3:3}:
+       lock_acquire+0x235/0x630
+       __mutex_lock_common+0x1d8/0x2530
+       mutex_lock_nested+0x1b/0x20
+       __rfcomm_dlc_close+0x222/0x690
+       rfcomm_dlc_close+0xf1/0x190
+       __rfcomm_sock_close+0x121/0x250
+       rfcomm_sock_shutdown+0xb8/0x240
+       rfcomm_sock_release+0x59/0x120
+       sock_close+0xd1/0x230
+       __fput+0x3b7/0x890
+       task_work_run+0x24a/0x300
+       get_signal+0x1606/0x17e0
+       arch_do_signal_or_restart+0x91/0x600
+       exit_to_user_mode_loop+0x6a/0x100
+       exit_to_user_mode_prepare+0xb1/0x140
+       syscall_exit_to_user_mode+0x64/0x2e0
+       do_syscall_64+0x4d/0x90
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+-> #1 (rfcomm_mutex){+.+.}-{3:3}:
+       lock_acquire+0x235/0x630
+       __mutex_lock_common+0x1d8/0x2530
+       mutex_lock_nested+0x1b/0x20
+       rfcomm_dlc_open+0xb0/0x1270
+       rfcomm_sock_connect+0x29c/0x480
+       __sys_connect+0x2cd/0x300
+       __x64_sys_connect+0x7a/0x90
+       do_syscall_64+0x41/0x90
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+-> #0 (
+sk_lock-AF_BLUETOOTH-BTPROTO_RFCOMM){+.+.}-{0:0}:
+       validate_chain+0x166b/0x58e0
+       __lock_acquire+0x125b/0x1f80
+       lock_acquire+0x235/0x630
+       lock_sock_nested+0x48/0x100
+       rfcomm_sk_state_change+0x5b/0x300
+       __rfcomm_dlc_close+0x268/0x690
+       rfcomm_dlc_close+0xf1/0x190
+       __rfcomm_sock_close+0x121/0x250
+       rfcomm_sock_shutdown+0xb8/0x240
+       rfcomm_sock_release+0x59/0x120
+       sock_close+0xd1/0x230
+       __fput+0x3b7/0x890
+       task_work_run+0x24a/0x300
+       get_signal+0x1606/0x17e0
+       arch_do_signal_or_restart+0x91/0x600
+       exit_to_user_mode_loop+0x6a/0x100
+       exit_to_user_mode_prepare+0xb1/0x140
+       syscall_exit_to_user_mode+0x64/0x2e0
+       do_syscall_64+0x4d/0x90
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+other info that might help us debug this:
+
+Chain exists of:
+  sk_lock-AF_BLUETOOTH-BTPROTO_RFCOMM --> rfcomm_mutex --> &d->lock
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&d->lock);
+                               lock(rfcomm_mutex);
+                               lock(&d->lock);
+  lock(sk_lock-AF_BLUETOOTH-BTPROTO_RFCOMM);
+
+ *** DEADLOCK ***
+
+3 locks held by syz-executor.6/5094:
+ #0: ffff8880763ec410 (&sb->s_type->i_mutex_key#9){+.+.}-{3:3}, at: sock_close+0x9c/0x230
+ #1: ffffffff8d93bf68 (rfcomm_mutex){+.+.}-{3:3}, at: rfcomm_dlc_close+0x3b/0x190
+ #2: ffff8880721ef128 (&d->lock){+.+.}-{3:3}, at: __rfcomm_dlc_close+0x222/0x690
+
+stack backtrace:
+CPU: 1 PID: 5094 Comm: syz-executor.6 Not tainted 6.2.0-rc3-syzkaller-00208-g506d9b4099a0 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1e7/0x2d0
+ check_noncircular+0x2fe/0x3b0
+ validate_chain+0x166b/0x58e0
+ __lock_acquire+0x125b/0x1f80
+ lock_acquire+0x235/0x630
+ lock_sock_nested+0x48/0x100
+ rfcomm_sk_state_change+0x5b/0x300
+ __rfcomm_dlc_close+0x268/0x690
+ rfcomm_dlc_close+0xf1/0x190
+ __rfcomm_sock_close+0x121/0x250
+ rfcomm_sock_shutdown+0xb8/0x240
+ rfcomm_sock_release+0x59/0x120
+ sock_close+0xd1/0x230
+ __fput+0x3b7/0x890
+ task_work_run+0x24a/0x300
+ get_signal+0x1606/0x17e0
+ arch_do_signal_or_restart+0x91/0x600
+ exit_to_user_mode_loop+0x6a/0x100
+ exit_to_user_mode_prepare+0xb1/0x140
+ syscall_exit_to_user_mode+0x64/0x2e0
+ do_syscall_64+0x4d/0x90
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fe2f64798a9
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fe2f75e80c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002a
+RAX: fffffffffffffffc RBX: 00007fe2f658bf60 RCX: 00007fe2f64798a9
+RDX: 0000000000000080 RSI: 0000000020000000 RDI: 0000000000000004
+RBP: 00007fe2f64d5074 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fe2f658bf60 R15: 00007ffe0ac81e68
+ </TASK>

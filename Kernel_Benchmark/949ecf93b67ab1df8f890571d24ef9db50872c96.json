@@ -1,0 +1,69 @@
+{
+    "version": 1,
+    "title": "unregister_netdevice: waiting for DEV to become free",
+    "display-title": "unregister_netdevice: waiting for DEV to become free (4)",
+    "id": "949ecf93b67ab1df8f890571d24ef9db50872c96",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "rxrpc: Fix deadlock around release of dst cached on udp tunnel",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5399d52233c47905bbf97dcbaa2d7a9cc31670ba",
+            "hash": "5399d52233c47905bbf97dcbaa2d7a9cc31670ba",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "umh: introduce fork_usermode_blob() helper",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=449325b52b7a6208f65ed67d3484fd7b7184477b",
+        "hash": "449325b52b7a6208f65ed67d3484fd7b7184477b",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000568fc005ad3b57c3@google.com/T/",
+        "https://lore.kernel.org/all/161193864000.3781058.7593105791689441003.stgit@warthog.procyon.org.uk/T/",
+        "https://lore.kernel.org/all/161196443016.3868642.5577440140646403533.stgit@warthog.procyon.org.uk/T/",
+        "https://lore.kernel.org/all/20210208145806.141056364@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210208145810.230485165@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210208145818.395353822@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15859986900000",
+            "c-reproducer": "/text?tag=ReproC&x=1228fea1900000",
+            "kernel-config": "/text?tag=KernelConfig&x=bb68b9e8a8cc842f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=18445bf405cb331117bc98427b1ba6f12418ad17",
+            "kernel-source-commit": "18445bf405cb331117bc98427b1ba6f12418ad17",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e1c29030da37d46475ab5babe68abc4afe085799",
+            "syzkaller-commit": "e1c29030da37d46475ab5babe68abc4afe085799",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14c6a929900000"
+        }
+    ],
+    "subsystems": [
+        "origin:upstream",
+        "fat",
+        "hfsplus",
+        "bfs",
+        "vfs",
+        "gfs2",
+        "udf",
+        "xfs",
+        "reiserfs",
+        "sysv",
+        "btrfs",
+        "f2fs",
+        "missing-backport",
+        "origin:upstream",
+        "net"
+    ],
+    "parent_of_fix_commit": "8d520b4de3edca4f4fb242b5ddc659b6a9b9e65e",
+    "patch": "diff --git a/fs/afs/main.c b/fs/afs/main.c\nindex accdd8970e7c..b2975256dadb 100644\n--- a/fs/afs/main.c\n+++ b/fs/afs/main.c\n@@ -193,7 +193,7 @@ static int __init afs_init(void)\n \t\tgoto error_cache;\n #endif\n \n-\tret = register_pernet_subsys(&afs_net_ops);\n+\tret = register_pernet_device(&afs_net_ops);\n \tif (ret < 0)\n \t\tgoto error_net;\n \n@@ -213,7 +213,7 @@ static int __init afs_init(void)\n error_proc:\n \tafs_fs_exit();\n error_fs:\n-\tunregister_pernet_subsys(&afs_net_ops);\n+\tunregister_pernet_device(&afs_net_ops);\n error_net:\n #ifdef CONFIG_AFS_FSCACHE\n \tfscache_unregister_netfs(&afs_cache_netfs);\n@@ -244,7 +244,7 @@ static void __exit afs_exit(void)\n \n \tproc_remove(afs_proc_symlink);\n \tafs_fs_exit();\n-\tunregister_pernet_subsys(&afs_net_ops);\n+\tunregister_pernet_device(&afs_net_ops);\n #ifdef CONFIG_AFS_FSCACHE\n \tfscache_unregister_netfs(&afs_cache_netfs);\n #endif\ndiff --git a/net/rxrpc/af_rxrpc.c b/net/rxrpc/af_rxrpc.c\nindex 0a2f4817ec6c..41671af6b33f 100644\n--- a/net/rxrpc/af_rxrpc.c\n+++ b/net/rxrpc/af_rxrpc.c\n@@ -990,7 +990,7 @@ static int __init af_rxrpc_init(void)\n \t\tgoto error_security;\n \t}\n \n-\tret = register_pernet_subsys(&rxrpc_net_ops);\n+\tret = register_pernet_device(&rxrpc_net_ops);\n \tif (ret)\n \t\tgoto error_pernet;\n \n@@ -1035,7 +1035,7 @@ static int __init af_rxrpc_init(void)\n error_sock:\n \tproto_unregister(&rxrpc_proto);\n error_proto:\n-\tunregister_pernet_subsys(&rxrpc_net_ops);\n+\tunregister_pernet_device(&rxrpc_net_ops);\n error_pernet:\n \trxrpc_exit_security();\n error_security:\n@@ -1057,7 +1057,7 @@ static void __exit af_rxrpc_exit(void)\n \tunregister_key_type(&key_type_rxrpc);\n \tsock_unregister(PF_RXRPC);\n \tproto_unregister(&rxrpc_proto);\n-\tunregister_pernet_subsys(&rxrpc_net_ops);\n+\tunregister_pernet_device(&rxrpc_net_ops);\n \tASSERTCMP(atomic_read(&rxrpc_n_tx_skbs), ==, 0);\n \tASSERTCMP(atomic_read(&rxrpc_n_rx_skbs), ==, 0);\n \n",
+    "patch_modified_files": [
+        "fs/afs/main.c",
+        "net/rxrpc/af_rxrpc.c"
+    ]
+}

@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in disk_release_events",
+    "display-title": "KASAN: use-after-free Read in disk_release_events",
+    "id": "b0932be9507e30fc4cbd16bf05cd3bea03b325d7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "block: fix error unwinding in device_add_disk",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=99d8690aae4b2f0d1d90075de355ac087f820a66",
+            "hash": "99d8690aae4b2f0d1d90075de355ac087f820a66",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b1ef3205d318ff2c@google.com/T/",
+        "https://lore.kernel.org/all/20211221161851.788424-1-hch@lst.de/T/",
+        "https://lore.kernel.org/all/20220124184100.867127425@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124184125.121143506@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/c614deb3-ce75-635e-a311-4f4fc7aa26e3@i-love.sakura.ne.jp/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in disk_release_events",
+            "syz-reproducer": "/text?tag=ReproSyz&x=158aa0bab00000",
+            "kernel-config": "/text?tag=KernelConfig&x=221ffc09e39ebbd1",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c741e49150dbb0c0aebe234389f4aa8b47958fa8",
+            "kernel-source-commit": "c741e49150dbb0c0aebe234389f4aa8b47958fa8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4d4ce9bc2a12073dcc8b917f9fc2a4ecba26c4c5",
+            "syzkaller-commit": "4d4ce9bc2a12073dcc8b917f9fc2a4ecba26c4c5",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12f0a3e5b00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "device_add_disk",
+            "block/genhd.c"
+        ]
+    ],
+    "patch_commit_date": "2021-12-21T16:18:51+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "block",
+        "fuse"
+    ],
+    "parent_of_fix_commit": "37e11c3616f6182b6bd7f95a04df035b43464f39",
+    "patch": "diff --git a/block/genhd.c b/block/genhd.c\nindex 3c139a1b6f04..603db5d6f10c 100644\n--- a/block/genhd.c\n+++ b/block/genhd.c\n@@ -442,10 +442,6 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,\n \t\tdisk->first_minor = ret;\n \t}\n \n-\tret = disk_alloc_events(disk);\n-\tif (ret)\n-\t\tgoto out_free_ext_minor;\n-\n \t/* delay uevents, until we scanned partition table */\n \tdev_set_uevent_suppress(ddev, 1);\n \n@@ -456,7 +452,12 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,\n \t\tddev->devt = MKDEV(disk->major, disk->first_minor);\n \tret = device_add(ddev);\n \tif (ret)\n-\t\tgoto out_disk_release_events;\n+\t\tgoto out_free_ext_minor;\n+\n+\tret = disk_alloc_events(disk);\n+\tif (ret)\n+\t\tgoto out_device_del;\n+\n \tif (!sysfs_deprecated) {\n \t\tret = sysfs_create_link(block_depr, &ddev->kobj,\n \t\t\t\t\tkobject_name(&ddev->kobj));\n@@ -538,8 +539,6 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,\n \t\tsysfs_remove_link(block_depr, dev_name(ddev));\n out_device_del:\n \tdevice_del(ddev);\n-out_disk_release_events:\n-\tdisk_release_events(disk);\n out_free_ext_minor:\n \tif (disk->major == BLOCK_EXT_MAJOR)\n \t\tblk_free_ext_minor(disk->first_minor);\n",
+    "patch_modified_files": [
+        "block/genhd.c"
+    ]
+}

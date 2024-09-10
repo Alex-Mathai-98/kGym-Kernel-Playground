@@ -1,0 +1,77 @@
+{
+    "version": 1,
+    "title": "general protection fault in nfc_alloc_send_skb",
+    "display-title": "general protection fault in nfc_alloc_send_skb",
+    "id": "36d6a96ec654d05f67fae60852aece19119c4772",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nfc: llcp: fix NULL error pointer dereference on sendmsg() after failed bind()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=dded08927ca3c31a5c37f8e7f95fe98770475dd4",
+            "hash": "dded08927ca3c31a5c37f8e7f95fe98770475dd4",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "nfc: fix refcount leak in llcp_sock_bind()",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c33b1cc62ac05c1dbb1cdafe2eb66da01c76ca8d",
+        "hash": "c33b1cc62ac05c1dbb1cdafe2eb66da01c76ca8d",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b5eac805d4d686d4@google.com/T/",
+        "https://lore.kernel.org/all/1a1129d3-38a0-f126-fc63-97708103b140@canonical.com/T/",
+        "https://lore.kernel.org/all/20220115122650.128182-1-krzysztof.kozlowski@canonical.com/T/",
+        "https://lore.kernel.org/all/20220119074816.6505-1-krzysztof.kozlowski@canonical.com/T/",
+        "https://lore.kernel.org/all/20220124183927.095545464@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183932.787526760@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183937.101330125@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183943.102762895@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183953.750177707@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124184024.407936072@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124184100.867127425@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124184125.121143506@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/d9691d32-40f5-14ee-027f-e7d431c94084@canonical.com/T/",
+        "https://lore.kernel.org/all/ddce0e77-2fba-716f-6a69-eeb148fe91ca@canonical.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in nfc_alloc_send_skb",
+            "syz-reproducer": "/text?tag=ReproSyz&x=133e5e2bb00000",
+            "c-reproducer": "/text?tag=ReproC&x=152e6571b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=dc943eeb68074e3",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=eec4df26e24e978e49ccf9bcf49ca0f2ccdaeffe",
+            "kernel-source-commit": "eec4df26e24e978e49ccf9bcf49ca0f2ccdaeffe",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2e49f10dbbcec83bf0aa7651c827503e1faec44c",
+            "syzkaller-commit": "2e49f10dbbcec83bf0aa7651c827503e1faec44c",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=135e61edb00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "llcp_sock_sendmsg",
+            "net/nfc/llcp_sock.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "llcp_sock_bind",
+            "net/nfc/llcp_sock.c"
+        ]
+    ],
+    "patch_commit_date": "2022-01-19T07:48:16+00:00",
+    "cause_commit_date": "2021-03-25T03:51:10+00:00",
+    "subsystems": [
+        "net",
+        "nfc"
+    ],
+    "parent_of_fix_commit": "8c8963b27e685ec5d45696e51f95947a8c413727",
+    "patch": "diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c\nindex 6cfd30fc0798..0b93a17b9f11 100644\n--- a/net/nfc/llcp_sock.c\n+++ b/net/nfc/llcp_sock.c\n@@ -789,6 +789,11 @@ static int llcp_sock_sendmsg(struct socket *sock, struct msghdr *msg,\n \n \tlock_sock(sk);\n \n+\tif (!llcp_sock->local) {\n+\t\trelease_sock(sk);\n+\t\treturn -ENODEV;\n+\t}\n+\n \tif (sk->sk_type == SOCK_DGRAM) {\n \t\tDECLARE_SOCKADDR(struct sockaddr_nfc_llcp *, addr,\n \t\t\t\t msg->msg_name);\n",
+    "patch_modified_files": [
+        "net/nfc/llcp_sock.c"
+    ]
+}

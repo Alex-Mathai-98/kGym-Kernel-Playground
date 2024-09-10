@@ -1,0 +1,77 @@
+{
+    "version": 1,
+    "title": "general protection fault in percpu_ref_put",
+    "display-title": "general protection fault in percpu_ref_put",
+    "id": "5d48b50ed679f22d7d4a4b578da8559d34b104ac",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "bpf, cgroup: Assign cgroup in cgroup_sk_alloc when called from interrupt",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=78cc316e9583067884eb8bd154301dc1e9ee945c",
+            "hash": "78cc316e9583067884eb8bd154301dc1e9ee945c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "namei: make do_linkat() take struct filename",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=020250f31c4c75ac7687a673e29c00786582a5f4",
+        "hash": "020250f31c4c75ac7687a673e29c00786582a5f4",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f8be2b05cc788686@google.com/T/",
+        "https://lore.kernel.org/all/20210927123921.21535-1-daniel@iogearbox.net/T/",
+        "https://lore.kernel.org/all/20211115165419.961798833@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in percpu_ref_put",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1395c6f1300000",
+            "c-reproducer": "/text?tag=ReproC&x=11568cad300000",
+            "kernel-config": "/text?tag=KernelConfig&x=ccfb8533b1cbe3b1",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4357f03d6611753936e4d52fc251b54a6afb1b54",
+            "kernel-source-commit": "4357f03d6611753936e4d52fc251b54a6afb1b54",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/70b76c1d627711cc3ef109af16d6cb7429a61fe3",
+            "syzkaller-commit": "70b76c1d627711cc3ef109af16d6cb7429a61fe3",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=124eb1f3300000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "cgroup_parse_float",
+            "kernel/cgroup/cgroup.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "filename_lookup",
+            "fs/namei.c"
+        ],
+        [
+            "EXPORT_SYMBOL",
+            "fs/namei.c"
+        ],
+        [
+            "do_linkat",
+            "fs/namei.c"
+        ],
+        [
+            "path_lookupat",
+            "fs/namei.c"
+        ]
+    ],
+    "patch_commit_date": "2021-09-27T12:39:20+00:00",
+    "cause_commit_date": "2021-07-08T06:34:43+00:00",
+    "subsystems": [
+        "cgroups"
+    ],
+    "parent_of_fix_commit": "bcfd367c2839f2126c048fe59700ec1b538e2b06",
+    "patch": "diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c\nindex 8afa8690d288..570b0c97392a 100644\n--- a/kernel/cgroup/cgroup.c\n+++ b/kernel/cgroup/cgroup.c\n@@ -6574,22 +6574,29 @@ int cgroup_parse_float(const char *input, unsigned dec_shift, s64 *v)\n \n void cgroup_sk_alloc(struct sock_cgroup_data *skcd)\n {\n-\t/* Don't associate the sock with unrelated interrupted task's cgroup. */\n-\tif (in_interrupt())\n-\t\treturn;\n+\tstruct cgroup *cgroup;\n \n \trcu_read_lock();\n+\t/* Don't associate the sock with unrelated interrupted task's cgroup. */\n+\tif (in_interrupt()) {\n+\t\tcgroup = &cgrp_dfl_root.cgrp;\n+\t\tcgroup_get(cgroup);\n+\t\tgoto out;\n+\t}\n+\n \twhile (true) {\n \t\tstruct css_set *cset;\n \n \t\tcset = task_css_set(current);\n \t\tif (likely(cgroup_tryget(cset->dfl_cgrp))) {\n-\t\t\tskcd->cgroup = cset->dfl_cgrp;\n-\t\t\tcgroup_bpf_get(cset->dfl_cgrp);\n+\t\t\tcgroup = cset->dfl_cgrp;\n \t\t\tbreak;\n \t\t}\n \t\tcpu_relax();\n \t}\n+out:\n+\tskcd->cgroup = cgroup;\n+\tcgroup_bpf_get(cgroup);\n \trcu_read_unlock();\n }\n \n",
+    "patch_modified_files": [
+        "kernel/cgroup/cgroup.c"
+    ]
+}

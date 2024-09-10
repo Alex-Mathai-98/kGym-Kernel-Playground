@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Write in process_preds",
+    "display-title": "KASAN: slab-out-of-bounds Write in process_preds",
+    "id": "e84ebd53b11608595ca4fd595d48ae9ddce9cf11",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "tracing: Check for no filter when processing event filters",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=70303420b5721c38998cf987e6b7d30cc62d4ff1",
+            "hash": "70303420b5721c38998cf987e6b7d30cc62d4ff1",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003723710569916833@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10f76d6b800000",
+            "c-reproducer": "/text?tag=ReproC&x=169c4f1b800000",
+            "kernel-config": "/text?tag=KernelConfig&x=ef07076ec3277c56",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b284d4d5a6785f8cd07eda2646a95782373cd01e",
+            "kernel-source-commit": "b284d4d5a6785f8cd07eda2646a95782373cd01e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8b8de4271424f3341b8a4c78e7d1856ba05a8632",
+            "syzkaller-commit": "8b8de4271424f3341b8a4c78e7d1856ba05a8632",
+            "compiler-description": "gcc (GCC) 8.0.1 20180301 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1280c83b800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "predicate_parse",
+            "kernel/trace/trace_events_filter.c"
+        ]
+    ],
+    "patch_commit_date": "2018-06-21T17:20:53+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "trace"
+    ],
+    "parent_of_fix_commit": "ce397d215ccd07b8ae3f71db689aedb85d56ab40",
+    "patch": "diff --git a/kernel/trace/trace_events_filter.c b/kernel/trace/trace_events_filter.c\nindex e1c818dbc0d7..0dceb77d1d42 100644\n--- a/kernel/trace/trace_events_filter.c\n+++ b/kernel/trace/trace_events_filter.c\n@@ -78,7 +78,8 @@ static const char * ops[] = { OPS };\n \tC(TOO_MANY_PREDS,\t\"Too many terms in predicate expression\"), \\\n \tC(INVALID_FILTER,\t\"Meaningless filter expression\"),\t\\\n \tC(IP_FIELD_ONLY,\t\"Only 'ip' field is supported for function trace\"), \\\n-\tC(INVALID_VALUE,\t\"Invalid value (did you forget quotes)?\"),\n+\tC(INVALID_VALUE,\t\"Invalid value (did you forget quotes)?\"), \\\n+\tC(NO_FILTER,\t\t\"No filter found\"),\n \n #undef C\n #define C(a, b)\t\tFILT_ERR_##a\n@@ -550,6 +551,13 @@ predicate_parse(const char *str, int nr_parens, int nr_preds,\n \t\tgoto out_free;\n \t}\n \n+\tif (!N) {\n+\t\t/* No program? */\n+\t\tret = -EINVAL;\n+\t\tparse_error(pe, FILT_ERR_NO_FILTER, ptr - str);\n+\t\tgoto out_free;\n+\t}\n+\n \tprog[N].pred = NULL;\t\t\t\t\t/* #13 */\n \tprog[N].target = 1;\t\t/* TRUE */\n \tprog[N+1].pred = NULL;\n",
+    "patch_modified_files": [
+        "kernel/trace/trace_events_filter.c"
+    ]
+}

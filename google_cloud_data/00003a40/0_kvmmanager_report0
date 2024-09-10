@@ -1,0 +1,103 @@
+loop7: detected capacity change from 0 to 2048
+==================================================================
+BUG: KASAN: slab-out-of-bounds in udf_find_entry+0x899/0x14a0
+Write of size 165 at addr ffff88801de0205a by task syz-executor.7/3672
+
+CPU: 1 PID: 3672 Comm: syz-executor.7 Not tainted 6.1.0-rc4-syzkaller-00011-g59f2f4b8a757 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1b1/0x28e
+ print_report+0x15f/0x4c0
+ kasan_report+0xca/0x100
+ kasan_check_range+0x27f/0x290
+ memcpy+0x3c/0x60
+ udf_find_entry+0x899/0x14a0
+ udf_lookup+0xf0/0x350
+ __lookup_hash+0x117/0x240
+ do_unlinkat+0x24a/0x8d0
+ do_coredump+0x1f42/0x2680
+ get_signal+0x141c/0x1790
+ arch_do_signal_or_restart+0x9e/0x1a00
+ exit_to_user_mode_loop+0x6a/0xf0
+ exit_to_user_mode_prepare+0xb1/0x140
+ syscall_exit_to_user_mode+0x50/0x2b0
+ do_syscall_64+0x49/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fb5ab078fb7
+Code: 08 89 3c 24 48 89 4c 24 18 e8 55 8c 02 00 4c 8b 54 24 18 48 8b 54 24 10 41 89 c0 48 8b 74 24 08 8b 3c 24 b8 12 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 31 44 89 c7 48 89 04 24 e8 a5 8c 02 00 48 8b
+RSP: 002b:00007fb5ac20ce60 EFLAGS: 00000293 ORIG_RAX: 0000000000000012
+RAX: ffffffffffffffe5 RBX: 000000000000001b RCX: 00007fb5ab078fb7
+RDX: 0000000000000027 RSI: 0000020006000001 RDI: 0000000000000006
+RBP: 0000000000000028 R08: 0000000000000000 R09: 0000000000000010
+R10: 6608000000000014 R11: 0000000000000293 R12: 0000000000000006
+R13: 0000000000000006 R14: 0000000000000000 R15: 0000000020000488
+ </TASK>
+
+Allocated by task 3672:
+ kasan_set_track+0x3c/0x60
+ __kasan_kmalloc+0x97/0xb0
+ udf_find_entry+0x7b1/0x14a0
+ udf_lookup+0xf0/0x350
+ __lookup_hash+0x117/0x240
+ do_unlinkat+0x24a/0x8d0
+ do_coredump+0x1f42/0x2680
+ get_signal+0x141c/0x1790
+ arch_do_signal_or_restart+0x9e/0x1a00
+ exit_to_user_mode_loop+0x6a/0xf0
+ exit_to_user_mode_prepare+0xb1/0x140
+ syscall_exit_to_user_mode+0x50/0x2b0
+ do_syscall_64+0x49/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+The buggy address belongs to the object at ffff88801de02000
+ which belongs to the cache kmalloc-256 of size 256
+The buggy address is located 90 bytes inside of
+ 256-byte region [ffff88801de02000, ffff88801de02100)
+
+The buggy address belongs to the physical page:
+page:ffffea0000778080 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x1de02
+head:ffffea0000778080 order:1 compound_mapcount:0 compound_pincount:0
+flags: 0xfff00000010200(slab|head|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000010200 0000000000000000 dead000000000122 ffff888011841b40
+raw: 0000000000000000 0000000080100010 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 1, migratetype Unmovable, gfp_mask 0xd2040(__GFP_IO|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC), pid 3672, tgid 3671 (syz-executor.7), ts 66780823107, free_ts 66748206603
+ get_page_from_freelist+0x34b2/0x3640
+ __alloc_pages+0x28d/0x7e0
+ alloc_slab_page+0x3b/0xe0
+ new_slab+0x84/0x2d0
+ ___slab_alloc+0x9f3/0xff0
+ __kmem_cache_alloc_node+0x19f/0x260
+ kmalloc_trace+0x26/0x60
+ udf_find_entry+0x7b1/0x14a0
+ udf_lookup+0xf0/0x350
+ __lookup_hash+0x117/0x240
+ do_unlinkat+0x24a/0x8d0
+ do_coredump+0x1f42/0x2680
+ get_signal+0x141c/0x1790
+ arch_do_signal_or_restart+0x9e/0x1a00
+ exit_to_user_mode_loop+0x6a/0xf0
+ exit_to_user_mode_prepare+0xb1/0x140
+page last free stack trace:
+ free_unref_page_prepare+0xfb8/0x1160
+ free_unref_page+0x99/0x520
+ qlist_free_all+0x22/0x60
+ kasan_quarantine_reduce+0x162/0x180
+ __kasan_slab_alloc+0x1f/0x70
+ slab_post_alloc_hook+0x50/0x360
+ kmem_cache_alloc+0x119/0x260
+ getname_flags+0xb8/0x4e0
+ __se_sys_newfstatat+0xcb/0x7e0
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Memory state around the buggy address:
+ ffff88801de01f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff88801de02000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff88801de02080: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06
+                                                                ^
+ ffff88801de02100: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88801de02180: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================

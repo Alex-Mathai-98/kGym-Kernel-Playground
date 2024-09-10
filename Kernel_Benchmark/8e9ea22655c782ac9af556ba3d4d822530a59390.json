@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "WARNING in usbtmc_ioctl/usb_submit_urb",
+    "display-title": "WARNING in usbtmc_ioctl/usb_submit_urb (2)",
+    "id": "8e9ea22655c782ac9af556ba3d4d822530a59390",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "USB: usbtmc: Fix direction for 0-length ioctl control messages",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=94d25e9128988c6a1fc9070f6e98215a95795bd8",
+            "hash": "94d25e9128988c6a1fc9070f6e98215a95795bd8",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "USB: core: WARN if pipe direction != setup packet direction",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5cc59c418fde9d02859996707b9d5dfd2941c50b",
+        "hash": "5cc59c418fde9d02859996707b9d5dfd2941c50b",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000716a3705f9adb8ee@google.com/T/",
+        "https://lore.kernel.org/all/ede1ee02-b718-49e7-a44c-51339fec706b@rowland.harvard.edu/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in usbtmc_ioctl/usb_submit_urb",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15027ef7c80000",
+            "c-reproducer": "/text?tag=ReproC&x=16d7550c280000",
+            "kernel-config": "/text?tag=KernelConfig&x=d56ffc213bf6bf4a",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=58390c8ce1bddb6c623f62e7ed36383e7fa5c02f",
+            "kernel-source-commit": "58390c8ce1bddb6c623f62e7ed36383e7fa5c02f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/62df2017e3b1edd786a4c737bd4ccba2b4581d88",
+            "syzkaller-commit": "62df2017e3b1edd786a4c737bd4ccba2b4581d88",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14afa594280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "usbtmc_ioctl_request",
+            "drivers/usb/class/usbtmc.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "usb_submit_urb",
+            "drivers/usb/core/urb.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-01T18:22:35+00:00",
+    "cause_commit_date": "2021-05-22T02:16:23+00:00",
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "ac9a78681b921877518763ba0e89202254349d1b",
+    "patch": "diff --git a/drivers/usb/class/usbtmc.c b/drivers/usb/class/usbtmc.c\nindex 4bb6d304eb4b..311007b1d904 100644\n--- a/drivers/usb/class/usbtmc.c\n+++ b/drivers/usb/class/usbtmc.c\n@@ -1928,6 +1928,8 @@ static int usbtmc_ioctl_request(struct usbtmc_device_data *data,\n \n \tif (request.req.wLength > USBTMC_BUFSIZE)\n \t\treturn -EMSGSIZE;\n+\tif (request.req.wLength == 0)\t/* Length-0 requests are never IN */\n+\t\trequest.req.bRequestType &= ~USB_DIR_IN;\n \n \tis_in = request.req.bRequestType & USB_DIR_IN;\n \n",
+    "patch_modified_files": [
+        "drivers/usb/class/usbtmc.c"
+    ]
+}

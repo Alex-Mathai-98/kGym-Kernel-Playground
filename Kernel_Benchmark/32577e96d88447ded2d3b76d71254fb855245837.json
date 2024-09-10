@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in bit_putcs",
+    "display-title": "KASAN: use-after-free Read in bit_putcs",
+    "id": "32577e96d88447ded2d3b76d71254fb855245837",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "vt_ioctl: make VT_RESIZEX behave like VT_RESIZE",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=988d0763361bb65690d60e2bc53a6b72777040c3",
+            "hash": "988d0763361bb65690d60e2bc53a6b72777040c3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000064653f059f419b58@google.com/T/",
+        "https://lore.kernel.org/all/20201016090437.170032996@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/4933b81b-9b1a-355b-df0e-9b31e8280ab9@i-love.sakura.ne.jp/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=143d11d3900000",
+            "c-reproducer": "/text?tag=ReproC&x=150d16e5900000",
+            "kernel-config": "/text?tag=KernelConfig&x=240e2ebab67245c7",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=171d4ff79f965c1f164705ef0aaea102a6ad238b",
+            "kernel-source-commit": "171d4ff79f965c1f164705ef0aaea102a6ad238b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4a006f636cdc7ecce6c16385b5aee54ddb717c2a",
+            "syzkaller-commit": "4a006f636cdc7ecce6c16385b5aee54ddb717c2a",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10c2f79b900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "vt_resizex",
+            "drivers/tty/vt/vt_ioctl.c"
+        ]
+    ],
+    "patch_commit_date": "2020-09-27T11:46:30+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fbdev"
+    ],
+    "parent_of_fix_commit": "b63537020db34ac3f88086095cc49df65283fb61",
+    "patch": "diff --git a/drivers/tty/vt/vt_ioctl.c b/drivers/tty/vt/vt_ioctl.c\nindex 2ea76a09e07f..0a33b8ababe3 100644\n--- a/drivers/tty/vt/vt_ioctl.c\n+++ b/drivers/tty/vt/vt_ioctl.c\n@@ -772,58 +772,21 @@ static int vt_resizex(struct vc_data *vc, struct vt_consize __user *cs)\n \tif (copy_from_user(&v, cs, sizeof(struct vt_consize)))\n \t\treturn -EFAULT;\n \n-\t/* FIXME: Should check the copies properly */\n-\tif (!v.v_vlin)\n-\t\tv.v_vlin = vc->vc_scan_lines;\n-\n-\tif (v.v_clin) {\n-\t\tint rows = v.v_vlin / v.v_clin;\n-\t\tif (v.v_rows != rows) {\n-\t\t\tif (v.v_rows) /* Parameters don't add up */\n-\t\t\t\treturn -EINVAL;\n-\t\t\tv.v_rows = rows;\n-\t\t}\n-\t}\n-\n-\tif (v.v_vcol && v.v_ccol) {\n-\t\tint cols = v.v_vcol / v.v_ccol;\n-\t\tif (v.v_cols != cols) {\n-\t\t\tif (v.v_cols)\n-\t\t\t\treturn -EINVAL;\n-\t\t\tv.v_cols = cols;\n-\t\t}\n-\t}\n-\n-\tif (v.v_clin > 32)\n-\t\treturn -EINVAL;\n+\tif (v.v_vlin)\n+\t\tpr_info_once(\"\\\"struct vt_consize\\\"->v_vlin is ignored. Please report if you need this.\\n\");\n+\tif (v.v_clin)\n+\t\tpr_info_once(\"\\\"struct vt_consize\\\"->v_clin is ignored. Please report if you need this.\\n\");\n \n+\tconsole_lock();\n \tfor (i = 0; i < MAX_NR_CONSOLES; i++) {\n-\t\tstruct vc_data *vcp;\n+\t\tvc = vc_cons[i].d;\n \n-\t\tif (!vc_cons[i].d)\n-\t\t\tcontinue;\n-\t\tconsole_lock();\n-\t\tvcp = vc_cons[i].d;\n-\t\tif (vcp) {\n-\t\t\tint ret;\n-\t\t\tint save_scan_lines = vcp->vc_scan_lines;\n-\t\t\tint save_font_height = vcp->vc_font.height;\n-\n-\t\t\tif (v.v_vlin)\n-\t\t\t\tvcp->vc_scan_lines = v.v_vlin;\n-\t\t\tif (v.v_clin)\n-\t\t\t\tvcp->vc_font.height = v.v_clin;\n-\t\t\tvcp->vc_resize_user = 1;\n-\t\t\tret = vc_resize(vcp, v.v_cols, v.v_rows);\n-\t\t\tif (ret) {\n-\t\t\t\tvcp->vc_scan_lines = save_scan_lines;\n-\t\t\t\tvcp->vc_font.height = save_font_height;\n-\t\t\t\tconsole_unlock();\n-\t\t\t\treturn ret;\n-\t\t\t}\n+\t\tif (vc) {\n+\t\t\tvc->vc_resize_user = 1;\n+\t\t\tvc_resize(vc, v.v_cols, v.v_rows);\n \t\t}\n-\t\tconsole_unlock();\n \t}\n+\tconsole_unlock();\n \n \treturn 0;\n }\n",
+    "patch_modified_files": [
+        "drivers/tty/vt/vt_ioctl.c"
+    ]
+}

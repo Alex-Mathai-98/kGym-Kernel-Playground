@@ -1,0 +1,189 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in nf_hook_entries_grow",
+    "display-title": "KASAN: use-after-free Read in nf_hook_entries_grow",
+    "id": "c7c63c2548579c7e4718d2f8bc079a6e152e4ac8",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: nf_tables: unregister flowtable hooks on netns exit",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6069da443bf65f513bb507bb21e2f87cfb1ad0b6",
+            "hash": "6069da443bf65f513bb507bb21e2f87cfb1ad0b6",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "netfilter: nftables: introduce table ownership",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6001a930ce0378b62210d4f83583fc88a903d89d",
+        "hash": "6001a930ce0378b62210d4f83583fc88a903d89d",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c0069f05d38f279d@google.com/T/",
+        "https://lore.kernel.org/all/20220218114932.2735042-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20220221161757.250801-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20220222073312.308406-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20220228172347.614588246@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220228172359.567256961@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20230927153007.562809-2-pablo@netfilter.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in nf_hook_entries_grow",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1781a643b00000",
+            "c-reproducer": "/text?tag=ReproC&x=15130199b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=10f3f669b8093e95",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9eaa88c7036eda3f6c215f87ca693594cf90559b",
+            "kernel-source-commit": "9eaa88c7036eda3f6c215f87ca693594cf90559b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/44068e196185e2f5a7c94629b6245cdde008b140",
+            "syzkaller-commit": "44068e196185e2f5a7c94629b6245cdde008b140",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=126dd47eb00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "EXPORT_SYMBOL_GPL",
+            "net/netfilter/nf_tables_api.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "nf_tables_delsetelem",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nft_ctx_init_from_setattr",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "__nft_release_table",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_module_init",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_getflowtable",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_newrule",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_delset",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_newflowtable",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_getsetelem",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_delrule",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_getchain",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_newsetelem",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nft_table_lookup",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_newset",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_newobj",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_delchain",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_newtable",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_exit_net",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nft_ctx_init_from_elemattr",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_delflowtable",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nft_flush",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_fill_table_info",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_getrule",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_newchain",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_updtable",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_getobj",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_delobj",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_getset",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nft_delflowtable",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_deltable",
+            "net/netfilter/nf_tables_api.c"
+        ],
+        [
+            "nf_tables_gettable",
+            "net/netfilter/nf_tables_api.c"
+        ]
+    ],
+    "patch_commit_date": "2022-02-18T11:45:32+00:00",
+    "cause_commit_date": "2021-02-15T11:28:07+00:00",
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "b1a5983f56e371046dcf164f90bfaf704d2b89f6",
+    "patch": "diff --git a/net/netfilter/nf_tables_api.c b/net/netfilter/nf_tables_api.c\nindex 5fa16990da95..3081c4399f10 100644\n--- a/net/netfilter/nf_tables_api.c\n+++ b/net/netfilter/nf_tables_api.c\n@@ -9636,10 +9636,13 @@ EXPORT_SYMBOL_GPL(__nft_release_basechain);\n \n static void __nft_release_hook(struct net *net, struct nft_table *table)\n {\n+\tstruct nft_flowtable *flowtable;\n \tstruct nft_chain *chain;\n \n \tlist_for_each_entry(chain, &table->chains, list)\n \t\tnf_tables_unregister_hook(net, table, chain);\n+\tlist_for_each_entry(flowtable, &table->flowtables, list)\n+\t\tnft_unregister_flowtable_net_hooks(net, &flowtable->hook_list);\n }\n \n static void __nft_release_hooks(struct net *net)\n",
+    "patch_modified_files": [
+        "net/netfilter/nf_tables_api.c"
+    ]
+}

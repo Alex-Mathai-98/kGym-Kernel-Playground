@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "WARNING in rmqueue",
+    "display-title": "WARNING in rmqueue",
+    "id": "a49f5785c682daf283714b6695f902e5371b83d7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "erofs: stop parsing non-compact HEAD index if clusterofs is invalid",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cc4efd3dd2ac9f89143e5d881609747ecff04164",
+            "hash": "cc4efd3dd2ac9f89143e5d881609747ecff04164",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ec75b005ee97fbaa@google.com/T/",
+        "https://lore.kernel.org/all/20230410173714.104604-1-hsiangkao@linux.alibaba.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in rmqueue",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15dde8a1880000",
+            "c-reproducer": "/text?tag=ReproC&x=15685e8d880000",
+            "kernel-config": "/text?tag=KernelConfig&x=2325e409a9a893e1",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b7b275e60bcd5f89771e865a8239325f86d9927d",
+            "kernel-source-commit": "b7b275e60bcd5f89771e865a8239325f86d9927d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/247de55b7ea6f9f235a407518b10c1496c8b25b3",
+            "syzkaller-commit": "247de55b7ea6f9f235a407518b10c1496c8b25b3",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1513fb9b880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "legacy_load_cluster_from_disk",
+            "fs/erofs/zmap.c"
+        ]
+    ],
+    "patch_commit_date": "2023-04-10T17:37:14+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "erofs"
+    ],
+    "parent_of_fix_commit": "12c2987e896bd1c433150a64f5bae9993c29d551",
+    "patch": "diff --git a/fs/erofs/zmap.c b/fs/erofs/zmap.c\nindex cbd3f72c83e9..7ca108c3834c 100644\n--- a/fs/erofs/zmap.c\n+++ b/fs/erofs/zmap.c\n@@ -85,6 +85,10 @@ static int legacy_load_cluster_from_disk(struct z_erofs_maprecorder *m,\n \t\tif (advise & Z_EROFS_LI_PARTIAL_REF)\n \t\t\tm->partialref = true;\n \t\tm->clusterofs = le16_to_cpu(di->di_clusterofs);\n+\t\tif (m->clusterofs >= 1 << vi->z_logical_clusterbits) {\n+\t\t\tDBG_BUGON(1);\n+\t\t\treturn -EFSCORRUPTED;\n+\t\t}\n \t\tm->pblk = le32_to_cpu(di->di_u.blkaddr);\n \t\tbreak;\n \tdefault:\n",
+    "patch_modified_files": [
+        "fs/erofs/zmap.c"
+    ]
+}

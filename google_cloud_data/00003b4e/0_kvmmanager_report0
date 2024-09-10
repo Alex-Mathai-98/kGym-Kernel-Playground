@@ -1,0 +1,28 @@
+================================================================================
+UBSAN: shift-out-of-bounds in drivers/media/v4l2-core/v4l2-ctrls.c:2184:36
+shift exponent 100 is too large for 64-bit type 'long long unsigned int'
+CPU: 1 PID: 5599 Comm: syz-executor.1 Not tainted 5.11.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x107/0x163
+ ubsan_epilogue+0xb/0x58
+ __ubsan_handle_shift_out_of_bounds.cold+0xab/0x178
+ std_validate.cold+0x19/0x1e
+ set_ctrl+0x1e1/0x4a0
+ v4l2_s_ctrl+0x2fc/0x500
+ v4l_s_ctrl+0x324/0x390
+ __video_do_ioctl+0xb85/0xe00
+ video_usercopy+0x47f/0x1370
+ v4l2_ioctl+0x1b3/0x250
+ __x64_sys_ioctl+0x185/0x210
+ do_syscall_64+0x2d/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7fc50728ef69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fc50660f0c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007fc5073bcf80 RCX: 00007fc50728ef69
+RDX: 0000000020000140 RSI: 00000000c008561c RDI: 0000000000000003
+RBP: 00007fc5072db4a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fc5073bcf80 R15: 00007ffed885a9e8
+================================================================================

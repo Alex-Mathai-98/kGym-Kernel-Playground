@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "memory leak in wacom_probe",
+    "display-title": "memory leak in wacom_probe",
+    "id": "3ce164d1f22d112c0bb0ef379a2656b5ca401583",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "HID: wacom: Fix memory leakage caused by kfifo_alloc",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=37309f47e2f5674f3e86cb765312ace42cfcedf5",
+            "hash": "37309f47e2f5674f3e86cb765312ace42cfcedf5",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000099d90905b3ea44b4@google.com/T/",
+        "https://lore.kernel.org/all/20201210112258.477636-1-yepeilin.cs@gmail.com/T/",
+        "https://lore.kernel.org/all/20210115121957.037407908@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210115121958.391610178@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210115122006.047132306@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16339ad6500000",
+            "c-reproducer": "/text?tag=ReproC&x=1409f511500000",
+            "kernel-config": "/text?tag=KernelConfig&x=a3f13716fa0212fd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=eccc876724927ff3b9ff91f36f7b6b159e948f0c",
+            "kernel-source-commit": "eccc876724927ff3b9ff91f36f7b6b159e948f0c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/cca8798699baeeccbf80af23d234ac19a5d667aa",
+            "syzkaller-commit": "cca8798699baeeccbf80af23d234ac19a5d667aa",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1614a5aa500000"
+        }
+    ],
+    "subsystems": [
+        "input",
+        "usb"
+    ],
+    "parent_of_fix_commit": "de925e2fbb44eed8a2a7ce166b485fed5eae01aa",
+    "patch": "diff --git a/drivers/hid/wacom_sys.c b/drivers/hid/wacom_sys.c\nindex 045c464228d9..e8acd235db2a 100644\n--- a/drivers/hid/wacom_sys.c\n+++ b/drivers/hid/wacom_sys.c\n@@ -1270,6 +1270,37 @@ static int wacom_devm_sysfs_create_group(struct wacom *wacom,\n \t\t\t\t\t       group);\n }\n \n+static void wacom_devm_kfifo_release(struct device *dev, void *res)\n+{\n+\tstruct kfifo_rec_ptr_2 *devres = res;\n+\n+\tkfifo_free(devres);\n+}\n+\n+static int wacom_devm_kfifo_alloc(struct wacom *wacom)\n+{\n+\tstruct wacom_wac *wacom_wac = &wacom->wacom_wac;\n+\tstruct kfifo_rec_ptr_2 *pen_fifo = &wacom_wac->pen_fifo;\n+\tint error;\n+\n+\tpen_fifo = devres_alloc(wacom_devm_kfifo_release,\n+\t\t\t      sizeof(struct kfifo_rec_ptr_2),\n+\t\t\t      GFP_KERNEL);\n+\n+\tif (!pen_fifo)\n+\t\treturn -ENOMEM;\n+\n+\terror = kfifo_alloc(pen_fifo, WACOM_PKGLEN_MAX, GFP_KERNEL);\n+\tif (error) {\n+\t\tdevres_free(pen_fifo);\n+\t\treturn error;\n+\t}\n+\n+\tdevres_add(&wacom->hdev->dev, pen_fifo);\n+\n+\treturn 0;\n+}\n+\n enum led_brightness wacom_leds_brightness_get(struct wacom_led *led)\n {\n \tstruct wacom *wacom = led->wacom;\n@@ -2724,7 +2755,7 @@ static int wacom_probe(struct hid_device *hdev,\n \tif (features->check_for_hid_type && features->hid_type != hdev->type)\n \t\treturn -ENODEV;\n \n-\terror = kfifo_alloc(&wacom_wac->pen_fifo, WACOM_PKGLEN_MAX, GFP_KERNEL);\n+\terror = wacom_devm_kfifo_alloc(wacom);\n \tif (error)\n \t\treturn error;\n \n@@ -2786,8 +2817,6 @@ static void wacom_remove(struct hid_device *hdev)\n \n \tif (wacom->wacom_wac.features.type != REMOTE)\n \t\twacom_release_resources(wacom);\n-\n-\tkfifo_free(&wacom_wac->pen_fifo);\n }\n \n #ifdef CONFIG_PM\n",
+    "patch_modified_files": [
+        "drivers/hid/wacom_sys.c"
+    ]
+}

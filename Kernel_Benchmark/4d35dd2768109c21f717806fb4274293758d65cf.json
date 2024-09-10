@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in mt_validate_nulls",
+    "display-title": "KASAN: slab-out-of-bounds Read in mt_validate_nulls",
+    "id": "4d35dd2768109c21f717806fb4274293758d65cf",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm: validate the mm before dropping the mmap lock",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ae80b404198434e49e903dc3b1ba83e2c7bb3ee2",
+            "hash": "ae80b404198434e49e903dc3b1ba83e2c7bb3ee2",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000002d884205ffc75b9a@google.com/T/",
+        "https://lore.kernel.org/all/000000000000c3f89306002158b3@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Read in mt_validate_nulls",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10342968a80000",
+            "c-reproducer": "/text?tag=ReproC&x=17d4cf70a80000",
+            "kernel-config": "/text?tag=KernelConfig&x=7406f415f386e786",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a901a3568fd26ca9c4a82d8bc5ed5b3ed844d451",
+            "kernel-source-commit": "a901a3568fd26ca9c4a82d8bc5ed5b3ed844d451",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/bfc478367b83b3fda580f54964aa9f3651beeb3d",
+            "syzkaller-commit": "bfc478367b83b3fda580f54964aa9f3651beeb3d",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1469a15f280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "do_vmi_align_munmap",
+            "mm/mmap.c"
+        ]
+    ],
+    "patch_commit_date": "2023-07-03T17:08:50+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "f66066bc5136f25e36a2daff4896c768f18c211e",
+    "patch": "diff --git a/mm/mmap.c b/mm/mmap.c\nindex 51e70fa98450..547b40531791 100644\n--- a/mm/mmap.c\n+++ b/mm/mmap.c\n@@ -2554,11 +2554,10 @@ do_vmi_align_munmap(struct vma_iterator *vmi, struct vm_area_struct *vma,\n \tmas_set(&mas_detach, start);\n \tremove_mt(mm, &mas_detach);\n \t__mt_destroy(&mt_detach);\n+\tvalidate_mm(mm);\n \tif (unlock)\n \t\tmmap_read_unlock(mm);\n \n-\n-\tvalidate_mm(mm);\n \treturn 0;\n \n clear_tree_failed:\n",
+    "patch_modified_files": [
+        "mm/mmap.c"
+    ]
+}

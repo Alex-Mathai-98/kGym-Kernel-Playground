@@ -1,0 +1,116 @@
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 3692 at kernel/workqueue.c:3066 __flush_work+0x941/0xba0
+Modules linked in:
+CPU: 0 PID: 3692 Comm: syz-executor.0 Not tainted 5.19.0-syzkaller-13962-gde64b6b6fb6f #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:__flush_work+0x941/0xba0
+Code: 00 48 c7 c6 b9 4d 4f 81 48 c7 c7 00 99 f8 8b e8 85 67 10 00 45 31 f6 e9 7f fc ff ff e8 38 1a 2d 00 0f 0b eb ef e8 2f 1a 2d 00 <0f> 0b eb e6 e8 26 1a 2d 00 e8 21 1a 2d 00 e8 1c 1a 2d 00 4c 89 ff
+RSP: 0018:ffffc900040afa50 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: dffffc0000000000 RCX: 0000000000000000
+RDX: ffff8880789b1d80 RSI: ffffffff814f4df1 RDI: 0000000000000001
+RBP: ffffc900040afbe8 R08: 0000000000000001 R09: 0000000000000000
+R10: 0000000000000001 R11: ffffc900040af874 R12: 0000000000000001
+R13: 0000000000000001 R14: 0000000000000001 R15: 0000000000000000
+FS:  000055555710f480(0000) GS:ffff8880b9a00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000020000000 CR3: 000000006a2bb000 CR4: 0000000000350ef0
+Call Trace:
+ <TASK>
+ __cancel_work_timer+0x3e6/0x580
+ tls_strp_done+0x66/0x230
+ tls_sk_proto_close+0x3fe/0xb00
+ inet_release+0x12e/0x270
+ inet6_release+0x4b/0x70
+ __sock_release+0xcd/0x280
+ sock_close+0x18/0x20
+ __fput+0x264/0x980
+ task_work_run+0xdd/0x1a0
+ exit_to_user_mode_prepare+0x23c/0x250
+ syscall_exit_to_user_mode+0x19/0x50
+ do_syscall_64+0x40/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f4352078b0a
+Code: 48 3d 00 f0 ff ff 77 48 c3 0f 1f 80 00 00 00 00 48 83 ec 18 89 7c 24 0c e8 03 7c 02 00 8b 7c 24 0c 89 c2 b8 03 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 36 89 d7 89 44 24 0c e8 63 7c 02 00 8b 44 24
+RSP: 002b:00007ffd91989990 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 0000000000000004 RCX: 00007f4352078b0a
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000003
+RBP: ffffffffffffffff R08: 00007f435218bf80 R09: 00007f435218bf8c
+R10: 00007ffd91989b10 R11: 0000000000000293 R12: 000000000000bcb2
+R13: 00007f435218bf80 R14: 000000000000bcb3 R15: 00007f4352590000
+ </TASK>
+irq event stamp: 6191
+hardirqs last  enabled at (6195): [<ffffffff8161d882>] __down_trylock_console_sem+0xe2/0x140
+hardirqs last disabled at (6198): [<ffffffff8161d865>] __down_trylock_console_sem+0xc5/0x140
+softirqs last  enabled at (6128): [<ffffffff81493a3b>] __irq_exit_rcu+0xeb/0x190
+softirqs last disabled at (6115): [<ffffffff81493a3b>] __irq_exit_rcu+0xeb/0x190
+---[ end trace 0000000000000000 ]---
+general protection fault, probably for non-canonical address 0xdffffc000000001a: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x00000000000000d0-0x00000000000000d7]
+CPU: 1 PID: 3692 Comm: syz-executor.0 Tainted: G        W          5.19.0-syzkaller-13962-gde64b6b6fb6f #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:tls_strp_done+0x9e/0x230
+Code: c1 ea 03 80 3c 02 00 0f 85 7e 01 00 00 48 b8 00 00 00 00 00 fc ff df 4c 8b 63 18 49 8d bc 24 d0 00 00 00 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 4d 01 00 00 49 8d bc 24 cc 00 00 00 49 8b ac 24
+RSP: 0018:ffffc900040afcf0 EFLAGS: 00010212
+RAX: dffffc0000000000 RBX: ffff88801765c0d0 RCX: ffffffff814f6428
+RDX: 000000000000001a RSI: 0000000000000000 RDI: 00000000000000d0
+RBP: 0000000000000000 R08: 0000000000000005 R09: 0000000000000000
+R10: 0000000000000000 R11: ffffc900040af874 R12: 0000000000000000
+R13: ffff88801765c0e8 R14: ffff88806a0c4908 R15: 0000000000000000
+FS:  000055555710f480(0000) GS:ffff8880b9b00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fef5aa11ff8 CR3: 000000006a2bb000 CR4: 0000000000350ee0
+Call Trace:
+ <TASK>
+ tls_sk_proto_close+0x3fe/0xb00
+ inet_release+0x12e/0x270
+ inet6_release+0x4b/0x70
+ __sock_release+0xcd/0x280
+ sock_close+0x18/0x20
+ __fput+0x264/0x980
+ task_work_run+0xdd/0x1a0
+ exit_to_user_mode_prepare+0x23c/0x250
+ syscall_exit_to_user_mode+0x19/0x50
+ do_syscall_64+0x40/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f4352078b0a
+Code: 48 3d 00 f0 ff ff 77 48 c3 0f 1f 80 00 00 00 00 48 83 ec 18 89 7c 24 0c e8 03 7c 02 00 8b 7c 24 0c 89 c2 b8 03 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 36 89 d7 89 44 24 0c e8 63 7c 02 00 8b 44 24
+RSP: 002b:00007ffd91989990 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 0000000000000004 RCX: 00007f4352078b0a
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000003
+RBP: ffffffffffffffff R08: 00007f435218bf80 R09: 00007f435218bf8c
+R10: 00007ffd91989b10 R11: 0000000000000293 R12: 000000000000bcb2
+R13: 00007f435218bf80 R14: 000000000000bcb3 R15: 00007f4352590000
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:tls_strp_done+0x9e/0x230
+Code: c1 ea 03 80 3c 02 00 0f 85 7e 01 00 00 48 b8 00 00 00 00 00 fc ff df 4c 8b 63 18 49 8d bc 24 d0 00 00 00 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 4d 01 00 00 49 8d bc 24 cc 00 00 00 49 8b ac 24
+RSP: 0018:ffffc900040afcf0 EFLAGS: 00010212
+RAX: dffffc0000000000 RBX: ffff88801765c0d0 RCX: ffffffff814f6428
+RDX: 000000000000001a RSI: 0000000000000000 RDI: 00000000000000d0
+RBP: 0000000000000000 R08: 0000000000000005 R09: 0000000000000000
+R10: 0000000000000000 R11: ffffc900040af874 R12: 0000000000000000
+R13: ffff88801765c0e8 R14: ffff88806a0c4908 R15: 0000000000000000
+FS:  000055555710f480(0000) GS:ffff8880b9b00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fef5aa11ff8 CR3: 000000006a2bb000 CR4: 0000000000350ee0
+----------------
+Code disassembly (best guess):
+   0:	c1 ea 03             	shr    $0x3,%edx
+   3:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1)
+   7:	0f 85 7e 01 00 00    	jne    0x18b
+   d:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  14:	fc ff df
+  17:	4c 8b 63 18          	mov    0x18(%rbx),%r12
+  1b:	49 8d bc 24 d0 00 00 	lea    0xd0(%r12),%rdi
+  22:	00
+  23:	48 89 fa             	mov    %rdi,%rdx
+  26:	48 c1 ea 03          	shr    $0x3,%rdx
+* 2a:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1) <-- trapping instruction
+  2e:	0f 85 4d 01 00 00    	jne    0x181
+  34:	49 8d bc 24 cc 00 00 	lea    0xcc(%r12),%rdi
+  3b:	00
+  3c:	49                   	rex.WB
+  3d:	8b                   	.byte 0x8b
+  3e:	ac                   	lods   %ds:(%rsi),%al
+  3f:	24                   	.byte 0x24

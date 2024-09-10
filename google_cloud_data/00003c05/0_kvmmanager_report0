@@ -1,0 +1,69 @@
+kasan: GPF could be caused by NULL-ptr deref or user memory access
+general protection fault: 0000 [#1] PREEMPT SMP KASAN
+CPU: 0 PID: 4377 Comm: syz-executor.3 Not tainted 5.5.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:xt_rateest_tg_checkentry+0x114/0x8b0
+Code: f2 8a 06 fb 45 84 ff 0f 84 33 05 00 00 e8 a4 89 06 fb 49 8d be 68 13 00 00 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 cd 06 00 00 4d 8b b6 68 13 00 00 e8 36 b0 f2 fa
+RSP: 0018:ffffc9000171f760 EFLAGS: 00010202
+RAX: dffffc0000000000 RBX: 1ffff920002e3eee RCX: ffffffff866ed6e0
+RDX: 000000000000026d RSI: ffffffff866ed19c RDI: 0000000000001368
+RBP: ffffc9000171f818 R08: 0000000000000001 R09: 0000000000000001
+R10: 0000000000000000 R11: 0000000000000001 R12: ffffc9000171fab0
+R13: 000000000000002d R14: 0000000000000000 R15: 0000000000000001
+FS:  00007f25d56486c0(0000) GS:ffff8881f6400000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f6f9832f270 CR3: 00000001d79a4005 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ xt_check_target+0x288/0x670
+ translate_table+0x104d/0x1e90
+ do_replace.constprop.0+0x1ab/0x4c0
+ do_arpt_set_ctl+0x122/0x160
+ nf_setsockopt+0x77/0xd0
+ ip_setsockopt+0xad/0xd0
+ udp_setsockopt+0x62/0xa0
+ sock_common_setsockopt+0x90/0xc0
+ __sys_setsockopt+0x24f/0x4c0
+ __x64_sys_setsockopt+0xbd/0x150
+ do_syscall_64+0xf6/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f25d62c7f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f25d56480c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000036
+RAX: ffffffffffffffda RBX: 00007f25d63f5f80 RCX: 00007f25d62c7f69
+RDX: 0000000000000060 RSI: 0a02000000000000 RDI: 0000000000000003
+RBP: 00007f25d63144a4 R08: 0000000000000530 R09: 0000000000000000
+R10: 0000000020000800 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f25d63f5f80 R15: 00007ffda4eff138
+Modules linked in:
+---[ end trace bf9d2c66e93c4026 ]---
+RIP: 0010:xt_rateest_tg_checkentry+0x114/0x8b0
+Code: f2 8a 06 fb 45 84 ff 0f 84 33 05 00 00 e8 a4 89 06 fb 49 8d be 68 13 00 00 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 cd 06 00 00 4d 8b b6 68 13 00 00 e8 36 b0 f2 fa
+RSP: 0018:ffffc9000171f760 EFLAGS: 00010202
+RAX: dffffc0000000000 RBX: 1ffff920002e3eee RCX: ffffffff866ed6e0
+RDX: 000000000000026d RSI: ffffffff866ed19c RDI: 0000000000001368
+RBP: ffffc9000171f818 R08: 0000000000000001 R09: 0000000000000001
+R10: 0000000000000000 R11: 0000000000000001 R12: ffffc9000171fab0
+R13: 000000000000002d R14: 0000000000000000 R15: 0000000000000001
+FS:  00007f25d56486c0(0000) GS:ffff8881f6400000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fa58fca0440 CR3: 00000001d79a4006 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	f2 8a 06             	repnz mov (%rsi),%al
+   3:	fb                   	sti
+   4:	45 84 ff             	test   %r15b,%r15b
+   7:	0f 84 33 05 00 00    	je     0x540
+   d:	e8 a4 89 06 fb       	call   0xfb0689b6
+  12:	49 8d be 68 13 00 00 	lea    0x1368(%r14),%rdi
+  19:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  20:	fc ff df
+  23:	48 89 fa             	mov    %rdi,%rdx
+  26:	48 c1 ea 03          	shr    $0x3,%rdx
+* 2a:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1) <-- trapping instruction
+  2e:	0f 85 cd 06 00 00    	jne    0x701
+  34:	4d 8b b6 68 13 00 00 	mov    0x1368(%r14),%r14
+  3b:	e8 36 b0 f2 fa       	call   0xfaf2b076

@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "WARNING: suspicious RCU usage in in6_dump_addrs",
+    "display-title": "WARNING: suspicious RCU usage in in6_dump_addrs",
+    "id": "91e171a9aa357b24b62b3ab188bc04996448c99b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ipv6: fix lockdep splat in in6_dump_addrs()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4e43e64d0f1332fcc503babad4dc31aead7131ca",
+            "hash": "4e43e64d0f1332fcc503babad4dc31aead7131ca",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "bpf: Add kernel/modules BTF presence checks to bpftool feature command",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b9fc8b4a591811546fec2dbef7e9f809362100c9",
+        "hash": "b9fc8b4a591811546fec2dbef7e9f809362100c9",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "WARNING: suspicious RCU usage in in6_dump_addrs",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10ee3a87f00000",
+            "c-reproducer": "/text?tag=ReproC&x=1235d2a0080000",
+            "kernel-config": "/text?tag=KernelConfig&x=7f18d63dadbcb795",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b13baccc3850ca8b8cccbf8ed9912dbaa0fdf7f3",
+            "kernel-source-commit": "b13baccc3850ca8b8cccbf8ed9912dbaa0fdf7f3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0d5abf15b74358009a02efb629f7bc7c84841a1f",
+            "syzkaller-commit": "0d5abf15b74358009a02efb629f7bc7c84841a1f",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=139d94fdf00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "in6_dump_addrs",
+            "net/ipv6/addrconf.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "probe_kernel_image_config",
+            "tools/bpf/bpftool/feature.c"
+        ]
+    ],
+    "patch_commit_date": "2022-06-28T12:12:48+00:00",
+    "cause_commit_date": "2021-02-22T19:58:46+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "fa152f626b24ec2ca3489100d8c5c0a0bce4e2ef",
+    "patch": "diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c\nindex 5864cbc30db6..49cc6587dd77 100644\n--- a/net/ipv6/addrconf.c\n+++ b/net/ipv6/addrconf.c\n@@ -5168,9 +5168,9 @@ static int in6_dump_addrs(struct inet6_dev *idev, struct sk_buff *skb,\n \t\tfillargs->event = RTM_GETMULTICAST;\n \n \t\t/* multicast address */\n-\t\tfor (ifmca = rcu_dereference(idev->mc_list);\n+\t\tfor (ifmca = rtnl_dereference(idev->mc_list);\n \t\t     ifmca;\n-\t\t     ifmca = rcu_dereference(ifmca->next), ip_idx++) {\n+\t\t     ifmca = rtnl_dereference(ifmca->next), ip_idx++) {\n \t\t\tif (ip_idx < s_ip_idx)\n \t\t\t\tcontinue;\n \t\t\terr = inet6_fill_ifmcaddr(skb, ifmca, fillargs);\n",
+    "patch_modified_files": [
+        "net/ipv6/addrconf.c"
+    ]
+}

@@ -1,0 +1,90 @@
+BUG: workqueue leaked lock or atomic: kworker/u4:1/0x00000000/11
+     last function: wb_workfn
+1 lock held by kworker/u4:1/11:
+ #0: ffff888078ed00b0
+ (&tree->tree_lock){+.+.}-{3:3}, at: hfs_find_init+0x1b6/0x220
+CPU: 1 PID: 11 Comm: kworker/u4:1 Not tainted 6.1.0-rc4-syzkaller-00074-g8d824e69d9f3 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: writeback wb_workfn (flush-7:6)
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x100/0x178
+ process_one_work.cold+0xa5/0xc0
+ worker_thread+0x67d/0x10e0
+ kthread+0x2e4/0x3a0
+ ret_from_fork+0x1f/0x30
+ </TASK>
+
+======================================================
+WARNING: possible circular locking dependency detected
+6.1.0-rc4-syzkaller-00074-g8d824e69d9f3 #0 Not tainted
+------------------------------------------------------
+kworker/u4:1/11 is trying to acquire lock:
+ffff888017e86138 ((wq_completion)writeback){+.+.}-{0:0}, at: process_one_work+0x8e4/0x1720
+
+but task is already holding lock:
+ffff888078ed00b0 (&tree->tree_lock){+.+.}-{3:3}, at: hfs_find_init+0x1b6/0x220
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #1 (&tree->tree_lock){+.+.}-{3:3}:
+       lock_release+0x36b/0x810
+       process_one_work+0xafc/0x1720
+       worker_thread+0x67d/0x10e0
+       kthread+0x2e4/0x3a0
+       ret_from_fork+0x1f/0x30
+
+-> #0 (
+(wq_completion)writeback
+){+.+.}-{0:0}
+:
+       __lock_acquire+0x29c8/0x5640
+       lock_acquire+0x1e0/0x610
+       process_one_work+0x945/0x1720
+       worker_thread+0x877/0x10e0
+       kthread+0x2e4/0x3a0
+       ret_from_fork+0x1f/0x30
+
+other info that might help us debug this:
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&tree->tree_lock
+);
+                               lock(
+(wq_completion)writeback
+);
+                               lock(&tree->tree_lock);
+  lock((wq_completion)writeback);
+
+ *** DEADLOCK ***
+
+1 lock held by kworker/u4:1/11:
+ #0: ffff888078ed00b0 (&tree->tree_lock){+.+.}-{3:3}, at: hfs_find_init+0x1b6/0x220
+
+stack backtrace:
+CPU: 1 PID: 11 Comm: kworker/u4:1 Not tainted 6.1.0-rc4-syzkaller-00074-g8d824e69d9f3 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: writeback wb_workfn
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x100/0x178
+ check_noncircular+0x268/0x310
+ __lock_acquire+0x29c8/0x5640
+ lock_acquire+0x1e0/0x610
+ process_one_work+0x945/0x1720
+ worker_thread+0x877/0x10e0
+ kthread+0x2e4/0x3a0
+ ret_from_fork+0x1f/0x30
+ </TASK>
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50

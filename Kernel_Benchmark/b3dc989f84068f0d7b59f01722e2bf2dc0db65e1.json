@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "memory leak in packet_set_ring",
+    "display-title": "memory leak in packet_set_ring",
+    "id": "b3dc989f84068f0d7b59f01722e2bf2dc0db65e1",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/packet: fix memory leak in packet_set_ring()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=55655e3d1197fff16a7a05088fb0e5eba50eac55",
+            "hash": "55655e3d1197fff16a7a05088fb0e5eba50eac55",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=169a2e69a00000",
+            "c-reproducer": "/text?tag=ReproC&x=11a8941aa00000",
+            "kernel-config": "/text?tag=KernelConfig&x=56f1da14935c3cce",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=abf02e2964b3aaf1d5197c5d7c671e771b0e109e",
+            "kernel-source-commit": "abf02e2964b3aaf1d5197c5d7c671e771b0e109e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/34bf9440bd06034f86b5d9ac8afbf078129cbdae",
+            "syzkaller-commit": "34bf9440bd06034f86b5d9ac8afbf078129cbdae",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11ee3016a00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "packet_set_ring",
+            "net/packet/af_packet.c"
+        ]
+    ],
+    "patch_commit_date": "2019-06-24T09:38:20+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "9354544cbccf68da1b047f8fb7b47630e3c8a59d",
+    "patch": "diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c\nindex a29d66da7394..0b4cf94f0233 100644\n--- a/net/packet/af_packet.c\n+++ b/net/packet/af_packet.c\n@@ -4314,7 +4314,7 @@ static int packet_set_ring(struct sock *sk, union tpacket_req_u *req_u,\n \t\t\t\t    req3->tp_sizeof_priv ||\n \t\t\t\t    req3->tp_feature_req_word) {\n \t\t\t\t\terr = -EINVAL;\n-\t\t\t\t\tgoto out;\n+\t\t\t\t\tgoto out_free_pg_vec;\n \t\t\t\t}\n \t\t\t}\n \t\t\tbreak;\n@@ -4378,6 +4378,7 @@ static int packet_set_ring(struct sock *sk, union tpacket_req_u *req_u,\n \t\t\tprb_shutdown_retire_blk_timer(po, rb_queue);\n \t}\n \n+out_free_pg_vec:\n \tif (pg_vec)\n \t\tfree_pg_vec(pg_vec, order, req->tp_block_nr);\n out:\n",
+    "patch_modified_files": [
+        "net/packet/af_packet.c"
+    ]
+}

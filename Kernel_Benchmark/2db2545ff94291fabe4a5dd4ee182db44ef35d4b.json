@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "BUG: GPF in non-whitelisted uaccess (non-canonical address?)",
+    "display-title": "BUG: GPF in non-whitelisted uaccess (non-canonical address?)",
+    "id": "2db2545ff94291fabe4a5dd4ee182db44ef35d4b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "HID: uhid: forbid UHID_CREATE under KERNEL_DS or elevated privileges",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8c01db7619f07c85c5cd81ec5eb83608b56c88f5",
+            "hash": "8c01db7619f07c85c5cd81ec5eb83608b56c88f5",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000080f8fa057a67b75c@google.com/T/",
+        "https://lore.kernel.org/all/20181114130712.21028-1-dh.herrmann@gmail.com/T/",
+        "https://lore.kernel.org/all/20181114180217.195917-1-ebiggers@kernel.org/T/",
+        "https://lore.kernel.org/all/20181126105029.790599475@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20181126105045.447291262@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20181126105046.722096341@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20181126105050.592727680@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20181126105059.832485122@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/lsq.1549201507.384106140@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1646a225400000",
+            "c-reproducer": "/text?tag=ReproC&x=108a6533400000",
+            "kernel-config": "/text?tag=KernelConfig&x=4a0a89f12ca9b0f5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=ccda4af0f4b92f7b4c308d3acc262f4a7e3affad",
+            "kernel-source-commit": "ccda4af0f4b92f7b4c308d3acc262f4a7e3affad",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/5f5f6d14e80b8bd6b42db961118e902387716bcb",
+            "syzkaller-commit": "5f5f6d14e80b8bd6b42db961118e902387716bcb",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12ee2c5d400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "uhid_char_write",
+            "drivers/hid/uhid.c"
+        ]
+    ],
+    "patch_commit_date": "2018-11-14T21:55:09+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "input"
+    ],
+    "parent_of_fix_commit": "0fd791841a6d67af1155a9c3de54dea51220721e",
+    "patch": "diff --git a/drivers/hid/uhid.c b/drivers/hid/uhid.c\nindex 3c5507313606..051639c09f72 100644\n--- a/drivers/hid/uhid.c\n+++ b/drivers/hid/uhid.c\n@@ -12,6 +12,7 @@\n \n #include <linux/atomic.h>\n #include <linux/compat.h>\n+#include <linux/cred.h>\n #include <linux/device.h>\n #include <linux/fs.h>\n #include <linux/hid.h>\n@@ -722,6 +723,17 @@ static ssize_t uhid_char_write(struct file *file, const char __user *buffer,\n \n \tswitch (uhid->input_buf.type) {\n \tcase UHID_CREATE:\n+\t\t/*\n+\t\t * 'struct uhid_create_req' contains a __user pointer which is\n+\t\t * copied from, so it's unsafe to allow this with elevated\n+\t\t * privileges (e.g. from a setuid binary) or via kernel_write().\n+\t\t */\n+\t\tif (file->f_cred != current_cred() || uaccess_kernel()) {\n+\t\t\tpr_err_once(\"UHID_CREATE from different security context by process %d (%s), this is not allowed.\\n\",\n+\t\t\t\t    task_tgid_vnr(current), current->comm);\n+\t\t\tret = -EACCES;\n+\t\t\tgoto unlock;\n+\t\t}\n \t\tret = uhid_dev_create(uhid, &uhid->input_buf);\n \t\tbreak;\n \tcase UHID_CREATE2:\n",
+    "patch_modified_files": [
+        "drivers/hid/uhid.c"
+    ]
+}

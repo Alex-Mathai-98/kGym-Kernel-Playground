@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "memory leak in vhci_write",
+    "display-title": "memory leak in vhci_write",
+    "id": "11cb6eec3ac0b37e657e8af0612342e140379e49",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: L2CAP: Fix memory leak in vhci_write",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7c9524d929648935bac2bbb4c20437df8f9c3f42",
+            "hash": "7c9524d929648935bac2bbb4c20437df8f9c3f42",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000000d0b1905e6aaef64@google.com/T/",
+        "https://lore.kernel.org/all/20221017074432.12177-1-yin31149@gmail.com/T/",
+        "https://lore.kernel.org/all/20221018021851.2900-1-yin31149@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in vhci_write",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11e8bd97080000",
+            "c-reproducer": "/text?tag=ReproC&x=143c9fc3080000",
+            "kernel-config": "/text?tag=KernelConfig&x=6e4b25d26c713a1b",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7ebfc85e2cd7b08f518b526173e9a33b56b3913b",
+            "kernel-source-commit": "7ebfc85e2cd7b08f518b526173e9a33b56b3913b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/7a7cb3044bb1ce0ba83e549d64c152bb5dacb98a",
+            "syzkaller-commit": "7a7cb3044bb1ce0ba83e549d64c152bb5dacb98a",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12960e3d080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "l2cap_recv_acldata",
+            "net/bluetooth/l2cap_core.c"
+        ]
+    ],
+    "patch_commit_date": "2022-10-18T02:18:51+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "0d0e2d032811280b927650ff3c15fe5020e82533",
+    "patch": "diff --git a/net/bluetooth/l2cap_core.c b/net/bluetooth/l2cap_core.c\nindex 9a32ce634919..1fbe087d6ae4 100644\n--- a/net/bluetooth/l2cap_core.c\n+++ b/net/bluetooth/l2cap_core.c\n@@ -8461,9 +8461,8 @@ void l2cap_recv_acldata(struct hci_conn *hcon, struct sk_buff *skb, u16 flags)\n \t\t * expected length.\n \t\t */\n \t\tif (skb->len < L2CAP_LEN_SIZE) {\n-\t\t\tif (l2cap_recv_frag(conn, skb, conn->mtu) < 0)\n-\t\t\t\tgoto drop;\n-\t\t\treturn;\n+\t\t\tl2cap_recv_frag(conn, skb, conn->mtu);\n+\t\t\tbreak;\n \t\t}\n \n \t\tlen = get_unaligned_le16(skb->data) + L2CAP_HDR_SIZE;\n@@ -8507,7 +8506,7 @@ void l2cap_recv_acldata(struct hci_conn *hcon, struct sk_buff *skb, u16 flags)\n \n \t\t\t/* Header still could not be read just continue */\n \t\t\tif (conn->rx_skb->len < L2CAP_LEN_SIZE)\n-\t\t\t\treturn;\n+\t\t\t\tbreak;\n \t\t}\n \n \t\tif (skb->len > conn->rx_len) {\n",
+    "patch_modified_files": [
+        "net/bluetooth/l2cap_core.c"
+    ]
+}

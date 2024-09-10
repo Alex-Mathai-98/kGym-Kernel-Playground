@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in __post_watch_notification",
+    "display-title": "KASAN: use-after-free Read in __post_watch_notification",
+    "id": "3f5d1a7de17359e085f9a912eae7bf7e89dc7435",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "watch_queue: Fix missing locking in add_watch_to_object()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e64ab2dbd882933b65cd82ff6235d705ad65dbb6",
+            "hash": "e64ab2dbd882933b65cd82ff6235d705ad65dbb6",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000029f85405e4c9fe7f@google.com/T/",
+        "https://lore.kernel.org/all/20220728155121.12145-1-code@siddh.me/T/",
+        "https://lore.kernel.org/all/20220801114133.641770326@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220801114134.468284027@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220801114138.041018499@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220801121513.28E4B5204D1@webmail.sinamail.sina.com.cn/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in __post_watch_notification",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1326814a080000",
+            "c-reproducer": "/text?tag=ReproC&x=174ea97e080000",
+            "kernel-config": "/text?tag=KernelConfig&x=cfd2f9ae77f1f719",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e0dccc3b76fb35bb257b4118367a883073d7390e",
+            "kernel-source-commit": "e0dccc3b76fb35bb257b4118367a883073d7390e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/664c519c76b7466a55b659a722a40aa4dff08998",
+            "syzkaller-commit": "664c519c76b7466a55b659a722a40aa4dff08998",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15abd572080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "init_watch",
+            "kernel/watch_queue.c"
+        ]
+    ],
+    "patch_commit_date": "2022-07-28T09:31:12+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "e0339f036ef4beb9b20f0b6532a1e0ece7f594c6",
+    "patch": "diff --git a/kernel/watch_queue.c b/kernel/watch_queue.c\nindex 2c351765c409..59ddb00d6944 100644\n--- a/kernel/watch_queue.c\n+++ b/kernel/watch_queue.c\n@@ -454,6 +454,33 @@ void init_watch(struct watch *watch, struct watch_queue *wqueue)\n \trcu_assign_pointer(watch->queue, wqueue);\n }\n \n+static int add_one_watch(struct watch *watch, struct watch_list *wlist, struct watch_queue *wqueue)\n+{\n+\tconst struct cred *cred;\n+\tstruct watch *w;\n+\n+\thlist_for_each_entry(w, &wlist->watchers, list_node) {\n+\t\tstruct watch_queue *wq = rcu_access_pointer(w->queue);\n+\t\tif (wqueue == wq && watch->id == w->id)\n+\t\t\treturn -EBUSY;\n+\t}\n+\n+\tcred = current_cred();\n+\tif (atomic_inc_return(&cred->user->nr_watches) > task_rlimit(current, RLIMIT_NOFILE)) {\n+\t\tatomic_dec(&cred->user->nr_watches);\n+\t\treturn -EAGAIN;\n+\t}\n+\n+\twatch->cred = get_cred(cred);\n+\trcu_assign_pointer(watch->watch_list, wlist);\n+\n+\tkref_get(&wqueue->usage);\n+\tkref_get(&watch->usage);\n+\thlist_add_head(&watch->queue_node, &wqueue->watches);\n+\thlist_add_head_rcu(&watch->list_node, &wlist->watchers);\n+\treturn 0;\n+}\n+\n /**\n  * add_watch_to_object - Add a watch on an object to a watch list\n  * @watch: The watch to add\n@@ -468,34 +495,21 @@ void init_watch(struct watch *watch, struct watch_queue *wqueue)\n  */\n int add_watch_to_object(struct watch *watch, struct watch_list *wlist)\n {\n-\tstruct watch_queue *wqueue = rcu_access_pointer(watch->queue);\n-\tstruct watch *w;\n-\n-\thlist_for_each_entry(w, &wlist->watchers, list_node) {\n-\t\tstruct watch_queue *wq = rcu_access_pointer(w->queue);\n-\t\tif (wqueue == wq && watch->id == w->id)\n-\t\t\treturn -EBUSY;\n-\t}\n-\n-\twatch->cred = get_current_cred();\n-\trcu_assign_pointer(watch->watch_list, wlist);\n+\tstruct watch_queue *wqueue;\n+\tint ret = -ENOENT;\n \n-\tif (atomic_inc_return(&watch->cred->user->nr_watches) >\n-\t    task_rlimit(current, RLIMIT_NOFILE)) {\n-\t\tatomic_dec(&watch->cred->user->nr_watches);\n-\t\tput_cred(watch->cred);\n-\t\treturn -EAGAIN;\n-\t}\n+\trcu_read_lock();\n \n+\twqueue = rcu_access_pointer(watch->queue);\n \tif (lock_wqueue(wqueue)) {\n-\t\tkref_get(&wqueue->usage);\n-\t\tkref_get(&watch->usage);\n-\t\thlist_add_head(&watch->queue_node, &wqueue->watches);\n+\t\tspin_lock(&wlist->lock);\n+\t\tret = add_one_watch(watch, wlist, wqueue);\n+\t\tspin_unlock(&wlist->lock);\n \t\tunlock_wqueue(wqueue);\n \t}\n \n-\thlist_add_head_rcu(&watch->list_node, &wlist->watchers);\n-\treturn 0;\n+\trcu_read_unlock();\n+\treturn ret;\n }\n EXPORT_SYMBOL(add_watch_to_object);\n \n",
+    "patch_modified_files": [
+        "kernel/watch_queue.c"
+    ]
+}

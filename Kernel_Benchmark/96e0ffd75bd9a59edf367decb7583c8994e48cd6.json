@@ -1,0 +1,179 @@
+{
+    "version": 1,
+    "title": "WARNING in wnd_init",
+    "display-title": "WARNING in wnd_init",
+    "id": "96e0ffd75bd9a59edf367decb7583c8994e48cd6",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/ntfs3: Use __GFP_NOWARN allocation at wnd_init()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0d0f659bf713662fabed973f9996b8f23c59ca51",
+            "hash": "0d0f659bf713662fabed973f9996b8f23c59ca51",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        },
+        {
+            "title": "fs/ntfs3: Validate attribute data and valid sizes",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=019d22eb0eb707fc099e6e8fad9b3933236a06d0",
+            "hash": "019d22eb0eb707fc099e6e8fad9b3933236a06d0",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "fs/ntfs3: Use kernel ALIGN macros over driver specific",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fa3cacf544636b2dc48cfb2f277a2071f14d66a2",
+        "hash": "fa3cacf544636b2dc48cfb2f277a2071f14d66a2",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c2333105e9cc7b1c@google.com/T/",
+        "https://lore.kernel.org/all/20221004031502.20007-1-abdun.nihaal@gmail.com/T/",
+        "https://lore.kernel.org/all/20221114115314.183818-1-abdun.nihaal@gmail.com/T/",
+        "https://lore.kernel.org/all/20221227203249.1213526-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221227203342.1213918-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221227203433.1214255-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in wnd_init",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11cad4e0880000",
+            "c-reproducer": "/text?tag=ReproC&x=1303781f080000",
+            "kernel-config": "/text?tag=KernelConfig&x=ba0d23aa7e1ffaf5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=49c13ed0316d55d73f1c81c66a7e2abd743f9ae6",
+            "kernel-source-commit": "49c13ed0316d55d73f1c81c66a7e2abd743f9ae6",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a41a2080e3ec52c9f7bd25156b59666dcfab13e5",
+            "syzkaller-commit": "a41a2080e3ec52c9f7bd25156b59666dcfab13e5",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=156847ff080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "wnd_init",
+            "fs/ntfs3/bitmap.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "ni_insert_nonresident",
+            "fs/ntfs3/frecord.c"
+        ],
+        [
+            "ni_expand_mft_list",
+            "fs/ntfs3/frecord.c"
+        ],
+        [
+            "mi_resize_attr",
+            "fs/ntfs3/record.c"
+        ],
+        [
+            "ntfs_set_ea",
+            "fs/ntfs3/xattr.c"
+        ],
+        [
+            "attr_ondisk_size",
+            "fs/ntfs3/ntfs.h"
+        ],
+        [
+            "ni_insert_resident",
+            "fs/ntfs3/frecord.c"
+        ],
+        [
+            "ntfs_security_init",
+            "fs/ntfs3/fsntfs.c"
+        ],
+        [
+            "is_rst_page_hdr_valid",
+            "fs/ntfs3/fslog.c"
+        ],
+        [
+            "log_replay",
+            "fs/ntfs3/fslog.c"
+        ],
+        [
+            "attr_set_size_res",
+            "fs/ntfs3/attrib.c"
+        ],
+        [
+            "hdr_find_e",
+            "fs/ntfs3/index.c"
+        ],
+        [
+            "de_has_vcn_ex",
+            "fs/ntfs3/ntfs.h"
+        ],
+        [
+            "ni_update_parent",
+            "fs/ntfs3/frecord.c"
+        ],
+        [
+            "ntfs_create_inode",
+            "fs/ntfs3/inode.c"
+        ],
+        [
+            "mi_pack_runs",
+            "fs/ntfs3/record.c"
+        ],
+        [
+            "attr_create_nonres_log",
+            "fs/ntfs3/fslog.c"
+        ],
+        [
+            "static_assert",
+            "fs/ntfs3/ntfs.h"
+        ],
+        [
+            "is_rst_area_valid",
+            "fs/ntfs3/fslog.c"
+        ],
+        [
+            "ntfs_init_from_boot",
+            "fs/ntfs3/super.c"
+        ],
+        [
+            "run_is_empty",
+            "fs/ntfs3/ntfs_fs.h"
+        ],
+        [
+            "log_create",
+            "fs/ntfs3/fslog.c"
+        ],
+        [
+            "indx_new",
+            "fs/ntfs3/index.c"
+        ],
+        [
+            "do_action",
+            "fs/ntfs3/fslog.c"
+        ],
+        [
+            "mi_enum_attr",
+            "fs/ntfs3/record.c"
+        ],
+        [
+            "fill_name_de",
+            "fs/ntfs3/namei.c"
+        ],
+        [
+            "next_log_lsn",
+            "fs/ntfs3/fslog.c"
+        ],
+        [
+            "ntfs_insert_security",
+            "fs/ntfs3/fsntfs.c"
+        ]
+    ],
+    "patch_commit_date": "2022-10-02T14:39:15+00:00",
+    "cause_commit_date": "2021-08-26T08:56:29+00:00",
+    "subsystems": [
+        "ntfs3"
+    ],
+    "parent_of_fix_commit": "557d19675a470bb0a98beccec38c5dc3735c20fa",
+    "patch": "diff --git a/fs/ntfs3/bitmap.c b/fs/ntfs3/bitmap.c\nindex 629c1ee97268..badaaaf302dd 100644\n--- a/fs/ntfs3/bitmap.c\n+++ b/fs/ntfs3/bitmap.c\n@@ -661,7 +661,7 @@ int wnd_init(struct wnd_bitmap *wnd, struct super_block *sb, size_t nbits)\n \tif (!wnd->bits_last)\n \t\twnd->bits_last = wbits;\n \n-\twnd->free_bits = kcalloc(wnd->nwnd, sizeof(u16), GFP_NOFS);\n+\twnd->free_bits = kcalloc(wnd->nwnd, sizeof(u16), GFP_NOFS | __GFP_NOWARN);\n \tif (!wnd->free_bits)\n \t\treturn -ENOMEM;\n \n",
+    "patch_modified_files": [
+        "fs/ntfs3/bitmap.c"
+    ]
+}

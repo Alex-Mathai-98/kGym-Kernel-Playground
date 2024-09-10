@@ -1,0 +1,39 @@
+================================================================================
+UBSAN: shift-out-of-bounds in sound/usb/midi.c:1928:8
+shift exponent 244 is too large for 32-bit type 'int'
+CPU: 1 PID: 33 Comm: kworker/1:1 Not tainted 5.10.0-rc5-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: usb_hub_wq hub_event
+Call Trace:
+ dump_stack+0x107/0x163
+ ubsan_epilogue+0xb/0x58
+ __ubsan_handle_shift_out_of_bounds.cold+0xab/0x178
+ snd_usbmidi_get_ms_info.cold+0x39/0x3e
+ __snd_usbmidi_create+0x3bc/0x2400
+ snd_usb_create_quirk+0xd3/0x190
+ usb_audio_probe+0x6a2/0x31e0
+ usb_probe_interface+0x30d/0x920
+ really_probe+0x2af/0xf50
+ driver_probe_device+0x287/0x3f0
+ __device_attach_driver+0x20b/0x2d0
+ bus_for_each_drv+0x147/0x1e0
+ __device_attach+0x1db/0x4b0
+ bus_probe_device+0x1e4/0x290
+ device_add+0xa08/0x1c40
+ usb_set_configuration+0xe98/0x1ba0
+ usb_generic_driver_probe+0xb4/0xf0
+ usb_probe_device+0xdb/0x2c0
+ really_probe+0x2af/0xf50
+ driver_probe_device+0x287/0x3f0
+ __device_attach_driver+0x20b/0x2d0
+ bus_for_each_drv+0x147/0x1e0
+ __device_attach+0x1db/0x4b0
+ bus_probe_device+0x1e4/0x290
+ device_add+0xa08/0x1c40
+ usb_new_device+0x965/0x1650
+ hub_event+0x161f/0x4780
+ process_one_work+0x91f/0x1670
+ worker_thread+0x679/0x1170
+ kthread+0x3a2/0x490
+ ret_from_fork+0x1f/0x30
+================================================================================

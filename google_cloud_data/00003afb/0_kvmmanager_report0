@@ -1,0 +1,78 @@
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+general protection fault, probably for non-canonical address 0xdffffc0000000001: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x0000000000000008-0x000000000000000f]
+CPU: 0 PID: 5247 Comm: kworker/0:4 Not tainted 6.1.0-syzkaller-09671-g89529367293c #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: wg-crypt-wg2 wg_packet_tx_worker
+RIP: 0010:em_cmp_match+0x55/0x650
+Code: 48 89 fa 48 c1 ea 03 80 3c 02 00 0f 85 9e 05 00 00 48 b8 00 00 00 00 00 fc ff df 48 8b 6b 08 4c 8d 7d 0a 4c 89 fa 48 c1 ea 03 <0f> b6 14 02 4c 89 f8 83 e0 07 83 c0 01 38 d0 7c 08 84 d2 0f 85 35
+RSP: 0018:ffffc90003e8f2b0 EFLAGS: 00010202
+RAX: dffffc0000000000 RBX: ffff888026f51e80 RCX: 0000000000000000
+RDX: 0000000000000001 RSI: ffffffff87f492dd RDI: ffff888026f51e88
+RBP: 0000000000000000 R08: 0000000000000004 R09: 0000000000000001
+R10: 0000000000000000 R11: 000000000000001d R12: ffff888027da9000
+R13: 0000000000000000 R14: dffffc0000000000 R15: 000000000000000a
+FS:  0000000000000000(0000) GS:ffff8880b9800000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000020000080 CR3: 000000000c48e000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ __tcf_em_tree_match+0x14b/0x530
+ basic_classify+0x20e/0x350
+ tcf_classify+0x1bb/0xa90
+ prio_enqueue+0x3ba/0x790
+ dev_qdisc_enqueue+0x45/0x390
+ __dev_queue_xmit+0x2452/0x3fd0
+ ip_finish_output2+0x1649/0x2380
+ __ip_finish_output+0x38b/0x640
+ ip_finish_output+0x31/0x280
+ ip_output+0x1fb/0x630
+ ip_local_out+0xaf/0x190
+ iptunnel_xmit+0x672/0x9d0
+ send4+0x493/0xde0
+ wg_socket_send_skb_to_peer+0x192/0x210
+ wg_packet_tx_worker+0x1ab/0x740
+ process_one_work+0xa33/0x1720
+ worker_thread+0x67d/0x10e0
+ kthread+0x2e4/0x3a0
+ ret_from_fork+0x1f/0x30
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:em_cmp_match+0x55/0x650
+Code: 48 89 fa 48 c1 ea 03 80 3c 02 00 0f 85 9e 05 00 00 48 b8 00 00 00 00 00 fc ff df 48 8b 6b 08 4c 8d 7d 0a 4c 89 fa 48 c1 ea 03 <0f> b6 14 02 4c 89 f8 83 e0 07 83 c0 01 38 d0 7c 08 84 d2 0f 85 35
+RSP: 0018:ffffc90003e8f2b0 EFLAGS: 00010202
+RAX: dffffc0000000000 RBX: ffff888026f51e80 RCX: 0000000000000000
+RDX: 0000000000000001 RSI: ffffffff87f492dd RDI: ffff888026f51e88
+RBP: 0000000000000000 R08: 0000000000000004 R09: 0000000000000001
+R10: 0000000000000000 R11: 000000000000001d R12: ffff888027da9000
+R13: 0000000000000000 R14: dffffc0000000000 R15: 000000000000000a
+FS:  0000000000000000(0000) GS:ffff8880b9800000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000020000080 CR3: 000000000c48e000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	48 89 fa             	mov    %rdi,%rdx
+   3:	48 c1 ea 03          	shr    $0x3,%rdx
+   7:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1)
+   b:	0f 85 9e 05 00 00    	jne    0x5af
+  11:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  18:	fc ff df
+  1b:	48 8b 6b 08          	mov    0x8(%rbx),%rbp
+  1f:	4c 8d 7d 0a          	lea    0xa(%rbp),%r15
+  23:	4c 89 fa             	mov    %r15,%rdx
+  26:	48 c1 ea 03          	shr    $0x3,%rdx
+* 2a:	0f b6 14 02          	movzbl (%rdx,%rax,1),%edx <-- trapping instruction
+  2e:	4c 89 f8             	mov    %r15,%rax
+  31:	83 e0 07             	and    $0x7,%eax
+  34:	83 c0 01             	add    $0x1,%eax
+  37:	38 d0                	cmp    %dl,%al
+  39:	7c 08                	jl     0x43
+  3b:	84 d2                	test   %dl,%dl
+  3d:	0f                   	.byte 0xf
+  3e:	85                   	.byte 0x85
+  3f:	35                   	.byte 0x35

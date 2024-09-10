@@ -1,0 +1,85 @@
+BUG: memory leak
+unreferenced object 0xffff88812081d000 (size 4096):
+  comm "syz-executor.1", pid 5190, jiffies 4294942458 (age 12.900s)
+  hex dump (first 32 bytes):
+    01 00 00 00 00 00 00 00 80 56 a7 20 81 88 ff ff  .........V. ....
+    1b e3 9e 85 ff ff ff ff 03 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff8154fc05>] kmalloc_trace+0x25/0x90
+    [<ffffffff83461223>] raw_open+0x43/0x100
+    [<ffffffff827c7768>] misc_open+0x1d8/0x200
+    [<ffffffff81669262>] chrdev_open+0x122/0x330
+    [<ffffffff81656fb2>] do_dentry_open+0x372/0x920
+    [<ffffffff8167f75f>] path_openat+0x12bf/0x1bd0
+    [<ffffffff81680c70>] do_filp_open+0xd0/0x1c0
+    [<ffffffff8165aaba>] do_sys_openat2+0xda/0x130
+    [<ffffffff8165b46f>] __x64_sys_openat+0xaf/0x100
+    [<ffffffff84a49638>] do_syscall_64+0x38/0xb0
+    [<ffffffff84c0008b>] entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+BUG: memory leak
+unreferenced object 0xffff8881209661c0 (size 32):
+  comm "syz-executor.1", pid 5190, jiffies 4294942458 (age 12.900s)
+  hex dump (first 32 bytes):
+    72 61 77 2d 67 61 64 67 65 74 2e 33 00 00 00 00  raw-gadget.3....
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff8154fc05>] kmalloc_trace+0x25/0x90
+    [<ffffffff8346050b>] raw_ioctl_init+0xdb/0x410
+    [<ffffffff83461810>] raw_ioctl+0x530/0x11c0
+    [<ffffffff816873f2>] __x64_sys_ioctl+0xf2/0x140
+    [<ffffffff84a49638>] do_syscall_64+0x38/0xb0
+    [<ffffffff84c0008b>] entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+BUG: memory leak
+unreferenced object 0xffff888120a75680 (size 128):
+  comm "syz-executor.1", pid 5190, jiffies 4294942458 (age 12.900s)
+  hex dump (first 32 bytes):
+    64 75 6d 6d 79 5f 75 64 63 00 00 00 00 00 00 00  dummy_udc.......
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff8154fc05>] kmalloc_trace+0x25/0x90
+    [<ffffffff83460548>] raw_ioctl_init+0x118/0x410
+    [<ffffffff83461810>] raw_ioctl+0x530/0x11c0
+    [<ffffffff816873f2>] __x64_sys_ioctl+0xf2/0x140
+    [<ffffffff84a49638>] do_syscall_64+0x38/0xb0
+    [<ffffffff84c0008b>] entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+BUG: memory leak
+unreferenced object 0xffff888120a75700 (size 128):
+  comm "syz-executor.1", pid 5190, jiffies 4294942458 (age 12.900s)
+  hex dump (first 32 bytes):
+    64 75 6d 6d 79 5f 75 64 63 2e 31 00 00 00 00 00  dummy_udc.1.....
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff8154fc05>] kmalloc_trace+0x25/0x90
+    [<ffffffff834605d7>] raw_ioctl_init+0x1a7/0x410
+    [<ffffffff83461810>] raw_ioctl+0x530/0x11c0
+    [<ffffffff816873f2>] __x64_sys_ioctl+0xf2/0x140
+    [<ffffffff84a49638>] do_syscall_64+0x38/0xb0
+    [<ffffffff84c0008b>] entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+BUG: memory leak
+unreferenced object 0xffff888120a75780 (size 128):
+  comm "syz-executor.1", pid 5190, jiffies 4294942458 (age 12.900s)
+  hex dump (first 32 bytes):
+    80 57 a7 20 81 88 ff ff 80 57 a7 20 81 88 ff ff  .W. .....W. ....
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff8154fc05>] kmalloc_trace+0x25/0x90
+    [<ffffffff833d18ba>] dummy_alloc_request+0x5a/0xe0
+    [<ffffffff833cdc10>] usb_ep_alloc_request+0x20/0xd0
+    [<ffffffff834629ac>] gadget_bind+0x6c/0x370
+    [<ffffffff833ce953>] gadget_bind_driver+0xe3/0x2e0
+    [<ffffffff82b90ee6>] really_probe+0x126/0x440
+    [<ffffffff82b912c3>] __driver_probe_device+0xc3/0x190
+    [<ffffffff82b913ba>] driver_probe_device+0x2a/0x120
+    [<ffffffff82b91717>] __driver_attach+0x107/0x1f0
+    [<ffffffff82b8e2b2>] bus_for_each_dev+0xa2/0x100
+    [<ffffffff82b8fd46>] bus_add_driver+0x126/0x2a0
+    [<ffffffff82b92de5>] driver_register+0x85/0x180
+    [<ffffffff833cc1c2>] usb_gadget_register_driver_owner+0x62/0x180
+    [<ffffffff83461fa0>] raw_ioctl+0xcc0/0x11c0
+    [<ffffffff816873f2>] __x64_sys_ioctl+0xf2/0x140
+    [<ffffffff84a49638>] do_syscall_64+0x38/0xb0
+

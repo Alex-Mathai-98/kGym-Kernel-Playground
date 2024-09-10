@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "WARNING in xfs_qm_dqget_cache_insert",
+    "display-title": "WARNING in xfs_qm_dqget_cache_insert",
+    "id": "b139c306850a825c7656508c3773dbea33eb56a1",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "xfs: remove WARN when dquot cache insertion fails",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4b827b3f305d1fcf837265f1e12acc22ee84327c",
+            "hash": "4b827b3f305d1fcf837265f1e12acc22ee84327c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000529f1805f81b23c2@google.com/T/",
+        "https://lore.kernel.org/all/000000000000db25f305ee15daf0@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in xfs_qm_dqget_cache_insert",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15c00fe9880000",
+            "c-reproducer": "/text?tag=ReproC&x=1052d639880000",
+            "kernel-config": "/text?tag=KernelConfig&x=8cdf448d3b35234",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=eb7081409f94a9a8608593d0fb63a1aa3d6f95d8",
+            "kernel-source-commit": "eb7081409f94a9a8608593d0fb63a1aa3d6f95d8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9da37ae85383e0dda5fc114ec808909f72fe038d",
+            "syzkaller-commit": "9da37ae85383e0dda5fc114ec808909f72fe038d",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1524cdf9880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "xfs_qm_dqget_cache_insert",
+            "fs/xfs/xfs_dquot.c"
+        ]
+    ],
+    "patch_commit_date": "2023-04-12T05:48:59+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "xfs"
+    ],
+    "parent_of_fix_commit": "aa88019851a85df80cb77f143758b13aee09e3d9",
+    "patch": "diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c\nindex 8fb90da89787..7f071757f278 100644\n--- a/fs/xfs/xfs_dquot.c\n+++ b/fs/xfs/xfs_dquot.c\n@@ -798,7 +798,6 @@ xfs_qm_dqget_cache_insert(\n \terror = radix_tree_insert(tree, id, dqp);\n \tif (unlikely(error)) {\n \t\t/* Duplicate found!  Caller must try again. */\n-\t\tWARN_ON(error != -EEXIST);\n \t\tmutex_unlock(&qi->qi_tree_lock);\n \t\ttrace_xfs_dqget_dup(dqp);\n \t\treturn error;\n",
+    "patch_modified_files": [
+        "fs/xfs/xfs_dquot.c"
+    ]
+}

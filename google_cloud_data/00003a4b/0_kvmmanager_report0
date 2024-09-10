@@ -1,0 +1,39 @@
+REISERFS (device loop2): found reiserfs format "3.5" with non-standard journal
+REISERFS (device loop2): using ordered data mode
+reiserfs: using flush barriers
+==================================================================
+BUG: KASAN: user-memory-access in zram_slot_lock+0x57/0x150
+Write of size 8 at addr 0000000000004128 by task syz-executor.2/5151
+
+CPU: 0 PID: 5151 Comm: syz-executor.2 Not tainted 6.4.0-rc1-syzkaller-00019-g46930b7cc772 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1e7/0x2d0
+ print_report+0xe6/0x540
+ kasan_report+0x176/0x1b0
+ kasan_check_range+0x283/0x290
+ zram_slot_lock+0x57/0x150
+ zram_submit_bio+0x18bc/0x26d0
+ __submit_bio+0x205/0x2e0
+ submit_bio_noacct_nocheck+0x467/0xc60
+ __bread_gfp+0x1ec/0x380
+ journal_init+0xf61/0x24b0
+ reiserfs_fill_super+0x1039/0x2620
+ mount_bdev+0x274/0x3a0
+ legacy_get_tree+0xef/0x190
+ vfs_get_tree+0x8c/0x270
+ do_new_mount+0x28f/0xae0
+ __se_sys_mount+0x2d9/0x3c0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fdd5567e11a
+Code: d8 64 89 02 48 c7 c0 ff ff ff ff eb a6 e8 de 09 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fdd5638aee8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
+RAX: ffffffffffffffda RBX: 00007fdd5638af80 RCX: 00007fdd5567e11a
+RDX: 0000000020000080 RSI: 0000000020000140 RDI: 00007fdd5638af40
+RBP: 0000000020000080 R08: 00007fdd5638af80 R09: 000000000120c083
+R10: 000000000120c083 R11: 0000000000000246 R12: 0000000020000140
+R13: 00007fdd5638af40 R14: 0000000000001127 R15: 0000000020000380
+ </TASK>
+==================================================================

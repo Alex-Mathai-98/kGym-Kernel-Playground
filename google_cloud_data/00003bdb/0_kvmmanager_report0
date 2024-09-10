@@ -1,0 +1,280 @@
+================================
+WARNING: inconsistent lock state
+6.0.0-rc6-syzkaller-00052-g3e4cb6ebbb2b #0 Not tainted
+--------------------------------
+inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
+kworker/1:6/3614 [HC0[0]:SC1[1]:HE1:SE0] takes:
+ffffffff8c0bf400 (fs_reclaim){+.?.}-{0:0}, at: kmem_cache_alloc+0x37/0x450
+{SOFTIRQ-ON-W} state was registered at:
+  lock_acquire+0x1a8/0x550
+  fs_reclaim_acquire+0x115/0x160
+  kmem_cache_alloc_trace+0x36/0x480
+  alloc_workqueue_attrs+0x38/0xc0
+  workqueue_init+0x12f/0x8c0
+  kernel_init_freeable+0x40c/0x743
+  kernel_init+0x18/0x1d0
+  ret_from_fork+0x1f/0x30
+irq event stamp: 92760
+hardirqs last  enabled at (92760): [<ffffffff81c734b3>] kfree+0x283/0x3b0
+hardirqs last disabled at (92759): [<ffffffff81c734a9>] kfree+0x279/0x3b0
+softirqs last  enabled at (92750): [<ffffffff857c8c69>] nsim_dev_trap_report_work+0x879/0xc50
+softirqs last disabled at (92755): [<ffffffff8148636b>] __irq_exit_rcu+0xeb/0x190
+
+other info that might help us debug this:
+ Possible unsafe locking scenario:
+
+       CPU0
+       ----
+  lock(fs_reclaim);
+  <Interrupt>
+    lock(fs_reclaim);
+
+ *** DEADLOCK ***
+
+5 locks held by kworker/1:6/3614:
+ #0: ffff888011867d38 ((wq_completion)events){+.+.}-{0:0}, at: process_one_work+0x8d9/0x1620
+ #1: ffffc9000377fda0 ((work_completion)(&(&nsim_dev->trap_data->trap_report_dw)->work)){+.+.}-{0:0}, at: process_one_work+0x90d/0x1620
+ #2: ffff888067d082f8 (&devlink->lock_key#6){+.+.}-{3:3}, at: nsim_dev_trap_report_work+0x4f/0xc50
+ #3: ffff888067d078e0 (&nsim_trap_data->trap_lock){+.+.}-{2:2}, at: nsim_dev_trap_report_work+0x1bf/0xc50
+ #4: ffffffff911fa508 (&fsnotify_mark_srcu){....}-{0:0}, at: fsnotify+0x545/0x1a90
+
+stack backtrace:
+CPU: 1 PID: 3614 Comm: kworker/1:6 Not tainted 6.0.0-rc6-syzkaller-00052-g3e4cb6ebbb2b #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: events nsim_dev_trap_report_work
+Call Trace:
+ <IRQ>
+ dump_stack_lvl+0xfc/0x174
+ mark_lock.cold+0x4d/0x5f
+ __lock_acquire+0x1247/0x5640
+ lock_acquire+0x1a8/0x550
+ fs_reclaim_acquire+0x115/0x160
+ kmem_cache_alloc+0x37/0x450
+ fanotify_handle_event+0x108c/0x3fb0
+ fsnotify+0xb73/0x1a90
+ __fsnotify_parent+0x5cf/0x9f0
+ __io_complete_rw_common+0x492/0x760
+ io_complete_rw+0x1c/0x1f0
+ iomap_dio_bio_end_io+0x443/0x5f0
+ bio_endio+0x612/0x790
+ blk_update_request+0x4b6/0x1470
+ scsi_end_request+0x7b/0x940
+ scsi_io_completion+0x172/0x20e0
+ scsi_complete+0x122/0x3a0
+ blk_complete_reqs+0xac/0xe0
+ __do_softirq+0x1d6/0x9cc
+ __irq_exit_rcu+0xeb/0x190
+ irq_exit_rcu+0x5/0x20
+ common_interrupt+0xaa/0xd0
+ </IRQ>
+ <TASK>
+ asm_common_interrupt+0x22/0x40
+RIP: 0010:kfree+0x195/0x3b0
+Code: 41 62 00 00 84 c0 75 0e 4c 89 f2 48 89 ee 4c 89 ef e8 af fa ff ff 4d 85 e4 0f 85 f4 00 00 00 9c 58 f6 c4 02 0f 85 8d 01 00 00 <48> 8b 44 24 08 65 48 2b 04 25 28 00 00 00 0f 85 f6 01 00 00 48 83
+RSP: 0018:ffffc9000377fb70 EFLAGS: 00000246
+RAX: 0000000000000002 RBX: ffffea0001efc480 RCX: 1ffffffff2122086
+RDX: 0000000000000000 RSI: ffffffff89ec6a60 RDI: ffffffff8a487ac0
+RBP: ffff88807bf12000 R08: 0000000000000001 R09: ffffffff908b4a37
+R10: fffffbfff2116946 R11: ffffc9000377f80c R12: 0000000000000200
+R13: ffff888011840900 R14: ffffffff874ecfdc R15: 0000000000000000
+ skb_free_head+0xac/0x110
+ skb_release_data+0x712/0x850
+ consume_skb+0xc2/0x160
+ nsim_dev_trap_report_work+0x881/0xc50
+ process_one_work+0x9f0/0x1620
+ worker_thread+0x679/0x10d0
+ kthread+0x2e0/0x390
+ ret_from_fork+0x1f/0x30
+ </TASK>
+BUG: sleeping function called from invalid context at include/linux/sched/mm.h:274
+in_atomic(): 1, irqs_disabled(): 0, non_block: 0, pid: 3614, name: kworker/1:6
+preempt_count: 101, expected: 0
+RCU nest depth: 0, expected: 0
+INFO: lockdep is turned off.
+Preemption disabled at:
+[<0000000000000000>] 0x0
+CPU: 1 PID: 3614 Comm: kworker/1:6 Not tainted 6.0.0-rc6-syzkaller-00052-g3e4cb6ebbb2b #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: events nsim_dev_trap_report_work
+Call Trace:
+ <IRQ>
+ dump_stack_lvl+0xfc/0x174
+ __might_resched.cold+0x220/0x269
+ kmem_cache_alloc+0x28e/0x450
+ fanotify_handle_event+0x108c/0x3fb0
+ fsnotify+0xb73/0x1a90
+ __fsnotify_parent+0x5cf/0x9f0
+ __io_complete_rw_common+0x492/0x760
+ io_complete_rw+0x1c/0x1f0
+ iomap_dio_bio_end_io+0x443/0x5f0
+ bio_endio+0x612/0x790
+ blk_update_request+0x4b6/0x1470
+ scsi_end_request+0x7b/0x940
+ scsi_io_completion+0x172/0x20e0
+ scsi_complete+0x122/0x3a0
+ blk_complete_reqs+0xac/0xe0
+ __do_softirq+0x1d6/0x9cc
+ __irq_exit_rcu+0xeb/0x190
+ irq_exit_rcu+0x5/0x20
+ common_interrupt+0xaa/0xd0
+ </IRQ>
+ <TASK>
+ asm_common_interrupt+0x22/0x40
+RIP: 0010:kfree+0x195/0x3b0
+Code: 41 62 00 00 84 c0 75 0e 4c 89 f2 48 89 ee 4c 89 ef e8 af fa ff ff 4d 85 e4 0f 85 f4 00 00 00 9c 58 f6 c4 02 0f 85 8d 01 00 00 <48> 8b 44 24 08 65 48 2b 04 25 28 00 00 00 0f 85 f6 01 00 00 48 83
+RSP: 0018:ffffc9000377fb70 EFLAGS: 00000246
+RAX: 0000000000000002 RBX: ffffea0001efc480 RCX: 1ffffffff2122086
+RDX: 0000000000000000 RSI: ffffffff89ec6a60 RDI: ffffffff8a487ac0
+RBP: ffff88807bf12000 R08: 0000000000000001 R09: ffffffff908b4a37
+R10: fffffbfff2116946 R11: ffffc9000377f80c R12: 0000000000000200
+R13: ffff888011840900 R14: ffffffff874ecfdc R15: 0000000000000000
+ skb_free_head+0xac/0x110
+ skb_release_data+0x712/0x850
+ consume_skb+0xc2/0x160
+ nsim_dev_trap_report_work+0x881/0xc50
+ process_one_work+0x9f0/0x1620
+ worker_thread+0x679/0x10d0
+ kthread+0x2e0/0x390
+ ret_from_fork+0x1f/0x30
+ </TASK>
+BUG: sleeping function called from invalid context at include/linux/sched/mm.h:274
+in_atomic(): 1, irqs_disabled(): 0, non_block: 0, pid: 4360, name: iou-wrk-4354
+preempt_count: 100, expected: 0
+RCU nest depth: 0, expected: 0
+INFO: lockdep is turned off.
+Preemption disabled at:
+[<ffffffff89c000e0>] __do_softirq+0xe0/0x9cc
+CPU: 1 PID: 4360 Comm: iou-wrk-4354 Tainted: G        W          6.0.0-rc6-syzkaller-00052-g3e4cb6ebbb2b #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <IRQ>
+ dump_stack_lvl+0xfc/0x174
+ __might_resched.cold+0x220/0x269
+ kmem_cache_alloc+0x28e/0x450
+ fanotify_handle_event+0x108c/0x3fb0
+ fsnotify+0xb73/0x1a90
+ __fsnotify_parent+0x5cf/0x9f0
+ __io_complete_rw_common+0x492/0x760
+ io_complete_rw+0x1c/0x1f0
+ iomap_dio_bio_end_io+0x443/0x5f0
+ bio_endio+0x612/0x790
+ blk_update_request+0x4b6/0x1470
+ scsi_end_request+0x7b/0x940
+ scsi_io_completion+0x172/0x20e0
+ scsi_complete+0x122/0x3a0
+ blk_complete_reqs+0xac/0xe0
+ __do_softirq+0x1d6/0x9cc
+ __irq_exit_rcu+0xeb/0x190
+ irq_exit_rcu+0x5/0x20
+ common_interrupt+0xaa/0xd0
+ </IRQ>
+ <TASK>
+ asm_common_interrupt+0x22/0x40
+RIP: 0010:__sanitizer_cov_trace_pc+0x7/0x60
+Code: 4b 00 5b be 03 00 00 00 e9 f6 15 85 02 66 0f 1f 44 00 00 48 8b be a8 01 00 00 e8 b4 ff ff ff 31 c0 c3 90 65 8b 05 39 dd 86 7e <89> c1 48 8b 34 24 81 e1 00 01 00 00 65 48 8b 14 25 80 6f 02 00 a9
+RSP: 0018:ffffc90005dd6fe8 EFLAGS: 00000246
+RAX: 0000000080000000 RBX: ffff8880641625f0 RCX: ffffffff81e2e90b
+RDX: ffff888077356180 RSI: 0000000000000000 RDI: 0000000000000001
+RBP: 0000000000000004 R08: 0000000000000001 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000000
+R13: ffff88814ab36000 R14: 0000000000000000 R15: ffffffff821a7ff0
+ __mark_inode_dirty+0xa9/0x1070
+ mark_buffer_dirty+0x6c2/0x990
+ __block_write_begin_int+0xa0d/0x14f0
+ block_page_mkwrite+0x34d/0x520
+ ext4_page_mkwrite+0xa7b/0x1c40
+ do_page_mkwrite+0x1a7/0x680
+ __handle_mm_fault+0x2131/0x3920
+ handle_mm_fault+0x1c8/0x760
+ do_user_addr_fault+0x488/0x11d0
+ exc_page_fault+0x58/0xd0
+ asm_exc_page_fault+0x22/0x30
+RIP: 0010:__clear_user+0x40/0x70
+Code: ad 4c 8a e8 c2 25 8c fd 0f 01 cb 48 89 d8 48 c1 eb 03 48 89 ef 83 e0 07 48 89 d9 48 85 c9 74 19 66 2e 0f 1f 84 00 00 00 00 00 <48> c7 07 00 00 00 00 48 83 c7 08 ff c9 75 f1 48 89 c1 85 c9 74 0a
+RSP: 0018:ffffc90005dd7608 EFLAGS: 00050206
+RAX: 0000000000000000 RBX: 0000000000003000 RCX: 0000000000001ec0
+RDX: ffff888077356180 RSI: ffffffff8426f71e RDI: 000000002000b000
+RBP: 0000000020002600 R08: 0000000000000000 R09: 0000000000000000
+R10: fffffbfff1bbcce2 R11: 0000000000000001 R12: 0000000020002600
+R13: ffff88807e982440 R14: ffff88807e982448 R15: 0000000000000000
+ clear_user+0xb5/0xe0
+ iov_iter_zero+0x4db/0x12a0
+ __iomap_dio_rw+0xe2d/0x1c40
+ iomap_dio_rw+0x3c/0xa0
+ ext4_file_read_iter+0x432/0x5f0
+ io_read+0x346/0x14a0
+ io_issue_sqe+0x180/0xd40
+ io_wq_submit_work+0x272/0xfc0
+ io_worker_handle_work+0x5d5/0x1500
+ io_wqe_worker+0x62d/0xe30
+ ret_from_fork+0x1f/0x30
+ </TASK>
+BUG: sleeping function called from invalid context at include/linux/sched/mm.h:274
+in_atomic(): 1, irqs_disabled(): 0, non_block: 0, pid: 4763, name: iou-wrk-4757
+preempt_count: 101, expected: 0
+RCU nest depth: 0, expected: 0
+INFO: lockdep is turned off.
+Preemption disabled at:
+[<0000000000000000>] 0x0
+CPU: 1 PID: 4763 Comm: iou-wrk-4757 Tainted: G        W          6.0.0-rc6-syzkaller-00052-g3e4cb6ebbb2b #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <IRQ>
+ dump_stack_lvl+0xfc/0x174
+ __might_resched.cold+0x220/0x269
+ kmem_cache_alloc+0x28e/0x450
+ fanotify_handle_event+0x108c/0x3fb0
+ fsnotify+0xb73/0x1a90
+ __fsnotify_parent+0x5cf/0x9f0
+ __io_complete_rw_common+0x492/0x760
+ io_complete_rw+0x1c/0x1f0
+ iomap_dio_bio_end_io+0x443/0x5f0
+ bio_endio+0x612/0x790
+ blk_update_request+0x4b6/0x1470
+ scsi_end_request+0x7b/0x940
+ scsi_io_completion+0x172/0x20e0
+ scsi_complete+0x122/0x3a0
+ blk_complete_reqs+0xac/0xe0
+ __do_softirq+0x1d6/0x9cc
+ __irq_exit_rcu+0xeb/0x190
+ irq_exit_rcu+0x5/0x20
+ common_interrupt+0xaa/0xd0
+ </IRQ>
+ <TASK>
+ asm_common_interrupt+0x22/0x40
+RIP: 0010:kasan_check_range+0x120/0x190
+Code: 83 c0 01 49 89 d3 48 39 d0 74 11 80 38 00 74 ef 4d 8d 1c 2c 48 85 c0 48 89 c2 75 0e 48 89 da 4c 89 d8 4c 29 da e9 4e ff ff ff <49> 39 d2 75 12 49 0f be 12 41 83 e1 07 b8 01 00 00 00 49 39 d1 7c
+RSP: 0018:ffffc9000b2d7c30 EFLAGS: 00000282
+RAX: 0000000000000001 RBX: fffff5200165af90 RCX: ffffffff815f66aa
+RDX: fffff5200165af8f RSI: 0000000000000004 RDI: ffffc9000b2d7c78
+RBP: fffff5200165af8f R08: 0000000000000001 R09: ffffc9000b2d7c7b
+R10: fffff5200165af8f R11: 0000000000000000 R12: ffff88801c9b2960
+R13: ffff88801c9b2968 R14: ffff8880217248f8 R15: 0000000000000000
+ do_raw_spin_lock+0x12a/0x2b0
+ exit_files+0x4c/0xa0
+ do_exit+0xad2/0x2a40
+ io_wqe_worker+0xb3d/0xe30
+ ret_from_fork+0x1f/0x30
+ </TASK>
+----------------
+Code disassembly (best guess):
+   0:	41 62                	rex.B (bad)
+   2:	00 00                	add    %al,(%rax)
+   4:	84 c0                	test   %al,%al
+   6:	75 0e                	jne    0x16
+   8:	4c 89 f2             	mov    %r14,%rdx
+   b:	48 89 ee             	mov    %rbp,%rsi
+   e:	4c 89 ef             	mov    %r13,%rdi
+  11:	e8 af fa ff ff       	call   0xfffffac5
+  16:	4d 85 e4             	test   %r12,%r12
+  19:	0f 85 f4 00 00 00    	jne    0x113
+  1f:	9c                   	pushf
+  20:	58                   	pop    %rax
+  21:	f6 c4 02             	test   $0x2,%ah
+  24:	0f 85 8d 01 00 00    	jne    0x1b7
+* 2a:	48 8b 44 24 08       	mov    0x8(%rsp),%rax <-- trapping instruction
+  2f:	65 48 2b 04 25 28 00 	sub    %gs:0x28,%rax
+  36:	00 00
+  38:	0f 85 f6 01 00 00    	jne    0x234
+  3e:	48                   	rex.W
+  3f:	83                   	.byte 0x83

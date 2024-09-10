@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "KMSAN: uninit-value in ieee80211_rx_handlers",
+    "display-title": "KMSAN: uninit-value in ieee80211_rx_handlers",
+    "id": "39ab3e5efebf884fd72eef1df306285bffcdaa56",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "wifi: mac80211: check S1G action frame size",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=19e4a47ee74718a22e963e8a647c8c3bfe8bb05c",
+            "hash": "19e4a47ee74718a22e963e8a647c8c3bfe8bb05c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000008c5b8c05ff934a6c@google.com/T/",
+        "https://lore.kernel.org/all/20230815175103.aaed17e98e4b.Iac98e14c90b454f910fd2807dad8b87f6eb169d4@changeid/T/",
+        "https://lore.kernel.org/all/20230908181327.3459042-32-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230908181555.3459640-29-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230908181806.3460164-19-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230908181920.3460520-11-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KMSAN: uninit-value in ieee80211_rx_handlers",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12a5f4eea80000",
+            "c-reproducer": "/text?tag=ReproC&x=143b7009a80000",
+            "kernel-config": "/text?tag=KernelConfig&x=6271275e6c8ac3e0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=12214540ad87ce824a8a791a3f063e6121ec5b66",
+            "kernel-source-commit": "12214540ad87ce824a8a791a3f063e6121ec5b66",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/924768299f97ac88b84f09eb979919305c8af5bb",
+            "syzkaller-commit": "924768299f97ac88b84f09eb979919305c8af5bb",
+            "compiler-description": "Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14f0f67ea80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ieee80211_rx_h_action",
+            "net/mac80211/rx.c"
+        ]
+    ],
+    "patch_commit_date": "2023-08-15T15:51:05+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "6d2c360b4badf78fb778afe1f5b85196ff18383e",
+    "patch": "diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c\nindex 4f707d2a160f..33f9764b94de 100644\n--- a/net/mac80211/rx.c\n+++ b/net/mac80211/rx.c\n@@ -3732,6 +3732,10 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)\n \t\t\tbreak;\n \t\tgoto queue;\n \tcase WLAN_CATEGORY_S1G:\n+\t\tif (len < offsetofend(typeof(*mgmt),\n+\t\t\t\t      u.action.u.s1g.action_code))\n+\t\t\tbreak;\n+\n \t\tswitch (mgmt->u.action.u.s1g.action_code) {\n \t\tcase WLAN_S1G_TWT_SETUP:\n \t\tcase WLAN_S1G_TWT_TEARDOWN:\n",
+    "patch_modified_files": [
+        "net/mac80211/rx.c"
+    ]
+}

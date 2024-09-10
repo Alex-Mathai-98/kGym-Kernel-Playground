@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "WARNING in restore_regulatory_settings",
+    "display-title": "WARNING in restore_regulatory_settings",
+    "id": "32c85d199d85c11202246570956a2cbe272f235a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "cfg80211: regulatory: reject invalid hints",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=47caf685a6854593348f216e0b489b71c10cbe03",
+            "hash": "47caf685a6854593348f216e0b489b71c10cbe03",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000093b204059b7edce0@google.com/T/",
+        "https://lore.kernel.org/all/20200804210546.319249-1-rkovhaev@gmail.com/T/",
+        "https://lore.kernel.org/all/20200819084648.13956-1-johannes@sipsolutions.net/T/",
+        "https://lore.kernel.org/all/20200907163220.1280412-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200907163329.1280888-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200907163426.1281284-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200907163500.1281543-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200907163524.1281734-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200907163543.1281889-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200908152217.022816723@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200908152221.082184905@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200908152229.689878733@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200908152241.646390211@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200911122502.395450276@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200911122504.928931589@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11538115e00000",
+            "c-reproducer": "/text?tag=ReproC&x=11d6ee3ee00000",
+            "kernel-config": "/text?tag=KernelConfig&x=42c82694f792b2f5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c79f46a282390e0f5b306007bf7b11a46d529538",
+            "kernel-source-commit": "c79f46a282390e0f5b306007bf7b11a46d529538",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/438e1227121e9d4bbca7b12b6e1b715524d512c2",
+            "syzkaller-commit": "438e1227121e9d4bbca7b12b6e1b715524d512c2",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14048ec6e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "regulatory_hint_user",
+            "net/wireless/reg.c"
+        ]
+    ],
+    "patch_commit_date": "2020-08-19T08:46:48+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "3579994476b65cb5e272ff0f720a1fd31322e53f",
+    "patch": "diff --git a/net/wireless/reg.c b/net/wireless/reg.c\nindex 35b8847a2f6d..d8a90d397423 100644\n--- a/net/wireless/reg.c\n+++ b/net/wireless/reg.c\n@@ -2946,6 +2946,9 @@ int regulatory_hint_user(const char *alpha2,\n \tif (WARN_ON(!alpha2))\n \t\treturn -EINVAL;\n \n+\tif (!is_world_regdom(alpha2) && !is_an_alpha2(alpha2))\n+\t\treturn -EINVAL;\n+\n \trequest = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);\n \tif (!request)\n \t\treturn -ENOMEM;\n",
+    "patch_modified_files": [
+        "net/wireless/reg.c"
+    ]
+}

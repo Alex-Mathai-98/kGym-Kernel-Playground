@@ -1,0 +1,73 @@
+general protection fault, probably for non-canonical address 0xdffffc0000000000: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+CPU: 1 PID: 3686 Comm: syz-executor.3 Not tainted 5.19.0-rc6-syzkaller-01775-gb3be4520d81e #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:release_udmabuf+0xcb/0x510
+Code: 48 89 fa 48 c1 ea 03 80 3c 02 00 0f 85 2d 04 00 00 48 8d 7b 0c 48 8b 6d 30 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 <0f> b6 14 02 48 89 f8 83 e0 07 83 c0 03 38 d0 7c 08 84 d2 0f 85 e7
+RSP: 0018:ffffc9000390fd60 EFLAGS: 00010246
+RAX: dffffc0000000000 RBX: fffffffffffffff4 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: ffffffff84ac9bf0 RDI: 0000000000000000
+RBP: ffff888147127000 R08: 0000000000000005 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: ffff88806b8ab130
+R13: ffff88801be88cc0 R14: ffff88806b8ab100 R15: 0000000000000000
+FS:  0000555555c81480(0000) GS:ffff8880b9b00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fa09ce34ff8 CR3: 000000006a1bb000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ dma_buf_release+0x155/0x2d0
+ __dentry_kill+0x423/0x640
+ dput+0x880/0xf70
+ __fput+0x387/0x980
+ task_work_run+0xdd/0x1a0
+ exit_to_user_mode_prepare+0x242/0x250
+ syscall_exit_to_user_mode+0x19/0x50
+ do_syscall_64+0x40/0xb0
+ entry_SYSCALL_64_after_hwframe+0x46/0xb0
+RIP: 0033:0x7fa09bc78b0a
+Code: 48 3d 00 f0 ff ff 77 48 c3 0f 1f 80 00 00 00 00 48 83 ec 18 89 7c 24 0c e8 03 7c 02 00 8b 7c 24 0c 89 c2 b8 03 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 36 89 d7 89 44 24 0c e8 63 7c 02 00 8b 44 24
+RSP: 002b:00007fffe60cdbc0 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 0000000000000007 RCX: 00007fa09bc78b0a
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000006
+RBP: ffffffffffffffff R08: 00007fa09bd8bf80 R09: 00007fa09bd8bf8c
+R10: 00007fffe60cdd40 R11: 0000000000000293 R12: 000000000000fa7b
+R13: 00007fa09bd8bf80 R14: 000000000000fa81 R15: 00007fa09c190000
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:release_udmabuf+0xcb/0x510
+Code: 48 89 fa 48 c1 ea 03 80 3c 02 00 0f 85 2d 04 00 00 48 8d 7b 0c 48 8b 6d 30 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 <0f> b6 14 02 48 89 f8 83 e0 07 83 c0 03 38 d0 7c 08 84 d2 0f 85 e7
+RSP: 0018:ffffc9000390fd60 EFLAGS: 00010246
+RAX: dffffc0000000000 RBX: fffffffffffffff4 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: ffffffff84ac9bf0 RDI: 0000000000000000
+RBP: ffff888147127000 R08: 0000000000000005 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: ffff88806b8ab130
+R13: ffff88801be88cc0 R14: ffff88806b8ab100 R15: 0000000000000000
+FS:  0000555555c81480(0000) GS:ffff8880b9b00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fa09ce34ff8 CR3: 000000006a1bb000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	48 89 fa             	mov    %rdi,%rdx
+   3:	48 c1 ea 03          	shr    $0x3,%rdx
+   7:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1)
+   b:	0f 85 2d 04 00 00    	jne    0x43e
+  11:	48 8d 7b 0c          	lea    0xc(%rbx),%rdi
+  15:	48 8b 6d 30          	mov    0x30(%rbp),%rbp
+  19:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  20:	fc ff df
+  23:	48 89 fa             	mov    %rdi,%rdx
+  26:	48 c1 ea 03          	shr    $0x3,%rdx
+* 2a:	0f b6 14 02          	movzbl (%rdx,%rax,1),%edx <-- trapping instruction
+  2e:	48 89 f8             	mov    %rdi,%rax
+  31:	83 e0 07             	and    $0x7,%eax
+  34:	83 c0 03             	add    $0x3,%eax
+  37:	38 d0                	cmp    %dl,%al
+  39:	7c 08                	jl     0x43
+  3b:	84 d2                	test   %dl,%dl
+  3d:	0f                   	.byte 0xf
+  3e:	85 e7                	test   %esp,%edi

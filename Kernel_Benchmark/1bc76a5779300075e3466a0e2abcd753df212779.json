@@ -1,0 +1,77 @@
+{
+    "version": 1,
+    "title": "KASAN: null-ptr-deref Write in __pm_runtime_resume",
+    "display-title": "KASAN: null-ptr-deref Write in __pm_runtime_resume",
+    "id": "1bc76a5779300075e3466a0e2abcd753df212779",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: hci_uart: fix GPF in h5_recv",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2fc7acb69fa3573d4bf7a90c323296d840daf330",
+            "hash": "2fc7acb69fa3573d4bf7a90c323296d840daf330",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Bluetooth: hci_h5: add WAKEUP_DISABLE flag",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=66f077dde74943e9dd84a9205b4951b19556c9ea",
+        "hash": "66f077dde74943e9dd84a9205b4951b19556c9ea",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000034712e05ca9741e8@google.com/T/",
+        "https://lore.kernel.org/all/20210902202756.25378-1-paskripkin@gmail.com/T/",
+        "https://lore.kernel.org/all/20211115165428.722074685@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: null-ptr-deref Write in __pm_runtime_resume",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16fde215300000",
+            "c-reproducer": "/text?tag=ReproC&x=11aa9149300000",
+            "kernel-config": "/text?tag=KernelConfig&x=9c32e23fada3a0e4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=835d31d319d9c8c4eb6cac074643360ba0ecab10",
+            "kernel-source-commit": "835d31d319d9c8c4eb6cac074643360ba0ecab10",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/7eb7e15259fddd67759f90feb2b016da878f76c7",
+            "syzkaller-commit": "7eb7e15259fddd67759f90feb2b016da878f76c7",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11980fad300000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "h5_recv",
+            "drivers/bluetooth/hci_h5.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "h5_serdev_probe",
+            "drivers/bluetooth/hci_h5.c"
+        ],
+        [
+            "h5_btrtl_close",
+            "drivers/bluetooth/hci_h5.c"
+        ],
+        [
+            "h5_btrtl_open",
+            "drivers/bluetooth/hci_h5.c"
+        ],
+        [
+            "h5_btrtl_reprobe_worker",
+            "drivers/bluetooth/hci_h5.c"
+        ]
+    ],
+    "patch_commit_date": "2021-09-02T20:27:56+00:00",
+    "cause_commit_date": "2021-07-23T11:31:55+00:00",
+    "subsystems": [
+        "pm"
+    ],
+    "parent_of_fix_commit": "8bba13b1d08d42e2e8308924fa5c1551a7b2b011",
+    "patch": "diff --git a/drivers/bluetooth/hci_h5.c b/drivers/bluetooth/hci_h5.c\nindex 0c0dedece59c..eb0099a21288 100644\n--- a/drivers/bluetooth/hci_h5.c\n+++ b/drivers/bluetooth/hci_h5.c\n@@ -587,9 +587,11 @@ static int h5_recv(struct hci_uart *hu, const void *data, int count)\n \t\tcount -= processed;\n \t}\n \n-\tpm_runtime_get(&hu->serdev->dev);\n-\tpm_runtime_mark_last_busy(&hu->serdev->dev);\n-\tpm_runtime_put_autosuspend(&hu->serdev->dev);\n+\tif (hu->serdev) {\n+\t\tpm_runtime_get(&hu->serdev->dev);\n+\t\tpm_runtime_mark_last_busy(&hu->serdev->dev);\n+\t\tpm_runtime_put_autosuspend(&hu->serdev->dev);\n+\t}\n \n \treturn 0;\n }\n",
+    "patch_modified_files": [
+        "drivers/bluetooth/hci_h5.c"
+    ]
+}

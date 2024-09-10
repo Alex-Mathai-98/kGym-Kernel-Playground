@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "WARNING in ext4_expand_extra_isize_ea",
+    "display-title": "WARNING in ext4_expand_extra_isize_ea",
+    "id": "789df5b54ebd19aec0b5c3900c933d1910db8ec5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: allocate extended attribute value in vmalloc area",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cc12a6f25e07ed05d5825a1664b67a970842b2ca",
+            "hash": "cc12a6f25e07ed05d5825a1664b67a970842b2ca",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000befd1d05eeb5af30@google.com/T/",
+        "https://lore.kernel.org/all/20221201084844.2855621-1-yebin@huaweicloud.com/T/",
+        "https://lore.kernel.org/all/20221201145923.73028-1-yebin@huaweicloud.com/T/",
+        "https://lore.kernel.org/all/20221206015806.3420321-1-yebin@huaweicloud.com/T/",
+        "https://lore.kernel.org/all/20221207074043.1286731-1-yebin@huaweicloud.com/T/",
+        "https://lore.kernel.org/all/20221208023233.1231330-1-yebin@huaweicloud.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in ext4_expand_extra_isize_ea",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12f49603880000",
+            "c-reproducer": "/text?tag=ReproC&x=163dfb9b880000",
+            "kernel-config": "/text?tag=KernelConfig&x=8d01b6e3197974dd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=644e9524388a5dbc6d4f58c492ee9ef7bd4ddf4d",
+            "kernel-source-commit": "644e9524388a5dbc6d4f58c492ee9ef7bd4ddf4d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f4470a7b5efeb021c66c8fb38656bcb2b1597974",
+            "syzkaller-commit": "f4470a7b5efeb021c66c8fb38656bcb2b1597974",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16492353880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ext4_xattr_move_to_block",
+            "fs/ext4/xattr.c"
+        ]
+    ],
+    "patch_commit_date": "2022-12-08T02:32:31+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "8994d11395f8165b3deca1971946f549f0822630",
+    "patch": "diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c\nindex 6bdd502527f8..b666d3bf8b38 100644\n--- a/fs/ext4/xattr.c\n+++ b/fs/ext4/xattr.c\n@@ -2548,7 +2548,7 @@ static int ext4_xattr_move_to_block(handle_t *handle, struct inode *inode,\n \n \tis = kzalloc(sizeof(struct ext4_xattr_ibody_find), GFP_NOFS);\n \tbs = kzalloc(sizeof(struct ext4_xattr_block_find), GFP_NOFS);\n-\tbuffer = kmalloc(value_size, GFP_NOFS);\n+\tbuffer = kvmalloc(value_size, GFP_NOFS);\n \tb_entry_name = kmalloc(entry->e_name_len + 1, GFP_NOFS);\n \tif (!is || !bs || !buffer || !b_entry_name) {\n \t\terror = -ENOMEM;\n@@ -2600,7 +2600,7 @@ static int ext4_xattr_move_to_block(handle_t *handle, struct inode *inode,\n \terror = 0;\n out:\n \tkfree(b_entry_name);\n-\tkfree(buffer);\n+\tkvfree(buffer);\n \tif (is)\n \t\tbrelse(is->iloc.bh);\n \tif (bs)\n",
+    "patch_modified_files": [
+        "fs/ext4/xattr.c"
+    ]
+}

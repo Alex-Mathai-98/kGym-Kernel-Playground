@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "WARNING in sta_info_insert_rcu",
+    "display-title": "WARNING in sta_info_insert_rcu",
+    "id": "f1b41b503f18f268d11e52f80deffcd0c62e0865",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mac80211: Drop frames from invalid MAC address in ad-hoc mode",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a6555f844549cd190eb060daef595f94d3de1582",
+            "hash": "a6555f844549cd190eb060daef595f94d3de1582",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000004d87c705b00bcb0a@google.com/T/",
+        "https://lore.kernel.org/all/20210626103856.19816-1-yuehaibing@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=167e5707900000",
+            "c-reproducer": "/text?tag=ReproC&x=1765b19b900000",
+            "kernel-config": "/text?tag=KernelConfig&x=5f4c828c9e3cef97",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=eff48ddeab782e35e58ccc8853f7386bbae9dec4",
+            "kernel-source-commit": "eff48ddeab782e35e58ccc8853f7386bbae9dec4",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3e8f6c27551f163a2fd2661e4b3cac126a5e7ef2",
+            "syzkaller-commit": "3e8f6c27551f163a2fd2661e4b3cac126a5e7ef2",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12489f07900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ieee80211_accept_frame",
+            "net/mac80211/rx.c"
+        ]
+    ],
+    "patch_commit_date": "2021-08-27T14:42:30+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "wireless",
+        "missing-backport",
+        "origin:lts-only",
+        "wireless",
+        "origin:upstream",
+        "wireless"
+    ],
+    "parent_of_fix_commit": "fe94bac626d9c1c5bc98ab32707be8a9d7f8adba",
+    "patch": "diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c\nindex 99ed68f7dc36..c4071b015c18 100644\n--- a/net/mac80211/rx.c\n+++ b/net/mac80211/rx.c\n@@ -4131,7 +4131,8 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)\n \t\tif (!bssid)\n \t\t\treturn false;\n \t\tif (ether_addr_equal(sdata->vif.addr, hdr->addr2) ||\n-\t\t    ether_addr_equal(sdata->u.ibss.bssid, hdr->addr2))\n+\t\t    ether_addr_equal(sdata->u.ibss.bssid, hdr->addr2) ||\n+\t\t    !is_valid_ether_addr(hdr->addr2))\n \t\t\treturn false;\n \t\tif (ieee80211_is_beacon(hdr->frame_control))\n \t\t\treturn true;\n",
+    "patch_modified_files": [
+        "net/mac80211/rx.c"
+    ]
+}

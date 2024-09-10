@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "memory leak in virtual_ncidev_write",
+    "display-title": "memory leak in virtual_ncidev_write",
+    "id": "cdc284a3166b0aa5c8797071e971fd0606769e61",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "NFC: nci: fix memory leak in nci_rx_data_packet()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=53270fb0fd77fe786d8c07a0793981d797836b93",
+            "hash": "53270fb0fd77fe786d8c07a0793981d797836b93",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001f056d05edab6b1e@google.com/T/",
+        "https://lore.kernel.org/all/20221118082419.239475-1-liushixin2@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in virtual_ncidev_write",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14bea8d9880000",
+            "c-reproducer": "/text?tag=ReproC&x=10015c4e880000",
+            "kernel-config": "/text?tag=KernelConfig&x=435fb8cdd395f932",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=cc675d22e422442f6d230654a55a5fc5682ea018",
+            "kernel-source-commit": "cc675d22e422442f6d230654a55a5fc5682ea018",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3a127a3157fd19caabb023978737471213127590",
+            "syzkaller-commit": "3a127a3157fd19caabb023978737471213127590",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=144d2759880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nci_rx_data_packet",
+            "net/nfc/nci/data.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-18T08:24:19+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net",
+        "nfc"
+    ],
+    "parent_of_fix_commit": "8427fd100c7b7793650e212a81e42f1cf124613d",
+    "patch": "diff --git a/net/nfc/nci/data.c b/net/nfc/nci/data.c\nindex aa5e712adf07..3d36ea5701f0 100644\n--- a/net/nfc/nci/data.c\n+++ b/net/nfc/nci/data.c\n@@ -279,8 +279,10 @@ void nci_rx_data_packet(struct nci_dev *ndev, struct sk_buff *skb)\n \t\t nci_plen(skb->data));\n \n \tconn_info = nci_get_conn_info_by_conn_id(ndev, nci_conn_id(skb->data));\n-\tif (!conn_info)\n+\tif (!conn_info) {\n+\t\tkfree_skb(skb);\n \t\treturn;\n+\t}\n \n \t/* strip the nci data header */\n \tskb_pull(skb, NCI_DATA_HDR_SIZE);\n",
+    "patch_modified_files": [
+        "net/nfc/nci/data.c"
+    ]
+}

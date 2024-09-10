@@ -1,0 +1,104 @@
+BUG: Dentry 00000000505c7837{i=5cfa,n=/}  still in use (2) [unmount of hugetlbfs hugetlbfs]
+WARNING: CPU: 0 PID: 4460 at fs/dcache.c:1529 umount_check.cold+0xec/0x110
+Modules linked in:
+CPU: 0 PID: 4460 Comm: syz-executor.2 Not tainted 5.2.0-rc5-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:umount_check.cold+0xec/0x110
+Code: 4e f0 ff 4d 8b 64 24 40 e8 fd c5 b7 ff 4d 89 f9 45 89 e8 48 89 d9 41 56 4c 89 e2 48 89 de 48 c7 c7 20 d6 75 87 e8 f4 ca a1 ff <0f> 0b 58 e9 aa 24 ff ff e8 d3 4d f0 ff e9 28 ff ff ff 4c 89 e7 e8
+RSP: 0018:ffff8881ca63fb90 EFLAGS: 00010282
+RAX: 000000000000005b RBX: ffff8881c99c7420 RCX: 0000000000000000
+RDX: 000000000000005b RSI: ffffffff815aa295 RDI: ffffed10394c7f64
+RBP: ffff8881ca63fbc0 R08: 0000000000000001 R09: 0000000000000005
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000005cfa
+R13: 0000000000000002 R14: ffff8881c8347368 R15: ffffffff877d53c0
+FS:  00005555556df480(0000) GS:ffff8881f6600000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f91fbf56440 CR3: 00000001efb3f001 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ d_walk+0x71/0x7d0
+ shrink_dcache_for_umount+0x8a/0x340
+ generic_shutdown_super+0x6d/0x370
+ kill_litter_super+0x72/0xa0
+ deactivate_locked_super+0x9a/0x170
+ deactivate_super+0x1ab/0x1c0
+ cleanup_mnt+0x1a7/0x290
+ __cleanup_mnt+0x16/0x20
+ task_work_run+0x152/0x1d0
+ prepare_exit_to_usermode+0x55d/0x5e0
+ syscall_return_slowpath+0xfe/0x720
+ do_syscall_64+0x123/0x190
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7fe5279f1e5a
+Code: 48 3d 00 f0 ff ff 77 48 c3 0f 1f 80 00 00 00 00 48 83 ec 18 89 7c 24 0c e8 13 7f 02 00 8b 7c 24 0c 89 c2 b8 03 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 36 89 d7 89 44 24 0c e8 73 7f 02 00 8b 44 24
+RSP: 002b:00007fffa817d180 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 0000000000000005 RCX: 00007fe5279f1e5a
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000004
+RBP: 00007fe527b22980 R08: 00007fe527975000 R09: 0000000000000001
+R10: 0000000000000001 R11: 0000000000000293 R12: 000000000000e3bb
+R13: 000000000000e389 R14: 00007fffa817d340 R15: 00007fe5279a9cb0
+irq event stamp: 1500
+hardirqs last  enabled at (1499): [<ffffffff815a3455>] console_unlock+0xc85/0xf00
+hardirqs last disabled at (1500): [<ffffffff810066a5>] trace_hardirqs_off_thunk+0x1a/0x1c
+softirqs last  enabled at (1496): [<ffffffff8740068f>] __do_softirq+0x68f/0x9aa
+softirqs last disabled at (1251): [<ffffffff8144d2ba>] irq_exit+0x22a/0x270
+---[ end trace 68e3fe7d0563a290 ]---
+VFS: Busy inodes after unmount of hugetlbfs. Self-destruct in 5 seconds.  Have a nice day...
+kasan: CONFIG_KASAN_INLINE enabled
+kasan: GPF could be caused by NULL-ptr deref or user memory access
+general protection fault: 0000 [#2] PREEMPT SMP KASAN
+CPU: 1 PID: 4460 Comm: syz-executor.2 Tainted: G      D W         5.2.0-rc5-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:remove_inode_hugepages+0x10a/0xa10
+Code: ea 03 80 3c 02 00 0f 85 a8 08 00 00 4d 8b a4 24 50 06 00 00 48 b8 00 00 00 00 00 fc ff df 49 8d 7c 24 48 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 ab 08 00 00 49 8b 44 24 48 48 8b 8d 78 fd ff ff
+RSP: 0018:ffff8881ca63f888 EFLAGS: 00010206
+RAX: dffffc0000000000 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: 0000000000000009 RSI: ffffffff8206abe8 RDI: 0000000000000048
+RBP: ffff8881ca63fb58 R08: 0000000000000000 R09: ffffed103e3f1421
+R10: ffff8881f1f8a10b R11: b03e5e5ad13d82cf R12: 0000000000000000
+R13: ffff8881f1f8a150 R14: ffff8881f1f8a080 R15: 1ffff110394c7f22
+FS:  00005555556df480(0000) GS:ffff8881f6700000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f15f1396b3b CR3: 00000001df85f006 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ hugetlbfs_evict_inode+0x23/0x80
+ evict+0x2f8/0x790
+ iput+0x510/0x810
+ dentry_unlink_inode+0x29b/0x3b0
+ __dentry_kill+0x3c5/0x650
+ dentry_kill+0xc9/0xb90
+ dput+0x5b2/0x6f0
+ path_put+0x31/0x70
+ exit_fs+0x103/0x180
+ do_exit+0x939/0x2e60
+ do_group_exit+0x135/0x330
+ __x64_sys_exit_group+0x3e/0x50
+ do_syscall_64+0xf5/0x190
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7fe5279f2f69
+Code: Bad RIP value.
+RSP: 002b:00007fffa817d3f8 EFLAGS: 00000246 ORIG_RAX: 00000000000000e7
+RAX: ffffffffffffffda RBX: 000000000000001e RCX: 00007fe5279f2f69
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
+RBP: 0000000000000001 R08: 0000000000000001 R09: 0000000000000000
+R10: 00007fe527975000 R11: 0000000000000246 R12: 0000000000000000
+R13: 0000000000000000 R14: 0000000000000001 R15: 0000000000000000
+Modules linked in:
+---[ end trace 68e3fe7d0563a293 ]---
+----------------
+Code disassembly (best guess), 1 bytes skipped:
+   0:	03 80 3c 02 00 0f    	add    0xf00023c(%rax),%eax
+   6:	85 a8 08 00 00 4d    	test   %ebp,0x4d000008(%rax)
+   c:	8b a4 24 50 06 00 00 	mov    0x650(%rsp),%esp
+  13:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  1a:	fc ff df
+  1d:	49 8d 7c 24 48       	lea    0x48(%r12),%rdi
+  22:	48 89 fa             	mov    %rdi,%rdx
+  25:	48 c1 ea 03          	shr    $0x3,%rdx
+* 29:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1) <-- trapping instruction
+  2d:	0f 85 ab 08 00 00    	jne    0x8de
+  33:	49 8b 44 24 48       	mov    0x48(%r12),%rax
+  38:	48 8b 8d 78 fd ff ff 	mov    -0x288(%rbp),%rcx

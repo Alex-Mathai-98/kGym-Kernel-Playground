@@ -1,0 +1,117 @@
+kasan: GPF could be caused by NULL-ptr deref or user memory access
+kasan: CONFIG_KASAN_INLINE enabled
+kobject: 'loop6' (00000000df50484f): kobject_uevent_env
+kasan: GPF could be caused by NULL-ptr deref or user memory access
+general protection fault: 0000 [#1] PREEMPT SMP KASAN
+CPU: 0 PID: 4310 Comm: syz-executor.6 Not tainted 4.20.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+ieee80211 phy6: Selected rate control algorithm 'minstrel_ht'
+RIP: 0010:keyctl_pkey_params_get+0x27f/0x580
+Code: 00 00 e8 04 a6 3e fe 48 8b 44 24 20 80 38 00 0f 85 7d 02 00 00 48 8b 9c 24 b0 00 00 00 48 89 d8 48 89 da 48 c1 e8 03 83 e2 07 <42> 0f b6 04 28 38 d0 7f 08 84 c0 0f 85 66 02 00 00 0f b6 03 31 ff
+RSP: 0018:ffff8881d84cfaf0 EFLAGS: 00010246
+RAX: 12194928064af2c0 RBX: 90ca494032579600 RCX: ffffffff834289ff
+RDX: 0000000000000000 RSI: ffffffff83428a0c RDI: 0000000000000001
+RBP: ffff8881d84cfc40 R08: 0000000000000000 R09: 0000000000000001
+R10: 0000000000000000 R11: 000000004e61f390 R12: 0000000000000000
+R13: dffffc0000000000 R14: ffff8881d84cfda0 R15: 0000000000000000
+FS:  00007f7bd6ba56c0(0000) GS:ffff8881f6600000(0000) knlGS:0000000000000000
+kobject: 'net' (00000000cfd0f1f1): kobject_add_internal: parent: 'hwsim6', set: '(null)'
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fbf4ee45440 CR3: 00000001f3973001 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ keyctl_pkey_params_get_2+0x13b/0x570
+ keyctl_pkey_verify+0xb0/0x410
+ __do_sys_keyctl+0x316/0x560
+ __x64_sys_keyctl+0xbd/0x140
+ do_syscall_64+0x183/0x270
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f7bd7824f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f7bd6ba50c8 EFLAGS: 00000246 ORIG_RAX: 00000000000000fa
+RAX: ffffffffffffffda RBX: 00007f7bd7952f80 RCX: 00007f7bd7824f69
+RDX: 00000000200002c0 RSI: 00000000200000c0 RDI: 000000000000001c
+RBP: 00007f7bd78714a4 R08: 0000000020000380 R09: 0000000000000000
+R10: 00000000fffffd2a R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f7bd7952f80 R15: 00007ffcc9fed6f8
+Modules linked in:
+general protection fault: 0000 [#2] PREEMPT SMP KASAN
+CPU: 1 PID: 4311 Comm: syz-executor.0 Tainted: G      D           4.20.0-syzkaller #0
+---[ end trace bf8d6d01169c5dd2 ]---
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:keyctl_pkey_params_get+0x27f/0x580
+Code: 00 00 e8 04 a6 3e fe 48 8b 44 24 20 80 38 00 0f 85 7d 02 00 00 48 8b 9c 24 b0 00 00 00 48 89 d8 48 89 da 48 c1 e8 03 83 e2 07 <42> 0f b6 04 28 38 d0 7f 08 84 c0 0f 85 66 02 00 00 0f b6 03 31 ff
+RSP: 0018:ffff8881f4367af0 EFLAGS: 00010246
+RAX: 1755014802fac180 RBX: baa80a4017d60c00 RCX: ffffffff834289ff
+RDX: 0000000000000000 RSI: ffffffff83428a0c RDI: 0000000000000001
+RBP: ffff8881f4367c40 R08: 0000000000000000 R09: 0000000000000001
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: dffffc0000000000 R14: ffff8881f4367da0 R15: 0000000000000000
+FS:  00007fbcb120c6c0(0000) GS:ffff8881f6700000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f7bd794f000 CR3: 00000001d5841001 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ keyctl_pkey_params_get_2+0x13b/0x570
+RIP: 0010:keyctl_pkey_params_get+0x27f/0x580
+ keyctl_pkey_verify+0xb0/0x410
+Code: 00 00 e8 04 a6 3e fe 48 8b 44 24 20 80 38 00 0f 85 7d 02 00 00 48 8b 9c 24 b0 00 00 00 48 89 d8 48 89 da 48 c1 e8 03 83 e2 07 <42> 0f b6 04 28 38 d0 7f 08 84 c0 0f 85 66 02 00 00 0f b6 03 31 ff
+ __do_sys_keyctl+0x316/0x560
+ __x64_sys_keyctl+0xbd/0x140
+ do_syscall_64+0x183/0x270
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7fbcb1e8bf69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fbcb120c0c8 EFLAGS: 00000246 ORIG_RAX: 00000000000000fa
+RAX: ffffffffffffffda RBX: 00007fbcb1fb9f80 RCX: 00007fbcb1e8bf69
+RDX: 00000000200002c0 RSI: 00000000200000c0 RDI: 000000000000001c
+RBP: 00007fbcb1ed84a4 R08: 0000000020000380 R09: 0000000000000000
+R10: 00000000fffffd2a R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fbcb1fb9f80 R15: 00007ffd297b89e8
+Modules linked in:
+kobject: 'loop6' (00000000df50484f): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'wlan0' (000000006ff73afe): kobject_add_internal: parent: 'net', set: 'devices'
+RSP: 0018:ffff8881d84cfaf0 EFLAGS: 00010246
+kobject: 'wlan0' (000000006ff73afe): kobject_uevent_env
+RAX: 12194928064af2c0 RBX: 90ca494032579600 RCX: ffffffff834289ff
+kobject: 'wlan0' (000000006ff73afe): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim6/net/wlan0'
+RDX: 0000000000000000 RSI: ffffffff83428a0c RDI: 0000000000000001
+kobject: 'queues' (00000000adaa8c03): kobject_add_internal: parent: 'wlan0', set: '<NULL>'
+RBP: ffff8881d84cfc40 R08: 0000000000000000 R09: 0000000000000001
+kobject: 'queues' (00000000adaa8c03): kobject_uevent_env
+R10: 0000000000000000 R11: 000000004e61f390 R12: 0000000000000000
+kobject: 'queues' (00000000adaa8c03): kobject_uevent_env: filter function caused the event to drop!
+kobject: 'rx-0' (00000000d92f26de): kobject_add_internal: parent: 'queues', set: 'queues'
+kobject: 'rx-0' (00000000d92f26de): kobject_uevent_env
+R13: dffffc0000000000 R14: ffff8881d84cfda0 R15: 0000000000000000
+kobject: 'rx-0' (00000000d92f26de): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim6/net/wlan0/queues/rx-0'
+FS:  00007f7bd6ba56c0(0000) GS:ffff8881f6600000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fe2fc40d440 CR3: 00000001f3973002 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+kobject: 'tx-0' (00000000c9c07bba): kobject_add_internal: parent: 'queues', set: 'queues'
+kobject: 'tx-0' (00000000c9c07bba): kobject_uevent_env
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+kobject: 'tx-0' (00000000c9c07bba): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim6/net/wlan0/queues/tx-0'
+----------------
+Code disassembly (best guess):
+   0:	00 00                	add    %al,(%rax)
+   2:	e8 04 a6 3e fe       	call   0xfe3ea60b
+   7:	48 8b 44 24 20       	mov    0x20(%rsp),%rax
+   c:	80 38 00             	cmpb   $0x0,(%rax)
+   f:	0f 85 7d 02 00 00    	jne    0x292
+  15:	48 8b 9c 24 b0 00 00 	mov    0xb0(%rsp),%rbx
+  1c:	00
+  1d:	48 89 d8             	mov    %rbx,%rax
+  20:	48 89 da             	mov    %rbx,%rdx
+  23:	48 c1 e8 03          	shr    $0x3,%rax
+  27:	83 e2 07             	and    $0x7,%edx
+* 2a:	42 0f b6 04 28       	movzbl (%rax,%r13,1),%eax <-- trapping instruction
+  2f:	38 d0                	cmp    %dl,%al
+  31:	7f 08                	jg     0x3b
+  33:	84 c0                	test   %al,%al
+  35:	0f 85 66 02 00 00    	jne    0x2a1
+  3b:	0f b6 03             	movzbl (%rbx),%eax
+  3e:	31 ff                	xor    %edi,%edi

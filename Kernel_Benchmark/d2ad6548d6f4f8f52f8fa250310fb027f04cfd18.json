@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "general protection fault in nl802154_trigger_scan",
+    "display-title": "general protection fault in nl802154_trigger_scan",
+    "id": "d2ad6548d6f4f8f52f8fa250310fb027f04cfd18",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ieee802154: Prevent user from crashing the host",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=02f18662f6c671382345fcb696e808d78f4c194a",
+            "hash": "02f18662f6c671382345fcb696e808d78f4c194a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000adec0205f5ffcaf4@google.com/T/",
+        "https://lore.kernel.org/all/20230307073004.74224-1-dzm91@hust.edu.cn/T/",
+        "https://lore.kernel.org/all/20230307090546.994258-1-dzm91@hust.edu.cn/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in nl802154_trigger_scan",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1597f254c80000",
+            "c-reproducer": "/text?tag=ReproC&x=15053e40c80000",
+            "kernel-config": "/text?tag=KernelConfig&x=81f5afa0c201c8de",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f3a2439f20d918930cc4ae8f76fe1c1afd26958f",
+            "kernel-source-commit": "f3a2439f20d918930cc4ae8f76fe1c1afd26958f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e792ae78c524597ed9bdc16cf10503e2c0079be5",
+            "syzkaller-commit": "e792ae78c524597ed9bdc16cf10503e2c0079be5",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12efbe60c80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nl802154_trigger_scan",
+            "net/ieee802154/nl802154.c"
+        ]
+    ],
+    "patch_commit_date": "2023-03-01T15:44:50+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "wpan"
+    ],
+    "parent_of_fix_commit": "6c993779ea1d0cccdb3a5d7d45446dd229e610a3",
+    "patch": "diff --git a/net/ieee802154/nl802154.c b/net/ieee802154/nl802154.c\nindex 2215f576ee37..d8f4379d4fa6 100644\n--- a/net/ieee802154/nl802154.c\n+++ b/net/ieee802154/nl802154.c\n@@ -1412,7 +1412,7 @@ static int nl802154_trigger_scan(struct sk_buff *skb, struct genl_info *info)\n \t\treturn -EOPNOTSUPP;\n \t}\n \n-\tif (!nla_get_u8(info->attrs[NL802154_ATTR_SCAN_TYPE])) {\n+\tif (!info->attrs[NL802154_ATTR_SCAN_TYPE]) {\n \t\tNL_SET_ERR_MSG(info->extack, \"Malformed request, missing scan type\");\n \t\treturn -EINVAL;\n \t}\n",
+    "patch_modified_files": [
+        "net/ieee802154/nl802154.c"
+    ]
+}

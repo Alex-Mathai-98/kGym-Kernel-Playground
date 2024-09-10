@@ -1,0 +1,76 @@
+{
+    "version": 1,
+    "title": "KASAN: null-ptr-deref Read in filp_close",
+    "display-title": "KASAN: null-ptr-deref Read in filp_close",
+    "id": "1bef50bdd9622a1969608d1090b2b4a588d0c6ac",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "close_range: unshare all fds for CLOSE_RANGE_UNSHARE | CLOSE_RANGE_CLOEXEC",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fec8a6a691033f2538cd46848f17f337f0739923",
+            "hash": "fec8a6a691033f2538cd46848f17f337f0739923",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        },
+        {
+            "title": "selftests/core: add regression test for CLOSE_RANGE_UNSHARE | CLOSE_RANGE_CLOEXEC",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6abc20f8f879d891930f37186b19c9dc3ecc34dd",
+            "hash": "6abc20f8f879d891930f37186b19c9dc3ecc34dd",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "fs, close_range: add flag CLOSE_RANGE_CLOEXEC",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=582f1fb6b721facf04848d2ca57f34468da1813e",
+        "hash": "582f1fb6b721facf04848d2ca57f34468da1813e",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a3962305b6ab0077@google.com/T/",
+        "https://lore.kernel.org/all/20201217213303.722643-1-christian.brauner@ubuntu.com/T/",
+        "https://lore.kernel.org/all/20201218145415.801063-4-christian.brauner@ubuntu.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10e1a00b500000",
+            "c-reproducer": "/text?tag=ReproC&x=1128e41f500000",
+            "kernel-config": "/text?tag=KernelConfig&x=db720fe37a6a41d8",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=5e60366d56c630e32befce7ef05c569e04391ca3",
+            "kernel-source-commit": "5e60366d56c630e32befce7ef05c569e04391ca3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/04201c0669446145fd9c347c5538da0ca13ff29b",
+            "syzkaller-commit": "04201c0669446145fd9c347c5538da0ca13ff29b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1402eadf500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__close_range",
+            "fs/file.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "__close_range",
+            "fs/file.c"
+        ],
+        [
+            "__close_fd",
+            "fs/file.c"
+        ]
+    ],
+    "patch_commit_date": "2020-12-17T21:33:03+00:00",
+    "cause_commit_date": "2020-11-18T10:47:45+00:00",
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "accefff5b547a9a1d959c7e76ad539bf2480e78b",
+    "patch": "diff --git a/fs/file.c b/fs/file.c\nindex 8434e0afecc7..c0b60961c672 100644\n--- a/fs/file.c\n+++ b/fs/file.c\n@@ -694,8 +694,10 @@ int __close_range(unsigned fd, unsigned max_fd, unsigned int flags)\n \t\t * If the requested range is greater than the current maximum,\n \t\t * we're closing everything so only copy all file descriptors\n \t\t * beneath the lowest file descriptor.\n+\t\t * If the caller requested all fds to be made cloexec copy all\n+\t\t * of the file descriptors since they still want to use them.\n \t\t */\n-\t\tif (max_fd >= cur_max)\n+\t\tif (!(flags & CLOSE_RANGE_CLOEXEC) && (max_fd >= cur_max))\n \t\t\tmax_unshare_fds = fd;\n \n \t\tret = unshare_fd(CLONE_FILES, max_unshare_fds, &fds);\n",
+    "patch_modified_files": [
+        "fs/file.c"
+    ]
+}

@@ -1,0 +1,324 @@
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+========================================================
+WARNING: possible irq lock inversion dependency detected
+5.2.0-rc7-syzkaller #0 Not tainted
+--------------------------------------------------------
+ksoftirqd/1/16 just changed the state of lock:
+00000000e8cb13ed (&(&ctx->ctx_lock)->rlock){..-.}, at: free_ioctx_users+0x2d/0x240
+but this lock took another, SOFTIRQ-unsafe lock in the past:
+ (&ctx->fault_pending_wqh){+.+.}
+
+
+and interrupts could create inverse lock ordering between them.
+
+
+other info that might help us debug this:
+Chain exists of:
+  &(&ctx->ctx_lock)->rlock --> &ctx->fd_wqh --> &ctx->fault_pending_wqh
+
+ Possible interrupt unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&ctx->fault_pending_wqh);
+                               local_irq_disable();
+                               lock(&(&ctx->ctx_lock)->rlock);
+                               lock(&ctx->fd_wqh);
+  <Interrupt>
+    lock(&(&ctx->ctx_lock)->rlock);
+
+ *** DEADLOCK ***
+
+2 locks held by ksoftirqd/1/16:
+ #0: 00000000a1f8a676 (rcu_callback){....}, at: rcu_core+0x9f4/0x11b0
+ #1: 0000000073fd00ad (rcu_read_lock_sched){....}, at: percpu_ref_switch_to_atomic_rcu+0x1b8/0x530
+
+the shortest dependencies between 2nd lock and 1st lock:
+  -> (&ctx->fault_pending_wqh){+.+.} {
+     HARDIRQ-ON-W at:
+                        lock_acquire+0x16d/0x420
+                        _raw_spin_lock+0x2d/0x40
+                        userfaultfd_release+0x4f3/0x7a0
+                        __fput+0x2f2/0x880
+                        ____fput+0x15/0x20
+                        task_work_run+0x158/0x1d0
+                        prepare_exit_to_usermode+0x55d/0x5e0
+                        syscall_return_slowpath+0xfe/0x720
+                        do_syscall_64+0x12d/0x190
+                        entry_SYSCALL_64_after_hwframe+0x49/0xbe
+     SOFTIRQ-ON-W at:
+                        lock_acquire+0x16d/0x420
+                        _raw_spin_lock+0x2d/0x40
+                        userfaultfd_release+0x4f3/0x7a0
+                        __fput+0x2f2/0x880
+                        ____fput+0x15/0x20
+                        task_work_run+0x158/0x1d0
+                        prepare_exit_to_usermode+0x55d/0x5e0
+                        syscall_return_slowpath+0xfe/0x720
+                        do_syscall_64+0x12d/0x190
+                        entry_SYSCALL_64_after_hwframe+0x49/0xbe
+     INITIAL USE at:
+                       lock_acquire+0x16d/0x420
+                       _raw_spin_lock+0x2d/0x40
+                       userfaultfd_read+0x563/0x1b40
+                       __vfs_read+0x8b/0x110
+                       vfs_read+0x199/0x3e0
+                       ksys_read+0x151/0x290
+                       __x64_sys_read+0x72/0xb0
+                       do_syscall_64+0xff/0x190
+                       entry_SYSCALL_64_after_hwframe+0x49/0xbe
+   }
+   ... key      at: [<ffffffff8a1d8d60>] __key.4+0x0/0x40
+   ... acquired at:
+   _raw_spin_lock+0x2d/0x40
+   userfaultfd_read+0x563/0x1b40
+   __vfs_read+0x8b/0x110
+   vfs_read+0x199/0x3e0
+   ksys_read+0x151/0x290
+   __x64_sys_read+0x72/0xb0
+   do_syscall_64+0xff/0x190
+   entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+ -> (&ctx->fd_wqh){....} {
+    INITIAL USE at:
+                     lock_acquire+0x16d/0x420
+                     _raw_spin_lock_irqsave+0x93/0xd0
+                     add_wait_queue+0x4c/0x160
+                     aio_poll_queue_proc+0x9e/0x110
+                     userfaultfd_poll+0x93/0x200
+                     io_submit_one+0xbb9/0x1990
+                     __x64_sys_io_submit+0x1a8/0x310
+                     do_syscall_64+0xff/0x190
+                     entry_SYSCALL_64_after_hwframe+0x49/0xbe
+  }
+  ... key      at: [<ffffffff8a1d8ca0>] __key.1+0x0/0x40
+  ... acquired at:
+   _raw_spin_lock+0x2d/0x40
+   io_submit_one+0xc60/0x1990
+   __x64_sys_io_submit+0x1a8/0x310
+   do_syscall_64+0xff/0x190
+   entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+-> (&(&ctx->ctx_lock)->rlock){..-.} {
+   IN-SOFTIRQ-W at:
+                    lock_acquire+0x16d/0x420
+                    _raw_spin_lock_irq+0x5e/0x80
+                    free_ioctx_users+0x2d/0x240
+                    percpu_ref_switch_to_atomic_rcu+0x3f2/0x530
+                    rcu_core+0x913/0x11b0
+                    __do_softirq+0x316/0x9b6
+                    run_ksoftirqd+0x8e/0x110
+                    smpboot_thread_fn+0x6ee/0xaa0
+                    kthread+0x352/0x420
+                    ret_from_fork+0x3a/0x50
+   INITIAL USE at:
+                   lock_acquire+0x16d/0x420
+                   _raw_spin_lock_irq+0x5e/0x80
+                   io_submit_one+0xc1c/0x1990
+                   __x64_sys_io_submit+0x1a8/0x310
+                   do_syscall_64+0xff/0x190
+                   entry_SYSCALL_64_after_hwframe+0x49/0xbe
+ }
+ ... key      at: [<ffffffff8a1d8f20>] __key.7+0x0/0x40
+ ... acquired at:
+   mark_lock+0x3ed/0xf80
+   __lock_acquire+0xb61/0x5cd0
+   lock_acquire+0x16d/0x420
+   _raw_spin_lock_irq+0x5e/0x80
+   free_ioctx_users+0x2d/0x240
+   percpu_ref_switch_to_atomic_rcu+0x3f2/0x530
+   rcu_core+0x913/0x11b0
+   __do_softirq+0x316/0x9b6
+   run_ksoftirqd+0x8e/0x110
+   smpboot_thread_fn+0x6ee/0xaa0
+   kthread+0x352/0x420
+   ret_from_fork+0x3a/0x50
+
+
+stack backtrace:
+CPU: 1 PID: 16 Comm: ksoftirqd/1 Not tainted 5.2.0-rc7-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x16c/0x1ef
+ print_irq_inversion_bug.part.0+0x2c0/0x2cf
+ check_usage_forwards.cold+0x1c/0x21
+ mark_lock+0x3ed/0xf80
+ __lock_acquire+0xb61/0x5cd0
+ lock_acquire+0x16d/0x420
+ _raw_spin_lock_irq+0x5e/0x80
+ free_ioctx_users+0x2d/0x240
+ percpu_ref_switch_to_atomic_rcu+0x3f2/0x530
+ rcu_core+0x913/0x11b0
+ __do_softirq+0x316/0x9b6
+ run_ksoftirqd+0x8e/0x110
+ smpboot_thread_fn+0x6ee/0xaa0
+ kthread+0x352/0x420
+ ret_from_fork+0x3a/0x50
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+kobject: 'loop3' (00000000e53adf4e): kobject_uevent_env
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+kobject: 'loop3' (00000000e53adf4e): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop1' (00000000e2107e5e): kobject_uevent_env
+kobject: 'loop1' (00000000e2107e5e): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop7' (00000000ac04c00b): kobject_uevent_env
+kobject: 'loop7' (00000000ac04c00b): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop4' (00000000b2d54b36): kobject_uevent_env
+kobject: 'loop4' (00000000b2d54b36): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop0' (000000003fc00f21): kobject_uevent_env
+kobject: 'loop0' (000000003fc00f21): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop5' (00000000e7c27369): kobject_uevent_env
+kobject: 'loop5' (00000000e7c27369): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop6' (0000000046006db2): kobject_uevent_env
+kobject: 'loop6' (0000000046006db2): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop2' (00000000b76e3c49): kobject_uevent_env
+kobject: 'loop2' (00000000b76e3c49): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop7' (00000000ac04c00b): kobject_uevent_env
+kobject: 'loop7' (00000000ac04c00b): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop3' (00000000e53adf4e): kobject_uevent_env
+kobject: 'loop3' (00000000e53adf4e): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop1' (00000000e2107e5e): kobject_uevent_env
+kobject: 'loop1' (00000000e2107e5e): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop4' (00000000b2d54b36): kobject_uevent_env
+kobject: 'loop4' (00000000b2d54b36): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop0' (000000003fc00f21): kobject_uevent_env
+kobject: 'loop0' (000000003fc00f21): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop5' (00000000e7c27369): kobject_uevent_env
+kobject: 'loop5' (00000000e7c27369): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop6' (0000000046006db2): kobject_uevent_env
+kobject: 'loop6' (0000000046006db2): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop2' (00000000b76e3c49): kobject_uevent_env
+kobject: 'loop2' (00000000b76e3c49): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop7' (00000000ac04c00b): kobject_uevent_env
+kobject: 'loop7' (00000000ac04c00b): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop1' (00000000e2107e5e): kobject_uevent_env
+kobject: 'loop1' (00000000e2107e5e): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop3' (00000000e53adf4e): kobject_uevent_env
+kobject: 'loop3' (00000000e53adf4e): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop4' (00000000b2d54b36): kobject_uevent_env
+kobject: 'loop4' (00000000b2d54b36): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop0' (000000003fc00f21): kobject_uevent_env
+kobject: 'loop0' (000000003fc00f21): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop5' (00000000e7c27369): kobject_uevent_env
+kobject: 'loop5' (00000000e7c27369): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop6' (0000000046006db2): kobject_uevent_env
+kobject: 'loop6' (0000000046006db2): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop2' (00000000b76e3c49): kobject_uevent_env
+kobject: 'loop2' (00000000b76e3c49): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop3' (00000000e53adf4e): kobject_uevent_env
+kobject: 'loop3' (00000000e53adf4e): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop1' (00000000e2107e5e): kobject_uevent_env
+kobject: 'loop1' (00000000e2107e5e): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop7' (00000000ac04c00b): kobject_uevent_env
+kobject: 'loop7' (00000000ac04c00b): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop4' (00000000b2d54b36): kobject_uevent_env
+kobject: 'loop4' (00000000b2d54b36): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop0' (000000003fc00f21): kobject_uevent_env
+kobject: 'loop0' (000000003fc00f21): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop2' (00000000b76e3c49): kobject_uevent_env
+kobject: 'loop2' (00000000b76e3c49): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop5' (00000000e7c27369): kobject_uevent_env
+kobject: 'loop5' (00000000e7c27369): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop6' (0000000046006db2): kobject_uevent_env
+kobject: 'loop6' (0000000046006db2): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop1' (00000000e2107e5e): kobject_uevent_env
+kobject: 'loop1' (00000000e2107e5e): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop3' (00000000e53adf4e): kobject_uevent_env
+kobject: 'loop3' (00000000e53adf4e): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop4' (00000000b2d54b36): kobject_uevent_env
+kobject: 'loop4' (00000000b2d54b36): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop7' (00000000ac04c00b): kobject_uevent_env
+kobject: 'loop7' (00000000ac04c00b): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop6' (0000000046006db2): kobject_uevent_env
+kobject: 'loop6' (0000000046006db2): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop2' (00000000b76e3c49): kobject_uevent_env
+kobject: 'loop2' (00000000b76e3c49): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop5' (00000000e7c27369): kobject_uevent_env
+kobject: 'loop5' (00000000e7c27369): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop0' (000000003fc00f21): kobject_uevent_env
+kobject: 'loop0' (000000003fc00f21): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop3' (00000000e53adf4e): kobject_uevent_env
+kobject: 'loop3' (00000000e53adf4e): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop1' (00000000e2107e5e): kobject_uevent_env
+kobject: 'loop1' (00000000e2107e5e): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop4' (00000000b2d54b36): kobject_uevent_env
+kobject: 'loop4' (00000000b2d54b36): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop7' (00000000ac04c00b): kobject_uevent_env
+kobject: 'loop7' (00000000ac04c00b): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop6' (0000000046006db2): kobject_uevent_env
+kobject: 'loop6' (0000000046006db2): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop2' (00000000b76e3c49): kobject_uevent_env
+kobject: 'loop2' (00000000b76e3c49): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop0' (000000003fc00f21): kobject_uevent_env
+kobject: 'loop0' (000000003fc00f21): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop5' (00000000e7c27369): kobject_uevent_env
+kobject: 'loop5' (00000000e7c27369): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop1' (00000000e2107e5e): kobject_uevent_env
+kobject: 'loop1' (00000000e2107e5e): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop3' (00000000e53adf4e): kobject_uevent_env
+kobject: 'loop3' (00000000e53adf4e): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop6' (0000000046006db2): kobject_uevent_env
+kobject: 'loop6' (0000000046006db2): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop4' (00000000b2d54b36): kobject_uevent_env
+kobject: 'loop4' (00000000b2d54b36): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop7' (00000000ac04c00b): kobject_uevent_env
+kobject: 'loop7' (00000000ac04c00b): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop2' (00000000b76e3c49): kobject_uevent_env
+kobject: 'loop2' (00000000b76e3c49): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop5' (00000000e7c27369): kobject_uevent_env
+kobject: 'loop5' (00000000e7c27369): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop0' (000000003fc00f21): kobject_uevent_env
+kobject: 'loop0' (000000003fc00f21): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop3' (00000000e53adf4e): kobject_uevent_env
+kobject: 'loop3' (00000000e53adf4e): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop4' (00000000b2d54b36): kobject_uevent_env
+kobject: 'loop4' (00000000b2d54b36): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop1' (00000000e2107e5e): kobject_uevent_env
+kobject: 'loop1' (00000000e2107e5e): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop6' (0000000046006db2): kobject_uevent_env
+kobject: 'loop6' (0000000046006db2): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop2' (00000000b76e3c49): kobject_uevent_env
+kobject: 'loop2' (00000000b76e3c49): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop5' (00000000e7c27369): kobject_uevent_env
+kobject: 'loop5' (00000000e7c27369): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop7' (00000000ac04c00b): kobject_uevent_env
+kobject: 'loop7' (00000000ac04c00b): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop0' (000000003fc00f21): kobject_uevent_env
+kobject: 'loop0' (000000003fc00f21): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop3' (00000000e53adf4e): kobject_uevent_env
+kobject: 'loop3' (00000000e53adf4e): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop4' (00000000b2d54b36): kobject_uevent_env
+kobject: 'loop4' (00000000b2d54b36): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop6' (0000000046006db2): kobject_uevent_env
+kobject: 'loop6' (0000000046006db2): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop1' (00000000e2107e5e): kobject_uevent_env
+kobject: 'loop1' (00000000e2107e5e): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop2' (00000000b76e3c49): kobject_uevent_env
+kobject: 'loop2' (00000000b76e3c49): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop7' (00000000ac04c00b): kobject_uevent_env
+kobject: 'loop7' (00000000ac04c00b): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop0' (000000003fc00f21): kobject_uevent_env
+kobject: 'loop0' (000000003fc00f21): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop5' (00000000e7c27369): kobject_uevent_env
+kobject: 'loop5' (00000000e7c27369): fill_kobj_path: path = '/devices/virtual/block/loop5'
+ieee802154 phy0 wpan0: encryption failed: -22
+ieee802154 phy1 wpan1: encryption failed: -22
+kobject: 'loop3' (00000000e53adf4e): kobject_uevent_env
+kobject: 'loop3' (00000000e53adf4e): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop2' (00000000b76e3c49): kobject_uevent_env
+kobject: 'loop2' (00000000b76e3c49): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop4' (00000000b2d54b36): kobject_uevent_env
+kobject: 'loop4' (00000000b2d54b36): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop7' (00000000ac04c00b): kobject_uevent_env
+kobject: 'loop7' (00000000ac04c00b): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop1' (00000000e2107e5e): kobject_uevent_env
+kobject: 'loop1' (00000000e2107e5e): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop0' (000000003fc00f21): kobject_uevent_env
+kobject: 'loop0' (000000003fc00f21): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop5' (00000000e7c27369): kobject_uevent_env
+kobject: 'loop5' (00000000e7c27369): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop6' (0000000046006db2): kobject_uevent_env
+kobject: 'loop6' (0000000046006db2): fill_kobj_path: path = '/devices/virtual/block/loop6'

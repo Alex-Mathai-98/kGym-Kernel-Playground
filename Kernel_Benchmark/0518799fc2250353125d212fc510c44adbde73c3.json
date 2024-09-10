@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "memory leak in __build_skb",
+    "display-title": "memory leak in __build_skb (3)",
+    "id": "0518799fc2250353125d212fc510c44adbde73c3",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "wifi: ath9k: htc_hst: free skb in ath9k_htc_rx_msg() if there is no callback function",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9b25e3985477ac3f02eca5fc1e0cc6850a3f7e69",
+            "hash": "9b25e3985477ac3f02eca5fc1e0cc6850a3f7e69",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f3e5f805f133d3f7@google.com/T/",
+        "https://lore.kernel.org/all/20221228224047.146399-1-pchelkin@ispras.ru/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in __build_skb",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15ee522f880000",
+            "c-reproducer": "/text?tag=ReproC&x=16d6e73c480000",
+            "kernel-config": "/text?tag=KernelConfig&x=a4fb7ad9185f1501",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1b929c02afd37871d5afb9d498426f83432e71c2",
+            "kernel-source-commit": "1b929c02afd37871d5afb9d498426f83432e71c2",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/44712fbc6b687170984c3562336a415b56d82607",
+            "syzkaller-commit": "44712fbc6b687170984c3562336a415b56d82607",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10395d12480000"
+        }
+    ],
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "323d91d4684d238f6bc3693fed93caf795378fe0",
+    "patch": "diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c\nindex ca05b07a45e6..fe62ff668f75 100644\n--- a/drivers/net/wireless/ath/ath9k/htc_hst.c\n+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c\n@@ -391,7 +391,7 @@ static void ath9k_htc_fw_panic_report(struct htc_target *htc_handle,\n  * HTC Messages are handled directly here and the obtained SKB\n  * is freed.\n  *\n- * Service messages (Data, WMI) passed to the corresponding\n+ * Service messages (Data, WMI) are passed to the corresponding\n  * endpoint RX handlers, which have to free the SKB.\n  */\n void ath9k_htc_rx_msg(struct htc_target *htc_handle,\n@@ -478,6 +478,8 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,\n \t\tif (endpoint->ep_callbacks.rx)\n \t\t\tendpoint->ep_callbacks.rx(endpoint->ep_callbacks.priv,\n \t\t\t\t\t\t  skb, epid);\n+\t\telse\n+\t\t\tgoto invalid;\n \t}\n }\n \n",
+    "patch_modified_files": [
+        "drivers/net/wireless/ath/ath9k/htc_hst.c"
+    ]
+}

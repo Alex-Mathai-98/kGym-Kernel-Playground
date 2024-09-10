@@ -1,0 +1,38 @@
+BUG: memory leak
+unreferenced object 0xffff88810da20700 (size 240):
+  comm "kworker/0:5", pid 3589, jiffies 4294942099 (age 17.940s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 07 a2 0d 81 88 ff ff  ................
+    00 00 6e 19 81 88 ff ff 80 30 c7 44 81 88 ff ff  ..n......0.D....
+  backtrace:
+    [<ffffffff83838f46>] __alloc_skb+0x1e6/0x260
+    [<ffffffff8383f8ea>] alloc_skb_with_frags+0x6a/0x340
+    [<ffffffff83830987>] sock_alloc_send_pskb+0x3a7/0x3e0
+    [<ffffffff83d0977d>] mld_newpack.isra.0+0x8d/0x200
+    [<ffffffff83d09993>] add_grhead+0xa3/0xc0
+    [<ffffffff83d0a0ea>] add_grec+0x73a/0x860
+    [<ffffffff83d0bdd2>] mld_ifc_work+0x272/0x750
+    [<ffffffff8127e575>] process_one_work+0x2e5/0x600
+    [<ffffffff8127ee68>] worker_thread+0x58/0x5b0
+    [<ffffffff8128893f>] kthread+0x11f/0x160
+    [<ffffffff810021cf>] ret_from_fork+0x1f/0x30
+
+BUG: memory leak
+unreferenced object 0xffff888117ece800 (size 2048):
+  comm "kworker/0:5", pid 3589, jiffies 4294942099 (age 17.940s)
+  hex dump (first 32 bytes):
+    00 00 33 33 00 00 00 16 42 42 42 42 42 42 86 dd  ..33....BBBBBB..
+    60 00 00 00 00 24 00 01 00 00 00 00 00 00 00 00  `....$..........
+  backtrace:
+    [<ffffffff83838e34>] __alloc_skb+0xd4/0x260
+    [<ffffffff8383f8ea>] alloc_skb_with_frags+0x6a/0x340
+    [<ffffffff83830987>] sock_alloc_send_pskb+0x3a7/0x3e0
+    [<ffffffff83d0977d>] mld_newpack.isra.0+0x8d/0x200
+    [<ffffffff83d09993>] add_grhead+0xa3/0xc0
+    [<ffffffff83d0a0ea>] add_grec+0x73a/0x860
+    [<ffffffff83d0bdd2>] mld_ifc_work+0x272/0x750
+    [<ffffffff8127e575>] process_one_work+0x2e5/0x600
+    [<ffffffff8127ee68>] worker_thread+0x58/0x5b0
+    [<ffffffff8128893f>] kthread+0x11f/0x160
+    [<ffffffff810021cf>] ret_from_fork+0x1f/0x30
+

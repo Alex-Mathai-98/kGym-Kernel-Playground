@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "general protection fault in qp_release_pages",
+    "display-title": "general protection fault in qp_release_pages",
+    "id": "6922c8c31f1fdd120d1cef3f58b319b6dd1d8c00",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "VMCI: check return value of get_user_pages_fast() for errors",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=90ca6333fd65f318c47bff425e1ea36c0a5539f6",
+            "hash": "90ca6333fd65f318c47bff425e1ea36c0a5539f6",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000903b5c05b1732a75@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=113937fb900000",
+            "c-reproducer": "/text?tag=ReproC&x=1049031b900000",
+            "kernel-config": "/text?tag=KernelConfig&x=c06bcf3cc963d91c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3dd0130f2430decf0cb001b452824515436986d2",
+            "kernel-source-commit": "3dd0130f2430decf0cb001b452824515436986d2",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4a77ae0bdc5cd75ebe88ce7c896aae6bbf457a29",
+            "syzkaller-commit": "4a77ae0bdc5cd75ebe88ce7c896aae6bbf457a29",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=107c9cab900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "qp_host_get_user_memory",
+            "drivers/misc/vmw_vmci/vmci_queue_pair.c"
+        ]
+    ],
+    "patch_commit_date": "2020-08-25T16:45:18+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "da0d6b3a536bc800cb46b35cc75327fd546b6272",
+    "patch": "diff --git a/drivers/misc/vmw_vmci/vmci_queue_pair.c b/drivers/misc/vmw_vmci/vmci_queue_pair.c\nindex 8531ae781195..c49065887e8f 100644\n--- a/drivers/misc/vmw_vmci/vmci_queue_pair.c\n+++ b/drivers/misc/vmw_vmci/vmci_queue_pair.c\n@@ -657,8 +657,9 @@ static int qp_host_get_user_memory(u64 produce_uva,\n \tif (retval < (int)produce_q->kernel_if->num_pages) {\n \t\tpr_debug(\"get_user_pages_fast(produce) failed (retval=%d)\",\n \t\t\tretval);\n-\t\tqp_release_pages(produce_q->kernel_if->u.h.header_page,\n-\t\t\t\t retval, false);\n+\t\tif (retval > 0)\n+\t\t\tqp_release_pages(produce_q->kernel_if->u.h.header_page,\n+\t\t\t\t\tretval, false);\n \t\terr = VMCI_ERROR_NO_MEM;\n \t\tgoto out;\n \t}\n@@ -670,8 +671,9 @@ static int qp_host_get_user_memory(u64 produce_uva,\n \tif (retval < (int)consume_q->kernel_if->num_pages) {\n \t\tpr_debug(\"get_user_pages_fast(consume) failed (retval=%d)\",\n \t\t\tretval);\n-\t\tqp_release_pages(consume_q->kernel_if->u.h.header_page,\n-\t\t\t\t retval, false);\n+\t\tif (retval > 0)\n+\t\t\tqp_release_pages(consume_q->kernel_if->u.h.header_page,\n+\t\t\t\t\tretval, false);\n \t\tqp_release_pages(produce_q->kernel_if->u.h.header_page,\n \t\t\t\t produce_q->kernel_if->num_pages, false);\n \t\terr = VMCI_ERROR_NO_MEM;\n",
+    "patch_modified_files": [
+        "drivers/misc/vmw_vmci/vmci_queue_pair.c"
+    ]
+}

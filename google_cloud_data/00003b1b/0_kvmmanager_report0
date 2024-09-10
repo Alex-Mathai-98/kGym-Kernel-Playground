@@ -1,0 +1,121 @@
+==================================================================
+BUG: KASAN: slab-out-of-bounds in usb_hcd_poll_rh_status+0x23f/0x530
+Write of size 2 at addr ffff8880221fb208 by task swapper/1/0
+
+CPU: 1 PID: 0 Comm: swapper/1 Not tainted 5.16.0-rc8-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <IRQ>
+ dump_stack_lvl+0x1e3/0x2cb
+ print_address_description+0x62/0x350
+ kasan_report+0x16b/0x1c0
+ kasan_check_range+0x27f/0x290
+ memcpy+0x3c/0x60
+ usb_hcd_poll_rh_status+0x23f/0x530
+ call_timer_fn+0x1bc/0x6b0
+ __run_timers+0x63b/0x830
+ run_timer_softirq+0x63/0xf0
+ __do_softirq+0x3d1/0x9fe
+ __irq_exit_rcu+0x155/0x240
+ irq_exit_rcu+0x5/0x20
+ sysvec_apic_timer_interrupt+0x91/0xb0
+ </IRQ>
+ <TASK>
+ asm_sysvec_apic_timer_interrupt+0x12/0x20
+RIP: 0010:acpi_idle_do_entry+0x10f/0x300
+Code: 3b b0 f7 48 83 e3 08 0f 85 26 01 00 00 4c 8d 74 24 20 e8 24 b7 b6 f7 e9 ed 01 00 00 e8 0a 37 b0 f7 0f 00 2d 43 7e b4 00 fb f4 <4c> 89 f3 48 c1 eb 03 42 80 3c 3b 00 74 08 4c 89 f7 e8 5b 21 f9 f7
+RSP: 0018:ffffc90000d57b00 EFLAGS: 00000293
+RAX: ffffffff89d05e83 RBX: 0000000000000000 RCX: ffff8880118e5700
+RDX: 0000000000000000 RSI: ffffffff8a2af6c0 RDI: ffffffff8a7a3020
+RBP: ffffc90000d57b90 R08: ffffffff818713e0 R09: ffffed100231cae1
+R10: 0000000000000000 R11: dffffc0000000001 R12: 1ffff920001aaf60
+R13: ffff888140f94004 R14: ffffc90000d57b20 R15: dffffc0000000000
+ acpi_idle_enter+0x34f/0x4e0
+ cpuidle_enter_state+0x521/0xef0
+ cpuidle_enter+0x59/0x90
+ do_idle+0x3e4/0x670
+ cpu_startup_entry+0x14/0x20
+ start_secondary+0x316/0x480
+ secondary_startup_64_no_verify+0xb1/0xbb
+ </TASK>
+
+Allocated by task 3834:
+ ____kasan_kmalloc+0xdb/0x110
+ __kmalloc+0x16d/0x2e0
+ do_proc_bulk+0x872/0x1200
+ usbdev_ioctl+0x2b32/0x6080
+ __se_sys_ioctl+0xf1/0x160
+ do_syscall_64+0x44/0xd0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+The buggy address belongs to the object at ffff8880221fb208
+ which belongs to the cache kmalloc-8 of size 8
+The buggy address is located 0 bytes inside of
+ 8-byte region [ffff8880221fb208, ffff8880221fb210)
+The buggy address belongs to the page:
+page:ffffea0000887ec0 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x221fb
+flags: 0xfff00000000200(slab|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000000200 0000000000000000 dead000000000122 ffff888010c41280
+raw: 0000000000000000 0000000080660066 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x12c00(GFP_NOIO|__GFP_NOWARN|__GFP_NORETRY), pid 25, ts 68930237271, free_ts 68796161325
+ get_page_from_freelist+0x322e/0x33d0
+ __alloc_pages+0x272/0x780
+ new_slab+0xbb/0x4b0
+ ___slab_alloc+0x6f3/0xe10
+ kmem_cache_alloc_trace+0x1a5/0x270
+ usb_control_msg+0xb7/0x4c0
+ hub_port_reset+0x33f/0x21f0
+ hub_port_init+0x1cb/0x23f0
+ hub_event+0x2a49/0x5840
+ process_one_work+0x8e6/0x1230
+ worker_thread+0xaca/0x1280
+ kthread+0x415/0x510
+ ret_from_fork+0x1f/0x30
+page last free stack trace:
+ free_unref_page_prepare+0xcbd/0xd80
+ free_unref_page+0x95/0x2d0
+ ___cache_free+0xe3/0x100
+ qlist_free_all+0x36/0x90
+ kasan_quarantine_reduce+0x162/0x180
+ __kasan_slab_alloc+0x2f/0xf0
+ slab_post_alloc_hook+0x50/0x390
+ kmem_cache_alloc_node+0x130/0x350
+ __alloc_skb+0xdb/0x590
+ alloc_skb_with_frags+0xa2/0x630
+ sock_alloc_send_pskb+0x915/0xa50
+ mld_newpack+0x1c0/0x9d0
+ add_grhead+0x5e/0x250
+ add_grec+0x13a0/0x1670
+ mld_send_initial_cr+0x1f0/0x360
+ mld_dad_work+0x40/0x400
+
+Memory state around the buggy address:
+ ffff8880221fb100: fc fc fc fa fc fc fc fc fa fc fc fc fc fa fc fc
+ ffff8880221fb180: fc fc fa fc fc fc fc fa fc fc fc fc 00 fc fc fc
+>ffff8880221fb200: fc 01 fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+                      ^
+ ffff8880221fb280: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8880221fb300: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================
+----------------
+Code disassembly (best guess):
+   0:	3b b0 f7 48 83 e3    	cmp    -0x1c7cb709(%rax),%esi
+   6:	08 0f                	or     %cl,(%rdi)
+   8:	85 26                	test   %esp,(%rsi)
+   a:	01 00                	add    %eax,(%rax)
+   c:	00 4c 8d 74          	add    %cl,0x74(%rbp,%rcx,4)
+  10:	24 20                	and    $0x20,%al
+  12:	e8 24 b7 b6 f7       	call   0xf7b6b73b
+  17:	e9 ed 01 00 00       	jmp    0x209
+  1c:	e8 0a 37 b0 f7       	call   0xf7b0372b
+  21:	0f 00 2d 43 7e b4 00 	verw   0xb47e43(%rip)        # 0xb47e6b
+  28:	fb                   	sti
+  29:	f4                   	hlt
+* 2a:	4c 89 f3             	mov    %r14,%rbx <-- trapping instruction
+  2d:	48 c1 eb 03          	shr    $0x3,%rbx
+  31:	42 80 3c 3b 00       	cmpb   $0x0,(%rbx,%r15,1)
+  36:	74 08                	je     0x40
+  38:	4c 89 f7             	mov    %r14,%rdi
+  3b:	e8 5b 21 f9 f7       	call   0xf7f9219b

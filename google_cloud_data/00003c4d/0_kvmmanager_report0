@@ -1,0 +1,72 @@
+Bluetooth: hci7: hardware error 0x00
+==================================================================
+BUG: KASAN: use-after-free in __list_del_entry_valid+0xd5/0xf0
+Read of size 8 at addr ffff8881ca81d4d0 by task kworker/u5:8/4307
+
+CPU: 0 PID: 4307 Comm: kworker/u5:8 Not tainted 5.8.0-rc6-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: hci7 hci_error_reset
+Call Trace:
+ dump_stack+0x188/0x1ff
+ print_address_description.constprop.0.cold+0x72/0x47e
+ kasan_report.cold+0x1f/0x37
+ __list_del_entry_valid+0xd5/0xf0
+ klist_release+0x66/0x480
+ klist_put+0xfb/0x1d0
+ device_del+0x3ea/0xc50
+ hci_conn_del_sysfs+0xd1/0x100
+ hci_conn_cleanup+0x369/0x700
+ hci_conn_del+0x280/0x6a0
+ hci_conn_hash_flush+0x189/0x220
+ hci_dev_do_close+0x5c2/0x1060
+ hci_error_reset+0x90/0xf0
+ process_one_work+0x9ad/0x1680
+ worker_thread+0x676/0x1170
+ kthread+0x3a6/0x490
+ ret_from_fork+0x1f/0x30
+
+Allocated by task 4122:
+ save_stack+0x19/0x40
+ __kasan_kmalloc.constprop.0+0xda/0xe0
+ kmem_cache_alloc_trace+0x133/0x2c0
+ device_add+0xe88/0x1b40
+ hci_conn_add_sysfs+0x84/0xe0
+ hci_event_packet+0xeca/0x8150
+ hci_rx_work+0x206/0xb50
+ process_one_work+0x9ad/0x1680
+ worker_thread+0x676/0x1170
+ kthread+0x3a6/0x490
+ ret_from_fork+0x1f/0x30
+
+Freed by task 4301:
+ save_stack+0x19/0x40
+ __kasan_slab_free+0xf9/0x140
+ kfree+0x103/0x2b0
+ device_add+0x2fc/0x1b40
+ hci_conn_add_sysfs+0x84/0xe0
+ hci_event_packet+0xeca/0x8150
+ hci_rx_work+0x206/0xb50
+ process_one_work+0x9ad/0x1680
+ worker_thread+0x676/0x1170
+ kthread+0x3a6/0x490
+ ret_from_fork+0x1f/0x30
+
+The buggy address belongs to the object at ffff8881ca81d400
+ which belongs to the cache kmalloc-512 of size 512
+The buggy address is located 208 bytes inside of
+ 512-byte region [ffff8881ca81d400, ffff8881ca81d600)
+The buggy address belongs to the page:
+page:ffffea00072a0740 refcount:1 mapcount:0 mapping:0000000000000000 index:0xffff8881ca81d000
+flags: 0x17ffe0000000200(slab)
+raw: 017ffe0000000200 ffffea00076d7ac8 ffffea000770d508 ffff8881f5000a80
+raw: ffff8881ca81d000 ffff8881ca81d000 0000000100000003 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff8881ca81d380: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8881ca81d400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>ffff8881ca81d480: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                                 ^
+ ffff8881ca81d500: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8881ca81d580: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================

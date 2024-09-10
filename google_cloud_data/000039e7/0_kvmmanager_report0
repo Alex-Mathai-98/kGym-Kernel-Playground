@@ -1,0 +1,65 @@
+BUG: memory leak
+unreferenced object 0xffff88811a84d600 (size 512):
+  comm "syz-executor.0", pid 3673, jiffies 4294941488 (age 11.100s)
+  hex dump (first 32 bytes):
+    d8 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff  ................
+    00 a2 28 82 ff ff ff ff 68 30 ea 19 81 88 ff ff  ..(.....h0......
+  backtrace:
+    [<ffffffff814ce7e2>] __kmalloc_node+0x42/0x140
+    [<ffffffff82281500>] crypto_create_tfm_node+0x30/0x130
+    [<ffffffff82281de8>] crypto_alloc_tfm_node+0x88/0x160
+    [<ffffffff8168091c>] fscrypt_init_hkdf+0x3c/0x170
+    [<ffffffff81682ae9>] add_master_key+0x169/0x3b0
+    [<ffffffff816831bc>] fscrypt_add_test_dummy_key+0x8c/0xb0
+    [<ffffffff817fa29d>] ext4_check_opt_consistency+0x73d/0xb70
+    [<ffffffff818003aa>] ext4_fill_super+0xa1a/0x4b00
+    [<ffffffff815dca11>] get_tree_bdev+0x1f1/0x310
+    [<ffffffff815dac56>] vfs_get_tree+0x26/0xf0
+    [<ffffffff8161df9b>] path_mount+0xc4b/0x1080
+    [<ffffffff8161eafc>] __x64_sys_mount+0x18c/0x1d0
+    [<ffffffff845b7ad4>] do_syscall_64+0x34/0xb0
+    [<ffffffff84600087>] entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+BUG: memory leak
+unreferenced object 0xffff88811a864ca0 (size 32):
+  comm "syz-executor.0", pid 3673, jiffies 4294941488 (age 11.100s)
+  hex dump (first 32 bytes):
+    d0 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff  ................
+    00 00 00 00 00 00 00 00 60 cd a7 85 ff ff ff ff  ........`.......
+  backtrace:
+    [<ffffffff814ce7e2>] __kmalloc_node+0x42/0x140
+    [<ffffffff82281500>] crypto_create_tfm_node+0x30/0x130
+    [<ffffffff82283583>] crypto_spawn_tfm2+0x43/0x80
+    [<ffffffff82292b2c>] hmac_init_tfm+0x3c/0x90
+    [<ffffffff8228abb9>] crypto_shash_init_tfm+0x79/0xe0
+    [<ffffffff82281522>] crypto_create_tfm_node+0x52/0x130
+    [<ffffffff82281de8>] crypto_alloc_tfm_node+0x88/0x160
+    [<ffffffff8168091c>] fscrypt_init_hkdf+0x3c/0x170
+    [<ffffffff81682ae9>] add_master_key+0x169/0x3b0
+    [<ffffffff816831bc>] fscrypt_add_test_dummy_key+0x8c/0xb0
+    [<ffffffff817fa29d>] ext4_check_opt_consistency+0x73d/0xb70
+    [<ffffffff818003aa>] ext4_fill_super+0xa1a/0x4b00
+    [<ffffffff815dca11>] get_tree_bdev+0x1f1/0x310
+    [<ffffffff815dac56>] vfs_get_tree+0x26/0xf0
+    [<ffffffff8161df9b>] path_mount+0xc4b/0x1080
+    [<ffffffff8161eafc>] __x64_sys_mount+0x18c/0x1d0
+
+BUG: memory leak
+unreferenced object 0xffff88811a1cb800 (size 2048):
+  comm "syz-executor.0", pid 3673, jiffies 4294941488 (age 11.100s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff814cde81>] kmalloc_trace+0x21/0x90
+    [<ffffffff81682c70>] add_master_key+0x2f0/0x3b0
+    [<ffffffff816831bc>] fscrypt_add_test_dummy_key+0x8c/0xb0
+    [<ffffffff817fa29d>] ext4_check_opt_consistency+0x73d/0xb70
+    [<ffffffff818003aa>] ext4_fill_super+0xa1a/0x4b00
+    [<ffffffff815dca11>] get_tree_bdev+0x1f1/0x310
+    [<ffffffff815dac56>] vfs_get_tree+0x26/0xf0
+    [<ffffffff8161df9b>] path_mount+0xc4b/0x1080
+    [<ffffffff8161eafc>] __x64_sys_mount+0x18c/0x1d0
+    [<ffffffff845b7ad4>] do_syscall_64+0x34/0xb0
+    [<ffffffff84600087>] entry_SYSCALL_64_after_hwframe+0x63/0xcd
+

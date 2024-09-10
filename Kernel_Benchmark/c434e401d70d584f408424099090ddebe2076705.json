@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in ntfs_fill_super",
+    "display-title": "UBSAN: shift-out-of-bounds in ntfs_fill_super",
+    "id": "c434e401d70d584f408424099090ddebe2076705",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/ntfs3: validate BOOT sectors_per_clusters",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a3b774342fa752a5290c0de36375289dfcf4a260",
+            "hash": "a3b774342fa752a5290c0de36375289dfcf4a260",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "f2fs: fix unexpected ENOENT comes from f2fs_map_blocks()",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=adf9ea89c719c1d23794e363f631e376b3ff8cbc",
+        "hash": "adf9ea89c719c1d23794e363f631e376b3ff8cbc",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f8b5ef05dd25b963@google.com/T/",
+        "https://lore.kernel.org/all/20220429172711.31894-1-rdunlap@infradead.org/T/",
+        "https://lore.kernel.org/all/20220429200100.22659-1-rdunlap@infradead.org/T/",
+        "https://lore.kernel.org/all/20220502175342.20296-1-rdunlap@infradead.org/T/",
+        "https://lore.kernel.org/all/20220603173820.663747061@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220603173820.731531504@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220603173821.749019262@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/4b37f037-3b10-b4e4-0644-73441c8fa0af@I-love.SAKURA.ne.jp/T/"
+    ],
+    "crashes": [
+        {
+            "title": "UBSAN: shift-out-of-bounds in ntfs_fill_super",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12e13cfcf00000",
+            "c-reproducer": "/text?tag=ReproC&x=135e3008f00000",
+            "kernel-config": "/text?tag=KernelConfig&x=ff9f8140cbb3af7",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b253435746d9a4a701b5f09211b9c14d3370d0da",
+            "kernel-source-commit": "b253435746d9a4a701b5f09211b9c14d3370d0da",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d4befee155c308c896933484e16a54b9e3290ee8",
+            "syzkaller-commit": "d4befee155c308c896933484e16a54b9e3290ee8",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16968cdcf00000"
+        }
+    ],
+    "subsystems": [
+        "ntfs3"
+    ],
+    "parent_of_fix_commit": "cd290a9839cee2f6641558877e707bd373c8f6f1",
+    "patch": "diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c\nindex 278dcf502410..b2b54c4553f9 100644\n--- a/fs/ntfs3/super.c\n+++ b/fs/ntfs3/super.c\n@@ -668,9 +668,11 @@ static u32 format_size_gb(const u64 bytes, u32 *mb)\n \n static u32 true_sectors_per_clst(const struct NTFS_BOOT *boot)\n {\n-\treturn boot->sectors_per_clusters <= 0x80\n-\t\t       ? boot->sectors_per_clusters\n-\t\t       : (1u << (0 - boot->sectors_per_clusters));\n+\tif (boot->sectors_per_clusters <= 0x80)\n+\t\treturn boot->sectors_per_clusters;\n+\tif (boot->sectors_per_clusters >= 0xf4) /* limit shift to 2MB max */\n+\t\treturn 1U << (0 - boot->sectors_per_clusters);\n+\treturn -EINVAL;\n }\n \n /*\n@@ -713,6 +715,8 @@ static int ntfs_init_from_boot(struct super_block *sb, u32 sector_size,\n \n \t/* cluster size: 512, 1K, 2K, 4K, ... 2M */\n \tsct_per_clst = true_sectors_per_clst(boot);\n+\tif ((int)sct_per_clst < 0)\n+\t\tgoto out;\n \tif (!is_power_of_2(sct_per_clst))\n \t\tgoto out;\n \n",
+    "patch_modified_files": [
+        "fs/ntfs3/super.c"
+    ]
+}

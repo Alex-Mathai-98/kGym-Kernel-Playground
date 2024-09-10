@@ -1,0 +1,89 @@
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+hrtimer: interrupt took 25867 ns
+==================================================================
+BUG: KASAN: use-after-free in __vb2_perform_fileio+0x1062/0x1130
+Read of size 4 at addr ffff8881f2b1a35c by task syz-executor.5/4805
+
+CPU: 0 PID: 4805 Comm: syz-executor.5 Not tainted 5.1.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x16c/0x1ef
+ print_address_description.cold+0x4b/0x2a1
+ kasan_report.cold+0x1b/0x3f
+ __asan_report_load4_noabort+0x14/0x20
+ __vb2_perform_fileio+0x1062/0x1130
+ vb2_read+0x3b/0x50
+ vb2_fop_read+0x203/0x3f0
+ v4l2_read+0x1cf/0x230
+ do_iter_read+0x49e/0x670
+ vfs_readv+0xf0/0x160
+ do_readv+0xf7/0x300
+ __x64_sys_readv+0x75/0xb0
+ do_syscall_64+0xff/0x190
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7feb73816f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007feb72b970c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000013
+RAX: ffffffffffffffda RBX: 00007feb73944f80 RCX: 00007feb73816f69
+RDX: 0000000000000001 RSI: 0000000020000280 RDI: 0000000000000003
+RBP: 00007feb738634a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007feb73944f80 R15: 00007ffcee8d7168
+
+Allocated by task 4804:
+ save_stack+0x43/0xc0
+ __kasan_kmalloc.constprop.0+0xea/0x100
+ kasan_kmalloc+0x9/0x10
+ kmem_cache_alloc_trace+0x13b/0x2a0
+ __vb2_init_fileio+0x1eb/0xbe0
+ __vb2_perform_fileio+0xc59/0x1130
+ vb2_read+0x3b/0x50
+ vb2_fop_read+0x203/0x3f0
+ v4l2_read+0x1cf/0x230
+ do_iter_read+0x49e/0x670
+ vfs_readv+0xf0/0x160
+ do_readv+0xf7/0x300
+ __x64_sys_readv+0x75/0xb0
+ do_syscall_64+0xff/0x190
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+Freed by task 4799:
+ save_stack+0x43/0xc0
+ __kasan_slab_free+0xfe/0x140
+ kasan_slab_free+0xe/0x10
+ kfree+0xcd/0x220
+ __vb2_cleanup_fileio+0xf8/0x160
+ vb2_core_queue_release+0x1e/0x80
+ _vb2_fop_release+0x1d2/0x2b0
+ vb2_fop_release+0x75/0xc0
+ vivid_fop_release+0x18e/0x6e1
+ v4l2_release+0x224/0x3a0
+ __fput+0x2d5/0x8c0
+ ____fput+0x15/0x20
+ task_work_run+0x158/0x1d0
+ prepare_exit_to_usermode+0x4ee/0x560
+ syscall_return_slowpath+0xfe/0x720
+ do_syscall_64+0x12d/0x190
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+The buggy address belongs to the object at ffff8881f2b1a040
+ which belongs to the cache kmalloc-1k of size 1024
+The buggy address is located 796 bytes inside of
+ 1024-byte region [ffff8881f2b1a040, ffff8881f2b1a440)
+The buggy address belongs to the page:
+page:ffffea0007cac680 count:1 mapcount:0 mapping:ffff8881f6000ac0 index:0x0 compound_mapcount: 0
+flags: 0x2fffc0000010200(slab|head)
+raw: 02fffc0000010200 ffffea0007cab488 ffffea0007c8dc88 ffff8881f6000ac0
+raw: 0000000000000000 ffff8881f2b1a040 0000000100000007 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff8881f2b1a200: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8881f2b1a280: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>ffff8881f2b1a300: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                                    ^
+ ffff8881f2b1a380: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8881f2b1a400: fb fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+==================================================================

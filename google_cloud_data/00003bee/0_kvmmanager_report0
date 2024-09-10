@@ -1,0 +1,32 @@
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 5104 at fs/nilfs2/dat.c:200 nilfs_dat_commit_end+0x5a0/0x6b0
+Modules linked in:
+CPU: 0 PID: 5104 Comm: segctord Not tainted 6.2.0-rc4-syzkaller-00055-ge89bd9e7d8eb #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:nilfs_dat_commit_end+0x5a0/0x6b0
+Code: 48 89 ee 48 83 c4 38 5b 41 5c 41 5d 41 5e 41 5f 5d e9 e4 75 03 00 e8 6f 02 3c fe e8 7a 01 b4 fd e9 d8 fc ff ff e8 60 02 3c fe <0f> 0b e9 39 fc ff ff e8 54 02 3c fe e8 5f 01 b4 fd 43 80 7c 35 00
+RSP: 0018:ffffc9000446f288 EFLAGS: 00010293
+RAX: ffffffff834c9260 RBX: ffff88807aba81a0 RCX: ffff88807db51d40
+RDX: 0000000000000000 RSI: 0000000000000003 RDI: 000023d50af30002
+RBP: 0000000000000003 R08: ffffffff834c8e92 R09: ffffed100ee5169b
+R10: 0000000000000000 R11: dffffc0000000001 R12: ffff88806b99ea40
+R13: 1ffff9200088de73 R14: 000023d50af30002 R15: ffff88807db53400
+FS:  0000000000000000(0000) GS:ffff8880b9a00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f82beb95ed8 CR3: 000000001b7f3000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ nilfs_dat_commit_update+0x29/0x40
+ nilfs_direct_propagate+0x21b/0x390
+ nilfs_bmap_propagate+0x71/0x120
+ nilfs_collect_file_data+0x4d/0xc0
+ nilfs_segctor_apply_buffers+0x180/0x330
+ nilfs_segctor_scan_file+0x816/0xac0
+ nilfs_segctor_do_construct+0x1c7c/0x6d70
+ nilfs_segctor_construct+0x145/0x8c0
+ nilfs_segctor_thread+0x526/0x1150
+ kthread+0x270/0x300
+ ret_from_fork+0x1f/0x30
+ </TASK>

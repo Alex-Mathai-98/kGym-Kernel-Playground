@@ -1,0 +1,67 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Write in record_print_text",
+    "display-title": "KASAN: slab-out-of-bounds Write in record_print_text",
+    "id": "7d0e7e183df07b0c306cca5dfd022a64c302dd4f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "printk: fix string termination for record_print_text()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=08d60e5999540110576e7c1346d486220751b7f9",
+            "hash": "08d60e5999540110576e7c1346d486220751b7f9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "printk: fix buffer overflow potential for print_text()",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f0e386ee0c0b71ea6f7238506a4d0965a2dbef11",
+        "hash": "f0e386ee0c0b71ea6f7238506a4d0965a2dbef11",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000bc67d205b9b8feb2@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Write in record_print_text",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1575e6b4d00000",
+            "c-reproducer": "/text?tag=ReproC&x=17aea4e8d00000",
+            "kernel-config": "/text?tag=KernelConfig&x=be33d8015c9de024",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e68061375f792af245fefbc13e3e078fa92d3539",
+            "kernel-source-commit": "e68061375f792af245fefbc13e3e078fa92d3539",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/52e3731913ab2677be27c29ed8142b04e8f28521",
+            "syzkaller-commit": "52e3731913ab2677be27c29ed8142b04e8f28521",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=171346b4d00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "record_print_text",
+            "kernel/printk/printk.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "info_print_prefix",
+            "kernel/printk/printk.c"
+        ],
+        [
+            "record_print_text",
+            "kernel/printk/printk.c"
+        ]
+    ],
+    "patch_commit_date": "2021-01-24T20:27:28+00:00",
+    "cause_commit_date": "2021-01-14T17:04:12+00:00",
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "f0e386ee0c0b71ea6f7238506a4d0965a2dbef11",
+    "patch": "diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c\nindex 17fa6dc77053..c55cd1820689 100644\n--- a/kernel/printk/printk.c\n+++ b/kernel/printk/printk.c\n@@ -1399,7 +1399,7 @@ static size_t record_print_text(struct printk_record *r, bool syslog,\n \t * not counted in the return value.\n \t */\n \tif (buf_size > 0)\n-\t\ttext[len] = 0;\n+\t\tr->text_buf[len] = 0;\n \n \treturn len;\n }\n",
+    "patch_modified_files": [
+        "kernel/printk/printk.c"
+    ]
+}

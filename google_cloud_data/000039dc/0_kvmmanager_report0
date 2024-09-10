@@ -1,0 +1,125 @@
+==================================================================
+BUG: KASAN: slab-use-after-free in hci_conn_hash_flush+0x241/0x270
+Read of size 8 at addr ffff88807ac82000 by task syz-executor.3/5041
+
+CPU: 1 PID: 5041 Comm: syz-executor.3 Not tainted 6.4.0-rc2-syzkaller-00175-g2910431ab0e5 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xd9/0x1b0
+ print_report+0xc4/0x5f0
+ kasan_report+0xc0/0xf0
+ hci_conn_hash_flush+0x241/0x270
+ hci_dev_close_sync+0x643/0x11d0
+ hci_dev_do_close+0x2e/0x70
+ hci_unregister_dev+0x1ce/0x570
+ vhci_release+0x7f/0xf0
+ __fput+0x26a/0xa40
+ task_work_run+0x14d/0x240
+ do_exit+0xaab/0x29a0
+ do_group_exit+0xd4/0x2a0
+ __x64_sys_exit_group+0x3e/0x50
+ do_syscall_64+0x38/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fb5b667ca19
+Code: Unable to access opcode bytes at 0x7fb5b667c9ef.
+RSP: 002b:00007fff538987f8 EFLAGS: 00000246 ORIG_RAX: 00000000000000e7
+RAX: ffffffffffffffda RBX: 0000000000000007 RCX: 00007fb5b667ca19
+RDX: 00007fb5b667e70c RSI: 0000000000000000 RDI: 0000000000000007
+RBP: 0000000000000000 R08: 000000000000000c R09: 0000000000000007
+R10: 00007fff53898e54 R11: 0000000000000246 R12: 0000000000000001
+R13: 0000000000000000 R14: 00007fb5b72c4670 R15: 0000000000000000
+ </TASK>
+
+Allocated by task 5169:
+ kasan_save_stack+0x20/0x40
+ kasan_set_track+0x25/0x30
+ __kasan_kmalloc+0xa2/0xb0
+ hci_conn_add+0xb6/0x1680
+ hci_connect_sco+0x3ac/0xff0
+ sco_sock_connect+0x2c7/0xad0
+ __sys_connect_file+0x14f/0x190
+ __sys_connect+0x133/0x160
+ __x64_sys_connect+0x72/0xb0
+ do_syscall_64+0x38/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Freed by task 5041:
+ kasan_save_stack+0x20/0x40
+ kasan_set_track+0x25/0x30
+ kasan_save_free_info+0x2e/0x40
+ ____kasan_slab_free+0x15e/0x1b0
+ slab_free_freelist_hook+0x10b/0x1e0
+ __kmem_cache_free+0xaf/0x2e0
+ device_release+0xa1/0x240
+ kobject_put+0x1f7/0x5b0
+ put_device+0x1f/0x30
+ hci_conn_del+0x1e7/0x930
+ hci_conn_unlink+0x389/0x480
+ hci_conn_hash_flush+0x198/0x270
+ hci_dev_close_sync+0x643/0x11d0
+ hci_dev_do_close+0x2e/0x70
+ hci_unregister_dev+0x1ce/0x570
+ vhci_release+0x7f/0xf0
+ __fput+0x26a/0xa40
+ task_work_run+0x14d/0x240
+ do_exit+0xaab/0x29a0
+ do_group_exit+0xd4/0x2a0
+ __x64_sys_exit_group+0x3e/0x50
+ do_syscall_64+0x38/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+The buggy address belongs to the object at ffff88807ac82000
+ which belongs to the cache kmalloc-4k of size 4096
+The buggy address is located 0 bytes inside of
+ freed 4096-byte region [ffff88807ac82000, ffff88807ac83000)
+
+The buggy address belongs to the physical page:
+page:ffffea0001eb2000 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x7ac80
+head:ffffea0001eb2000 order:3 entire_mapcount:0 nr_pages_mapped:0 pincount:0
+anon flags: 0xfff00000010200(slab|head|node=0|zone=1|lastcpupid=0x7ff)
+page_type: 0xffffffff()
+raw: 00fff00000010200 ffff888012442140 0000000000000000 dead000000000001
+raw: 0000000000000000 0000000000040004 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 3, migratetype Unmovable, gfp_mask 0xd20c0(__GFP_IO|__GFP_FS|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC), pid 5041, tgid 5041 (syz-executor.3), ts 58011898828, free_ts 37987145302
+ post_alloc_hook+0x2d2/0x350
+ get_page_from_freelist+0xe71/0x2e80
+ __alloc_pages+0x1c8/0x4a0
+ alloc_pages+0x1a9/0x270
+ allocate_slab+0x24e/0x380
+ ___slab_alloc+0x89a/0x1400
+ __slab_alloc.constprop.0+0x56/0xa0
+ __kmem_cache_alloc_node+0x126/0x330
+ __kmalloc+0x4c/0x100
+ ops_init+0x16b/0x650
+ setup_net+0x5d1/0xc50
+ copy_net_ns+0x4a0/0x870
+ create_new_namespaces+0x3ea/0xb10
+ unshare_nsproxy_namespaces+0xc1/0x1f0
+ ksys_unshare+0x3da/0x930
+ __x64_sys_unshare+0x31/0x40
+page last free stack trace:
+ free_unref_page_prepare+0x508/0xb90
+ free_unref_page+0x33/0x3b0
+ __unfreeze_partials+0x18d/0x1b0
+ qlist_free_all+0x6a/0x170
+ kasan_quarantine_reduce+0x18b/0x1d0
+ __kasan_slab_alloc+0x65/0x90
+ kmem_cache_alloc+0x16e/0x3b0
+ getname_flags.part.0+0x50/0x4d0
+ getname+0x90/0xe0
+ do_sys_openat2+0xf5/0x4c0
+ __x64_sys_openat+0x175/0x210
+ do_syscall_64+0x38/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Memory state around the buggy address:
+ ffff88807ac81f00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88807ac81f80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff88807ac82000: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                   ^
+ ffff88807ac82080: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88807ac82100: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================

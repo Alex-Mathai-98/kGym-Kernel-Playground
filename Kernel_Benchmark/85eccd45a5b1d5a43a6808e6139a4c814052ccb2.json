@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "title": "UBSAN: array-index-out-of-bounds in alg_bind",
+    "display-title": "UBSAN: array-index-out-of-bounds in alg_bind",
+    "id": "85eccd45a5b1d5a43a6808e6139a4c814052ccb2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "crypto: af_alg - avoid undefined behavior accessing salg_name",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=92eb6c3060ebe3adf381fd9899451c5b047bb14d",
+            "hash": "92eb6c3060ebe3adf381fd9899451c5b047bb14d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000014370305b1c55370@google.com/T/",
+        "https://lore.kernel.org/all/20201026200715.170261-1-ebiggers@kernel.org/T/",
+        "https://lore.kernel.org/all/20201223150515.553836647@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124904.654293249@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124919.745526410@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124937.240114599@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=145afc2c500000",
+            "c-reproducer": "/text?tag=ReproC&x=141ad11a500000",
+            "kernel-config": "/text?tag=KernelConfig&x=e791ddf0875adf65",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3cea11cd5e3b00d91caf0b4730194039b45c5891",
+            "kernel-source-commit": "3cea11cd5e3b00d91caf0b4730194039b45c5891",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8bc4594f832068a30c0eff44d468311780057d1f",
+            "syzkaller-commit": "8bc4594f832068a30c0eff44d468311780057d1f",
+            "compiler-description": "clang version 11.0.0 (https://github.com/llvm/llvm-project.git ca2dcbd030eadbf0aa9b660efe864ff08af6e18b)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=142a1cfa500000"
+        }
+    ],
+    "subsystems": [
+        "crypto"
+    ],
+    "parent_of_fix_commit": "2d653936eb2cf613526290caa512b46e4c0d71ae",
+    "patch": "diff --git a/crypto/af_alg.c b/crypto/af_alg.c\nindex d11db80d24cd..9acb9d2c4bcf 100644\n--- a/crypto/af_alg.c\n+++ b/crypto/af_alg.c\n@@ -147,7 +147,7 @@ static int alg_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)\n \tconst u32 allowed = CRYPTO_ALG_KERN_DRIVER_ONLY;\n \tstruct sock *sk = sock->sk;\n \tstruct alg_sock *ask = alg_sk(sk);\n-\tstruct sockaddr_alg *sa = (void *)uaddr;\n+\tstruct sockaddr_alg_new *sa = (void *)uaddr;\n \tconst struct af_alg_type *type;\n \tvoid *private;\n \tint err;\n@@ -155,7 +155,11 @@ static int alg_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)\n \tif (sock->state == SS_CONNECTED)\n \t\treturn -EINVAL;\n \n-\tif (addr_len < sizeof(*sa))\n+\tBUILD_BUG_ON(offsetof(struct sockaddr_alg_new, salg_name) !=\n+\t\t     offsetof(struct sockaddr_alg, salg_name));\n+\tBUILD_BUG_ON(offsetof(struct sockaddr_alg, salg_name) != sizeof(*sa));\n+\n+\tif (addr_len < sizeof(*sa) + 1)\n \t\treturn -EINVAL;\n \n \t/* If caller uses non-allowed flag, return error. */\n@@ -163,7 +167,7 @@ static int alg_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)\n \t\treturn -EINVAL;\n \n \tsa->salg_type[sizeof(sa->salg_type) - 1] = 0;\n-\tsa->salg_name[sizeof(sa->salg_name) + addr_len - sizeof(*sa) - 1] = 0;\n+\tsa->salg_name[addr_len - sizeof(*sa) - 1] = 0;\n \n \ttype = alg_get_type(sa->salg_type);\n \tif (PTR_ERR(type) == -ENOENT) {\ndiff --git a/include/uapi/linux/if_alg.h b/include/uapi/linux/if_alg.h\nindex 60b7c2efd921..dc52a11ba6d1 100644\n--- a/include/uapi/linux/if_alg.h\n+++ b/include/uapi/linux/if_alg.h\n@@ -24,6 +24,22 @@ struct sockaddr_alg {\n \t__u8\tsalg_name[64];\n };\n \n+/*\n+ * Linux v4.12 and later removed the 64-byte limit on salg_name[]; it's now an\n+ * arbitrary-length field.  We had to keep the original struct above for source\n+ * compatibility with existing userspace programs, though.  Use the new struct\n+ * below if support for very long algorithm names is needed.  To do this,\n+ * allocate 'sizeof(struct sockaddr_alg_new) + strlen(algname) + 1' bytes, and\n+ * copy algname (including the null terminator) into salg_name.\n+ */\n+struct sockaddr_alg_new {\n+\t__u16\tsalg_family;\n+\t__u8\tsalg_type[14];\n+\t__u32\tsalg_feat;\n+\t__u32\tsalg_mask;\n+\t__u8\tsalg_name[];\n+};\n+\n struct af_alg_iv {\n \t__u32\tivlen;\n \t__u8\tiv[0];\n",
+    "patch_modified_files": [
+        "crypto/af_alg.c",
+        "include/uapi/linux/if_alg.h"
+    ]
+}

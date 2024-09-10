@@ -1,0 +1,68 @@
+kasan: GPF could be caused by NULL-ptr deref or user memory access
+general protection fault: 0000 [#1] PREEMPT SMP KASAN
+CPU: 1 PID: 4391 Comm: syz-executor.0 Not tainted 5.2.0-rc3-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:btf_array_resolve+0x1a8/0x12e0
+Code: c1 e8 03 42 80 3c 20 00 74 08 48 89 df e8 c0 ae 24 00 48 8b 03 4c 89 6c 24 20 48 89 44 24 48 48 8d 58 04 49 89 de 49 c1 ee 03 <43> 0f b6 04 26 84 c0 0f 85 54 0d 00 00 48 89 5c 24 50 8b 1b 41 89
+RSP: 0018:ffff8881d0727480 EFLAGS: 00010247
+RAX: 0000000000000000 RBX: 0000000000000004 RCX: ffff8881e8e5c340
+RDX: 0000000000000000 RSI: 0000000000000002 RDI: 0000000000000001
+RBP: ffff8881d07275b0 R08: ffffffff81861ccd R09: ffffffff8186d2f7
+R10: ffff8881e8e5c340 R11: 0000000000000004 R12: dffffc0000000000
+R13: ffff8881e92e0e98 R14: 0000000000000000 R15: 0000000000000002
+FS:  00007f619ad6b6c0(0000) GS:ffff8881f6700000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f2b5837dff8 CR3: 00000001d2f16006 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ btf_resolve+0x3e7/0xd90
+ btf_parse_type_sec+0xa54/0x1d50
+ btf_new_fd+0xa9a/0x11c0
+ __se_sys_bpf+0x12ae/0xc4a0
+ __x64_sys_bpf+0x7b/0x90
+ do_syscall_64+0xfd/0x140
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f619b9eaf69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f619ad6b0c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000141
+RAX: ffffffffffffffda RBX: 00007f619bb18f80 RCX: 00007f619b9eaf69
+RDX: 0000000000000020 RSI: 0000000020000100 RDI: 0000000000000012
+RBP: 00007f619ba374a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f619bb18f80 R15: 00007ffe7dc12158
+Modules linked in:
+---[ end trace ad512fc5bf35f843 ]---
+RIP: 0010:btf_array_resolve+0x1a8/0x12e0
+Code: c1 e8 03 42 80 3c 20 00 74 08 48 89 df e8 c0 ae 24 00 48 8b 03 4c 89 6c 24 20 48 89 44 24 48 48 8d 58 04 49 89 de 49 c1 ee 03 <43> 0f b6 04 26 84 c0 0f 85 54 0d 00 00 48 89 5c 24 50 8b 1b 41 89
+RSP: 0018:ffff8881d0727480 EFLAGS: 00010247
+RAX: 0000000000000000 RBX: 0000000000000004 RCX: ffff8881e8e5c340
+RDX: 0000000000000000 RSI: 0000000000000002 RDI: 0000000000000001
+RBP: ffff8881d07275b0 R08: ffffffff81861ccd R09: ffffffff8186d2f7
+R10: ffff8881e8e5c340 R11: 0000000000000004 R12: dffffc0000000000
+R13: ffff8881e92e0e98 R14: 0000000000000000 R15: 0000000000000002
+FS:  00007f619ad6b6c0(0000) GS:ffff8881f6700000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000055f2ec7a0300 CR3: 00000001d2f16001 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	c1 e8 03             	shr    $0x3,%eax
+   3:	42 80 3c 20 00       	cmpb   $0x0,(%rax,%r12,1)
+   8:	74 08                	je     0x12
+   a:	48 89 df             	mov    %rbx,%rdi
+   d:	e8 c0 ae 24 00       	call   0x24aed2
+  12:	48 8b 03             	mov    (%rbx),%rax
+  15:	4c 89 6c 24 20       	mov    %r13,0x20(%rsp)
+  1a:	48 89 44 24 48       	mov    %rax,0x48(%rsp)
+  1f:	48 8d 58 04          	lea    0x4(%rax),%rbx
+  23:	49 89 de             	mov    %rbx,%r14
+  26:	49 c1 ee 03          	shr    $0x3,%r14
+* 2a:	43 0f b6 04 26       	movzbl (%r14,%r12,1),%eax <-- trapping instruction
+  2f:	84 c0                	test   %al,%al
+  31:	0f 85 54 0d 00 00    	jne    0xd8b
+  37:	48 89 5c 24 50       	mov    %rbx,0x50(%rsp)
+  3c:	8b 1b                	mov    (%rbx),%ebx
+  3e:	41                   	rex.B
+  3f:	89                   	.byte 0x89

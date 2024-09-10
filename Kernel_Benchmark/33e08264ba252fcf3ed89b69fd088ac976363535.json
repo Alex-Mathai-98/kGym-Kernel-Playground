@@ -1,0 +1,75 @@
+{
+    "version": 1,
+    "title": "WARNING in udf_setsize",
+    "display-title": "WARNING in udf_setsize",
+    "id": "33e08264ba252fcf3ed89b69fd088ac976363535",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "udf: Do not update file length for failed writes to inline files",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=256fe4162f8b5a1625b8603ca5f7ff79725bfb47",
+            "hash": "256fe4162f8b5a1625b8603ca5f7ff79725bfb47",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "udf: Discard preallocation before extending file with a hole",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=16d0556568148bdcaa45d077cac9f8f7077cf70a",
+        "hash": "16d0556568148bdcaa45d077cac9f8f7077cf70a",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c31da505f0025531@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in udf_setsize",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11c41f07880000",
+            "c-reproducer": "/text?tag=ReproC&x=137b3913880000",
+            "kernel-config": "/text?tag=KernelConfig&x=8c59170b68d26a55",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=764822972d64e7f3e6792278ecc7a3b3c81087cd",
+            "kernel-source-commit": "764822972d64e7f3e6792278ecc7a3b3c81087cd",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/67be1ae742603edad9c97d30b6ed69f9bbe2ffa8",
+            "syzkaller-commit": "67be1ae742603edad9c97d30b6ed69f9bbe2ffa8",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12930a8f880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "udf_file_write_iter",
+            "fs/udf/file.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "udf_do_extend_file",
+            "fs/udf/inode.c"
+        ],
+        [
+            "udf_extend_file",
+            "fs/udf/inode.c"
+        ],
+        [
+            "udf_get_block",
+            "fs/udf/inode.c"
+        ],
+        [
+            "inode_getblk",
+            "fs/udf/inode.c"
+        ]
+    ],
+    "patch_commit_date": "2023-01-02T19:14:47+00:00",
+    "cause_commit_date": "2022-12-07T17:17:34+00:00",
+    "subsystems": [
+        "udf"
+    ],
+    "parent_of_fix_commit": "02113feaf62c190b4216ea0a1a2b8d9ccdbcdf6f",
+    "patch": "diff --git a/fs/udf/file.c b/fs/udf/file.c\nindex 5c659e23e578..8be51161f3e5 100644\n--- a/fs/udf/file.c\n+++ b/fs/udf/file.c\n@@ -149,26 +149,24 @@ static ssize_t udf_file_write_iter(struct kiocb *iocb, struct iov_iter *from)\n \t\tgoto out;\n \n \tdown_write(&iinfo->i_data_sem);\n-\tif (iinfo->i_alloc_type == ICBTAG_FLAG_AD_IN_ICB) {\n-\t\tloff_t end = iocb->ki_pos + iov_iter_count(from);\n-\n-\t\tif (inode->i_sb->s_blocksize <\n-\t\t\t\t(udf_file_entry_alloc_offset(inode) + end)) {\n-\t\t\terr = udf_expand_file_adinicb(inode);\n-\t\t\tif (err) {\n-\t\t\t\tinode_unlock(inode);\n-\t\t\t\tudf_debug(\"udf_expand_adinicb: err=%d\\n\", err);\n-\t\t\t\treturn err;\n-\t\t\t}\n-\t\t} else {\n-\t\t\tiinfo->i_lenAlloc = max(end, inode->i_size);\n-\t\t\tup_write(&iinfo->i_data_sem);\n+\tif (iinfo->i_alloc_type == ICBTAG_FLAG_AD_IN_ICB &&\n+\t    inode->i_sb->s_blocksize < (udf_file_entry_alloc_offset(inode) +\n+\t\t\t\t iocb->ki_pos + iov_iter_count(from))) {\n+\t\terr = udf_expand_file_adinicb(inode);\n+\t\tif (err) {\n+\t\t\tinode_unlock(inode);\n+\t\t\tudf_debug(\"udf_expand_adinicb: err=%d\\n\", err);\n+\t\t\treturn err;\n \t\t}\n \t} else\n \t\tup_write(&iinfo->i_data_sem);\n \n \tretval = __generic_file_write_iter(iocb, from);\n out:\n+\tdown_write(&iinfo->i_data_sem);\n+\tif (iinfo->i_alloc_type == ICBTAG_FLAG_AD_IN_ICB && retval > 0)\n+\t\tiinfo->i_lenAlloc = inode->i_size;\n+\tup_write(&iinfo->i_data_sem);\n \tinode_unlock(inode);\n \n \tif (retval > 0) {\n",
+    "patch_modified_files": [
+        "fs/udf/file.c"
+    ]
+}

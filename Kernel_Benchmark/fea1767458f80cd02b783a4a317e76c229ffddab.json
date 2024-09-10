@@ -1,0 +1,39 @@
+{
+    "version": 1,
+    "title": "general protection fault in icmp_timeout_obj_to_nlattr",
+    "display-title": "general protection fault in icmp_timeout_obj_to_nlattr",
+    "id": "fea1767458f80cd02b783a4a317e76c229ffddab",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: nfnetlink_cttimeout: pass default timeout policy to obj_to_nlattr",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8866df9264a34e675b4ee8a151db819b87cce2d3",
+            "hash": "8866df9264a34e675b4ee8a151db819b87cce2d3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10443183400000",
+            "c-reproducer": "/text?tag=ReproC&x=12bbbe83400000",
+            "kernel-config": "/text?tag=KernelConfig&x=13e789936c182ce7",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=310c7585e8300ddc46211df0757c11e4299ec482",
+            "kernel-source-commit": "310c7585e8300ddc46211df0757c11e4299ec482",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/897810904389a6c30278f70a21669dbf7843bd70",
+            "syzkaller-commit": "897810904389a6c30278f70a21669dbf7843bd70",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1384290b400000"
+        }
+    ],
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "a95a7774d51e13f9cf4b7285666829b68852f07a",
+    "patch": "diff --git a/net/netfilter/nfnetlink_cttimeout.c b/net/netfilter/nfnetlink_cttimeout.c\nindex e7a50af1b3d6..a518eb162344 100644\n--- a/net/netfilter/nfnetlink_cttimeout.c\n+++ b/net/netfilter/nfnetlink_cttimeout.c\n@@ -382,7 +382,8 @@ static int cttimeout_default_set(struct net *net, struct sock *ctnl,\n static int\n cttimeout_default_fill_info(struct net *net, struct sk_buff *skb, u32 portid,\n \t\t\t    u32 seq, u32 type, int event, u16 l3num,\n-\t\t\t    const struct nf_conntrack_l4proto *l4proto)\n+\t\t\t    const struct nf_conntrack_l4proto *l4proto,\n+\t\t\t    const unsigned int *timeouts)\n {\n \tstruct nlmsghdr *nlh;\n \tstruct nfgenmsg *nfmsg;\n@@ -408,7 +409,7 @@ cttimeout_default_fill_info(struct net *net, struct sk_buff *skb, u32 portid,\n \tif (!nest_parms)\n \t\tgoto nla_put_failure;\n \n-\tret = l4proto->ctnl_timeout.obj_to_nlattr(skb, NULL);\n+\tret = l4proto->ctnl_timeout.obj_to_nlattr(skb, timeouts);\n \tif (ret < 0)\n \t\tgoto nla_put_failure;\n \n@@ -430,6 +431,7 @@ static int cttimeout_default_get(struct net *net, struct sock *ctnl,\n \t\t\t\t struct netlink_ext_ack *extack)\n {\n \tconst struct nf_conntrack_l4proto *l4proto;\n+\tunsigned int *timeouts = NULL;\n \tstruct sk_buff *skb2;\n \tint ret, err;\n \t__u16 l3num;\n@@ -442,12 +444,44 @@ static int cttimeout_default_get(struct net *net, struct sock *ctnl,\n \tl4num = nla_get_u8(cda[CTA_TIMEOUT_L4PROTO]);\n \tl4proto = nf_ct_l4proto_find_get(l4num);\n \n-\t/* This protocol is not supported, skip. */\n-\tif (l4proto->l4proto != l4num) {\n-\t\terr = -EOPNOTSUPP;\n+\terr = -EOPNOTSUPP;\n+\tif (l4proto->l4proto != l4num)\n \t\tgoto err;\n+\n+\tswitch (l4proto->l4proto) {\n+\tcase IPPROTO_ICMP:\n+\t\ttimeouts = &nf_icmp_pernet(net)->timeout;\n+\t\tbreak;\n+\tcase IPPROTO_TCP:\n+\t\ttimeouts = nf_tcp_pernet(net)->timeouts;\n+\t\tbreak;\n+\tcase IPPROTO_UDP:\n+\t\ttimeouts = nf_udp_pernet(net)->timeouts;\n+\t\tbreak;\n+\tcase IPPROTO_DCCP:\n+#ifdef CONFIG_NF_CT_PROTO_DCCP\n+\t\ttimeouts = nf_dccp_pernet(net)->dccp_timeout;\n+#endif\n+\t\tbreak;\n+\tcase IPPROTO_ICMPV6:\n+\t\ttimeouts = &nf_icmpv6_pernet(net)->timeout;\n+\t\tbreak;\n+\tcase IPPROTO_SCTP:\n+#ifdef CONFIG_NF_CT_PROTO_SCTP\n+\t\ttimeouts = nf_sctp_pernet(net)->timeouts;\n+#endif\n+\t\tbreak;\n+\tcase 255:\n+\t\ttimeouts = &nf_generic_pernet(net)->timeout;\n+\t\tbreak;\n+\tdefault:\n+\t\tWARN_ON_ONCE(1);\n+\t\tbreak;\n \t}\n \n+\tif (!timeouts)\n+\t\tgoto err;\n+\n \tskb2 = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);\n \tif (skb2 == NULL) {\n \t\terr = -ENOMEM;\n@@ -458,8 +492,7 @@ static int cttimeout_default_get(struct net *net, struct sock *ctnl,\n \t\t\t\t\t  nlh->nlmsg_seq,\n \t\t\t\t\t  NFNL_MSG_TYPE(nlh->nlmsg_type),\n \t\t\t\t\t  IPCTNL_MSG_TIMEOUT_DEFAULT_SET,\n-\t\t\t\t\t  l3num,\n-\t\t\t\t\t  l4proto);\n+\t\t\t\t\t  l3num, l4proto, timeouts);\n \tif (ret <= 0) {\n \t\tkfree_skb(skb2);\n \t\terr = -ENOMEM;\n",
+    "patch_modified_files": [
+        "net/netfilter/nfnetlink_cttimeout.c"
+    ]
+}

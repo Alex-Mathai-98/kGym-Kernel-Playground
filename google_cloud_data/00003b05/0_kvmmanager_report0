@@ -1,0 +1,38 @@
+vcan0: j1939_xtp_rx_abort_one: 0xffff888076d80c00: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff888076d81000: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 21 at net/can/j1939/transport.c:1098 j1939_session_deactivate+0x29a/0x330
+Modules linked in:
+CPU: 1 PID: 21 Comm: ksoftirqd/1 Not tainted 6.2.0-rc5-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:j1939_session_deactivate+0x29a/0x330
+Code: e7 e8 7a c9 ff ff 83 fd 02 0f 92 c3 4c 89 ef e8 2c 76 06 01 89 d8 48 83 c4 18 5b 41 5c 41 5d 41 5e 41 5f 5d c3 e8 e6 fe 64 f8 <0f> 0b e9 ea fd ff ff e8 da fe 64 f8 0f 0b e9 4b fe ff ff 89 d9 80
+RSP: 0018:ffffc900001b75b8 EFLAGS: 00010246
+RAX: ffffffff8921c04a RBX: 0000000000000001 RCX: ffff888011e59d00
+RDX: 0000000000000301 RSI: 0000000000000001 RDI: 0000000000000002
+RBP: 1ffff1100edb0200 R08: ffffffff8921be2d R09: ffffed100edb0206
+R10: 0000000000000000 R11: dffffc0000000001 R12: ffff888076d81000
+R13: ffff88807d8e9070 R14: 0000000000000071 R15: dffffc0000000000
+FS:  0000000000000000(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007efde07a80c0 CR3: 000000002a15c000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ j1939_xtp_rx_abort_one+0x4bb/0x580
+ j1939_tp_recv+0x93f/0x1050
+ j1939_can_recv+0x732/0xb20
+ can_rcv_filter+0x349/0x7c0
+ can_receive+0x2e0/0x400
+ can_rcv+0x144/0x260
+ __netif_receive_skb+0x1ca/0x530
+ process_backlog+0x30f/0x6b0
+ __napi_poll+0xc7/0x470
+ net_rx_action+0x6f8/0xe80
+ __do_softirq+0x308/0xaf7
+ run_ksoftirqd+0xa6/0x100
+ smpboot_thread_fn+0x533/0xa30
+ kthread+0x270/0x300
+ ret_from_fork+0x1f/0x30
+ </TASK>

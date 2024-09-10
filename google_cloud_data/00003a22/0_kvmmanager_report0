@@ -1,0 +1,81 @@
+BUG: memory leak
+unreferenced object 0xffff888235aa9ac0 (size 1088):
+  comm "syz-executor.1", pid 4427, jiffies 4294942548 (age 15.840s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 5f c9 25 68 00 00 00 00  ........_.%h....
+    02 00 07 40 14 00 00 00 00 00 00 00 00 00 00 00  ...@............
+  backtrace:
+    [<00000000fe2f53b2>] kmem_cache_alloc+0xed/0x280
+    [<000000001ce3278f>] sk_prot_alloc+0x41/0x170
+    [<0000000032de0efb>] sk_alloc+0x33/0x2c0
+    [<00000000efbd1f77>] inet_create+0x123/0x3e0
+    [<000000005fe99f8a>] __sock_create+0x14a/0x220
+    [<0000000074dee521>] __sys_socket+0x66/0x110
+    [<00000000a7675646>] __x64_sys_socket+0x1b/0x30
+    [<000000006ebac1fe>] do_syscall_64+0x76/0x1a0
+    [<0000000055f01e98>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+BUG: memory leak
+unreferenced object 0xffff888221b444a0 (size 32):
+  comm "syz-executor.1", pid 4427, jiffies 4294942548 (age 15.840s)
+  hex dump (first 32 bytes):
+    b0 ee 5f 37 82 88 ff ff 00 00 00 00 00 00 00 00  .._7............
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<00000000a17d7d10>] kmem_cache_alloc_trace+0xf1/0x270
+    [<000000007e088aed>] apparmor_sk_alloc_security+0x4c/0x90
+    [<00000000050cfb5d>] security_sk_alloc+0x4d/0x70
+    [<000000000fdb0bcb>] sk_prot_alloc+0x6e/0x170
+    [<0000000032de0efb>] sk_alloc+0x33/0x2c0
+    [<00000000efbd1f77>] inet_create+0x123/0x3e0
+    [<000000005fe99f8a>] __sock_create+0x14a/0x220
+    [<0000000074dee521>] __sys_socket+0x66/0x110
+    [<00000000a7675646>] __x64_sys_socket+0x1b/0x30
+    [<000000006ebac1fe>] do_syscall_64+0x76/0x1a0
+    [<0000000055f01e98>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+BUG: memory leak
+unreferenced object 0xffff88822c92ff00 (size 224):
+  comm "syz-executor.1", pid 4427, jiffies 4294942549 (age 15.830s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 c0 9a aa 35 82 88 ff ff  ...........5....
+  backtrace:
+    [<000000005a6b8090>] kmem_cache_alloc_node+0xff/0x280
+    [<0000000030642778>] __alloc_skb+0x65/0x240
+    [<000000005a5e9f42>] sock_omalloc+0x49/0x90
+    [<00000000b983d90e>] sock_zerocopy_alloc+0x3c/0xe0
+    [<00000000e83a13c8>] sock_zerocopy_realloc+0x7d/0xf0
+    [<0000000070d87cf0>] __ip_append_data+0x6d0/0xea0
+    [<000000007a35930f>] ip_append_data+0xa1/0x100
+    [<00000000e668f3d0>] udp_sendmsg+0x6ba/0xf40
+    [<00000000f5202333>] inet_sendmsg+0x62/0x130
+    [<00000000dec3b01b>] sock_sendmsg+0x52/0x70
+    [<00000000c73438b0>] __sys_sendto+0x12d/0x1a0
+    [<00000000368b9fc6>] __x64_sys_sendto+0x28/0x30
+    [<000000006ebac1fe>] do_syscall_64+0x76/0x1a0
+    [<0000000055f01e98>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+BUG: memory leak
+unreferenced object 0xffff888221966c00 (size 512):
+  comm "syz-executor.1", pid 4427, jiffies 4294942549 (age 15.830s)
+  hex dump (first 32 bytes):
+    23 32 30 32 34 2f 30 34 2f 31 36 20 31 36 3a 32  #2024/04/16 16:2
+    35 3a 32 39 23 20 70 72 6f 66 69 6c 65 3d 30 20  5:29# profile=0 
+  backtrace:
+    [<00000000082b9b74>] kmem_cache_alloc_node_trace+0x109/0x290
+    [<000000005be15ee7>] __kmalloc_node_track_caller+0x37/0x50
+    [<00000000af04bc96>] __alloc_skb+0xa5/0x240
+    [<000000005a5e9f42>] sock_omalloc+0x49/0x90
+    [<00000000b983d90e>] sock_zerocopy_alloc+0x3c/0xe0
+    [<00000000e83a13c8>] sock_zerocopy_realloc+0x7d/0xf0
+    [<0000000070d87cf0>] __ip_append_data+0x6d0/0xea0
+    [<000000007a35930f>] ip_append_data+0xa1/0x100
+    [<00000000e668f3d0>] udp_sendmsg+0x6ba/0xf40
+    [<00000000f5202333>] inet_sendmsg+0x62/0x130
+    [<00000000dec3b01b>] sock_sendmsg+0x52/0x70
+    [<00000000c73438b0>] __sys_sendto+0x12d/0x1a0
+    [<00000000368b9fc6>] __x64_sys_sendto+0x28/0x30
+    [<000000006ebac1fe>] do_syscall_64+0x76/0x1a0
+    [<0000000055f01e98>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
+

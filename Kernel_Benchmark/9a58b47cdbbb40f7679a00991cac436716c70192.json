@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in udf_get_filelongad",
+    "display-title": "KASAN: slab-out-of-bounds Read in udf_get_filelongad",
+    "id": "9a58b47cdbbb40f7679a00991cac436716c70192",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "udf: Do not bother merging very long extents",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=53cafe1d6d8ef9f93318e5bfccc0d24f27d41ced",
+            "hash": "53cafe1d6d8ef9f93318e5bfccc0d24f27d41ced",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001f0e5705ef9c14de@google.com/T/",
+        "https://lore.kernel.org/all/20221216121344.14025-1-jack@suse.cz/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Read in udf_get_filelongad",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16f936b7880000",
+            "c-reproducer": "/text?tag=ReproC&x=119cda43880000",
+            "kernel-config": "/text?tag=KernelConfig&x=4edf421741552bc3",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3ecc37918c80ffdbfa8f08d3e75a0a9fca1c1979",
+            "kernel-source-commit": "3ecc37918c80ffdbfa8f08d3e75a0a9fca1c1979",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/67be1ae742603edad9c97d30b6ed69f9bbe2ffa8",
+            "syzkaller-commit": "67be1ae742603edad9c97d30b6ed69f9bbe2ffa8",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12cc2ab7880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "udf_merge_extents",
+            "fs/udf/inode.c"
+        ]
+    ],
+    "patch_commit_date": "2022-12-16T11:37:51+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "udf"
+    ],
+    "parent_of_fix_commit": "70bfb3a8d661d4fdc742afc061b88a7f3fc9f500",
+    "patch": "diff --git a/fs/udf/inode.c b/fs/udf/inode.c\nindex e077183e2ee3..5498365669eb 100644\n--- a/fs/udf/inode.c\n+++ b/fs/udf/inode.c\n@@ -997,23 +997,8 @@ static void udf_merge_extents(struct inode *inode, struct kernel_long_ad *laarr,\n \t\t\tblocksize - 1) >> blocksize_bits)))) {\n \n \t\t\tif (((li->extLength & UDF_EXTENT_LENGTH_MASK) +\n-\t\t\t\t(lip1->extLength & UDF_EXTENT_LENGTH_MASK) +\n-\t\t\t\tblocksize - 1) & ~UDF_EXTENT_LENGTH_MASK) {\n-\t\t\t\tlip1->extLength = (lip1->extLength -\n-\t\t\t\t\t\t  (li->extLength &\n-\t\t\t\t\t\t   UDF_EXTENT_LENGTH_MASK) +\n-\t\t\t\t\t\t   UDF_EXTENT_LENGTH_MASK) &\n-\t\t\t\t\t\t\t~(blocksize - 1);\n-\t\t\t\tli->extLength = (li->extLength &\n-\t\t\t\t\t\t UDF_EXTENT_FLAG_MASK) +\n-\t\t\t\t\t\t(UDF_EXTENT_LENGTH_MASK + 1) -\n-\t\t\t\t\t\tblocksize;\n-\t\t\t\tlip1->extLocation.logicalBlockNum =\n-\t\t\t\t\tli->extLocation.logicalBlockNum +\n-\t\t\t\t\t((li->extLength &\n-\t\t\t\t\t\tUDF_EXTENT_LENGTH_MASK) >>\n-\t\t\t\t\t\tblocksize_bits);\n-\t\t\t} else {\n+\t\t\t     (lip1->extLength & UDF_EXTENT_LENGTH_MASK) +\n+\t\t\t     blocksize - 1) <= UDF_EXTENT_LENGTH_MASK) {\n \t\t\t\tli->extLength = lip1->extLength +\n \t\t\t\t\t(((li->extLength &\n \t\t\t\t\t\tUDF_EXTENT_LENGTH_MASK) +\n",
+    "patch_modified_files": [
+        "fs/udf/inode.c"
+    ]
+}

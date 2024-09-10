@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "WARNING in change_protection",
+    "display-title": "WARNING in change_protection",
+    "id": "f55849742bdcdf58f6eaae61e747ac00e5c061f4",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm/uffd: fix warning without PTE_MARKER_UFFD_WP compiled in",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=515778e2d790652a38a24554fdb7f21420d91efc",
+            "hash": "515778e2d790652a38a24554fdb7f21420d91efc",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Linux 5.18",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4b0986a3613c92f4ec1bdc7f60ec66fea135991f",
+        "hash": "4b0986a3613c92f4ec1bdc7f60ec66fea135991f",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000046580505e9dea8e4@google.com/T/",
+        "https://lore.kernel.org/all/20221019083249.951566199@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221022072415.034382448@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in change_protection",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1164d0ec880000",
+            "c-reproducer": "/text?tag=ReproC&x=15c3c2e0880000",
+            "kernel-config": "/text?tag=KernelConfig&x=a1992c90769e07",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=511cce163b75bc3933fa3de769a82bb7e8663f2b",
+            "kernel-source-commit": "511cce163b75bc3933fa3de769a82bb7e8663f2b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/1d385642c6e7ff09f8689d6e0d70b07cc40af05d",
+            "syzkaller-commit": "1d385642c6e7ff09f8689d6e0d70b07cc40af05d",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11bc9cbc880000"
+        }
+    ],
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "28c5609fb236807910ca347ad3e26c4567998526",
+    "patch": "diff --git a/mm/hugetlb.c b/mm/hugetlb.c\nindex 41d3aa077837..9a910612336d 100644\n--- a/mm/hugetlb.c\n+++ b/mm/hugetlb.c\n@@ -5096,6 +5096,7 @@ static void __unmap_hugepage_range(struct mmu_gather *tlb, struct vm_area_struct\n \t\t * unmapped and its refcount is dropped, so just clear pte here.\n \t\t */\n \t\tif (unlikely(!pte_present(pte))) {\n+#ifdef CONFIG_PTE_MARKER_UFFD_WP\n \t\t\t/*\n \t\t\t * If the pte was wr-protected by uffd-wp in any of the\n \t\t\t * swap forms, meanwhile the caller does not want to\n@@ -5107,6 +5108,7 @@ static void __unmap_hugepage_range(struct mmu_gather *tlb, struct vm_area_struct\n \t\t\t\tset_huge_pte_at(mm, address, ptep,\n \t\t\t\t\t\tmake_pte_marker(PTE_MARKER_UFFD_WP));\n \t\t\telse\n+#endif\n \t\t\t\thuge_pte_clear(mm, address, ptep, sz);\n \t\t\tspin_unlock(ptl);\n \t\t\tcontinue;\n@@ -5135,11 +5137,13 @@ static void __unmap_hugepage_range(struct mmu_gather *tlb, struct vm_area_struct\n \t\ttlb_remove_huge_tlb_entry(h, tlb, ptep, address);\n \t\tif (huge_pte_dirty(pte))\n \t\t\tset_page_dirty(page);\n+#ifdef CONFIG_PTE_MARKER_UFFD_WP\n \t\t/* Leave a uffd-wp pte marker if needed */\n \t\tif (huge_pte_uffd_wp(pte) &&\n \t\t    !(zap_flags & ZAP_FLAG_DROP_MARKER))\n \t\t\tset_huge_pte_at(mm, address, ptep,\n \t\t\t\t\tmake_pte_marker(PTE_MARKER_UFFD_WP));\n+#endif\n \t\thugetlb_count_sub(pages_per_huge_page(h), mm);\n \t\tpage_remove_rmap(page, vma, true);\n \ndiff --git a/mm/memory.c b/mm/memory.c\nindex df678fa30cdb..2c7723ea4371 100644\n--- a/mm/memory.c\n+++ b/mm/memory.c\n@@ -1393,10 +1393,12 @@ zap_install_uffd_wp_if_needed(struct vm_area_struct *vma,\n \t\t\t      unsigned long addr, pte_t *pte,\n \t\t\t      struct zap_details *details, pte_t pteval)\n {\n+#ifdef CONFIG_PTE_MARKER_UFFD_WP\n \tif (zap_drop_file_uffd_wp(details))\n \t\treturn;\n \n \tpte_install_uffd_wp_if_needed(vma, addr, pte, pteval);\n+#endif\n }\n \n static unsigned long zap_pte_range(struct mmu_gather *tlb,\ndiff --git a/mm/mprotect.c b/mm/mprotect.c\nindex 461dcbd4f21a..668bfaa6ed2a 100644\n--- a/mm/mprotect.c\n+++ b/mm/mprotect.c\n@@ -267,6 +267,7 @@ static unsigned long change_pte_range(struct mmu_gather *tlb,\n \t\t} else {\n \t\t\t/* It must be an none page, or what else?.. */\n \t\t\tWARN_ON_ONCE(!pte_none(oldpte));\n+#ifdef CONFIG_PTE_MARKER_UFFD_WP\n \t\t\tif (unlikely(uffd_wp && !vma_is_anonymous(vma))) {\n \t\t\t\t/*\n \t\t\t\t * For file-backed mem, we need to be able to\n@@ -278,6 +279,7 @@ static unsigned long change_pte_range(struct mmu_gather *tlb,\n \t\t\t\t\t   make_pte_marker(PTE_MARKER_UFFD_WP));\n \t\t\t\tpages++;\n \t\t\t}\n+#endif\n \t\t}\n \t} while (pte++, addr += PAGE_SIZE, addr != end);\n \tarch_leave_lazy_mmu_mode();\n",
+    "patch_modified_files": [
+        "mm/hugetlb.c",
+        "mm/memory.c",
+        "mm/mprotect.c"
+    ]
+}

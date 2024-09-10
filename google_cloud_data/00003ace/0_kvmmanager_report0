@@ -1,0 +1,28 @@
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 9 at net/netfilter/nf_tables_api.c:10098 nf_tables_exit_net+0x717/0x830
+Modules linked in:
+CPU: 1 PID: 9 Comm: kworker/u4:0 Not tainted 6.1.0-rc3-syzkaller-00201-g03832a32bf8f #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: netns cleanup_net
+RIP: 0010:nf_tables_exit_net+0x717/0x830
+Code: 1f 06 01 e8 70 0a 9e 01 e9 b5 f9 ff ff e8 91 3f d0 f9 0f 0b e9 87 fd ff ff e8 85 3f d0 f9 0f 0b e9 19 fd ff ff e8 79 3f d0 f9 <0f> 0b e9 3e fd ff ff e8 7d c8 1c fa e9 ae fb ff ff 4c 89 e7 e8 90
+RSP: 0018:ffffc900000e7bc8 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: ffff88807cc53c20 RCX: 0000000000000000
+RDX: ffff888011a50000 RSI: ffffffff87acc5a7 RDI: ffffc900000e7b10
+RBP: dffffc0000000000 R08: 0000000000000001 R09: ffffc900000e7b17
+R10: fffff5200001cf62 R11: 0000000000000000 R12: ffff88807cc53c00
+R13: ffff88807cc53c00 R14: ffff88807cc53c00 R15: fffffbfff1b131ac
+FS:  0000000000000000(0000) GS:ffff8880b9b00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000560638f15020 CR3: 0000000075a57000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ ops_exit_list+0xb0/0x170
+ cleanup_net+0x501/0xb10
+ process_one_work+0xa33/0x1720
+ worker_thread+0x679/0x10d0
+ kthread+0x2e0/0x390
+ ret_from_fork+0x1f/0x30
+ </TASK>

@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "kernel BUG in __clear_extent_bit",
+    "display-title": "kernel BUG in __clear_extent_bit",
+    "id": "f1d54f488af5e3967ea8e664e514cb1c2820db45",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "btrfs: do not panic if we can't allocate a prealloc extent state",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5a75034e71ef5ec0fce983afcb6c9cb0147cd5b9",
+            "hash": "5a75034e71ef5ec0fce983afcb6c9cb0147cd5b9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ceb65c05ee4beb9d@google.com/T/",
+        "https://lore.kernel.org/all/CACT4Y+Zw8f982C-qgvjkUuEtuw2UZApT6J18NfF8oE6S+EgvJA@mail.gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "kernel BUG in __clear_extent_bit",
+            "syz-reproducer": "/text?tag=ReproSyz&x=103324e3880000",
+            "c-reproducer": "/text?tag=ReproC&x=12e7e1c9880000",
+            "kernel-config": "/text?tag=KernelConfig&x=8d01b6e3197974dd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c3eb11fbb826879be773c137f281569efce67aa8",
+            "kernel-source-commit": "c3eb11fbb826879be773c137f281569efce67aa8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/74a66371788c1eb22bde25c9c422c7754596d7f5",
+            "syzkaller-commit": "74a66371788c1eb22bde25c9c422c7754596d7f5",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=121dc93d880000"
+        }
+    ],
+    "subsystems": [
+        "btrfs"
+    ],
+    "parent_of_fix_commit": "da2a071b6f142f47072ea7b37e03d3ef317b8a4e",
+    "patch": "diff --git a/fs/btrfs/extent-io-tree.c b/fs/btrfs/extent-io-tree.c\nindex a630c771d25c..599db7b15574 100644\n--- a/fs/btrfs/extent-io-tree.c\n+++ b/fs/btrfs/extent-io-tree.c\n@@ -572,7 +572,7 @@ int __clear_extent_bit(struct extent_io_tree *tree, u64 start, u64 end,\n \tif (bits & (EXTENT_LOCKED | EXTENT_BOUNDARY))\n \t\tclear = 1;\n again:\n-\tif (!prealloc && gfpflags_allow_blocking(mask)) {\n+\tif (!prealloc) {\n \t\t/*\n \t\t * Don't care for allocation failure here because we might end\n \t\t * up not needing the pre-allocated extent state at all, which\n@@ -636,7 +636,8 @@ int __clear_extent_bit(struct extent_io_tree *tree, u64 start, u64 end,\n \n \tif (state->start < start) {\n \t\tprealloc = alloc_extent_state_atomic(prealloc);\n-\t\tBUG_ON(!prealloc);\n+\t\tif (!prealloc)\n+\t\t\tgoto search_again;\n \t\terr = split_state(tree, state, prealloc, start);\n \t\tif (err)\n \t\t\textent_io_tree_panic(tree, err);\n@@ -657,7 +658,8 @@ int __clear_extent_bit(struct extent_io_tree *tree, u64 start, u64 end,\n \t */\n \tif (state->start <= end && state->end > end) {\n \t\tprealloc = alloc_extent_state_atomic(prealloc);\n-\t\tBUG_ON(!prealloc);\n+\t\tif (!prealloc)\n+\t\t\tgoto search_again;\n \t\terr = split_state(tree, state, prealloc, end + 1);\n \t\tif (err)\n \t\t\textent_io_tree_panic(tree, err);\n@@ -987,7 +989,7 @@ static int __set_extent_bit(struct extent_io_tree *tree, u64 start, u64 end,\n \telse\n \t\tASSERT(failed_start == NULL && failed_state == NULL);\n again:\n-\tif (!prealloc && gfpflags_allow_blocking(mask)) {\n+\tif (!prealloc) {\n \t\t/*\n \t\t * Don't care for allocation failure here because we might end\n \t\t * up not needing the pre-allocated extent state at all, which\n@@ -1012,7 +1014,8 @@ static int __set_extent_bit(struct extent_io_tree *tree, u64 start, u64 end,\n \tstate = tree_search_for_insert(tree, start, &p, &parent);\n \tif (!state) {\n \t\tprealloc = alloc_extent_state_atomic(prealloc);\n-\t\tBUG_ON(!prealloc);\n+\t\tif (!prealloc)\n+\t\t\tgoto search_again;\n \t\tprealloc->start = start;\n \t\tprealloc->end = end;\n \t\tinsert_state_fast(tree, prealloc, p, parent, bits, changeset);\n@@ -1085,7 +1088,8 @@ static int __set_extent_bit(struct extent_io_tree *tree, u64 start, u64 end,\n \t\t}\n \n \t\tprealloc = alloc_extent_state_atomic(prealloc);\n-\t\tBUG_ON(!prealloc);\n+\t\tif (!prealloc)\n+\t\t\tgoto search_again;\n \t\terr = split_state(tree, state, prealloc, start);\n \t\tif (err)\n \t\t\textent_io_tree_panic(tree, err);\n@@ -1122,7 +1126,8 @@ static int __set_extent_bit(struct extent_io_tree *tree, u64 start, u64 end,\n \t\t\tthis_end = last_start - 1;\n \n \t\tprealloc = alloc_extent_state_atomic(prealloc);\n-\t\tBUG_ON(!prealloc);\n+\t\tif (!prealloc)\n+\t\t\tgoto search_again;\n \n \t\t/*\n \t\t * Avoid to free 'prealloc' if it can be merged with the later\n@@ -1154,7 +1159,8 @@ static int __set_extent_bit(struct extent_io_tree *tree, u64 start, u64 end,\n \t\t}\n \n \t\tprealloc = alloc_extent_state_atomic(prealloc);\n-\t\tBUG_ON(!prealloc);\n+\t\tif (!prealloc)\n+\t\t\tgoto search_again;\n \t\terr = split_state(tree, state, prealloc, end + 1);\n \t\tif (err)\n \t\t\textent_io_tree_panic(tree, err);\n",
+    "patch_modified_files": [
+        "fs/btrfs/extent-io-tree.c"
+    ]
+}

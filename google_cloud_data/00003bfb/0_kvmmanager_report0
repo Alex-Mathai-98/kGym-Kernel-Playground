@@ -1,0 +1,83 @@
+BUG: unable to handle page fault for address: ffff888001000030
+#PF: supervisor write access in kernel mode
+#PF: error_code(0x0003) - permissions violation
+PGD 10a01067 P4D 10a01067 PUD 10a02067 PMD 80000000010001e1 
+Oops: 0003 [#1] PREEMPT SMP KASAN
+CPU: 1 PID: 3694 Comm: syz-executor.2 Not tainted 5.16.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:bitfill_aligned+0x1c4/0x270
+Code: e8 61 b6 27 fd 48 83 c3 08 eb ca e8 56 b6 27 fd eb 09 e8 4f b6 27 fd 48 83 c3 40 31 ff 89 ee e8 a2 b9 27 fd 85 ed 74 20 ff cd <4c> 89 33 83 ed 01 72 0b 48 83 c3 08 e8 2b b6 27 fd eb ed e8 24 b6
+RSP: 0018:ffffc9000315f338 EFLAGS: 00010202
+RAX: 0000000000000000 RBX: ffff888001000030 RCX: ffff8880213b1d00
+RDX: ffff8880213b1d00 RSI: 0000000000000002 RDI: 0000000000000000
+RBP: 0000000000000001 R08: ffffffff8458db8e R09: 0000000000000040
+R10: 0000000000000002 R11: ffff8880213b1d00 R12: ffffffffffffffff
+R13: 0000000000000080 R14: 0000000000000000 R15: 0000000000000000
+FS:  00007f21ed8b66c0(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: ffff888001000030 CR3: 0000000060a34000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ cfb_fillrect+0x5db/0x800
+ bit_clear_margins+0x2c8/0x6a0
+ fbcon_switch+0x1569/0x21b0
+ redraw_screen+0x538/0xe70
+ vc_do_resize+0x1282/0x1820
+ fbcon_do_set_font+0xa11/0x1110
+ fbcon_set_font+0xa53/0xcf0
+ con_font_op+0xbea/0x1070
+ vt_ioctl+0x172a/0x1d00
+ tty_ioctl+0x871/0xc50
+ __se_sys_ioctl+0xf1/0x160
+ do_syscall_64+0x44/0xd0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7f21ee556f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f21ed8b60c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007f21ee685050 RCX: 00007f21ee556f69
+RDX: 0000000020000400 RSI: 0000000000004b72 RDI: 0000000000000004
+RBP: 00007f21ee5a34a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000006e R14: 00007f21ee685050 R15: 00007fff288c6d78
+ </TASK>
+Modules linked in:
+CR2: ffff888001000030
+---[ end trace 3734e815f0de5f17 ]---
+RIP: 0010:bitfill_aligned+0x1c4/0x270
+Code: e8 61 b6 27 fd 48 83 c3 08 eb ca e8 56 b6 27 fd eb 09 e8 4f b6 27 fd 48 83 c3 40 31 ff 89 ee e8 a2 b9 27 fd 85 ed 74 20 ff cd <4c> 89 33 83 ed 01 72 0b 48 83 c3 08 e8 2b b6 27 fd eb ed e8 24 b6
+RSP: 0018:ffffc9000315f338 EFLAGS: 00010202
+RAX: 0000000000000000 RBX: ffff888001000030 RCX: ffff8880213b1d00
+RDX: ffff8880213b1d00 RSI: 0000000000000002 RDI: 0000000000000000
+RBP: 0000000000000001 R08: ffffffff8458db8e R09: 0000000000000040
+R10: 0000000000000002 R11: ffff8880213b1d00 R12: ffffffffffffffff
+R13: 0000000000000080 R14: 0000000000000000 R15: 0000000000000000
+FS:  00007f21ed8b66c0(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: ffff888001000030 CR3: 0000000060a34000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	e8 61 b6 27 fd       	call   0xfd27b666
+   5:	48 83 c3 08          	add    $0x8,%rbx
+   9:	eb ca                	jmp    0xffffffd5
+   b:	e8 56 b6 27 fd       	call   0xfd27b666
+  10:	eb 09                	jmp    0x1b
+  12:	e8 4f b6 27 fd       	call   0xfd27b666
+  17:	48 83 c3 40          	add    $0x40,%rbx
+  1b:	31 ff                	xor    %edi,%edi
+  1d:	89 ee                	mov    %ebp,%esi
+  1f:	e8 a2 b9 27 fd       	call   0xfd27b9c6
+  24:	85 ed                	test   %ebp,%ebp
+  26:	74 20                	je     0x48
+  28:	ff cd                	dec    %ebp
+* 2a:	4c 89 33             	mov    %r14,(%rbx) <-- trapping instruction
+  2d:	83 ed 01             	sub    $0x1,%ebp
+  30:	72 0b                	jb     0x3d
+  32:	48 83 c3 08          	add    $0x8,%rbx
+  36:	e8 2b b6 27 fd       	call   0xfd27b666
+  3b:	eb ed                	jmp    0x2a
+  3d:	e8                   	.byte 0xe8
+  3e:	24 b6                	and    $0xb6,%al

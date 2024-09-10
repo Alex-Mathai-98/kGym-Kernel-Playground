@@ -1,0 +1,43 @@
+------------[ cut here ]------------
+hook not found, pf 2 num 0
+WARNING: CPU: 1 PID: 4087 at net/netfilter/core.c:413 __nf_unregister_net_hook+0x3d1/0x5a0
+Modules linked in:
+CPU: 0 PID: 4087 Comm: syz-executor.2 Not tainted 5.8.0-rc4-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:__nf_unregister_net_hook+0x3d1/0x5a0
+Code: 01 48 8b 44 24 28 42 0f b6 04 38 84 c0 0f 85 c2 01 00 00 48 8b 44 24 08 8b 10 48 c7 c7 c0 68 eb 88 8b 74 24 04 e8 9f 20 c9 fa <0f> 0b eb 45 e8 b6 0d f6 fa e8 f1 38 c5 ff 8b 5c 24 04 48 b8 00 00
+RSP: 0018:ffffc900013976f8 EFLAGS: 00010246
+RAX: 605c88909b7fb400 RBX: ffff8881de0d5400 RCX: ffff8881de8f2200
+RDX: 0000000000000000 RSI: 0000000000000008 RDI: 0000000000000286
+RBP: ffff8881eabbe470 R08: dffffc0000000000 R09: fffffbfff1870d81
+R10: 0000000000000000 R11: dffffc0000000001 R12: ffff8881d4d72080
+R13: ffff8881d4d73048 R14: ffff8881eabbe400 R15: dffffc0000000000
+FS:  00007f42a88b26c0(0000) GS:ffff8881f6200000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000000002000c2c0 CR3: 00000001de056002 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ nf_tables_commit+0x2a4f/0x47e0
+ nfnetlink_rcv+0x1859/0x1f60
+ netlink_unicast+0x765/0x910
+ netlink_sendmsg+0x97a/0xd00
+ ____sys_sendmsg+0x520/0x800
+ ___sys_sendmsg+0x19d/0x200
+ __x64_sys_sendmsg+0x16a/0x1f0
+ do_syscall_64+0x76/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7f42a9531f69
+Code: Bad RIP value.
+RSP: 002b:00007f42a88b20c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f42a965ff80 RCX: 00007f42a9531f69
+RDX: 0000000000000000 RSI: 000000002000c2c0 RDI: 0000000000000003
+RBP: 00007f42a957e4a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f42a965ff80 R15: 00007ffe45adc848
+irq event stamp: 2459
+hardirqs last  enabled at (2467): [<ffffffff815c28e4>] console_unlock+0xe34/0x1020
+hardirqs last disabled at (2504): [<ffffffff815c1c93>] console_unlock+0x1e3/0x1020
+softirqs last  enabled at (2602): [<ffffffff88000f0f>] asm_call_on_stack+0xf/0x20
+softirqs last disabled at (2615): [<ffffffff88000f0f>] asm_call_on_stack+0xf/0x20
+---[ end trace c96c53cb94657e0b ]---

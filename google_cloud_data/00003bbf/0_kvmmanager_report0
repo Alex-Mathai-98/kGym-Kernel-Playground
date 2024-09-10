@@ -1,0 +1,118 @@
+==================================================================
+BUG: KASAN: use-after-free in io_rsrc_node_ref_zero+0x5a/0x274
+Read of size 8 at addr ffff88806ea6e600 by task ksoftirqd/0/13
+
+CPU: 0 PID: 13 Comm: ksoftirqd/0 Not tainted 5.17.0-rc1-syzkaller-00038-g228339662b39-dirty #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xfc/0x174
+ print_address_description.constprop.0.cold+0x8d/0x2f9
+ kasan_report.cold+0x83/0xdf
+ io_rsrc_node_ref_zero+0x5a/0x274
+ percpu_ref_put_many.constprop.0+0x233/0x270
+ rcu_core+0x7b0/0x1530
+ __do_softirq+0x29d/0x9c8
+ run_ksoftirqd+0x2d/0x60
+ smpboot_thread_fn+0x669/0x9f0
+ kthread+0x2e0/0x390
+ ret_from_fork+0x1f/0x30
+ </TASK>
+
+Allocated by task 3771:
+ kasan_save_stack+0x1c/0x40
+ __kasan_kmalloc+0xa5/0xd0
+ __kmalloc+0x226/0x4d0
+ io_rsrc_data_alloc+0x39/0x392
+ io_sqe_buffers_register+0x133/0x420
+ __do_sys_io_uring_register+0x8c9/0x13d0
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+Freed by task 3771:
+ kasan_save_stack+0x1c/0x40
+ kasan_set_track+0x21/0x30
+ kasan_set_free_info+0x20/0x30
+ __kasan_slab_free+0xee/0x120
+ kfree+0xf1/0x290
+ __io_sqe_buffers_unregister+0xfa/0x18b
+ __do_sys_io_uring_register.cold+0x1bc/0x1012
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+Last potentially related work creation:
+ kasan_save_stack+0x1c/0x40
+ __kasan_record_aux_stack+0x7e/0x90
+ insert_work+0x4a/0x340
+ __queue_work+0x5f3/0xfa0
+ queue_work_on+0xe9/0x110
+ netdevice_event+0x425/0x8a0
+ notifier_call_chain+0xb5/0x1e0
+ call_netdevice_notifiers_info+0xb5/0x130
+ __dev_notify_flags+0x121/0x2c0
+ dev_change_flags+0x119/0x170
+ do_setlink+0xaf6/0x3c00
+ __rtnl_newlink+0xde1/0x1720
+ rtnl_newlink+0x63/0x90
+ rtnetlink_rcv_msg+0x410/0xb60
+ netlink_rcv_skb+0x154/0x420
+ netlink_unicast+0x529/0x7f0
+ netlink_sendmsg+0x8e1/0xdd0
+ sock_sendmsg+0xc9/0x120
+ __sys_sendto+0x1e3/0x2d0
+ __x64_sys_sendto+0xdc/0x1b0
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+The buggy address belongs to the object at ffff88806ea6e600
+ which belongs to the cache kmalloc-192 of size 192
+The buggy address is located 0 bytes inside of
+ 192-byte region [ffff88806ea6e600, ffff88806ea6e6c0)
+The buggy address belongs to the page:
+page:ffffea0001ba9b80 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x6ea6e
+flags: 0xfff00000000200(slab|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000000200 ffffea0001db8588 ffffea00019a5608 ffff888010c40000
+raw: 0000000000000000 ffff88806ea6e000 0000000100000010 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x2420c0(__GFP_IO|__GFP_FS|__GFP_NOWARN|__GFP_COMP|__GFP_THISNODE), pid 3531, ts 58100795439, free_ts 57992037316
+ get_page_from_freelist+0x1642/0x3680
+ __alloc_pages+0x1b1/0x500
+ cache_grow_begin+0x73/0x350
+ cache_alloc_refill+0x28a/0x390
+ kmem_cache_alloc_trace+0x36d/0x4a0
+ call_usermodehelper_setup+0x9b/0x340
+ __request_module+0x409/0xa70
+ dev_load+0x1c8/0x200
+ dev_ioctl+0x2d8/0x1020
+ sock_do_ioctl+0x1be/0x250
+ sock_ioctl+0x2fb/0x660
+ __x64_sys_ioctl+0x185/0x210
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+page last free stack trace:
+ __free_pages_ok+0x542/0xca0
+ slabs_destroy+0x89/0xc0
+ ___cache_free+0x310/0x5d0
+ qlist_free_all+0x4f/0x1a0
+ kasan_quarantine_reduce+0x176/0x1b0
+ __kasan_slab_alloc+0x97/0xb0
+ kmem_cache_alloc_node_trace+0x1e0/0x5a0
+ __kmalloc_node+0x35/0x60
+ kvmalloc_node+0xa5/0x100
+ seq_read_iter+0x807/0x1200
+ kernfs_fop_read_iter+0x443/0x5c0
+ new_sync_read+0x46b/0x6e0
+ vfs_read+0x347/0x5f0
+ ksys_read+0x131/0x250
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+Memory state around the buggy address:
+ ffff88806ea6e500: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88806ea6e580: fb fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+>ffff88806ea6e600: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                   ^
+ ffff88806ea6e680: fb fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+ ffff88806ea6e700: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================

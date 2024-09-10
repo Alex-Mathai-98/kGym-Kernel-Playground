@@ -1,0 +1,154 @@
+======================================================
+WARNING: possible circular locking dependency detected
+6.5.0-rc1-syzkaller-00002-gd42334578eba #0 Not tainted
+------------------------------------------------------
+syz-executor.4/5686 is trying to acquire lock:
+ffff8880783ebaa0 (&mm->mmap_lock){++++}-{3:3}, at: lock_mm_and_find_vma+0x3fb/0x780
+
+but task is already holding lock:
+ffff8880693d20e0 (&sbi->s_lock){+.+.}-{3:3}, at: exfat_iterate+0x117/0xb40
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #2 (&sbi->s_lock){+.+.}-{3:3}:
+       __mutex_lock+0x14d/0x12d0
+       exfat_get_block+0x17c/0x1780
+       do_mpage_readpage+0x6d5/0x1a80
+       mpage_readahead+0x344/0x580
+       read_pages+0x1a3/0xd70
+       page_cache_ra_unbounded+0x457/0x5e0
+       page_cache_ra_order+0x72b/0xa80
+       ondemand_readahead+0x540/0x1150
+       page_cache_sync_ra+0x174/0x1d0
+       filemap_get_pages+0xc05/0x1820
+       filemap_read+0x359/0xce0
+       generic_file_read_iter+0x346/0x450
+       __kernel_read+0x2ac/0x840
+       integrity_kernel_read+0x7f/0xb0
+       ima_calc_file_hash_tfm+0x2b8/0x3c0
+       ima_calc_file_hash+0x1c6/0x4a0
+       ima_collect_measurement+0x5b4/0x6c0
+       process_measurement+0xc68/0x1cc0
+       ima_file_check+0xba/0x100
+       path_openat+0x178d/0x2990
+       do_filp_open+0x1cb/0x410
+       do_sys_openat2+0x15c/0x1c0
+       __x64_sys_openat+0x175/0x210
+       do_syscall_64+0x38/0xb0
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+-> #1 (mapping.invalidate_lock#3){.+.+}-{3:3}:
+       down_read+0x9c/0x470
+       filemap_fault+0x276/0x2680
+       __do_fault+0x107/0x5f0
+       __handle_mm_fault+0x27b7/0x3b50
+       handle_mm_fault+0x2ab/0x9d0
+       do_user_addr_fault+0x45c/0xfd0
+       exc_page_fault+0x5c/0xd0
+       asm_exc_page_fault+0x26/0x30
+       strncpy_from_user+0x165/0x300
+       getname_flags.part.0+0x93/0x4d0
+       getname+0x90/0xe0
+       do_sys_openat2+0xe6/0x1c0
+       __x64_sys_openat+0x175/0x210
+       do_syscall_64+0x38/0xb0
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+-> #0 (&mm->mmap_lock){++++}-{3:3}:
+       __lock_acquire+0x2e3d/0x5de0
+       lock_acquire+0x1ae/0x510
+       down_read_killable+0x9f/0x4b0
+       lock_mm_and_find_vma+0x3fb/0x780
+       do_user_addr_fault+0x413/0xfd0
+       exc_page_fault+0x5c/0xd0
+       asm_exc_page_fault+0x26/0x30
+       filldir64+0x289/0x5d0
+       exfat_iterate+0x581/0xb40
+       iterate_dir+0x201/0x740
+       __x64_sys_getdents64+0x14f/0x2e0
+       do_syscall_64+0x38/0xb0
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+other info that might help us debug this:
+
+Chain exists of:
+  &mm->mmap_lock --> mapping.invalidate_lock#3 --> &sbi->s_lock
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&sbi->s_lock);
+                               lock(mapping.invalidate_lock#3);
+                               lock(&sbi->s_lock);
+  rlock(&mm->mmap_lock);
+
+ *** DEADLOCK ***
+
+3 locks held by syz-executor.4/5686:
+ #0: ffff88807d2f6d48 (&f->f_pos_lock){+.+.}-{3:3}, at: __fdget_pos+0xe3/0x100
+ #1: ffff888068a84a30 (&sb->s_type->i_mutex_key#19){++++}-{3:3}, at: iterate_dir+0x535/0x740
+ #2: ffff8880693d20e0 (&sbi->s_lock){+.+.}-{3:3}, at: exfat_iterate+0x117/0xb40
+
+stack backtrace:
+CPU: 1 PID: 5686 Comm: syz-executor.4 Not tainted 6.5.0-rc1-syzkaller-00002-gd42334578eba #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xd9/0x1b0
+ check_noncircular+0x2f7/0x3d0
+ __lock_acquire+0x2e3d/0x5de0
+ lock_acquire+0x1ae/0x510
+ down_read_killable+0x9f/0x4b0
+ lock_mm_and_find_vma+0x3fb/0x780
+ do_user_addr_fault+0x413/0xfd0
+ exc_page_fault+0x5c/0xd0
+ asm_exc_page_fault+0x26/0x30
+RIP: 0010:filldir64+0x289/0x5d0
+Code: ff ff ff 31 db e8 e7 0e 98 ff 89 d8 48 83 c4 48 5b 5d 41 5c 41 5d 41 5e 41 5f c3 e8 d1 0e 98 ff 0f 01 cb 0f ae e8 48 8b 04 24 <49> 89 47 08 e8 be 0e 98 ff 4c 8b 7c 24 28 48 8b 74 24 10 49 89 37
+RSP: 0018:ffffc90005fa7bd8 EFLAGS: 00050293
+RAX: 0000000000000000 RBX: ffffc90005fa7e90 RCX: 0000000000000000
+RDX: ffff88807d6c0000 RSI: ffffffff81eda7cf RDI: 0000000000000006
+RBP: 0000000000000001 R08: 0000000000000006 R09: 0000000000000000
+R10: 0000000000000018 R11: 0000000000000000 R12: 0000000000000018
+R13: 0000000000000018 R14: ffffffff8a866140 R15: 0000000000000000
+ exfat_iterate+0x581/0xb40
+ iterate_dir+0x201/0x740
+ __x64_sys_getdents64+0x14f/0x2e0
+ do_syscall_64+0x38/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f16b147ca19
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f16b22650c8 EFLAGS: 00000246 ORIG_RAX: 00000000000000d9
+RAX: ffffffffffffffda RBX: 00007f16b159c050 RCX: 00007f16b147ca19
+RDX: 0000000000008008 RSI: 0000000000000000 RDI: 0000000000000006
+RBP: 00007f16b14d8c88 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f16b159c050 R15: 00007fff7d478f78
+ </TASK>
+----------------
+Code disassembly (best guess), 2 bytes skipped:
+   0:	ff 31                	push   (%rcx)
+   2:	db e8                	fucomi %st(0),%st
+   4:	e7 0e                	out    %eax,$0xe
+   6:	98                   	cwtl
+   7:	ff 89 d8 48 83 c4    	decl   -0x3b7cb728(%rcx)
+   d:	48 5b                	rex.W pop %rbx
+   f:	5d                   	pop    %rbp
+  10:	41 5c                	pop    %r12
+  12:	41 5d                	pop    %r13
+  14:	41 5e                	pop    %r14
+  16:	41 5f                	pop    %r15
+  18:	c3                   	ret
+  19:	e8 d1 0e 98 ff       	call   0xff980eef
+  1e:	0f 01 cb             	stac
+  21:	0f ae e8             	lfence
+  24:	48 8b 04 24          	mov    (%rsp),%rax
+* 28:	49 89 47 08          	mov    %rax,0x8(%r15) <-- trapping instruction
+  2c:	e8 be 0e 98 ff       	call   0xff980eef
+  31:	4c 8b 7c 24 28       	mov    0x28(%rsp),%r15
+  36:	48 8b 74 24 10       	mov    0x10(%rsp),%rsi
+  3b:	49 89 37             	mov    %rsi,(%r15)

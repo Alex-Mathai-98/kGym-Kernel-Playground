@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in sfq_init",
+    "display-title": "UBSAN: shift-out-of-bounds in sfq_init",
+    "id": "b96fbfdb1cf23b90ac7ee98b9c66235110e4a943",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: sched: prevent invalid Scell_log shift count",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bd1248f1ddbc48b0c30565fce897a3b6423313b8",
+            "hash": "bd1248f1ddbc48b0c30565fce897a3b6423313b8",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Linux 5.3",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4d856f72c10ecb060868ed10ff1b1453943fc6c8",
+        "hash": "4d856f72c10ecb060868ed10ff1b1453943fc6c8",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000cf6d3705b7176c3d@google.com/T/",
+        "https://lore.kernel.org/all/20201225062344.32566-1-rdunlap@infradead.org/T/",
+        "https://lore.kernel.org/all/20210111130032.469630231@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130033.676306636@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130033.715773309@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130036.414620026@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130039.165470698@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130048.499958175@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1136680f500000",
+            "c-reproducer": "/text?tag=ReproC&x=14383487500000",
+            "kernel-config": "/text?tag=KernelConfig&x=f7c39e7211134bc0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a409ed156a90093a03fe6a93721ddf4c591eac87",
+            "kernel-source-commit": "a409ed156a90093a03fe6a93721ddf4c591eac87",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/04201c0669446145fd9c347c5538da0ca13ff29b",
+            "syzkaller-commit": "04201c0669446145fd9c347c5538da0ca13ff29b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10d64333500000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "a533b70a657c03137dd49cbcfee70aac086ab2b1",
+    "patch": "diff --git a/include/net/red.h b/include/net/red.h\nindex fc455445f4b2..932f0d79d60c 100644\n--- a/include/net/red.h\n+++ b/include/net/red.h\n@@ -168,12 +168,14 @@ static inline void red_set_vars(struct red_vars *v)\n \tv->qcount\t= -1;\n }\n \n-static inline bool red_check_params(u32 qth_min, u32 qth_max, u8 Wlog)\n+static inline bool red_check_params(u32 qth_min, u32 qth_max, u8 Wlog, u8 Scell_log)\n {\n \tif (fls(qth_min) + Wlog > 32)\n \t\treturn false;\n \tif (fls(qth_max) + Wlog > 32)\n \t\treturn false;\n+\tif (Scell_log >= 32)\n+\t\treturn false;\n \tif (qth_max < qth_min)\n \t\treturn false;\n \treturn true;\ndiff --git a/net/sched/sch_choke.c b/net/sched/sch_choke.c\nindex bd618b00d319..50f680f03a54 100644\n--- a/net/sched/sch_choke.c\n+++ b/net/sched/sch_choke.c\n@@ -362,7 +362,7 @@ static int choke_change(struct Qdisc *sch, struct nlattr *opt,\n \n \tctl = nla_data(tb[TCA_CHOKE_PARMS]);\n \n-\tif (!red_check_params(ctl->qth_min, ctl->qth_max, ctl->Wlog))\n+\tif (!red_check_params(ctl->qth_min, ctl->qth_max, ctl->Wlog, ctl->Scell_log))\n \t\treturn -EINVAL;\n \n \tif (ctl->limit > CHOKE_MAX_QUEUE)\ndiff --git a/net/sched/sch_gred.c b/net/sched/sch_gred.c\nindex 8599c6f31b05..e0bc77533acc 100644\n--- a/net/sched/sch_gred.c\n+++ b/net/sched/sch_gred.c\n@@ -480,7 +480,7 @@ static inline int gred_change_vq(struct Qdisc *sch, int dp,\n \tstruct gred_sched *table = qdisc_priv(sch);\n \tstruct gred_sched_data *q = table->tab[dp];\n \n-\tif (!red_check_params(ctl->qth_min, ctl->qth_max, ctl->Wlog)) {\n+\tif (!red_check_params(ctl->qth_min, ctl->qth_max, ctl->Wlog, ctl->Scell_log)) {\n \t\tNL_SET_ERR_MSG_MOD(extack, \"invalid RED parameters\");\n \t\treturn -EINVAL;\n \t}\ndiff --git a/net/sched/sch_red.c b/net/sched/sch_red.c\nindex e89fab6ccb34..b4ae34d7aa96 100644\n--- a/net/sched/sch_red.c\n+++ b/net/sched/sch_red.c\n@@ -250,7 +250,7 @@ static int __red_change(struct Qdisc *sch, struct nlattr **tb,\n \tmax_P = tb[TCA_RED_MAX_P] ? nla_get_u32(tb[TCA_RED_MAX_P]) : 0;\n \n \tctl = nla_data(tb[TCA_RED_PARMS]);\n-\tif (!red_check_params(ctl->qth_min, ctl->qth_max, ctl->Wlog))\n+\tif (!red_check_params(ctl->qth_min, ctl->qth_max, ctl->Wlog, ctl->Scell_log))\n \t\treturn -EINVAL;\n \n \terr = red_get_flags(ctl->flags, TC_RED_HISTORIC_FLAGS,\ndiff --git a/net/sched/sch_sfq.c b/net/sched/sch_sfq.c\nindex bca2be57d9fc..b25e51440623 100644\n--- a/net/sched/sch_sfq.c\n+++ b/net/sched/sch_sfq.c\n@@ -647,7 +647,7 @@ static int sfq_change(struct Qdisc *sch, struct nlattr *opt)\n \t}\n \n \tif (ctl_v1 && !red_check_params(ctl_v1->qth_min, ctl_v1->qth_max,\n-\t\t\t\t\tctl_v1->Wlog))\n+\t\t\t\t\tctl_v1->Wlog, ctl_v1->Scell_log))\n \t\treturn -EINVAL;\n \tif (ctl_v1 && ctl_v1->qth_min) {\n \t\tp = kmalloc(sizeof(*p), GFP_KERNEL);\n",
+    "patch_modified_files": [
+        "include/net/red.h",
+        "net/sched/sch_choke.c",
+        "net/sched/sch_gred.c",
+        "net/sched/sch_red.c",
+        "net/sched/sch_sfq.c"
+    ]
+}

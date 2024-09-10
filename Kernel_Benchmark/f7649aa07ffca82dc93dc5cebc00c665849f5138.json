@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "kernel BUG at security/keys/keyring.c:LINE!",
+    "display-title": "kernel BUG at security/keys/keyring.c:LINE!",
+    "id": "f7649aa07ffca82dc93dc5cebc00c665849f5138",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "KEYS: always initialize keyring_index_key::desc_len",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ede0fa98a900e657d1fcd80b50920efc896c1a4c",
+            "hash": "ede0fa98a900e657d1fcd80b50920efc896c1a4c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a722550577796543@google.com/T/",
+        "https://lore.kernel.org/all/155084977835.23242.14844856182331713906.stgit@warthog.procyon.org.uk/T/",
+        "https://lore.kernel.org/all/20181102231510.15911-1-ebiggers@kernel.org/T/",
+        "https://lore.kernel.org/all/20181103015854.7380-1-ebiggers@kernel.org/T/",
+        "https://lore.kernel.org/all/20190225195034.555044862@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190225195035.713274200@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190225195043.645958524@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190225195054.748060397@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190322111210.465931067@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190322111236.796964179@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200117073436.6507-1-zhangxiaoxu5@huawei.com/T/",
+        "https://lore.kernel.org/all/lsq.1556377988.384060557@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10160e3a400000",
+            "c-reproducer": "/text?tag=ReproC&x=16995491400000",
+            "kernel-config": "/text?tag=KernelConfig&x=c0af03fe452b65fb",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=befad944e2312c18d855013ce154ca7d2b110ade",
+            "kernel-source-commit": "befad944e2312c18d855013ce154ca7d2b110ade",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8b311eafa7f32ebcae67cdf5e16aa1ab3fc77e7f",
+            "syzkaller-commit": "8b311eafa7f32ebcae67cdf5e16aa1ab3fc77e7f",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1602025e400000"
+        }
+    ],
+    "subsystems": [
+        "keyrings",
+        "lsm"
+    ],
+    "parent_of_fix_commit": "cc1780fc42c76c705dd07ea123f1143dc5057630",
+    "patch": "diff --git a/security/keys/keyring.c b/security/keys/keyring.c\nindex eadebb92986a..f81372f53dd7 100644\n--- a/security/keys/keyring.c\n+++ b/security/keys/keyring.c\n@@ -661,9 +661,6 @@ static bool search_nested_keyrings(struct key *keyring,\n \tBUG_ON((ctx->flags & STATE_CHECKS) == 0 ||\n \t       (ctx->flags & STATE_CHECKS) == STATE_CHECKS);\n \n-\tif (ctx->index_key.description)\n-\t\tctx->index_key.desc_len = strlen(ctx->index_key.description);\n-\n \t/* Check to see if this top-level keyring is what we are looking for\n \t * and whether it is valid or not.\n \t */\n@@ -914,6 +911,7 @@ key_ref_t keyring_search(key_ref_t keyring,\n \tstruct keyring_search_context ctx = {\n \t\t.index_key.type\t\t= type,\n \t\t.index_key.description\t= description,\n+\t\t.index_key.desc_len\t= strlen(description),\n \t\t.cred\t\t\t= current_cred(),\n \t\t.match_data.cmp\t\t= key_default_cmp,\n \t\t.match_data.raw_data\t= description,\ndiff --git a/security/keys/proc.c b/security/keys/proc.c\nindex d2b802072693..78ac305d715e 100644\n--- a/security/keys/proc.c\n+++ b/security/keys/proc.c\n@@ -165,8 +165,7 @@ static int proc_keys_show(struct seq_file *m, void *v)\n \tint rc;\n \n \tstruct keyring_search_context ctx = {\n-\t\t.index_key.type\t\t= key->type,\n-\t\t.index_key.description\t= key->description,\n+\t\t.index_key\t\t= key->index_key,\n \t\t.cred\t\t\t= m->file->f_cred,\n \t\t.match_data.cmp\t\t= lookup_user_key_possessed,\n \t\t.match_data.raw_data\t= key,\ndiff --git a/security/keys/request_key.c b/security/keys/request_key.c\nindex 3f56a312dd35..7a0c6b666ff0 100644\n--- a/security/keys/request_key.c\n+++ b/security/keys/request_key.c\n@@ -531,6 +531,7 @@ struct key *request_key_and_link(struct key_type *type,\n \tstruct keyring_search_context ctx = {\n \t\t.index_key.type\t\t= type,\n \t\t.index_key.description\t= description,\n+\t\t.index_key.desc_len\t= strlen(description),\n \t\t.cred\t\t\t= current_cred(),\n \t\t.match_data.cmp\t\t= key_default_cmp,\n \t\t.match_data.raw_data\t= description,\ndiff --git a/security/keys/request_key_auth.c b/security/keys/request_key_auth.c\nindex afc304e8b61e..bda6201c6c45 100644\n--- a/security/keys/request_key_auth.c\n+++ b/security/keys/request_key_auth.c\n@@ -247,7 +247,7 @@ struct key *key_get_instantiation_authkey(key_serial_t target_id)\n \tstruct key *authkey;\n \tkey_ref_t authkey_ref;\n \n-\tsprintf(description, \"%x\", target_id);\n+\tctx.index_key.desc_len = sprintf(description, \"%x\", target_id);\n \n \tauthkey_ref = search_process_keyrings(&ctx);\n \n",
+    "patch_modified_files": [
+        "security/keys/keyring.c",
+        "security/keys/proc.c",
+        "security/keys/request_key.c",
+        "security/keys/request_key_auth.c"
+    ]
+}

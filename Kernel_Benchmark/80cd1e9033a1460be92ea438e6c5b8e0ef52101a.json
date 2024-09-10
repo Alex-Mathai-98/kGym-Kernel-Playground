@@ -1,0 +1,65 @@
+{
+    "version": 1,
+    "title": "WARNING: suspicious RCU usage in tipc_l2_send_msg",
+    "display-title": "WARNING: suspicious RCU usage in tipc_l2_send_msg",
+    "id": "80cd1e9033a1460be92ea438e6c5b8e0ef52101a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "tipc: call rcu_read_lock() in tipc_aead_encrypt_done()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f6db9096416209474090d64d8284e7c16c3d8873",
+            "hash": "f6db9096416209474090d64d8284e7c16c3d8873",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Revert commit e918e570415c (\"tpm_tis: Remove the HID IFX0102\")",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=786a2aa281f4c4ba424ea8b8ea1e85ab62c4a57c",
+        "hash": "786a2aa281f4c4ba424ea8b8ea1e85ab62c4a57c",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000d411cf05a8ffc4a6@google.com/T/",
+        "https://lore.kernel.org/all/20200826114849.295321031@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200826114911.216745274@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/7f24b6b0a0d2cb82b9dfbf5343c01266d2840561.1597908887.git.lucien.xin@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10c005af100000",
+            "kernel-config": "/text?tag=KernelConfig&x=66ad203c2bb6d8b",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4437dd6e8f71e8b4b5546924a6e48e7edaf4a8dc",
+            "kernel-source-commit": "4437dd6e8f71e8b4b5546924a6e48e7edaf4a8dc",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9ebcc5b1a8145326065b932958d82ada85a5c224",
+            "syzkaller-commit": "9ebcc5b1a8145326065b932958d82ada85a5c224",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16ad41c0900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "tipc_aead_encrypt_done",
+            "net/tipc/crypto.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "tpm_tis_pnp_init",
+            "drivers/char/tpm/tpm_tis.c"
+        ]
+    ],
+    "patch_commit_date": "2020-08-20T07:34:47+00:00",
+    "cause_commit_date": "2020-07-06T20:53:42+00:00",
+    "subsystems": [
+        "tipc"
+    ],
+    "parent_of_fix_commit": "eda814b97dfb8d9f4808eb2f65af9bd3705c4cae",
+    "patch": "diff --git a/net/tipc/crypto.c b/net/tipc/crypto.c\nindex 001bcb0f2480..c38babaa4e57 100644\n--- a/net/tipc/crypto.c\n+++ b/net/tipc/crypto.c\n@@ -757,10 +757,12 @@ static void tipc_aead_encrypt_done(struct crypto_async_request *base, int err)\n \tswitch (err) {\n \tcase 0:\n \t\tthis_cpu_inc(tx->stats->stat[STAT_ASYNC_OK]);\n+\t\trcu_read_lock();\n \t\tif (likely(test_bit(0, &b->up)))\n \t\t\tb->media->send_msg(net, skb, b, &tx_ctx->dst);\n \t\telse\n \t\t\tkfree_skb(skb);\n+\t\trcu_read_unlock();\n \t\tbreak;\n \tcase -EINPROGRESS:\n \t\treturn;\n",
+    "patch_modified_files": [
+        "net/tipc/crypto.c"
+    ]
+}

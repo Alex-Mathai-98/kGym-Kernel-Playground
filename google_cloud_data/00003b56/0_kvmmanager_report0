@@ -1,0 +1,24 @@
+Bluetooth: : Invalid header checksum
+Bluetooth: : Invalid header checksum
+==================================================================
+BUG: KASAN: null-ptr-deref in __pm_runtime_resume+0x14e/0x170
+Write of size 4 at addr 0000000000000388 by task kworker/u4:4/92
+
+CPU: 1 PID: 92 Comm: kworker/u4:4 Not tainted 5.14.0-rc7-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: events_unbound flush_to_ldisc
+Call Trace:
+ dump_stack_lvl+0xfc/0x174
+ kasan_report.cold+0x66/0xdf
+ kasan_check_range+0x13b/0x190
+ __pm_runtime_resume+0x14e/0x170
+ h5_recv+0x2c4/0x680
+ hci_uart_tty_receive+0x24e/0x720
+ tty_ldisc_receive_buf+0x13f/0x180
+ tty_port_default_receive_buf+0x6b/0xa0
+ flush_to_ldisc+0x23a/0x3d0
+ process_one_work+0x9df/0x1600
+ worker_thread+0x67d/0x1220
+ kthread+0x3d0/0x4c0
+ ret_from_fork+0x1f/0x30
+==================================================================

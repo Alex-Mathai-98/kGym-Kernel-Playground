@@ -1,0 +1,96 @@
+==================================================================
+BUG: KASAN: slab-out-of-bounds in xfs_getbmap+0x1c06/0x1c90
+Read of size 4 at addr ffff88806c7f16f8 by task syz-executor.2/5150
+
+CPU: 1 PID: 5150 Comm: syz-executor.2 Not tainted 6.3.0-rc6-syzkaller-00132-g1f1397b7218d #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1e7/0x2d0
+ print_report+0x163/0x540
+ kasan_report+0x176/0x1b0
+ xfs_getbmap+0x1c06/0x1c90
+ xfs_ioc_getbmap+0x243/0x7a0
+ xfs_file_ioctl+0xbf5/0x16a0
+ __se_sys_ioctl+0xf1/0x160
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f5dbf87ca19
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f5dc05790c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007f5dbf99c050 RCX: 00007f5dbf87ca19
+RDX: 0000000020000140 RSI: 00000000c0205826 RDI: 0000000000000005
+RBP: 00007f5dbf8d8c88 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f5dbf99c050 R15: 00007fff6b915528
+ </TASK>
+
+Allocated by task 5141:
+ kasan_set_track+0x4f/0x70
+ __kasan_kmalloc+0x98/0xb0
+ __kmalloc_node+0xb8/0x230
+ kvmalloc_node+0x72/0x180
+ xfs_ioc_getbmap+0x1fd/0x7a0
+ xfs_file_ioctl+0xbf5/0x16a0
+ __se_sys_ioctl+0xf1/0x160
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Freed by task 5141:
+ kasan_set_track+0x4f/0x70
+ kasan_save_free_info+0x2b/0x40
+ ____kasan_slab_free+0xd6/0x120
+ __kmem_cache_free+0x264/0x3c0
+ xfs_ioc_getbmap+0x6f8/0x7a0
+ xfs_file_ioctl+0xbf5/0x16a0
+ __se_sys_ioctl+0xf1/0x160
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+The buggy address belongs to the object at ffff88806c7f1680
+ which belongs to the cache kmalloc-64 of size 64
+The buggy address is located 56 bytes to the right of
+ allocated 64-byte region [ffff88806c7f1680, ffff88806c7f16c0)
+
+The buggy address belongs to the physical page:
+page:ffffea0001b1fc40 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x6c7f1
+flags: 0xfff00000000200(slab|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000000200 ffff888012441640 dead000000000122 0000000000000000
+raw: 0000000000000000 0000000080200020 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x12cc0(GFP_KERNEL|__GFP_NOWARN|__GFP_NORETRY), pid 5077, tgid 5077 (udevd), ts 63078275437, free_ts 59272094139
+ post_alloc_hook+0x1e6/0x210
+ get_page_from_freelist+0x3246/0x33c0
+ __alloc_pages+0x255/0x670
+ alloc_slab_page+0x6a/0x160
+ new_slab+0x84/0x2f0
+ ___slab_alloc+0xa85/0x10a0
+ __kmem_cache_alloc_node+0x1b8/0x290
+ __kmalloc_node+0xa7/0x230
+ kvmalloc_node+0x72/0x180
+ simple_xattr_alloc+0x43/0xa0
+ shmem_initxattrs+0x8e/0x1e0
+ security_inode_init_security+0x2df/0x3f0
+ shmem_mknod+0xba/0x1c0
+ shmem_mkdir+0x33/0x60
+ vfs_mkdir+0x29d/0x450
+ do_mkdirat+0x264/0x520
+page last free stack trace:
+ free_unref_page_prepare+0xe34/0xe90
+ free_unref_page+0x37/0x3f0
+ __mmdrop+0xbe/0x460
+ finish_task_switch+0x225/0x650
+ __schedule+0x1743/0x4630
+ preempt_schedule_irq+0xfb/0x1b0
+ irqentry_exit+0x57/0x80
+ asm_sysvec_apic_timer_interrupt+0x1a/0x20
+
+Memory state around the buggy address:
+ ffff88806c7f1580: fa fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+ ffff88806c7f1600: fa fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+>ffff88806c7f1680: fa fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+                                                                ^
+ ffff88806c7f1700: 00 00 00 00 00 00 00 00 fc fc fc fc fc fc fc fc
+ ffff88806c7f1780: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================

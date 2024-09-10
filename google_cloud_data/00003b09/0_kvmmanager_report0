@@ -1,0 +1,78 @@
+BUG: KASAN: slab-out-of-bounds in selinux_xfrm_alloc_user+0x23e/0x440
+Read of size 768 at addr ffff8881e7993934 by task syz-executor.0/4300
+
+CPU: 0 PID: 4300 Comm: syz-executor.0 Not tainted 5.5.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x181/0x1fd
+ print_address_description.constprop.0.cold+0x72/0x36f
+ __kasan_report.cold+0x1a/0x32
+ kasan_report+0xe/0x20
+ check_memory_region+0x11a/0x190
+ memcpy+0x1f/0x50
+ selinux_xfrm_alloc_user+0x23e/0x440
+ security_xfrm_policy_alloc+0x6e/0xb0
+ xfrm_policy_construct+0x21d/0x640
+ xfrm_add_acquire+0x383/0xb30
+ xfrm_user_rcv_msg+0x468/0x700
+ netlink_rcv_skb+0x15a/0x400
+ xfrm_netlink_rcv+0x68/0x80
+ netlink_unicast+0x527/0x7e0
+ netlink_sendmsg+0x85a/0xd70
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x5f9/0x7c0
+ ___sys_sendmsg+0x11d/0x1b0
+ __x64_sys_sendmsg+0x135/0x210
+ do_syscall_64+0xf1/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7fe80bfc9f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fe80b34a0c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007fe80c0f7f80 RCX: 00007fe80bfc9f69
+RDX: 0000000000000000 RSI: 0000000020000080 RDI: 0000000000000003
+RBP: 00007fe80c0164a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fe80c0f7f80 R15: 00007ffdb9083578
+
+Allocated by task 4300:
+ save_stack+0x19/0x70
+ __kasan_kmalloc.constprop.0+0xda/0xe0
+ __alloc_skb+0xaa/0x550
+ netlink_sendmsg+0x950/0xd70
+ sock_sendmsg+0xc9/0x120
+ ____sys_sendmsg+0x5f9/0x7c0
+ ___sys_sendmsg+0x11d/0x1b0
+ __x64_sys_sendmsg+0x135/0x210
+ do_syscall_64+0xf1/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+Freed by task 4125:
+ save_stack+0x19/0x70
+ __kasan_slab_free+0xf9/0x140
+ kfree+0x103/0x2b0
+ load_elf_binary+0x235c/0x4dea
+ search_binary_handler.part.0+0xf3/0x520
+ __do_execve_file.isra.0+0x135f/0x2240
+ do_execve+0x2e/0x40
+ __x64_sys_execve+0x7c/0xa0
+ do_syscall_64+0xf1/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+The buggy address belongs to the object at ffff8881e7993800
+ which belongs to the cache kmalloc-1k of size 1024
+The buggy address is located 308 bytes inside of
+ 1024-byte region [ffff8881e7993800, ffff8881e7993c00)
+The buggy address belongs to the page:
+page:ffffea00079e64c0 refcount:1 mapcount:0 mapping:ffff8881f5000c40 index:0x0
+raw: 017ffe0000000200 ffffea00079e3cc8 ffffea00079ead08 ffff8881f5000c40
+raw: 0000000000000000 ffff8881e7993000 0000000100000002 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff8881e7993b00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff8881e7993b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff8881e7993c00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+                   ^
+ ffff8881e7993c80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8881e7993d00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================

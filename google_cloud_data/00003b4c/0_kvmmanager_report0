@@ -1,0 +1,44 @@
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 4166 at sound/core/oss/mulaw.c:332 snd_pcm_plugin_build_mulaw+0x500/0x6f0
+Modules linked in:
+CPU: 1 PID: 4166 Comm: syz-executor.2 Not tainted 5.8.0-rc7-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:snd_pcm_plugin_build_mulaw+0x500/0x6f0
+Code: 0f 0b bb fa ff ff ff eb cd e8 ac 4d 56 fb 0f 0b bb fa ff ff ff eb bf e8 9e 4d 56 fb 0f 0b bb fa ff ff ff eb b1 e8 90 4d 56 fb <0f> 0b bb fa ff ff ff eb a3 89 e9 80 e1 07 80 c1 03 38 c1 0f 8c 67
+RSP: 0018:ffffc900009afa28 EFLAGS: 00010293
+RAX: ffffffff861c2100 RBX: 0000000000000000 RCX: ffff8881dc938440
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
+RBP: ffffffff861c2b00 R08: ffffffff861c1da5 R09: fffff52000135f63
+R10: 0000000000000000 R11: dffffc0000000001 R12: 1ffff92000135f61
+R13: ffffc900009afaf8 R14: ffffc900009afb08 R15: ffffc900009afb08
+FS:  00005555565b3480(0000) GS:ffff8881f6200000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f7885bac038 CR3: 00000001dc932001 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ snd_pcm_plug_format_plugins+0xc50/0x15f0
+ snd_pcm_oss_change_params_locked+0x2585/0x3ab0
+ snd_pcm_oss_make_ready+0x119/0x2b0
+ snd_pcm_oss_sync+0x280/0x8e0
+ snd_pcm_oss_release+0x11a/0x270
+ __fput+0x2f6/0x730
+ task_work_run+0x123/0x1a0
+ exit_to_usermode_loop+0xd8/0x100
+ __prepare_exit_to_usermode+0x98/0xd0
+ do_syscall_64+0x82/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7fd59c89be5a
+Code: 48 3d 00 f0 ff ff 77 48 c3 0f 1f 80 00 00 00 00 48 83 ec 18 89 7c 24 0c e8 13 7f 02 00 8b 7c 24 0c 89 c2 b8 03 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 36 89 d7 89 44 24 0c e8 73 7f 02 00 8b 44 24
+RSP: 002b:00007ffd88fb9020 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 0000000000000005 RCX: 00007fd59c89be5a
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000004
+RBP: 00007fd59c9cc980 R08: 00007fd59c81f000 R09: 0000000000000001
+R10: 0000000000000001 R11: 0000000000000293 R12: 000000000000c95e
+R13: 000000000000c92c R14: 00007ffd88fb91e0 R15: 00007fd59c853cb0
+irq event stamp: 6891
+hardirqs last  enabled at (6919): [<ffffffff87f3e06f>] _raw_spin_unlock_irq+0x1f/0x80
+hardirqs last disabled at (6944): [<ffffffff87f30f29>] __schedule+0x259/0x1880
+softirqs last  enabled at (7144): [<ffffffff88000f0f>] asm_call_on_stack+0xf/0x20
+softirqs last disabled at (7157): [<ffffffff88000f0f>] asm_call_on_stack+0xf/0x20
+---[ end trace c21a21ca53213896 ]---

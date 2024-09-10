@@ -1,0 +1,59 @@
+{
+    "version": 1,
+    "title": "memory leak in do_replace",
+    "display-title": "memory leak in do_replace",
+    "id": "5b79a616feb996279758323aba4031c57f80a8bc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: ebtables: fix memory leak when blob is malformed",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=62ce44c4fff947eebdf10bb582267e686e6835c9",
+            "hash": "62ce44c4fff947eebdf10bb582267e686e6835c9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b010bd05e9100e11@google.com/T/",
+        "https://lore.kernel.org/all/20220920122017.2600-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20220921073825.4658-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20220926100738.148626940@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220926100741.430882406@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220926100750.519221159@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220926100754.639112000@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220926100756.074519146@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220926100806.522017616@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in do_replace",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14b0e87f080000",
+            "c-reproducer": "/text?tag=ReproC&x=1100f1d8880000",
+            "kernel-config": "/text?tag=KernelConfig&x=a4afe4efcad47dde",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3245cb65fd91cd514801bf91f5a3066d562f0ac4",
+            "kernel-source-commit": "3245cb65fd91cd514801bf91f5a3066d562f0ac4",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/dd9a85ff356d74a765888403f1b70faece9e642b",
+            "syzkaller-commit": "dd9a85ff356d74a765888403f1b70faece9e642b",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12d823bf080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "do_replace_finish",
+            "net/bridge/netfilter/ebtables.c"
+        ]
+    ],
+    "patch_commit_date": "2022-09-20T12:20:17+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "netfilter",
+        "bridge"
+    ],
+    "parent_of_fix_commit": "9a4d6dd554b86e65581ef6b6638a39ae079b17ac",
+    "patch": "diff --git a/net/bridge/netfilter/ebtables.c b/net/bridge/netfilter/ebtables.c\nindex 9a0ae59cdc50..4f385d52a1c4 100644\n--- a/net/bridge/netfilter/ebtables.c\n+++ b/net/bridge/netfilter/ebtables.c\n@@ -1040,8 +1040,10 @@ static int do_replace_finish(struct net *net, struct ebt_replace *repl,\n \t\tgoto free_iterate;\n \t}\n \n-\tif (repl->valid_hooks != t->valid_hooks)\n+\tif (repl->valid_hooks != t->valid_hooks) {\n+\t\tret = -EINVAL;\n \t\tgoto free_unlock;\n+\t}\n \n \tif (repl->num_counters && repl->num_counters != t->private->nentries) {\n \t\tret = -EINVAL;\n",
+    "patch_modified_files": [
+        "net/bridge/netfilter/ebtables.c"
+    ]
+}

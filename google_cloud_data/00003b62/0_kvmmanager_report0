@@ -1,0 +1,71 @@
+BUG: kernel NULL pointer dereference, address: 0000000000000008
+#PF: supervisor read access in kernel mode
+#PF: error_code(0x0000) - not-present page
+PGD 2349b067 P4D 2349b067 PUD 0 
+Oops: 0000 [#1] PREEMPT SMP KASAN
+CPU: 0 PID: 5572 Comm: kworker/0:5 Not tainted 5.11.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: events free_ipc
+RIP: 0010:kasan_record_aux_stack+0x78/0xb0
+Code: 49 f7 f8 8b 47 24 48 29 d3 83 e8 01 41 0f af c0 48 01 c1 48 39 cb 48 89 ce 48 0f 46 f3 e8 40 e9 ff ff bf 00 08 00 00 48 89 c3 <8b> 40 08 89 43 0c e8 ed e5 ff ff 89 43 08 5b c3 48 8b 50 08 48 c7
+RSP: 0018:ffffc900016a7ae8 EFLAGS: 00010046
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffff888042400000
+RDX: 0000000000000000 RSI: ffff888042400000 RDI: 0000000000000800
+RBP: ffffffff83824090 R08: 0000000000400000 R09: 000000000000002e
+R10: ffffffff8132a478 R11: 000000000000003f R12: 0000000000000246
+R13: 0000000000035b40 R14: ffff8880424000c8 R15: 0000000000000200
+FS:  0000000000000000(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000008 CR3: 000000001f90c000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ call_rcu+0xb6/0x700
+ ipc_rcu_putref+0x83/0xb0
+ freeary+0x134a/0x1a40
+ free_ipcs+0x98/0x1d0
+ sem_exit_ns+0x1b/0x40
+ free_ipc+0xf8/0x200
+ process_one_work+0x9e6/0x1670
+ worker_thread+0x676/0x1170
+ kthread+0x3a2/0x490
+ ret_from_fork+0x1f/0x30
+Modules linked in:
+CR2: 0000000000000008
+---[ end trace 71bd9300eeeb3434 ]---
+RIP: 0010:kasan_record_aux_stack+0x78/0xb0
+Code: 49 f7 f8 8b 47 24 48 29 d3 83 e8 01 41 0f af c0 48 01 c1 48 39 cb 48 89 ce 48 0f 46 f3 e8 40 e9 ff ff bf 00 08 00 00 48 89 c3 <8b> 40 08 89 43 0c e8 ed e5 ff ff 89 43 08 5b c3 48 8b 50 08 48 c7
+RSP: 0018:ffffc900016a7ae8 EFLAGS: 00010046
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffff888042400000
+RDX: 0000000000000000 RSI: ffff888042400000 RDI: 0000000000000800
+RBP: ffffffff83824090 R08: 0000000000400000 R09: 000000000000002e
+R10: ffffffff8132a478 R11: 000000000000003f R12: 0000000000000246
+R13: 0000000000035b40 R14: ffff8880424000c8 R15: 0000000000000200
+FS:  0000000000000000(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000008 CR3: 000000001f90c000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	49 f7 f8             	idiv   %r8
+   3:	8b 47 24             	mov    0x24(%rdi),%eax
+   6:	48 29 d3             	sub    %rdx,%rbx
+   9:	83 e8 01             	sub    $0x1,%eax
+   c:	41 0f af c0          	imul   %r8d,%eax
+  10:	48 01 c1             	add    %rax,%rcx
+  13:	48 39 cb             	cmp    %rcx,%rbx
+  16:	48 89 ce             	mov    %rcx,%rsi
+  19:	48 0f 46 f3          	cmovbe %rbx,%rsi
+  1d:	e8 40 e9 ff ff       	call   0xffffe962
+  22:	bf 00 08 00 00       	mov    $0x800,%edi
+  27:	48 89 c3             	mov    %rax,%rbx
+* 2a:	8b 40 08             	mov    0x8(%rax),%eax <-- trapping instruction
+  2d:	89 43 0c             	mov    %eax,0xc(%rbx)
+  30:	e8 ed e5 ff ff       	call   0xffffe622
+  35:	89 43 08             	mov    %eax,0x8(%rbx)
+  38:	5b                   	pop    %rbx
+  39:	c3                   	ret
+  3a:	48 8b 50 08          	mov    0x8(%rax),%rdx
+  3e:	48                   	rex.W
+  3f:	c7                   	.byte 0xc7

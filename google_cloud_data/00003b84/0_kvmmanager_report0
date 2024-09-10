@@ -1,0 +1,95 @@
+general protection fault, probably for non-canonical address 0xdffffc0000000182: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x0000000000000c10-0x0000000000000c17]
+CPU: 0 PID: 5626 Comm: syz-executor.4 Not tainted 5.14.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:percpu_ref_put+0x8c/0x1e0
+Code: 01 48 c7 c7 e0 2b 0d 8a be b1 02 00 00 48 c7 c2 20 2c 0d 8a e8 75 20 ea ff 49 be 00 00 00 00 00 fc ff df 48 89 d8 48 c1 e8 03 <42> 80 3c 30 00 74 08 48 89 df e8 95 ee 4f 00 48 8b 2b 48 89 ee 48
+RSP: 0018:ffffc90000007b08 EFLAGS: 00010206
+RAX: 0000000000000182 RBX: 0000000000000c10 RCX: ffff88801b94d580
+RDX: 0000000000000100 RSI: 0000000000000004 RDI: ffff8880b9c32488
+RBP: 0000000000000063 R08: dffffc0000000000 R09: ffffed1017386492
+R10: 0000000000000000 R11: dffffc0000000001 R12: ffff888026b09000
+R13: ffff888026b09458 R14: dffffc0000000000 R15: dffffc0000000000
+FS:  00007f0e3ca566c0(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000555557188938 CR3: 000000006050d000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <IRQ>
+ cgroup_sk_free+0x3c/0xa0
+ __sk_destruct+0x570/0x830
+ call_timer_fn+0x1bc/0x6b0
+ __run_timers+0x63b/0x830
+ run_timer_softirq+0x63/0xf0
+ __do_softirq+0x3d1/0x9fe
+ __irq_exit_rcu+0x155/0x240
+ irq_exit_rcu+0x5/0x20
+ sysvec_apic_timer_interrupt+0x91/0xb0
+ </IRQ>
+ asm_sysvec_apic_timer_interrupt+0x12/0x20
+RIP: 0010:sysfs_add_file_mode_ns+0xa2/0x3e0
+Code: 00 48 89 e8 48 c1 e8 03 80 3c 18 00 74 08 48 89 ef e8 02 9c c8 ff 4c 8b 65 00 49 8d 6c 24 28 48 89 e8 48 c1 e8 03 80 3c 18 00 <74> 08 48 89 ef e8 e4 9b c8 ff 48 8b 6d 00 48 83 c5 08 48 89 e8 48
+RSP: 0018:ffffc9000296f568 EFLAGS: 00000246
+RAX: 1ffff1100c8c88c6 RBX: dffffc0000000000 RCX: ffff88801b94d580
+RDX: 0000000000000000 RSI: ffffffff8cf52e80 RDI: ffff888060e1ae80
+RBP: ffff888064644630 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: dffffc0000000001 R12: ffff888064644608
+R13: ffff888060e1ae80 R14: ffffffff8cf52e80 R15: 0000000000000000
+ internal_create_group+0x573/0xf00
+ sysfs_create_groups+0x52/0x110
+ device_add_attrs+0x8a/0x470
+ device_add+0x67e/0x1030
+ netdev_register_kobject+0x176/0x310
+ register_netdevice+0x108f/0x1640
+ __ip_tunnel_create+0x2b0/0x370
+ ip_tunnel_init_net+0x21f/0x700
+ ops_init+0x317/0x430
+ setup_net+0x358/0x9a0
+ copy_net_ns+0x35c/0x5a0
+ create_new_namespaces+0x425/0x7a0
+ unshare_nsproxy_namespaces+0x119/0x170
+ ksys_unshare+0x580/0xb20
+ __x64_sys_unshare+0x34/0x40
+ do_syscall_64+0x44/0xd0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7f0e3d6f6f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f0e3ca560c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000110
+RAX: ffffffffffffffda RBX: 00007f0e3d825050 RCX: 00007f0e3d6f6f69
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000040000000
+RBP: 00007f0e3d7434a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000006e R14: 00007f0e3d825050 R15: 00007ffc7c783bf8
+Modules linked in:
+---[ end trace 7a06e52d3fd3dd8e ]---
+RIP: 0010:percpu_ref_put+0x8c/0x1e0
+Code: 01 48 c7 c7 e0 2b 0d 8a be b1 02 00 00 48 c7 c2 20 2c 0d 8a e8 75 20 ea ff 49 be 00 00 00 00 00 fc ff df 48 89 d8 48 c1 e8 03 <42> 80 3c 30 00 74 08 48 89 df e8 95 ee 4f 00 48 8b 2b 48 89 ee 48
+RSP: 0018:ffffc90000007b08 EFLAGS: 00010206
+RAX: 0000000000000182 RBX: 0000000000000c10 RCX: ffff88801b94d580
+RDX: 0000000000000100 RSI: 0000000000000004 RDI: ffff8880b9c32488
+RBP: 0000000000000063 R08: dffffc0000000000 R09: ffffed1017386492
+R10: 0000000000000000 R11: dffffc0000000001 R12: ffff888026b09000
+R13: ffff888026b09458 R14: dffffc0000000000 R15: dffffc0000000000
+FS:  00007f0e3ca566c0(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000555557188938 CR3: 000000006050d000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess), 1 bytes skipped:
+   0:	48 c7 c7 e0 2b 0d 8a 	mov    $0xffffffff8a0d2be0,%rdi
+   7:	be b1 02 00 00       	mov    $0x2b1,%esi
+   c:	48 c7 c2 20 2c 0d 8a 	mov    $0xffffffff8a0d2c20,%rdx
+  13:	e8 75 20 ea ff       	call   0xffea208d
+  18:	49 be 00 00 00 00 00 	movabs $0xdffffc0000000000,%r14
+  1f:	fc ff df
+  22:	48 89 d8             	mov    %rbx,%rax
+  25:	48 c1 e8 03          	shr    $0x3,%rax
+* 29:	42 80 3c 30 00       	cmpb   $0x0,(%rax,%r14,1) <-- trapping instruction
+  2e:	74 08                	je     0x38
+  30:	48 89 df             	mov    %rbx,%rdi
+  33:	e8 95 ee 4f 00       	call   0x4feecd
+  38:	48 8b 2b             	mov    (%rbx),%rbp
+  3b:	48 89 ee             	mov    %rbp,%rsi
+  3e:	48                   	rex.W

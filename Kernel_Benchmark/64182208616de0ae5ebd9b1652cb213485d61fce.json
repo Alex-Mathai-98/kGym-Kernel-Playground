@@ -1,0 +1,46 @@
+{
+    "version": 1,
+    "title": "memory leak in nfc_genl_se_io",
+    "display-title": "memory leak in nfc_genl_se_io",
+    "id": "64182208616de0ae5ebd9b1652cb213485d61fce",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nfc: fix memory leak of se_io context in nfc_genl_se_io",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=25ff6f8a5a3b8dc48e8abda6f013e8cc4b14ffea",
+            "hash": "25ff6f8a5a3b8dc48e8abda6f013e8cc4b14ffea",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000bbf72c05f4e9ad5d@google.com/T/",
+        "https://lore.kernel.org/all/20230225105614.379382-1-pchelkin@ispras.ru/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in nfc_genl_se_io",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1273b13f480000",
+            "c-reproducer": "/text?tag=ReproC&x=1223934f480000",
+            "kernel-config": "/text?tag=KernelConfig&x=74b547d21d6e842b",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=ceaa837f96adb69c0df0397937cd74991d5d821a",
+            "kernel-source-commit": "ceaa837f96adb69c0df0397937cd74991d5d821a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4d66ad72335dded5c9a6652adf7b767b2dbd1de4",
+            "syzkaller-commit": "4d66ad72335dded5c9a6652adf7b767b2dbd1de4",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14eff957480000"
+        }
+    ],
+    "subsystems": [
+        "net",
+        "nfc"
+    ],
+    "parent_of_fix_commit": "cf871006c01709211f2620a33de37257362a05e8",
+    "patch": "diff --git a/drivers/nfc/st-nci/se.c b/drivers/nfc/st-nci/se.c\nindex ec87dd21e054..b2f1ced8e6dd 100644\n--- a/drivers/nfc/st-nci/se.c\n+++ b/drivers/nfc/st-nci/se.c\n@@ -672,6 +672,12 @@ int st_nci_se_io(struct nci_dev *ndev, u32 se_idx,\n \t\t\t\t\tST_NCI_EVT_TRANSMIT_DATA, apdu,\n \t\t\t\t\tapdu_length);\n \tdefault:\n+\t\t/* Need to free cb_context here as at the moment we can't\n+\t\t * clearly indicate to the caller if the callback function\n+\t\t * would be called (and free it) or not. In both cases a\n+\t\t * negative value may be returned to the caller.\n+\t\t */\n+\t\tkfree(cb_context);\n \t\treturn -ENODEV;\n \t}\n }\ndiff --git a/drivers/nfc/st21nfca/se.c b/drivers/nfc/st21nfca/se.c\nindex df8d27cf2956..dae288bebcb5 100644\n--- a/drivers/nfc/st21nfca/se.c\n+++ b/drivers/nfc/st21nfca/se.c\n@@ -236,6 +236,12 @@ int st21nfca_hci_se_io(struct nfc_hci_dev *hdev, u32 se_idx,\n \t\t\t\t\tST21NFCA_EVT_TRANSMIT_DATA,\n \t\t\t\t\tapdu, apdu_length);\n \tdefault:\n+\t\t/* Need to free cb_context here as at the moment we can't\n+\t\t * clearly indicate to the caller if the callback function\n+\t\t * would be called (and free it) or not. In both cases a\n+\t\t * negative value may be returned to the caller.\n+\t\t */\n+\t\tkfree(cb_context);\n \t\treturn -ENODEV;\n \t}\n }\ndiff --git a/net/nfc/netlink.c b/net/nfc/netlink.c\nindex 1fc339084d89..348bf561bc9f 100644\n--- a/net/nfc/netlink.c\n+++ b/net/nfc/netlink.c\n@@ -1442,7 +1442,11 @@ static int nfc_se_io(struct nfc_dev *dev, u32 se_idx,\n \trc = dev->ops->se_io(dev, se_idx, apdu,\n \t\t\tapdu_length, cb, cb_context);\n \n+\tdevice_unlock(&dev->dev);\n+\treturn rc;\n+\n error:\n+\tkfree(cb_context);\n \tdevice_unlock(&dev->dev);\n \treturn rc;\n }\n",
+    "patch_modified_files": [
+        "drivers/nfc/st-nci/se.c",
+        "drivers/nfc/st21nfca/se.c",
+        "net/nfc/netlink.c"
+    ]
+}

@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "general protection fault in xt_rateest_put",
+    "display-title": "general protection fault in xt_rateest_put",
+    "id": "8dba39eccdf108d625bf6acb2bea1aa0c7e1fd61",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: arp_tables: init netns pointer in xt_tgdtor_param struct",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=212e7f56605ef9688d0846db60c6c6ec06544095",
+            "hash": "212e7f56605ef9688d0846db60c6c6ec06544095",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "netfilter: make xt_rateest hash table per net",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3427b2ab63faccafe774ea997fc2da7faf690c5a",
+        "hash": "3427b2ab63faccafe774ea997fc2da7faf690c5a",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000af1c5b059be111e5@google.com/T/",
+        "https://lore.kernel.org/all/20200111221953.17759-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20200116195044.326614-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20200122092750.976732974@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200122092755.678349497@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200122092803.587683021@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200122092833.339495161@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200124141817.28793-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200124142012.29752-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200124142119.30484-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200124142157.30931-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/lsq.1587683027.831233700@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13dbd58ee00000",
+            "c-reproducer": "/text?tag=ReproC&x=15eff9e1e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=18698c0c240ba616",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e69ec487b2c7c82ef99b4b15122f58a2a99289a3",
+            "kernel-source-commit": "e69ec487b2c7c82ef99b4b15122f58a2a99289a3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4de4e9f01d7139b72102ae0b8a1e810730467774",
+            "syzkaller-commit": "4de4e9f01d7139b72102ae0b8a1e810730467774",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15272d49e00000"
+        }
+    ],
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "c120959387efa51479056fd01dc90adfba7a590c",
+    "patch": "diff --git a/net/ipv4/netfilter/arp_tables.c b/net/ipv4/netfilter/arp_tables.c\nindex 069f72edb264..f1f78a742b36 100644\n--- a/net/ipv4/netfilter/arp_tables.c\n+++ b/net/ipv4/netfilter/arp_tables.c\n@@ -496,12 +496,13 @@ static inline int check_entry_size_and_hooks(struct arpt_entry *e,\n \treturn 0;\n }\n \n-static inline void cleanup_entry(struct arpt_entry *e)\n+static void cleanup_entry(struct arpt_entry *e, struct net *net)\n {\n \tstruct xt_tgdtor_param par;\n \tstruct xt_entry_target *t;\n \n \tt = arpt_get_target(e);\n+\tpar.net      = net;\n \tpar.target   = t->u.kernel.target;\n \tpar.targinfo = t->data;\n \tpar.family   = NFPROTO_ARP;\n@@ -584,7 +585,7 @@ static int translate_table(struct net *net,\n \t\txt_entry_foreach(iter, entry0, newinfo->size) {\n \t\t\tif (i-- == 0)\n \t\t\t\tbreak;\n-\t\t\tcleanup_entry(iter);\n+\t\t\tcleanup_entry(iter, net);\n \t\t}\n \t\treturn ret;\n \t}\n@@ -927,7 +928,7 @@ static int __do_replace(struct net *net, const char *name,\n \t/* Decrease module usage counts and free resource */\n \tloc_cpu_old_entry = oldinfo->entries;\n \txt_entry_foreach(iter, loc_cpu_old_entry, oldinfo->size)\n-\t\tcleanup_entry(iter);\n+\t\tcleanup_entry(iter, net);\n \n \txt_free_table_info(oldinfo);\n \tif (copy_to_user(counters_ptr, counters,\n@@ -990,7 +991,7 @@ static int do_replace(struct net *net, const void __user *user,\n \n  free_newinfo_untrans:\n \txt_entry_foreach(iter, loc_cpu_entry, newinfo->size)\n-\t\tcleanup_entry(iter);\n+\t\tcleanup_entry(iter, net);\n  free_newinfo:\n \txt_free_table_info(newinfo);\n \treturn ret;\n@@ -1287,7 +1288,7 @@ static int compat_do_replace(struct net *net, void __user *user,\n \n  free_newinfo_untrans:\n \txt_entry_foreach(iter, loc_cpu_entry, newinfo->size)\n-\t\tcleanup_entry(iter);\n+\t\tcleanup_entry(iter, net);\n  free_newinfo:\n \txt_free_table_info(newinfo);\n \treturn ret;\n@@ -1514,7 +1515,7 @@ static int do_arpt_get_ctl(struct sock *sk, int cmd, void __user *user, int *len\n \treturn ret;\n }\n \n-static void __arpt_unregister_table(struct xt_table *table)\n+static void __arpt_unregister_table(struct net *net, struct xt_table *table)\n {\n \tstruct xt_table_info *private;\n \tvoid *loc_cpu_entry;\n@@ -1526,7 +1527,7 @@ static void __arpt_unregister_table(struct xt_table *table)\n \t/* Decrease module usage counts and free resources */\n \tloc_cpu_entry = private->entries;\n \txt_entry_foreach(iter, loc_cpu_entry, private->size)\n-\t\tcleanup_entry(iter);\n+\t\tcleanup_entry(iter, net);\n \tif (private->number > private->initial_entries)\n \t\tmodule_put(table_owner);\n \txt_free_table_info(private);\n@@ -1566,7 +1567,7 @@ int arpt_register_table(struct net *net,\n \n \tret = nf_register_net_hooks(net, ops, hweight32(table->valid_hooks));\n \tif (ret != 0) {\n-\t\t__arpt_unregister_table(new_table);\n+\t\t__arpt_unregister_table(net, new_table);\n \t\t*res = NULL;\n \t}\n \n@@ -1581,7 +1582,7 @@ void arpt_unregister_table(struct net *net, struct xt_table *table,\n \t\t\t   const struct nf_hook_ops *ops)\n {\n \tnf_unregister_net_hooks(net, ops, hweight32(table->valid_hooks));\n-\t__arpt_unregister_table(table);\n+\t__arpt_unregister_table(net, table);\n }\n \n /* The built-in targets: standard (NULL) and error. */\n",
+    "patch_modified_files": [
+        "net/ipv4/netfilter/arp_tables.c"
+    ]
+}

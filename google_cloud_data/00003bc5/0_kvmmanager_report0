@@ -1,0 +1,106 @@
+ieee802154 phy0 wpan0: encryption failed: -22
+ieee802154 phy1 wpan1: encryption failed: -22
+INFO: task syz-executor.3:4271 blocked for more than 140 seconds.
+      Not tainted 4.20.0-rc1-syzkaller #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+syz-executor.3  D26264  4271   3694 0x00000006
+Call Trace:
+ __schedule+0x971/0x2070
+ schedule+0x105/0x440
+ schedule_timeout+0x26a/0x310
+ do_wait_for_common+0x4b4/0xa90
+ wait_for_completion+0x47/0x60
+ flush_workqueue+0x67d/0x1bd0
+ vim2m_stop_streaming+0x79/0x270
+ __vb2_queue_cancel+0x128/0xcb0
+ vb2_core_queue_release+0x26/0x80
+ vb2_queue_release+0x15/0x20
+ v4l2_m2m_ctx_release+0x1e/0x40
+ vim2m_release+0xe6/0x150
+ v4l2_release+0x224/0x3a0
+ __fput+0x37e/0xa30
+ ____fput+0x15/0x20
+ task_work_run+0x1fc/0x2b0
+ exit_to_usermode_loop+0x321/0x380
+ syscall_return_slowpath+0x695/0xbc0
+ do_syscall_64+0x1b5/0x270
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f705ece2e5a
+Code: Bad RIP value.
+RSP: 002b:00007ffdbec94e10 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
+RAX: 0000000000000000 RBX: 0000000000000004 RCX: 00007f705ece2e5a
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000003
+RBP: 00007f705ee13980 R08: 00007f705ec66000 R09: 0000000000000001
+R10: 0000000000000001 R11: 0000000000000293 R12: 000000000000d822
+R13: 000000000000d7f0 R14: 00007ffdbec94fd0 R15: 00007f705ec9acb0
+
+Showing all locks held in the system:
+2 locks held by kworker/0:0/5:
+ #0: 0000000014de2fea ((wq_completion)"events"){+.+.}, at: process_one_work+0xc25/0x1ce0
+ #1: 000000001098e080 ((work_completion)(&smc->tcp_listen_work)){+.+.}, at: process_one_work+0xc7b/0x1ce0
+1 lock held by khungtaskd/1009:
+ #0: 00000000268332bc (rcu_read_lock){....}, at: debug_show_all_locks+0xbc/0x427
+2 locks held by kworker/0:2/3211:
+ #0: 0000000014de2fea ((wq_completion)"events"){+.+.}, at: process_one_work+0xc25/0x1ce0
+ #1: 00000000d3da59df ((work_completion)(&smc->tcp_listen_work)){+.+.}, at: process_one_work+0xc7b/0x1ce0
+1 lock held by klogd/3419:
+ #0: 000000005081d146 (&rq->lock){-.-.}, at: __schedule+0x209/0x2070
+2 locks held by getty/3658:
+ #0: 00000000dc0a985d (&tty->ldisc_sem){++++}, at: ldsem_down_read+0x32/0x40
+ #1: 000000004fcdfc7a (&ldata->atomic_read_lock){+.+.}, at: n_tty_read+0x2fb/0x1f70
+2 locks held by kworker/0:3/3906:
+ #0: 0000000014de2fea ((wq_completion)"events"){+.+.}, at: process_one_work+0xc25/0x1ce0
+ #1: 00000000b9f80c79 ((work_completion)(&smc->tcp_listen_work)){+.+.}, at: process_one_work+0xc7b/0x1ce0
+2 locks held by kworker/1:3/3908:
+ #0: 0000000014de2fea ((wq_completion)"events"){+.+.}, at: process_one_work+0xc25/0x1ce0
+ #1: 00000000ad7cd448 ((work_completion)(&smc->tcp_listen_work)){+.+.}, at: process_one_work+0xc7b/0x1ce0
+2 locks held by kworker/0:4/3909:
+ #0: 0000000014de2fea ((wq_completion)"events"){+.+.}, at: process_one_work+0xc25/0x1ce0
+ #1: 0000000067d7bc29 ((work_completion)(&smc->tcp_listen_work)){+.+.}, at: process_one_work+0xc7b/0x1ce0
+2 locks held by kworker/1:4/4252:
+ #0: 0000000014de2fea ((wq_completion)"events"){+.+.}, at: process_one_work+0xc25/0x1ce0
+ #1: 00000000c846ee70 ((work_completion)(&smc->tcp_listen_work)){+.+.}, at: process_one_work+0xc7b/0x1ce0
+2 locks held by syz-executor.3/4271:
+ #0: 0000000069726ad7 (&mdev->req_queue_mutex){+.+.}, at: v4l2_release+0x1d7/0x3a0
+ #1: 00000000032b8f15 (&dev->dev_mutex){+.+.}, at: vim2m_release+0xbc/0x150
+2 locks held by kworker/0:7/4408:
+ #0: 0000000014de2fea ((wq_completion)"events"){+.+.}, at: process_one_work+0xc25/0x1ce0
+ #1: 00000000a789eaac ((work_completion)(&smc->tcp_listen_work)){+.+.}, at: process_one_work+0xc7b/0x1ce0
+2 locks held by kworker/1:6/4474:
+ #0: 0000000014de2fea ((wq_completion)"events"){+.+.}, at: process_one_work+0xc25/0x1ce0
+ #1: 000000004f5e1400 ((work_completion)(&smc->tcp_listen_work)){+.+.}, at: process_one_work+0xc7b/0x1ce0
+2 locks held by kworker/0:8/4673:
+ #0: 0000000014de2fea ((wq_completion)"events"){+.+.}, at: process_one_work+0xc25/0x1ce0
+ #1: 000000004a6b21a0 ((work_completion)(&smc->tcp_listen_work)){+.+.}, at: process_one_work+0xc7b/0x1ce0
+1 lock held by syz-executor.2/7919:
+ #0: 00000000032b8f15 (&dev->dev_mutex){+.+.}, at: vim2m_open+0x60/0x630
+1 lock held by syz-executor.4/7922:
+ #0: 00000000032b8f15 (&dev->dev_mutex){+.+.}, at: vim2m_open+0x60/0x630
+1 lock held by syz-executor.6/7924:
+ #0: 00000000032b8f15 (&dev->dev_mutex){+.+.}, at: vim2m_open+0x60/0x630
+1 lock held by syz-executor.7/7925:
+ #0: 00000000032b8f15 (&dev->dev_mutex){+.+.}, at: vim2m_open+0x60/0x630
+1 lock held by syz-executor.3/7929:
+ #0: 00000000032b8f15 (&dev->dev_mutex){+.+.}, at: vim2m_open+0x60/0x630
+1 lock held by syz-executor.1/7931:
+ #0: 00000000032b8f15 (&dev->dev_mutex){+.+.}, at: vim2m_open+0x60/0x630
+1 lock held by syz-executor.5/7935:
+ #0: 00000000032b8f15 (&dev->dev_mutex){+.+.}, at: vim2m_open+0x60/0x630
+1 lock held by syz-executor.0/7938:
+ #0: 00000000032b8f15 (&dev->dev_mutex){+.+.}, at: vim2m_open+0x60/0x630
+
+=============================================
+
+NMI backtrace for cpu 0
+CPU: 0 PID: 1009 Comm: khungtaskd Not tainted 4.20.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x1c2/0x2af
+ nmi_cpu_backtrace.cold+0x63/0xa4
+ nmi_trigger_cpumask_backtrace+0x1fc/0x23b
+ arch_trigger_cpumask_backtrace+0x14/0x20
+ watchdog+0xbca/0x1120
+ kthread+0x352/0x420
+ ret_from_fork+0x3a/0x50
+Sending NMI from CPU 0 to CPUs 1:
+NMI backtrace for cpu 1 skipped: idling at native_safe_halt+0x2/0x10

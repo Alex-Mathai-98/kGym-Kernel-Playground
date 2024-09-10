@@ -1,0 +1,31 @@
+BUG: memory leak
+unreferenced object 0xffff88811b105c00 (size 240):
+  comm "syz-executor.2", pid 3717, jiffies 4294941653 (age 10.840s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff83a75566>] __alloc_skb+0x1e6/0x260
+    [<ffffffff82a39de4>] virtual_ncidev_write+0x24/0xe0
+    [<ffffffff815f18c4>] do_iter_write+0x254/0x300
+    [<ffffffff815f1ab2>] vfs_writev+0xe2/0x250
+    [<ffffffff815f1ccc>] do_writev+0xac/0x230
+    [<ffffffff84832aa4>] do_syscall_64+0x34/0xb0
+    [<ffffffff84a00087>] entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+BUG: memory leak
+unreferenced object 0xffff88811b066c00 (size 512):
+  comm "syz-executor.2", pid 3717, jiffies 4294941653 (age 10.840s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff814ec3a5>] __kmalloc_node_track_caller+0x45/0x140
+    [<ffffffff83a75454>] __alloc_skb+0xd4/0x260
+    [<ffffffff82a39de4>] virtual_ncidev_write+0x24/0xe0
+    [<ffffffff815f18c4>] do_iter_write+0x254/0x300
+    [<ffffffff815f1ab2>] vfs_writev+0xe2/0x250
+    [<ffffffff815f1ccc>] do_writev+0xac/0x230
+    [<ffffffff84832aa4>] do_syscall_64+0x34/0xb0
+    [<ffffffff84a00087>] entry_SYSCALL_64_after_hwframe+0x63/0xcd
+

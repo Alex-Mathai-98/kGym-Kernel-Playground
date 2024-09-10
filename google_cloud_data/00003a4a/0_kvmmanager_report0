@@ -1,0 +1,70 @@
+RBP: 00007f7a8e9c7120 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000001
+R13: 000000000000000b R14: 00007f7a8dd9bf80 R15: 00007ffd681e3ac8
+ </TASK>
+==================================================================
+BUG: KASAN: null-ptr-deref in filemap_fault+0x121e/0x1810
+Read of size 4 at addr 0000000000000028 by task syz-executor.5/5148
+
+CPU: 0 PID: 5148 Comm: syz-executor.5 Not tainted 6.3.0-syzkaller-13447-gdd9e11d6477a #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1e7/0x2d0
+ print_report+0xe6/0x540
+ kasan_report+0x176/0x1b0
+ kasan_check_range+0x283/0x290
+ filemap_fault+0x121e/0x1810
+ __do_fault+0x136/0x500
+ handle_mm_fault+0x41a8/0x5860
+ exc_page_fault+0x7d2/0x910
+ asm_exc_page_fault+0x26/0x30
+RIP: 0010:fault_in_readable+0x165/0x2b0
+Code: bf ff 4c 8d b3 ff 0f 00 00 48 89 d8 4d 01 e6 49 81 e6 00 f0 ff ff 49 39 c6 72 6b e8 75 b9 bf ff 4c 39 f3 74 6e 4c 89 64 24 10 <44> 8a 23 43 0f b6 04 2f 84 c0 75 18 44 88 64 24 40 48 81 c3 00 10
+RSP: 0018:ffffc900048ef9c0 EFLAGS: 00050287
+RAX: ffffffff81cbadcb RBX: 0000000020000000 RCX: ffff888028ae8000
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
+RBP: ffffc900048efa78 R08: ffffffff81cbad68 R09: ffffffff8430cfa9
+R10: 0000000000000002 R11: ffff888028ae8000 R12: 0000000000001000
+R13: dffffc0000000000 R14: 0000000020001000 R15: 1ffff9200091df40
+ fault_in_iov_iter_readable+0xdf/0x280
+ generic_perform_write+0x20b/0x5e0
+ __generic_file_write_iter+0x17a/0x400
+ udf_file_write_iter+0x2fc/0x660
+ vfs_write+0x790/0xb20
+ ksys_write+0x1a0/0x2c0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f7a8dc7ca19
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f7a8e9c70c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007f7a8dd9bf80 RCX: 00007f7a8dc7ca19
+RDX: 000000000208e24b RSI: 0000000020000000 RDI: 0000000000000005
+RBP: 00007f7a8e9c7120 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000001
+R13: 000000000000000b R14: 00007f7a8dd9bf80 R15: 00007ffd681e3ac8
+ </TASK>
+==================================================================
+----------------
+Code disassembly (best guess):
+   0:	bf ff 4c 8d b3       	mov    $0xb38d4cff,%edi
+   5:	ff 0f                	decl   (%rdi)
+   7:	00 00                	add    %al,(%rax)
+   9:	48 89 d8             	mov    %rbx,%rax
+   c:	4d 01 e6             	add    %r12,%r14
+   f:	49 81 e6 00 f0 ff ff 	and    $0xfffffffffffff000,%r14
+  16:	49 39 c6             	cmp    %rax,%r14
+  19:	72 6b                	jb     0x86
+  1b:	e8 75 b9 bf ff       	call   0xffbfb995
+  20:	4c 39 f3             	cmp    %r14,%rbx
+  23:	74 6e                	je     0x93
+  25:	4c 89 64 24 10       	mov    %r12,0x10(%rsp)
+* 2a:	44 8a 23             	mov    (%rbx),%r12b <-- trapping instruction
+  2d:	43 0f b6 04 2f       	movzbl (%r15,%r13,1),%eax
+  32:	84 c0                	test   %al,%al
+  34:	75 18                	jne    0x4e
+  36:	44 88 64 24 40       	mov    %r12b,0x40(%rsp)
+  3b:	48                   	rex.W
+  3c:	81                   	.byte 0x81
+  3d:	c3                   	ret
+  3e:	00 10                	add    %dl,(%rax)

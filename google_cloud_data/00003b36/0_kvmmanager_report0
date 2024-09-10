@@ -1,0 +1,68 @@
+general protection fault, probably for non-canonical address 0xdffffc0000000003: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x0000000000000018-0x000000000000001f]
+CPU: 0 PID: 4322 Comm: syz-executor.3 Not tainted 5.7.0-rc6-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:selinux_socket_recvmsg+0x1e/0x40
+Code: b8 42 5f fe eb ea 66 0f 1f 44 00 00 53 48 89 fb e8 47 01 21 fe 48 8d 7b 18 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 <80> 3c 02 00 75 0f 48 8b 7b 18 be 02 00 00 00 5b e9 8d fc ff ff e8
+RSP: 0018:ffffc90001397a90 EFLAGS: 00010206
+RAX: dffffc0000000000 RBX: 0000000000000000 RCX: 0000000040000000
+RDX: 0000000000000003 RSI: ffffffff8351b729 RDI: 0000000000000018
+RBP: dffffc0000000000 R08: 0000000000000001 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: ffffc90001397d80 R14: 0000000000001000 R15: 0000000040000000
+FS:  00007f13289286c0(0000) GS:ffff8881f6200000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f1328907d58 CR3: 00000001d86a8005 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ security_socket_recvmsg+0x78/0xc0
+ sock_recvmsg+0x46/0x100
+ mptcp_recvmsg+0xb2f/0xf20
+ inet_recvmsg+0x121/0x5e0
+ __sys_recvfrom+0x23a/0x390
+ __x64_sys_recvfrom+0xdc/0x1b0
+ do_syscall_64+0xf1/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xb3
+RIP: 0033:0x7f13295a7f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f13289280c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002d
+RAX: ffffffffffffffda RBX: 00007f13296d5f80 RCX: 00007f13295a7f69
+RDX: 0000000000001000 RSI: 00000000200004c0 RDI: 0000000000000003
+RBP: 00007f13295f44a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000040000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f13296d5f80 R15: 00007ffe01ea4438
+Modules linked in:
+---[ end trace f05464a4d228ebd8 ]---
+RIP: 0010:selinux_socket_recvmsg+0x1e/0x40
+Code: b8 42 5f fe eb ea 66 0f 1f 44 00 00 53 48 89 fb e8 47 01 21 fe 48 8d 7b 18 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 <80> 3c 02 00 75 0f 48 8b 7b 18 be 02 00 00 00 5b e9 8d fc ff ff e8
+RSP: 0018:ffffc90001397a90 EFLAGS: 00010206
+RAX: dffffc0000000000 RBX: 0000000000000000 RCX: 0000000040000000
+RDX: 0000000000000003 RSI: ffffffff8351b729 RDI: 0000000000000018
+RBP: dffffc0000000000 R08: 0000000000000001 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: ffffc90001397d80 R14: 0000000000001000 R15: 0000000040000000
+FS:  00007f13289286c0(0000) GS:ffff8881f6200000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f1328907d58 CR3: 00000001d86a8005 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess), 4 bytes skipped:
+   0:	eb ea                	jmp    0xffffffec
+   2:	66 0f 1f 44 00 00    	nopw   0x0(%rax,%rax,1)
+   8:	53                   	push   %rbx
+   9:	48 89 fb             	mov    %rdi,%rbx
+   c:	e8 47 01 21 fe       	call   0xfe210158
+  11:	48 8d 7b 18          	lea    0x18(%rbx),%rdi
+  15:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  1c:	fc ff df
+  1f:	48 89 fa             	mov    %rdi,%rdx
+  22:	48 c1 ea 03          	shr    $0x3,%rdx
+* 26:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1) <-- trapping instruction
+  2a:	75 0f                	jne    0x3b
+  2c:	48 8b 7b 18          	mov    0x18(%rbx),%rdi
+  30:	be 02 00 00 00       	mov    $0x2,%esi
+  35:	5b                   	pop    %rbx
+  36:	e9 8d fc ff ff       	jmp    0xfffffcc8
+  3b:	e8                   	.byte 0xe8

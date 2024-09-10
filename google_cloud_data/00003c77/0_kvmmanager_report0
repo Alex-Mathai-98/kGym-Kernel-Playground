@@ -1,0 +1,63 @@
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+kasan: CONFIG_KASAN_INLINE enabled
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+kasan: GPF could be caused by NULL-ptr deref or user memory access
+general protection fault: 0000 [#1] SMP KASAN
+ieee80211 phy7: Selected rate control algorithm 'minstrel_ht'
+Modules linked in:
+CPU: 0 PID: 5312 Comm: syz-executor.2 Tainted: G        W         4.17.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:smc_getname+0xf8/0x180
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+RSP: 0018:ffff8801e1257d30 EFLAGS: 00010206
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+RAX: dffffc0000000000 RBX: 0000000000000000 RCX: ffffffff872c5386
+RDX: 0000000000000005 RSI: ffffffff872c53fb RDI: 0000000000000028
+RBP: ffff8801e1257d50 R08: 0000000000000000 R09: 0000000000000005
+R10: 0000000000000000 R11: ffff8801d63e0040 R12: 0000000000000000
+R13: ffff8801e1257db8 R14: ffff8801e1257d98 R15: ffffffff883de0a0
+FS:  00007f18f85056c0(0000) GS:ffff8801f6600000(0000) knlGS:0000000000000000
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f68d9a23008 CR3: 00000001d45a2004 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ __sys_getsockname+0x15f/0x340
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+ __x64_sys_getsockname+0x72/0xb0
+ do_syscall_64+0x16e/0x230
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f18f8983f69
+RSP: 002b:00007f18f85050c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000033
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+RAX: ffffffffffffffda RBX: 00007f18f8ab1f80 RCX: 00007f18f8983f69
+RDX: 0000000020000080 RSI: 0000000020000000 RDI: 0000000000000003
+RBP: 00007f18f89d04a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f18f8ab1f80 R15: 00007ffcf3dc5a88
+Code: 48 89 fa 48 c1 ea 03 80 3c 02 00 75 7f 4d 8b a4 24 50 04 00 00 48 b8 00 00 00 00 00 fc ff df 49 8d 7c 24 28 48 89 fa 48 c1 ea 03 <80> 3c 02 00 75 65 48 b8 00 00 00 00 00 fc ff df 4d 8b 74 24 28 
+RIP: smc_getname+0xf8/0x180 RSP: ffff8801e1257d30
+---[ end trace 9225d09c01a7cf53 ]---
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+----------------
+Code disassembly (best guess):
+   0:	48 89 fa             	mov    %rdi,%rdx
+   3:	48 c1 ea 03          	shr    $0x3,%rdx
+   7:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1)
+   b:	75 7f                	jne    0x8c
+   d:	4d 8b a4 24 50 04 00 	mov    0x450(%r12),%r12
+  14:	00
+  15:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  1c:	fc ff df
+  1f:	49 8d 7c 24 28       	lea    0x28(%r12),%rdi
+  24:	48 89 fa             	mov    %rdi,%rdx
+  27:	48 c1 ea 03          	shr    $0x3,%rdx
+* 2b:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1) <-- trapping instruction
+  2f:	75 65                	jne    0x96
+  31:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  38:	fc ff df
+  3b:	4d 8b 74 24 28       	mov    0x28(%r12),%r14

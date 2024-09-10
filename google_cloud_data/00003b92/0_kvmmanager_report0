@@ -1,0 +1,71 @@
+Bluetooth: hci0: unknown advertising packet type: 0x90
+Bluetooth: hci0: Dropping invalid advertising data
+==================================================================
+BUG: KASAN: slab-out-of-bounds in hci_le_meta_evt+0x3d31/0x45b0
+Read of size 1 at addr ffff88801abe3603 by task kworker/u5:2/3514
+
+CPU: 1 PID: 3514 Comm: kworker/u5:2 Not tainted 5.15.0-rc3-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: hci0 hci_rx_work
+Call Trace:
+ dump_stack_lvl+0xfc/0x174
+ print_address_description.constprop.0.cold+0x60/0x329
+ kasan_report.cold+0x83/0xdf
+ hci_le_meta_evt+0x3d31/0x45b0
+ hci_event_packet+0x602/0x79d0
+ hci_rx_work+0x227/0xd50
+ process_one_work+0xa11/0x1680
+ worker_thread+0x67d/0x1220
+ kthread+0x3d0/0x4c0
+ ret_from_fork+0x1f/0x30
+
+Allocated by task 3651:
+ kasan_save_stack+0x19/0x40
+ __kasan_kmalloc+0xa0/0xd0
+ __alloc_skb+0xdc/0x340
+ vhci_write+0xc3/0x450
+ new_sync_write+0x473/0x640
+ vfs_write+0x7d9/0xb00
+ ksys_write+0x131/0x250
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+The buggy address belongs to the object at ffff88801abe3400
+ which belongs to the cache kmalloc-512 of size 512
+The buggy address is located 3 bytes to the right of
+ 512-byte region [ffff88801abe3400, ffff88801abe3600)
+The buggy address belongs to the page:
+page:ffffea00006af8c0 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x1abe3
+flags: 0xfff00000000200(slab|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000000200 ffffea00006d5248 ffffea00006d0248 ffff888010c40600
+raw: 0000000000000000 ffff88801abe3000 0000000100000004 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x2420c0(__GFP_IO|__GFP_FS|__GFP_NOWARN|__GFP_COMP|__GFP_THISNODE), pid 644, ts 9391635176, free_ts 9390355484
+ get_page_from_freelist+0x1670/0x36d0
+ __alloc_pages+0x1b1/0x500
+ cache_grow_begin+0x73/0x460
+ cache_alloc_refill+0x28a/0x390
+ kmem_cache_alloc_trace+0x37c/0x480
+ alloc_bprm+0x51/0x890
+ kernel_execve+0x55/0x440
+ call_usermodehelper_exec_async+0x2f0/0x570
+ ret_from_fork+0x1f/0x30
+page last free stack trace:
+ free_pcp_prepare+0x2b7/0x780
+ free_unref_page+0x19/0x670
+ __vunmap+0x7e3/0xbf0
+ free_work+0x57/0x70
+ process_one_work+0xa11/0x1680
+ worker_thread+0x67d/0x1220
+ kthread+0x3d0/0x4c0
+ ret_from_fork+0x1f/0x30
+
+Memory state around the buggy address:
+ ffff88801abe3500: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff88801abe3580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff88801abe3600: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+                   ^
+ ffff88801abe3680: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88801abe3700: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================

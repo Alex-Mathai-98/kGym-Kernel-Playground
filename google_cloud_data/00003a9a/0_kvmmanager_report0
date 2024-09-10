@@ -1,0 +1,71 @@
+microsoft 0003:045E:07DA.0001: hid_field_extract() called with n (128) > 32! (kworker/0:11)
+================================================================================
+UBSAN: shift-out-of-bounds in drivers/hid/hid-core.c:1323:20
+shift exponent 127 is too large for 32-bit type 'int'
+CPU: 0 PID: 3657 Comm: kworker/0:11 Not tainted 6.0.0-syzkaller-06979-g3405a4beaaa8 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: events linkwatch_event
+Call Trace:
+ <IRQ>
+ dump_stack_lvl+0x1e3/0x2cb
+ __ubsan_handle_shift_out_of_bounds+0x3bf/0x430
+ hid_report_raw_event+0xcf0/0x17d0
+ hid_input_report+0x420/0x4e0
+ hid_irq_in+0x45c/0x690
+ __usb_hcd_giveback_urb+0x371/0x530
+ dummy_timer+0x8ad/0x3200
+ call_timer_fn+0x1bf/0x6d0
+ __run_timers+0x67c/0x890
+ run_timer_softirq+0x63/0xf0
+ __do_softirq+0x2c2/0x9cb
+ __irq_exit_rcu+0x155/0x240
+ irq_exit_rcu+0x5/0x20
+ sysvec_apic_timer_interrupt+0x91/0xb0
+ </IRQ>
+ <TASK>
+ asm_sysvec_apic_timer_interrupt+0x16/0x20
+RIP: 0010:console_emit_next_record+0xb70/0xda0
+Code: 00 48 8b 5c 24 68 44 0f b6 74 24 1f 4d 85 e4 75 07 e8 14 9b 1b 00 eb 06 e8 0d 9b 1b 00 fb 48 c7 84 24 a0 00 00 00 0e 36 e0 45 <41> c7 44 1d 00 00 00 00 00 49 c7 44 1d 0a 00 00 00 00 49 c7 44 1d
+RSP: 0018:ffffc90004847520 EFLAGS: 00000293
+RAX: ffffffff816a3ac3 RBX: 1ffff92000908eb8 RCX: ffff88807b169d80
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
+RBP: ffffc900048477d0 R08: ffffffff816a3a99 R09: fffffbfff1b8abe6
+R10: 0000000000000000 R11: dffffc0000000001 R12: 0000000000000200
+R13: dffffc0000000000 R14: 0000000000000001 R15: ffffc90004847840
+ console_unlock+0x25b/0x680
+ vprintk_emit+0xd1/0x1f0
+ _printk+0xd1/0x111
+ addrconf_notify+0xa9b/0xfe0
+ raw_notifier_call_chain+0xd0/0x170
+ netdev_state_change+0x1a3/0x250
+ linkwatch_do_dev+0x10c/0x160
+ __linkwatch_run_queue+0x448/0x6b0
+ linkwatch_event+0x48/0x50
+ process_one_work+0x8d9/0x1230
+ worker_thread+0xa5f/0x1210
+ kthread+0x268/0x300
+ ret_from_fork+0x1f/0x30
+ </TASK>
+================================================================================
+----------------
+Code disassembly (best guess):
+   0:	00 48 8b             	add    %cl,-0x75(%rax)
+   3:	5c                   	pop    %rsp
+   4:	24 68                	and    $0x68,%al
+   6:	44 0f b6 74 24 1f    	movzbl 0x1f(%rsp),%r14d
+   c:	4d 85 e4             	test   %r12,%r12
+   f:	75 07                	jne    0x18
+  11:	e8 14 9b 1b 00       	call   0x1b9b2a
+  16:	eb 06                	jmp    0x1e
+  18:	e8 0d 9b 1b 00       	call   0x1b9b2a
+  1d:	fb                   	sti
+  1e:	48 c7 84 24 a0 00 00 	movq   $0x45e0360e,0xa0(%rsp)
+  25:	00 0e 36 e0 45
+* 2a:	41 c7 44 1d 00 00 00 	movl   $0x0,0x0(%r13,%rbx,1) <-- trapping instruction
+  31:	00 00
+  33:	49 c7 44 1d 0a 00 00 	movq   $0x0,0xa(%r13,%rbx,1)
+  3a:	00 00
+  3c:	49                   	rex.WB
+  3d:	c7                   	.byte 0xc7
+  3e:	44                   	rex.R
+  3f:	1d                   	.byte 0x1d

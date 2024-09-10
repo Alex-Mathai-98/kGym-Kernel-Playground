@@ -1,0 +1,72 @@
+BUG: memory leak
+unreferenced object 0xffff88811781bd80 (size 32):
+  comm "softirq", pid 0, jiffies 4294941502 (age 31.900s)
+  hex dump (first 32 bytes):
+    64 f3 c6 6a d1 88 07 04 00 00 00 00 00 00 00 00  d..j............
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff814c2c00>] kmemdup+0x20/0x50
+    [<ffffffff83578276>] hidraw_report_event+0xa6/0x150
+    [<ffffffff8356a069>] hid_report_raw_event+0x249/0x6f0
+    [<ffffffff8356a709>] hid_input_report+0x1f9/0x290
+    [<ffffffff835ed11e>] hid_irq_in+0x1fe/0x240
+    [<ffffffff82d4771e>] __usb_hcd_giveback_urb+0x13e/0x220
+    [<ffffffff82d479a8>] usb_hcd_giveback_urb+0x1a8/0x1c0
+    [<ffffffff82ef969a>] dummy_timer+0x90a/0x1560
+    [<ffffffff81310549>] call_timer_fn+0x39/0x200
+    [<ffffffff81310a2d>] __run_timers.part.0+0x31d/0x420
+    [<ffffffff81310b74>] run_timer_softirq+0x44/0x90
+    [<ffffffff848000ee>] __do_softirq+0xee/0x2fe
+    [<ffffffff812575bc>] irq_exit_rcu+0xac/0x110
+    [<ffffffff84585cce>] sysvec_apic_timer_interrupt+0x9e/0xc0
+    [<ffffffff84600cc6>] asm_sysvec_apic_timer_interrupt+0x16/0x20
+    [<ffffffff8459a822>] acpi_idle_do_entry+0xb2/0xd0
+
+BUG: memory leak
+unreferenced object 0xffff88811781bd00 (size 32):
+  comm "softirq", pid 0, jiffies 4294941504 (age 31.880s)
+  hex dump (first 32 bytes):
+    27 1a e8 41 4f c2 fd 8c 00 00 00 00 00 00 00 00  '..AO...........
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff814c2c00>] kmemdup+0x20/0x50
+    [<ffffffff83578276>] hidraw_report_event+0xa6/0x150
+    [<ffffffff8356a069>] hid_report_raw_event+0x249/0x6f0
+    [<ffffffff8356a709>] hid_input_report+0x1f9/0x290
+    [<ffffffff835ed11e>] hid_irq_in+0x1fe/0x240
+    [<ffffffff82d4771e>] __usb_hcd_giveback_urb+0x13e/0x220
+    [<ffffffff82d479a8>] usb_hcd_giveback_urb+0x1a8/0x1c0
+    [<ffffffff82ef969a>] dummy_timer+0x90a/0x1560
+    [<ffffffff81310549>] call_timer_fn+0x39/0x200
+    [<ffffffff81310a2d>] __run_timers.part.0+0x31d/0x420
+    [<ffffffff81310b74>] run_timer_softirq+0x44/0x90
+    [<ffffffff848000ee>] __do_softirq+0xee/0x2fe
+    [<ffffffff812572a1>] run_ksoftirqd+0x21/0x30
+    [<ffffffff81292357>] smpboot_thread_fn+0x267/0x360
+    [<ffffffff8128914f>] kthread+0x11f/0x160
+    [<ffffffff810021df>] ret_from_fork+0x1f/0x30
+
+BUG: memory leak
+unreferenced object 0xffff88811750e080 (size 32):
+  comm "softirq", pid 0, jiffies 4294941506 (age 31.860s)
+  hex dump (first 32 bytes):
+    5e 2d ce 49 18 07 8e f1 00 00 00 00 00 00 00 00  ^-.I............
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff814c2c00>] kmemdup+0x20/0x50
+    [<ffffffff83578276>] hidraw_report_event+0xa6/0x150
+    [<ffffffff8356a069>] hid_report_raw_event+0x249/0x6f0
+    [<ffffffff8356a709>] hid_input_report+0x1f9/0x290
+    [<ffffffff835ed11e>] hid_irq_in+0x1fe/0x240
+    [<ffffffff82d4771e>] __usb_hcd_giveback_urb+0x13e/0x220
+    [<ffffffff82d479a8>] usb_hcd_giveback_urb+0x1a8/0x1c0
+    [<ffffffff82ef969a>] dummy_timer+0x90a/0x1560
+    [<ffffffff81310549>] call_timer_fn+0x39/0x200
+    [<ffffffff81310a2d>] __run_timers.part.0+0x31d/0x420
+    [<ffffffff81310b74>] run_timer_softirq+0x44/0x90
+    [<ffffffff848000ee>] __do_softirq+0xee/0x2fe
+    [<ffffffff812572a1>] run_ksoftirqd+0x21/0x30
+    [<ffffffff81292357>] smpboot_thread_fn+0x267/0x360
+    [<ffffffff8128914f>] kthread+0x11f/0x160
+    [<ffffffff810021df>] ret_from_fork+0x1f/0x30
+

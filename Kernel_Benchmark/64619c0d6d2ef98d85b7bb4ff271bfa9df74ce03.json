@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "kernel BUG in ext4_mb_use_inode_pa",
+    "display-title": "kernel BUG in ext4_mb_use_inode_pa",
+    "id": "64619c0d6d2ef98d85b7bb4ff271bfa9df74ce03",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: avoid crash when inline data creation follows DIO write",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4bb26f2885ac6930984ee451b952c5a6042f2c0e",
+            "hash": "4bb26f2885ac6930984ee451b952c5a6042f2c0e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000082ed3805ea318a4a@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "kernel BUG in ext4_mb_use_inode_pa",
+            "syz-reproducer": "/text?tag=ReproSyz&x=119bc15c880000",
+            "c-reproducer": "/text?tag=ReproC&x=13d97bc0880000",
+            "kernel-config": "/text?tag=KernelConfig&x=48b99eaecc2b324f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4fe89d07dcc2804c8b562f6c7896a45643d34b2f",
+            "kernel-source-commit": "4fe89d07dcc2804c8b562f6c7896a45643d34b2f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/feb5635181eb12a6e3516172a3f5af06a3bc93e1",
+            "syzkaller-commit": "feb5635181eb12a6e3516172a3f5af06a3bc93e1",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14b025c0880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ext4_dio_write_iter",
+            "fs/ext4/file.c"
+        ]
+    ],
+    "patch_commit_date": "2022-07-27T15:57:53+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "d412df530f77d0f61c41b83f925997452fc3944c",
+    "patch": "diff --git a/fs/ext4/file.c b/fs/ext4/file.c\nindex 109d07629f81..847a2f806b8f 100644\n--- a/fs/ext4/file.c\n+++ b/fs/ext4/file.c\n@@ -528,6 +528,12 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)\n \t\tret = -EAGAIN;\n \t\tgoto out;\n \t}\n+\t/*\n+\t * Make sure inline data cannot be created anymore since we are going\n+\t * to allocate blocks for DIO. We know the inode does not have any\n+\t * inline data now because ext4_dio_supported() checked for that.\n+\t */\n+\text4_clear_inode_state(inode, EXT4_STATE_MAY_INLINE_DATA);\n \n \toffset = iocb->ki_pos;\n \tcount = ret;\n",
+    "patch_modified_files": [
+        "fs/ext4/file.c"
+    ]
+}

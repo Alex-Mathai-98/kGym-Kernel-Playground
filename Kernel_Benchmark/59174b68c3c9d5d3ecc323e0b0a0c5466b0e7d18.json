@@ -1,0 +1,45 @@
+{
+    "version": 1,
+    "title": "INFO: task hung in nilfs_segctor_thread",
+    "display-title": "INFO: task hung in nilfs_segctor_thread",
+    "id": "59174b68c3c9d5d3ecc323e0b0a0c5466b0e7d18",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: fix underflow in second superblock position calculations",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=99b9402a36f0799f25feee4465bfa4b8dfa74b4d",
+            "hash": "99b9402a36f0799f25feee4465bfa4b8dfa74b4d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000037441f05ed0f8f9f@google.com/T/",
+        "https://lore.kernel.org/all/20230214224043.24141-1-konishi.ryusuke@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "INFO: task hung in nilfs_segctor_thread",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14ba7207480000",
+            "c-reproducer": "/text?tag=ReproC&x=15fd30d0c80000",
+            "kernel-config": "/text?tag=KernelConfig&x=42ba4da8e1e6af9f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f6feea56f66d34259c4222fa02e8171c4f2673d1",
+            "kernel-source-commit": "f6feea56f66d34259c4222fa02e8171c4f2673d1",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/93ae7e0a1ca84fd2df902b7c8d94cdedb671bed6",
+            "syzkaller-commit": "93ae7e0a1ca84fd2df902b7c8d94cdedb671bed6",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10bff957480000"
+        }
+    ],
+    "subsystems": [
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "ec4288fe63966b26d53907212ecd05dfa81dd2cc",
+    "patch": "diff --git a/fs/nilfs2/ioctl.c b/fs/nilfs2/ioctl.c\nindex 87e1004b606d..b4041d0566a9 100644\n--- a/fs/nilfs2/ioctl.c\n+++ b/fs/nilfs2/ioctl.c\n@@ -1114,7 +1114,14 @@ static int nilfs_ioctl_set_alloc_range(struct inode *inode, void __user *argp)\n \n \tminseg = range[0] + segbytes - 1;\n \tdo_div(minseg, segbytes);\n+\n+\tif (range[1] < 4096)\n+\t\tgoto out;\n+\n \tmaxseg = NILFS_SB2_OFFSET_BYTES(range[1]);\n+\tif (maxseg < segbytes)\n+\t\tgoto out;\n+\n \tdo_div(maxseg, segbytes);\n \tmaxseg--;\n \ndiff --git a/fs/nilfs2/super.c b/fs/nilfs2/super.c\nindex 6edb6e0dd61f..1422b8ba24ed 100644\n--- a/fs/nilfs2/super.c\n+++ b/fs/nilfs2/super.c\n@@ -408,6 +408,15 @@ int nilfs_resize_fs(struct super_block *sb, __u64 newsize)\n \tif (newsize > devsize)\n \t\tgoto out;\n \n+\t/*\n+\t * Prevent underflow in second superblock position calculation.\n+\t * The exact minimum size check is done in nilfs_sufile_resize().\n+\t */\n+\tif (newsize < 4096) {\n+\t\tret = -ENOSPC;\n+\t\tgoto out;\n+\t}\n+\n \t/*\n \t * Write lock is required to protect some functions depending\n \t * on the number of segments, the number of reserved segments,\ndiff --git a/fs/nilfs2/the_nilfs.c b/fs/nilfs2/the_nilfs.c\nindex 2064e6473d30..3a4c9c150cbf 100644\n--- a/fs/nilfs2/the_nilfs.c\n+++ b/fs/nilfs2/the_nilfs.c\n@@ -544,9 +544,15 @@ static int nilfs_load_super_block(struct the_nilfs *nilfs,\n {\n \tstruct nilfs_super_block **sbp = nilfs->ns_sbp;\n \tstruct buffer_head **sbh = nilfs->ns_sbh;\n-\tu64 sb2off = NILFS_SB2_OFFSET_BYTES(bdev_nr_bytes(nilfs->ns_bdev));\n+\tu64 sb2off, devsize = bdev_nr_bytes(nilfs->ns_bdev);\n \tint valid[2], swp = 0;\n \n+\tif (devsize < NILFS_SEG_MIN_BLOCKS * NILFS_MIN_BLOCK_SIZE + 4096) {\n+\t\tnilfs_err(sb, \"device size too small\");\n+\t\treturn -EINVAL;\n+\t}\n+\tsb2off = NILFS_SB2_OFFSET_BYTES(devsize);\n+\n \tsbp[0] = nilfs_read_super_block(sb, NILFS_SB_OFFSET_BYTES, blocksize,\n \t\t\t\t\t&sbh[0]);\n \tsbp[1] = nilfs_read_super_block(sb, sb2off, blocksize, &sbh[1]);\n",
+    "patch_modified_files": [
+        "fs/nilfs2/ioctl.c",
+        "fs/nilfs2/super.c",
+        "fs/nilfs2/the_nilfs.c"
+    ]
+}

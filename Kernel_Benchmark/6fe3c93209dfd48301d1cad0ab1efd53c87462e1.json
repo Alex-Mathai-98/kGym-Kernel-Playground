@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "general protection fault in sys_finit_module",
+    "display-title": "general protection fault in sys_finit_module",
+    "id": "6fe3c93209dfd48301d1cad0ab1efd53c87462e1",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "module: fix init_module_from_file() error handling",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f1962207150c8b602e980616f04b37ea4e64bb9f",
+            "hash": "f1962207150c8b602e980616f04b37ea4e64bb9f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000094ac8b05ffae2bf2@google.com/T/",
+        "https://lore.kernel.org/all/000000000000f03d270600d34c07@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: vmalloc-out-of-bounds Read in sys_finit_module",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17d6670ca80000",
+            "c-reproducer": "/text?tag=ReproC&x=103be50b280000",
+            "kernel-config": "/text?tag=KernelConfig&x=71a52faf60231bc7",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=995b406c7e972fab181a4bb57f3b95e59b8e5bf3",
+            "kernel-source-commit": "995b406c7e972fab181a4bb57f3b95e59b8e5bf3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/bfc478367b83b3fda580f54964aa9f3651beeb3d",
+            "syzkaller-commit": "bfc478367b83b3fda580f54964aa9f3651beeb3d",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12d83bbf280000"
+        }
+    ],
+    "subsystems": [
+        "modules"
+    ],
+    "parent_of_fix_commit": "b5641a5d8b8b14643bfe3d017d64da90a5c55479",
+    "patch": "diff --git a/kernel/module/main.c b/kernel/module/main.c\nindex 834de86ebe35..59b1d067e528 100644\n--- a/kernel/module/main.c\n+++ b/kernel/module/main.c\n@@ -3092,7 +3092,7 @@ static bool idempotent(struct idempotent *u, const void *cookie)\n  * remove everybody - which includes ourselves - fill in the return\n  * value, and then complete the operation.\n  */\n-static void idempotent_complete(struct idempotent *u, int ret)\n+static int idempotent_complete(struct idempotent *u, int ret)\n {\n \tconst void *cookie = u->cookie;\n \tint hash = hash_ptr(cookie, IDEM_HASH_BITS);\n@@ -3109,27 +3109,18 @@ static void idempotent_complete(struct idempotent *u, int ret)\n \t\tcomplete(&pos->complete);\n \t}\n \tspin_unlock(&idem_lock);\n+\treturn ret;\n }\n \n static int init_module_from_file(struct file *f, const char __user * uargs, int flags)\n {\n-\tstruct idempotent idem;\n \tstruct load_info info = { };\n \tvoid *buf = NULL;\n-\tint len, ret;\n-\n-\tif (!f || !(f->f_mode & FMODE_READ))\n-\t\treturn -EBADF;\n-\n-\tif (idempotent(&idem, file_inode(f))) {\n-\t\twait_for_completion(&idem.complete);\n-\t\treturn idem.ret;\n-\t}\n+\tint len;\n \n \tlen = kernel_read_file(f, 0, &buf, INT_MAX, NULL, READING_MODULE);\n \tif (len < 0) {\n \t\tmod_stat_inc(&failed_kreads);\n-\t\tmod_stat_add_long(len, &invalid_kread_bytes);\n \t\treturn len;\n \t}\n \n@@ -3146,9 +3137,25 @@ static int init_module_from_file(struct file *f, const char __user * uargs, int\n \t\tinfo.len = len;\n \t}\n \n-\tret = load_module(&info, uargs, flags);\n-\tidempotent_complete(&idem, ret);\n-\treturn ret;\n+\treturn load_module(&info, uargs, flags);\n+}\n+\n+static int idempotent_init_module(struct file *f, const char __user * uargs, int flags)\n+{\n+\tstruct idempotent idem;\n+\n+\tif (!f || !(f->f_mode & FMODE_READ))\n+\t\treturn -EBADF;\n+\n+\t/* See if somebody else is doing the operation? */\n+\tif (idempotent(&idem, file_inode(f))) {\n+\t\twait_for_completion(&idem.complete);\n+\t\treturn idem.ret;\n+\t}\n+\n+\t/* Otherwise, we'll do it and complete others */\n+\treturn idempotent_complete(&idem,\n+\t\tinit_module_from_file(f, uargs, flags));\n }\n \n SYSCALL_DEFINE3(finit_module, int, fd, const char __user *, uargs, int, flags)\n@@ -3168,7 +3175,7 @@ SYSCALL_DEFINE3(finit_module, int, fd, const char __user *, uargs, int, flags)\n \t\treturn -EINVAL;\n \n \tf = fdget(fd);\n-\terr = init_module_from_file(f.file, uargs, flags);\n+\terr = idempotent_init_module(f.file, uargs, flags);\n \tfdput(f);\n \treturn err;\n }\n",
+    "patch_modified_files": [
+        "kernel/module/main.c"
+    ]
+}

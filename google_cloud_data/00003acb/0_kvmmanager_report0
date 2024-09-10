@@ -1,0 +1,87 @@
+======================================================
+WARNING: possible circular locking dependency detected
+6.2.0-rc5-syzkaller-00023-g7fc1f5c28ae4 #0 Not tainted
+------------------------------------------------------
+syz-executor.1/5108 is trying to acquire lock:
+ffff88814b1a4990 (jbd2_handle){++++}-{0:0}, at: jbd2_log_wait_commit+0x144/0x440
+
+but task is already holding lock:
+ffff88806c771900 (&type->i_mutex_dir_key#3/4){+.+.}-{3:3}, at: ext4_rename+0x1792/0x2c80
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #1 (&type->i_mutex_dir_key#3/4){+.+.}-{3:3}:
+       down_write_nested+0x97/0x230
+       ext4_rename+0x1792/0x2c80
+       ext4_rename2+0x1bc/0x270
+       vfs_rename+0xc02/0x1a80
+       do_renameat2+0xaa5/0xc90
+       __x64_sys_renameat2+0xeb/0x130
+       do_syscall_64+0x38/0xb0
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+-> #0 (jbd2_handle){++++}-{0:0}:
+       __lock_acquire+0x29c8/0x5640
+       lock_acquire+0x1e0/0x610
+       jbd2_log_wait_commit+0x179/0x440
+       jbd2_journal_stop+0x713/0xf60
+       __ext4_journal_stop+0xdd/0x200
+       ext4_rename+0x13f7/0x2c80
+       ext4_rename2+0x1bc/0x270
+       vfs_rename+0xc02/0x1a80
+       do_renameat2+0xaa5/0xc90
+       __x64_sys_renameat2+0xeb/0x130
+       do_syscall_64+0x38/0xb0
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+other info that might help us debug this:
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&type->i_mutex_dir_key#3/4);
+                               lock(jbd2_handle);
+                               lock(&type->i_mutex_dir_key#3/4);
+  lock(jbd2_handle);
+
+ *** DEADLOCK ***
+
+5 locks held by syz-executor.1/5108:
+ #0: ffff88814b1a0460 (sb_writers#5){.+.+}-{0:0}, at: do_renameat2+0x363/0xc90
+ #1: ffff88814b1a0748 (&type->s_vfs_rename_key#2){+.+.}-{3:3}, at: lock_rename+0x58/0x280
+ #2: ffff88806c768740 (&type->i_mutex_dir_key#3/1){+.+.}-{3:3}, at: lock_rename+0x136/0x280
+ #3: ffff88806c7708c0 (&type->i_mutex_dir_key#3/2){+.+.}-{3:3}, at: lock_rename+0x16a/0x280
+ #4: ffff88806c771900 (&type->i_mutex_dir_key#3/4){+.+.}-{3:3}, at: ext4_rename+0x1792/0x2c80
+
+stack backtrace:
+CPU: 0 PID: 5108 Comm: syz-executor.1 Not tainted 6.2.0-rc5-syzkaller-00023-g7fc1f5c28ae4 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x100/0x178
+ check_noncircular+0x268/0x310
+ __lock_acquire+0x29c8/0x5640
+ lock_acquire+0x1e0/0x610
+ jbd2_log_wait_commit+0x179/0x440
+ jbd2_journal_stop+0x713/0xf60
+ __ext4_journal_stop+0xdd/0x200
+ ext4_rename+0x13f7/0x2c80
+ ext4_rename2+0x1bc/0x270
+ vfs_rename+0xc02/0x1a80
+ do_renameat2+0xaa5/0xc90
+ __x64_sys_renameat2+0xeb/0x130
+ do_syscall_64+0x38/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f9f59e7c999
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f9f5aca40c8 EFLAGS: 00000246 ORIG_RAX: 000000000000013c
+RAX: ffffffffffffffda RBX: 00007f9f59f9bf80 RCX: 00007f9f59e7c999
+RDX: 0000000000000004 RSI: 0000000020000140 RDI: 0000000000000004
+RBP: 00007f9f59ed8ad0 R08: 0000000000000004 R09: 0000000000000000
+R10: 00000000200002c0 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f9f59f9bf80 R15: 00007ffcb24c50a8
+ </TASK>

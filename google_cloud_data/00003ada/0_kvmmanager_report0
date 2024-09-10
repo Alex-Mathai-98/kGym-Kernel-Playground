@@ -1,0 +1,68 @@
+general protection fault, probably for non-canonical address 0xdffffc0000000000: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+CPU: 0 PID: 6437 Comm: syz-executor.5 Not tainted 6.4.0-syzkaller-10174-gf66066bc5136 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:mt_validate+0x321c/0x4100
+Code: ee e8 28 cc 71 f7 40 84 ed 0f 84 59 fe ff ff e8 ea d0 71 f7 49 8d ae a0 00 00 00 e8 de d0 71 f7 48 01 dd 48 89 e8 48 c1 e8 03 <42> 80 3c 38 00 0f 85 d3 0c 00 00 48 8b 6d 00 4c 8b 6c 24 08 48 89
+RSP: 0018:ffffc9000c1ff8f8 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: ffff888076261dc0 RSI: ffffffff8a13d142 RDI: 0000000000000007
+RBP: 0000000000000000 R08: 0000000000000007 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: 0000000000000000 R14: ffff888077586600 R15: dffffc0000000000
+FS:  00007f519effe6c0(0000) GS:ffff8880b9800000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f5196bccd58 CR3: 00000000670ce000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ validate_mm+0x9a/0x460
+ do_vmi_align_munmap+0x1234/0x1730
+ do_vmi_munmap+0x20e/0x450
+ __vm_munmap+0x144/0x390
+ __x64_sys_munmap+0x62/0x80
+ do_syscall_64+0x38/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f519fc7cc77
+Code: 00 00 00 48 c7 c2 b0 ff ff ff f7 d8 64 89 02 48 c7 c0 ff ff ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 66 90 b8 0b 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f519effde98 EFLAGS: 00000246 ORIG_RAX: 000000000000000b
+RAX: ffffffffffffffda RBX: 0000000000010000 RCX: 00007f519fc7cc77
+RDX: 0000000000000000 RSI: 0000000000010000 RDI: 00007f5196bbd000
+RBP: 0000000000000000 R08: 0000000000000000 R09: 000000000000028b
+R10: 00000000000003d0 R11: 0000000000000246 R12: 0000000000000003
+R13: 00007f519effdf3c R14: 00007f519effdf40 R15: 00007f5196bbd000
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:mt_validate+0x321c/0x4100
+Code: ee e8 28 cc 71 f7 40 84 ed 0f 84 59 fe ff ff e8 ea d0 71 f7 49 8d ae a0 00 00 00 e8 de d0 71 f7 48 01 dd 48 89 e8 48 c1 e8 03 <42> 80 3c 38 00 0f 85 d3 0c 00 00 48 8b 6d 00 4c 8b 6c 24 08 48 89
+RSP: 0018:ffffc9000c1ff8f8 EFLAGS: 00010246
+
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: ffff888076261dc0 RSI: ffffffff8a13d142 RDI: 0000000000000007
+RBP: 0000000000000000 R08: 0000000000000007 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: 0000000000000000 R14: ffff888077586600 R15: dffffc0000000000
+FS:  00007f519effe6c0(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007ff2fd8d71e5 CR3: 00000000670ce000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+----------------
+Code disassembly (best guess):
+   0:	ee                   	out    %al,(%dx)
+   1:	e8 28 cc 71 f7       	call   0xf771cc2e
+   6:	40 84 ed             	test   %bpl,%bpl
+   9:	0f 84 59 fe ff ff    	je     0xfffffe68
+   f:	e8 ea d0 71 f7       	call   0xf771d0fe
+  14:	49 8d ae a0 00 00 00 	lea    0xa0(%r14),%rbp
+  1b:	e8 de d0 71 f7       	call   0xf771d0fe
+  20:	48 01 dd             	add    %rbx,%rbp
+  23:	48 89 e8             	mov    %rbp,%rax
+  26:	48 c1 e8 03          	shr    $0x3,%rax
+* 2a:	42 80 3c 38 00       	cmpb   $0x0,(%rax,%r15,1) <-- trapping instruction
+  2f:	0f 85 d3 0c 00 00    	jne    0xd08
+  35:	48 8b 6d 00          	mov    0x0(%rbp),%rbp
+  39:	4c 8b 6c 24 08       	mov    0x8(%rsp),%r13
+  3e:	48                   	rex.W
+  3f:	89                   	.byte 0x89

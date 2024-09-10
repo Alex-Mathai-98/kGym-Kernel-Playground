@@ -1,0 +1,63 @@
+{
+    "version": 1,
+    "title": "WARNING in __kernel_read",
+    "display-title": "WARNING in __kernel_read",
+    "id": "e6028c53b349b6a97a83fe01a2013ac52db59710",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/9p: validate fds in p9_fd_open",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a39c46067c845a8a2d7144836e9468b7f072343e",
+            "hash": "a39c46067c845a8a2d7144836e9468b7f072343e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "fs: implement kernel_read using __kernel_read",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6209dd9132e8ea5545cffc84483841e88ea8cc5b",
+        "hash": "6209dd9132e8ea5545cffc84483841e88ea8cc5b",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000003d32b05aa4d493c@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12e0222b100000",
+            "c-reproducer": "/text?tag=ReproC&x=162a004f100000",
+            "kernel-config": "/text?tag=KernelConfig&x=66ad203c2bb6d8b",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a581387e415bbb0085e7e67906c8f4a99746590e",
+            "kernel-source-commit": "a581387e415bbb0085e7e67906c8f4a99746590e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/18d18b591b354e07ba76be8f115b7119d49056a9",
+            "syzkaller-commit": "18d18b591b354e07ba76be8f115b7119d49056a9",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12661967100000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "p9_fd_open",
+            "net/9p/trans_fd.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "__kernel_read",
+            "fs/read_write.c"
+        ]
+    ],
+    "patch_commit_date": "2020-07-10T08:57:22+00:00",
+    "cause_commit_date": "2020-05-08T07:00:28+00:00",
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "11ba468877bb23f28956a35e896356252d63c983",
+    "patch": "diff --git a/net/9p/trans_fd.c b/net/9p/trans_fd.c\nindex 13cd683a658a..9c9196d30a59 100644\n--- a/net/9p/trans_fd.c\n+++ b/net/9p/trans_fd.c\n@@ -803,20 +803,28 @@ static int p9_fd_open(struct p9_client *client, int rfd, int wfd)\n \t\treturn -ENOMEM;\n \n \tts->rd = fget(rfd);\n+\tif (!ts->rd)\n+\t\tgoto out_free_ts;\n+\tif (!(ts->rd->f_mode & FMODE_READ))\n+\t\tgoto out_put_rd;\n \tts->wr = fget(wfd);\n-\tif (!ts->rd || !ts->wr) {\n-\t\tif (ts->rd)\n-\t\t\tfput(ts->rd);\n-\t\tif (ts->wr)\n-\t\t\tfput(ts->wr);\n-\t\tkfree(ts);\n-\t\treturn -EIO;\n-\t}\n+\tif (!ts->wr)\n+\t\tgoto out_put_rd;\n+\tif (!(ts->wr->f_mode & FMODE_WRITE))\n+\t\tgoto out_put_wr;\n \n \tclient->trans = ts;\n \tclient->status = Connected;\n \n \treturn 0;\n+\n+out_put_wr:\n+\tfput(ts->wr);\n+out_put_rd:\n+\tfput(ts->rd);\n+out_free_ts:\n+\tkfree(ts);\n+\treturn -EIO;\n }\n \n static int p9_socket_open(struct p9_client *client, struct socket *csocket)\n",
+    "patch_modified_files": [
+        "net/9p/trans_fd.c"
+    ]
+}

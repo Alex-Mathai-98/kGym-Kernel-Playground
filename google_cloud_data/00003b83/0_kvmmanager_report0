@@ -1,0 +1,104 @@
+==================================================================
+BUG: KASAN: double-free or invalid-free in packet_set_ring+0xfd2/0x1af0
+
+CPU: 1 PID: 3705 Comm: syz-executor.4 Not tainted 5.16.0-rc4-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xfc/0x174
+ print_address_description.constprop.0.cold+0x8d/0x2e3
+ kasan_report_invalid_free+0x50/0x80
+ __kasan_slab_free+0xee/0x100
+ kfree+0x10a/0x2c0
+ packet_set_ring+0xfd2/0x1af0
+ packet_setsockopt+0x17e2/0x3b40
+ __sys_setsockopt+0x2c7/0x5f0
+ __x64_sys_setsockopt+0xb9/0x150
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7f16e9a25f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f16e8d430c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000036
+RAX: ffffffffffffffda RBX: 00007f16e9b541f0 RCX: 00007f16e9a25f69
+RDX: 0000000000000005 RSI: 0000000000000107 RDI: 0000000000000003
+RBP: 00007f16e9a724a4 R08: 000000000000001c R09: 0000000000000000
+R10: 00000000200000c0 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000006e R14: 00007f16e9b541f0 R15: 00007ffd4da901b8
+ </TASK>
+
+Allocated by task 3702:
+ kasan_save_stack+0x1c/0x40
+ __kasan_kmalloc+0xa5/0xd0
+ __kmalloc+0x226/0x4d0
+ packet_set_ring+0xa92/0x1af0
+ packet_setsockopt+0x17e2/0x3b40
+ __sys_setsockopt+0x2c7/0x5f0
+ __x64_sys_setsockopt+0xb9/0x150
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+Freed by task 3703:
+ kasan_save_stack+0x1c/0x40
+ kasan_set_track+0x21/0x30
+ kasan_set_free_info+0x20/0x30
+ __kasan_slab_free+0xd2/0x100
+ kfree+0x10a/0x2c0
+ packet_set_ring+0x6d4/0x1af0
+ packet_setsockopt+0x17e2/0x3b40
+ __sys_setsockopt+0x2c7/0x5f0
+ __x64_sys_setsockopt+0xb9/0x150
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+The buggy address belongs to the object at ffff88801e512b00
+ which belongs to the cache kmalloc-64 of size 64
+The buggy address is located 0 bytes inside of
+ 64-byte region [ffff88801e512b00, ffff88801e512b40)
+The buggy address belongs to the page:
+page:ffffea0000794480 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x1e512
+flags: 0xfff00000000200(slab|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000000200 ffffea00007b6688 ffffea00007c4888 ffff888010c40200
+raw: 0000000000000000 ffff88801e512000 0000000100000020 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x242040(__GFP_IO|__GFP_NOWARN|__GFP_COMP|__GFP_THISNODE), pid 2972, ts 22438460971, free_ts 22438374590
+ get_page_from_freelist+0x1642/0x3680
+ __alloc_pages+0x1b1/0x500
+ cache_grow_begin+0x73/0x470
+ cache_alloc_refill+0x28a/0x390
+ __kmalloc+0x3a5/0x4d0
+ tomoyo_encode2+0xfc/0x3d0
+ tomoyo_encode+0x25/0x40
+ tomoyo_realpath_from_path+0x1a4/0x760
+ tomoyo_check_open_permission+0x26a/0x370
+ tomoyo_file_open+0xa1/0xd0
+ security_file_open+0x66/0xe0
+ do_dentry_open+0x4dc/0x11f0
+ path_openat+0xd63/0x29b0
+ do_filp_open+0x1bf/0x420
+ do_sys_openat2+0x16b/0x4d0
+ __x64_sys_openat+0x171/0x210
+page last free stack trace:
+ free_pcp_prepare+0x359/0x810
+ free_unref_page+0x19/0x6a0
+ inode_doinit_with_dentry+0x7af/0x1300
+ selinux_d_instantiate+0x22/0x30
+ security_d_instantiate+0x50/0xe0
+ d_splice_alias+0x90/0xc20
+ kernfs_iop_lookup+0x22f/0x2c0
+ lookup_open.isra.0+0x710/0x1350
+ path_openat+0xab1/0x29b0
+ do_filp_open+0x1bf/0x420
+ do_sys_openat2+0x16b/0x4d0
+ __x64_sys_openat+0x171/0x210
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+Memory state around the buggy address:
+ ffff88801e512a00: 00 00 00 00 00 00 00 00 fc fc fc fc fc fc fc fc
+ ffff88801e512a80: 00 00 00 00 00 00 00 03 fc fc fc fc fc fc fc fc
+>ffff88801e512b00: fa fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+                   ^
+ ffff88801e512b80: 00 00 00 00 00 00 00 00 fc fc fc fc fc fc fc fc
+ ffff88801e512c00: 00 00 00 00 00 00 00 03 fc fc fc fc fc fc fc fc
+==================================================================

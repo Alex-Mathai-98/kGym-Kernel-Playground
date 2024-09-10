@@ -1,0 +1,129 @@
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+==================================================================
+BUG: KASAN: slab-out-of-bounds in batadv_interface_tx+0x16b7/0x1950
+Read of size 2 at addr ffff8881d5d47ccb by task syz-executor.0/4264
+
+CPU: 0 PID: 4264 Comm: syz-executor.0 Not tainted 4.20.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x1c2/0x2af
+ print_address_description.cold+0x4b/0x2a1
+ kasan_report.part.0.cold+0x192/0x282
+ __asan_report_load_n_noabort+0x3b/0x40
+ batadv_interface_tx+0x16b7/0x1950
+ dev_direct_xmit+0x48b/0x8c0
+ packet_direct_xmit+0xfe/0x170
+ packet_sendmsg+0x293c/0x7150
+ sock_sendmsg+0xd5/0x120
+ __sys_sendto+0x3a8/0x5e0
+ __x64_sys_sendto+0xe0/0x1a0
+ do_syscall_64+0x183/0x270
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7fce96309f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fce9568a0c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002c
+RAX: ffffffffffffffda RBX: 00007fce96437f80 RCX: 00007fce96309f69
+RDX: 000000000000000e RSI: 0000000020000180 RDI: 0000000000000003
+RBP: 00007fce963564a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fce96437f80 R15: 00007ffcd35aa1a8
+
+Allocated by task 3786:
+ save_stack+0x43/0xc0
+ kasan_kmalloc+0xce/0xf0
+ kasan_slab_alloc+0xf/0x20
+ kmem_cache_alloc+0x12e/0x390
+ __alloc_file+0x93/0x450
+ alloc_empty_file+0x6f/0x170
+ path_openat+0x105/0x3c70
+ do_filp_open+0x272/0x4f0
+ do_sys_open+0x577/0x720
+ __x64_sys_openat+0x9c/0x100
+ do_syscall_64+0x183/0x270
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+Freed by task 3780:
+ save_stack+0x43/0xc0
+ __kasan_slab_free+0xfe/0x140
+ kasan_slab_free+0xe/0x10
+ kmem_cache_free+0xc6/0x240
+ file_free_rcu+0x91/0xd0
+ rcu_process_callbacks+0xa14/0x13b0
+ __do_softirq+0x315/0xb6d
+
+The buggy address belongs to the object at ffff8881d5d47ac0
+ which belongs to the cache filp of size 456
+The buggy address is located 67 bytes to the right of
+ 456-byte region [ffff8881d5d47ac0, ffff8881d5d47c88)
+The buggy address belongs to the page:
+page:ffffea00075751c0 count:1 mapcount:0 mapping:ffff8881f618b980 index:0x0
+flags: 0x2fffc0000000200(slab)
+raw: 02fffc0000000200 ffffea0007589c08 ffffea0007562188 ffff8881f618b980
+raw: 0000000000000000 ffff8881d5d470c0 0000000100000006 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff8881d5d47b80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8881d5d47c00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>ffff8881d5d47c80: fb fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+                                              ^
+ ffff8881d5d47d00: fc fc fc fc fc fc fc fc fb fb fb fb fb fb fb fb
+ ffff8881d5d47d80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+protocol 88fb is buggy, dev hsr_slave_0
+protocol 88fb is buggy, dev hsr_slave_1
+protocol 88fb is buggy, dev hsr_slave_0
+protocol 88fb is buggy, dev hsr_slave_1
+protocol 88fb is buggy, dev hsr_slave_0
+protocol 88fb is buggy, dev hsr_slave_1

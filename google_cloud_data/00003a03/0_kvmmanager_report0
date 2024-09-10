@@ -1,0 +1,22 @@
+================================================================================
+UBSAN: array-index-out-of-bounds in crypto/af_alg.c:166:2
+index 98 is out of range for type '__u8[64]' (aka 'unsigned char[64]')
+CPU: 1 PID: 5586 Comm: syz-executor.3 Not tainted 5.10.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x137/0x1b7
+ __ubsan_handle_out_of_bounds+0xe7/0x140
+ alg_bind+0x59f/0x5b0
+ __sys_bind+0x283/0x360
+ __x64_sys_bind+0x76/0x80
+ do_syscall_64+0x30/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7ff2e9e37f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ff2e91b80c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000031
+RAX: ffffffffffffffda RBX: 00007ff2e9f65f80 RCX: 00007ff2e9e37f69
+RDX: 000000000000007b RSI: 00000000200000c0 RDI: 0000000000000003
+RBP: 00007ff2e9e844a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007ff2e9f65f80 R15: 00007ffe808d1718
+================================================================================

@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel paging request in smc_nl_handle_smcr_dev",
+    "display-title": "BUG: unable to handle kernel paging request in smc_nl_handle_smcr_dev",
+    "id": "35ca150acc791b7283bb643a0edbbc185aa4a69e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/smc: fix access to parent of an ib device",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=995433b795cec0a4ef6c8603e7642903c621943a",
+            "hash": "995433b795cec0a4ef6c8603e7642903c621943a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000705ff605b5f2b656@google.com/T/",
+        "https://lore.kernel.org/all/20201215091058.49354-1-kgraul@linux.ibm.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17d8e41f500000",
+            "c-reproducer": "/text?tag=ReproC&x=17962287500000",
+            "kernel-config": "/text?tag=KernelConfig&x=503d0089cd701d6d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=5e60366d56c630e32befce7ef05c569e04391ca3",
+            "kernel-source-commit": "5e60366d56c630e32befce7ef05c569e04391ca3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/04201c0669446145fd9c347c5538da0ca13ff29b",
+            "syzkaller-commit": "04201c0669446145fd9c347c5538da0ca13ff29b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13e1fccb500000"
+        }
+    ],
+    "subsystems": [
+        "net",
+        "s390"
+    ],
+    "parent_of_fix_commit": "ef72cd3c5ce168829c6684ecb2cae047d3493690",
+    "patch": "diff --git a/net/smc/smc_ib.c b/net/smc/smc_ib.c\nindex 89ea10675a7d..ddd7fac98b1d 100644\n--- a/net/smc/smc_ib.c\n+++ b/net/smc/smc_ib.c\n@@ -394,6 +394,22 @@ static int smc_nl_handle_dev_port(struct sk_buff *skb,\n \treturn -EMSGSIZE;\n }\n \n+static bool smc_nl_handle_pci_values(const struct smc_pci_dev *smc_pci_dev,\n+\t\t\t\t     struct sk_buff *skb)\n+{\n+\tif (nla_put_u32(skb, SMC_NLA_DEV_PCI_FID, smc_pci_dev->pci_fid))\n+\t\treturn false;\n+\tif (nla_put_u16(skb, SMC_NLA_DEV_PCI_CHID, smc_pci_dev->pci_pchid))\n+\t\treturn false;\n+\tif (nla_put_u16(skb, SMC_NLA_DEV_PCI_VENDOR, smc_pci_dev->pci_vendor))\n+\t\treturn false;\n+\tif (nla_put_u16(skb, SMC_NLA_DEV_PCI_DEVICE, smc_pci_dev->pci_device))\n+\t\treturn false;\n+\tif (nla_put_string(skb, SMC_NLA_DEV_PCI_ID, smc_pci_dev->pci_id))\n+\t\treturn false;\n+\treturn true;\n+}\n+\n static int smc_nl_handle_smcr_dev(struct smc_ib_device *smcibdev,\n \t\t\t\t  struct sk_buff *skb,\n \t\t\t\t  struct netlink_callback *cb)\n@@ -417,19 +433,13 @@ static int smc_nl_handle_smcr_dev(struct smc_ib_device *smcibdev,\n \tis_crit = smcr_diag_is_dev_critical(&smc_lgr_list, smcibdev);\n \tif (nla_put_u8(skb, SMC_NLA_DEV_IS_CRIT, is_crit))\n \t\tgoto errattr;\n-\tmemset(&smc_pci_dev, 0, sizeof(smc_pci_dev));\n-\tpci_dev = to_pci_dev(smcibdev->ibdev->dev.parent);\n-\tsmc_set_pci_values(pci_dev, &smc_pci_dev);\n-\tif (nla_put_u32(skb, SMC_NLA_DEV_PCI_FID, smc_pci_dev.pci_fid))\n-\t\tgoto errattr;\n-\tif (nla_put_u16(skb, SMC_NLA_DEV_PCI_CHID, smc_pci_dev.pci_pchid))\n-\t\tgoto errattr;\n-\tif (nla_put_u16(skb, SMC_NLA_DEV_PCI_VENDOR, smc_pci_dev.pci_vendor))\n-\t\tgoto errattr;\n-\tif (nla_put_u16(skb, SMC_NLA_DEV_PCI_DEVICE, smc_pci_dev.pci_device))\n-\t\tgoto errattr;\n-\tif (nla_put_string(skb, SMC_NLA_DEV_PCI_ID, smc_pci_dev.pci_id))\n-\t\tgoto errattr;\n+\tif (smcibdev->ibdev->dev.parent) {\n+\t\tmemset(&smc_pci_dev, 0, sizeof(smc_pci_dev));\n+\t\tpci_dev = to_pci_dev(smcibdev->ibdev->dev.parent);\n+\t\tsmc_set_pci_values(pci_dev, &smc_pci_dev);\n+\t\tif (!smc_nl_handle_pci_values(&smc_pci_dev, skb))\n+\t\t\tgoto errattr;\n+\t}\n \tsnprintf(smc_ibname, sizeof(smc_ibname), \"%s\", smcibdev->ibdev->name);\n \tif (nla_put_string(skb, SMC_NLA_DEV_IB_NAME, smc_ibname))\n \t\tgoto errattr;\n",
+    "patch_modified_files": [
+        "net/smc/smc_ib.c"
+    ]
+}

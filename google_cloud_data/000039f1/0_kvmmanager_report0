@@ -1,0 +1,85 @@
+==================================================================
+BUG: KASAN: slab-out-of-bounds in ethnl_update_bitset32+0x17d7/0x1850
+Read of size 4 at addr ffff8881eb47383c by task syz-executor.3/4464
+
+CPU: 0 PID: 4464 Comm: syz-executor.3 Not tainted 5.6.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x191/0x20f
+ print_address_description.constprop.0.cold+0x72/0x369
+ __kasan_report.cold+0x1b/0x32
+ kasan_report+0x12/0x20
+ __asan_report_load4_noabort+0x14/0x20
+ ethnl_update_bitset32+0x17d7/0x1850
+ ethnl_update_bitset+0x41/0x50
+ ethnl_set_linkmodes+0x50d/0xc40
+ genl_rcv_msg+0x71f/0xf80
+ netlink_rcv_skb+0x186/0x470
+ genl_rcv+0x28/0x40
+ netlink_unicast+0x589/0x880
+ netlink_sendmsg+0x922/0xe90
+ sock_sendmsg+0xd2/0x120
+ ____sys_sendmsg+0x679/0x880
+ ___sys_sendmsg+0x11d/0x1b0
+ __x64_sys_sendmsg+0x149/0x230
+ do_syscall_64+0xf6/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f4ec0f4df69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f4ec02ce0c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f4ec107bf80 RCX: 00007f4ec0f4df69
+RDX: 0000000000000000 RSI: 0000000020000240 RDI: 0000000000000003
+RBP: 00007f4ec0f9a4a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f4ec107bf80 R15: 00007ffdc4541628
+
+Allocated by task 4400:
+ save_stack+0x21/0x80
+ __kasan_kmalloc.constprop.0+0xea/0x100
+ kasan_kmalloc+0x9/0x10
+ __kmalloc_node+0x4d/0x70
+ kvmalloc_node+0x65/0xf0
+ seq_read+0x82e/0x1160
+ kernfs_fop_read+0xf2/0x570
+ __vfs_read+0x88/0x110
+ vfs_read+0x1f5/0x440
+ ksys_read+0x151/0x290
+ __x64_sys_read+0x72/0xb0
+ do_syscall_64+0xf6/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+Freed by task 4400:
+ save_stack+0x21/0x80
+ __kasan_slab_free+0xfe/0x140
+ kasan_slab_free+0xe/0x10
+ kfree+0x104/0x2c0
+ kvfree+0x4c/0x60
+ seq_release+0x51/0x80
+ kernfs_fop_release+0xf6/0x1a0
+ __fput+0x2ef/0x880
+ ____fput+0x15/0x20
+ task_work_run+0x152/0x1d0
+ prepare_exit_to_usermode+0x663/0x700
+ syscall_return_slowpath+0xfe/0x7e0
+ do_syscall_64+0x128/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+The buggy address belongs to the object at ffff8881eb472000
+ which belongs to the cache kmalloc-4k of size 4096
+The buggy address is located 2108 bytes to the right of
+ 4096-byte region [ffff8881eb472000, ffff8881eb473000)
+The buggy address belongs to the page:
+page:ffffea0007ad1c80 refcount:1 mapcount:0 mapping:ffff8881f5402000 index:0x0 compound_mapcount: 0
+flags: 0x17ffe0000010200(slab|head)
+raw: 017ffe0000010200 ffffea0007acf808 ffffea0007651208 ffff8881f5402000
+raw: 0000000000000000 ffff8881eb472000 0000000100000001 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff8881eb473700: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8881eb473780: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff8881eb473800: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+                                        ^
+ ffff8881eb473880: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8881eb473900: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================

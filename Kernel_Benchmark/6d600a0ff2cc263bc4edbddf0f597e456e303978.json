@@ -1,0 +1,73 @@
+{
+    "version": 1,
+    "title": "WARNING: bad usercopy in fanotify_read",
+    "display-title": "WARNING: bad usercopy in fanotify_read",
+    "id": "6d600a0ff2cc263bc4edbddf0f597e456e303978",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fanotify: Allow copying of file handle to userspace",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b2d22b6bb33aac10c415e4ba13c8eade201c6f09",
+            "hash": "b2d22b6bb33aac10c415e4ba13c8eade201c6f09",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "fanotify: enable FAN_REPORT_FID init flag",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a8b13aa20afb69161b5123b4f1acc7ea0a03d360",
+        "hash": "a8b13aa20afb69161b5123b4f1acc7ea0a03d360",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000016f7d40583d79bd9@google.com/T/",
+        "https://lore.kernel.org/all/20190312114528.GA32521@quack2.suse.cz/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1287516f200000",
+            "c-reproducer": "/text?tag=ReproC&x=17ee410b200000",
+            "kernel-config": "/text?tag=KernelConfig&x=e9d91b7192a5e96e",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=12ad143e1b803e541e48b8ba40f550250259ecdd",
+            "kernel-source-commit": "12ad143e1b803e541e48b8ba40f550250259ecdd",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/12365b99ce83b8a58433eaedbe412dff563ef8fb",
+            "syzkaller-commit": "12365b99ce83b8a58433eaedbe412dff563ef8fb",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1660002b200000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "copy_fid_to_user",
+            "fs/notify/fanotify/fanotify_user.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "COMPAT_SYSCALL_DEFINE6",
+            "fs/notify/fanotify/fanotify_user.c"
+        ],
+        [
+            "SYSCALL_DEFINE2",
+            "fs/notify/fanotify/fanotify_user.c"
+        ],
+        [
+            "do_fanotify_mark",
+            "fs/notify/fanotify/fanotify_user.c"
+        ]
+    ],
+    "patch_commit_date": "2019-03-12T11:42:37+00:00",
+    "cause_commit_date": "2019-01-10T17:04:36+00:00",
+    "subsystems": [
+        "hardening",
+        "mm"
+    ],
+    "parent_of_fix_commit": "62c9d2674b31d4c8a674bee86b7edc6da2803aea",
+    "patch": "diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c\nindex 56992b32c6bb..a90bb19dcfa2 100644\n--- a/fs/notify/fanotify/fanotify_user.c\n+++ b/fs/notify/fanotify/fanotify_user.c\n@@ -208,6 +208,7 @@ static int copy_fid_to_user(struct fanotify_event *event, char __user *buf)\n {\n \tstruct fanotify_event_info_fid info = { };\n \tstruct file_handle handle = { };\n+\tunsigned char bounce[FANOTIFY_INLINE_FH_LEN], *fh;\n \tsize_t fh_len = event->fh_len;\n \tsize_t len = fanotify_event_info_len(event);\n \n@@ -233,7 +234,16 @@ static int copy_fid_to_user(struct fanotify_event *event, char __user *buf)\n \n \tbuf += sizeof(handle);\n \tlen -= sizeof(handle);\n-\tif (copy_to_user(buf, fanotify_event_fh(event), fh_len))\n+\t/*\n+\t * For an inline fh, copy through stack to exclude the copy from\n+\t * usercopy hardening protections.\n+\t */\n+\tfh = fanotify_event_fh(event);\n+\tif (fh_len <= FANOTIFY_INLINE_FH_LEN) {\n+\t\tmemcpy(bounce, fh, fh_len);\n+\t\tfh = bounce;\n+\t}\n+\tif (copy_to_user(buf, fh, fh_len))\n \t\treturn -EFAULT;\n \n \t/* Pad with 0's */\n",
+    "patch_modified_files": [
+        "fs/notify/fanotify/fanotify_user.c"
+    ]
+}

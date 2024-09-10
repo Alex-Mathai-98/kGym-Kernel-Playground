@@ -1,0 +1,96 @@
+==================================================================
+BUG: KASAN: use-after-free in netlbl_catmap_walk+0x275/0x2d0
+Read of size 4 at addr ffff88801e6a8a80 by task syz-executor.2/6683
+
+CPU: 0 PID: 6683 Comm: syz-executor.2 Not tainted 5.15.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack_lvl+0x1b1/0x28e
+ print_address_description+0x63/0x390
+ kasan_report+0x15a/0x1b0
+ netlbl_catmap_walk+0x275/0x2d0
+ cipso_seq_show+0x16b/0x260
+ traverse+0x1d5/0x530
+ seq_lseek+0x125/0x240
+ __x64_sys_lseek+0x15c/0x1e0
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7fb3dfab2f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fb3dee330c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000008
+RAX: ffffffffffffffda RBX: 00007fb3dfbe0f80 RCX: 00007fb3dfab2f69
+RDX: 0000000000000000 RSI: 0000000100000001 RDI: 0000000000000003
+RBP: 00007fb3dfaff4a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fb3dfbe0f80 R15: 00007ffc06d5ffb8
+
+Allocated by task 6683:
+ ____kasan_kmalloc+0xcc/0x100
+ kmem_cache_alloc_trace+0x140/0x260
+ netlbl_catmap_setbit+0x1c6/0x3c0
+ smk_netlbl_mls+0x112/0x620
+ smk_set_cipso+0x624/0x820
+ vfs_write+0x305/0xe00
+ ksys_write+0x17e/0x2a0
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+Freed by task 6678:
+ kasan_set_track+0x3c/0x70
+ kasan_set_free_info+0x1f/0x40
+ ____kasan_slab_free+0x102/0x140
+ slab_free_freelist_hook+0x129/0x1a0
+ kfree+0xfb/0x2c0
+ smk_set_cipso+0x685/0x820
+ vfs_write+0x305/0xe00
+ ksys_write+0x17e/0x2a0
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+The buggy address belongs to the object at ffff88801e6a8a80
+ which belongs to the cache kmalloc-64 of size 64
+The buggy address is located 0 bytes inside of
+ 64-byte region [ffff88801e6a8a80, ffff88801e6a8ac0)
+The buggy address belongs to the page:
+page:ffffea000079aa00 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x1e6a8
+flags: 0xfff00000000200(slab|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000000200 dead000000000100 dead000000000122 ffff888010841640
+raw: 0000000000000000 0000000000200020 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x12c40(GFP_NOFS|__GFP_NOWARN|__GFP_NORETRY), pid 2971, ts 15998410599, free_ts 13674301888
+ get_page_from_freelist+0x3218/0x33b0
+ __alloc_pages+0x272/0x780
+ new_slab+0xbb/0x4b0
+ ___slab_alloc+0x6a8/0xd80
+ __kmalloc+0x1c6/0x2c0
+ tomoyo_supervisor+0xecf/0x1440
+ tomoyo_path_permission+0x243/0x360
+ tomoyo_path_perm+0x3e4/0x5e0
+ security_inode_getattr+0xcf/0x120
+ vfs_statx+0x164/0x3a0
+ __se_sys_newfstatat+0xb4/0x790
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+page last free stack trace:
+ free_unref_page_prepare+0xc95/0xd50
+ free_unref_page+0x95/0x280
+ kasan_depopulate_vmalloc_pte+0x66/0x80
+ __apply_to_page_range+0x9b5/0xcc0
+ kasan_release_vmalloc+0x96/0xb0
+ __purge_vmap_area_lazy+0x15ae/0x1740
+ _vm_unmap_aliases+0x419/0x4a0
+ change_page_attr_set_clr+0x305/0xfe0
+ set_memory_nx+0xee/0x130
+ free_initmem+0x71/0xc0
+ kernel_init+0x23/0x290
+ ret_from_fork+0x1f/0x30
+
+Memory state around the buggy address:
+ ffff88801e6a8980: 00 00 00 00 00 00 00 00 fc fc fc fc fc fc fc fc
+ ffff88801e6a8a00: fa fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+>ffff88801e6a8a80: fa fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+                   ^
+ ffff88801e6a8b00: 00 00 00 00 00 00 00 00 fc fc fc fc fc fc fc fc
+ ffff88801e6a8b80: 00 00 00 00 01 fc fc fc fc fc fc fc fc fc fc fc
+==================================================================

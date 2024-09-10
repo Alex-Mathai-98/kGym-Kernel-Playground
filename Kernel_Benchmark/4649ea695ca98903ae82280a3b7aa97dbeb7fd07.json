@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "general protection fault in nexthop_is_blackhole",
+    "display-title": "general protection fault in nexthop_is_blackhole",
+    "id": "4649ea695ca98903ae82280a3b7aa97dbeb7fd07",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: nexthop: don't allow empty NHA_GROUP",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=eeaac3634ee0e3f35548be35275efeca888e9b23",
+            "hash": "eeaac3634ee0e3f35548be35275efeca888e9b23",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "af_key: make use of BUG_ON macro",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=de47c5d8e11dda678e4354eeb4235e58e92f7cd2",
+        "hash": "de47c5d8e11dda678e4354eeb4235e58e92f7cd2",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000009383f505adc8c5a0@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14d75e39900000",
+            "c-reproducer": "/text?tag=ReproC&x=12aea519900000",
+            "kernel-config": "/text?tag=KernelConfig&x=bb68b9e8a8cc842f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c3d8f220d01220a5b253e422be407d068dc65511",
+            "kernel-source-commit": "c3d8f220d01220a5b253e422be407d068dc65511",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/cef5ae6814696260ff58c538a1b6044af90c5979",
+            "syzkaller-commit": "cef5ae6814696260ff58c538a1b6044af90c5979",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1671e90e900000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "4af7b32f84aa4cd60e39b355bc8a1eab6cd8d8a4",
+    "patch": "diff --git a/net/ipv4/nexthop.c b/net/ipv4/nexthop.c\nindex cc8049b100b2..134e92382275 100644\n--- a/net/ipv4/nexthop.c\n+++ b/net/ipv4/nexthop.c\n@@ -446,7 +446,7 @@ static int nh_check_attr_group(struct net *net, struct nlattr *tb[],\n \tunsigned int i, j;\n \tu8 nhg_fdb = 0;\n \n-\tif (len & (sizeof(struct nexthop_grp) - 1)) {\n+\tif (!len || len & (sizeof(struct nexthop_grp) - 1)) {\n \t\tNL_SET_ERR_MSG(extack,\n \t\t\t       \"Invalid length for nexthop group attribute\");\n \t\treturn -EINVAL;\n@@ -1187,6 +1187,9 @@ static struct nexthop *nexthop_create_group(struct net *net,\n \tstruct nexthop *nh;\n \tint i;\n \n+\tif (WARN_ON(!num_nh))\n+\t\treturn ERR_PTR(-EINVAL);\n+\n \tnh = nexthop_alloc();\n \tif (!nh)\n \t\treturn ERR_PTR(-ENOMEM);\n",
+    "patch_modified_files": [
+        "net/ipv4/nexthop.c"
+    ]
+}

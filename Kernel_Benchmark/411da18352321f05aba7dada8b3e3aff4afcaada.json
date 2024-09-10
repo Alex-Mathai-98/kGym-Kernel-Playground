@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "WARNING in tls_strp_done",
+    "display-title": "WARNING in tls_strp_done",
+    "id": "411da18352321f05aba7dada8b3e3aff4afcaada",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "tls: rx: react to strparser initialization errors",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=849f16bbfb686cf75e67c536d196027fa8bfc803",
+            "hash": "849f16bbfb686cf75e67c536d196027fa8bfc803",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001ca53e05e630cb63@google.com/T/",
+        "https://lore.kernel.org/all/20220816002358.509148-1-kuba@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in tls_strp_done",
+            "syz-reproducer": "/text?tag=ReproSyz&x=164c98cb080000",
+            "c-reproducer": "/text?tag=ReproC&x=15497dc3080000",
+            "kernel-config": "/text?tag=KernelConfig&x=924833c12349a8c0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7ebfc85e2cd7b08f518b526173e9a33b56b3913b",
+            "kernel-source-commit": "7ebfc85e2cd7b08f518b526173e9a33b56b3913b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8dfcaa3d2828a113ae780da01f5f73ad64710e31",
+            "syzkaller-commit": "8dfcaa3d2828a113ae780da01f5f73ad64710e31",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10e8612d080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "tls_set_sw_offload",
+            "net/tls/tls_sw.c"
+        ]
+    ],
+    "patch_commit_date": "2022-08-16T00:23:58+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "de64b6b6fb6f369840d171b7c5a9baf31b8b2630",
+    "patch": "diff --git a/net/tls/tls_sw.c b/net/tls/tls_sw.c\nindex f76119f62f1b..fe27241cd13f 100644\n--- a/net/tls/tls_sw.c\n+++ b/net/tls/tls_sw.c\n@@ -2702,7 +2702,9 @@ int tls_set_sw_offload(struct sock *sk, struct tls_context *ctx, int tx)\n \t\t\tcrypto_info->version != TLS_1_3_VERSION &&\n \t\t\t!!(tfm->__crt_alg->cra_flags & CRYPTO_ALG_ASYNC);\n \n-\t\ttls_strp_init(&sw_ctx_rx->strp, sk);\n+\t\trc = tls_strp_init(&sw_ctx_rx->strp, sk);\n+\t\tif (rc)\n+\t\t\tgoto free_aead;\n \t}\n \n \tgoto out;\n",
+    "patch_modified_files": [
+        "net/tls/tls_sw.c"
+    ]
+}

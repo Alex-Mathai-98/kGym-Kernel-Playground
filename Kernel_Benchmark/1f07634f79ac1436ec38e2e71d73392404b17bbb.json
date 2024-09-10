@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "title": "possible deadlock in quotactl_fd",
+    "display-title": "possible deadlock in quotactl_fd",
+    "id": "1f07634f79ac1436ec38e2e71d73392404b17bbb",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: fix lockdep warning when enabling MMP",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=949f95ff39bf188e594e7ecd8e29b82eb108f5bf",
+            "hash": "949f95ff39bf188e594e7ecd8e29b82eb108f5bf",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a2feae05fb06dcee@google.com/T/",
+        "https://lore.kernel.org/all/000000000000db94d405ffd231f7@google.com/T/",
+        "https://lore.kernel.org/all/000000000000f1a9d205f909f327@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "possible deadlock in quotactl_fd",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12cc2a92280000",
+            "c-reproducer": "/text?tag=ReproC&x=10dc5fa6280000",
+            "kernel-config": "/text?tag=KernelConfig&x=8bc832f563d8bf38",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1dc3731daf1f350cfd631b5559aac865ab2fbb4c",
+            "kernel-source-commit": "1dc3731daf1f350cfd631b5559aac865ab2fbb4c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/1964022bd4ae3c35688b98f6a4db45076c7d002c",
+            "syzkaller-commit": "1964022bd4ae3c35688b98f6a4db45076c7d002c",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11ef5042280000"
+        }
+    ],
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "fa08a7b61dff8a4df11ff1e84abfc214b487caf7",
+    "patch": "diff --git a/fs/ext4/mmp.c b/fs/ext4/mmp.c\nindex 4022bc713421..0aaf38ffcb6e 100644\n--- a/fs/ext4/mmp.c\n+++ b/fs/ext4/mmp.c\n@@ -39,28 +39,36 @@ static void ext4_mmp_csum_set(struct super_block *sb, struct mmp_struct *mmp)\n  * Write the MMP block using REQ_SYNC to try to get the block on-disk\n  * faster.\n  */\n-static int write_mmp_block(struct super_block *sb, struct buffer_head *bh)\n+static int write_mmp_block_thawed(struct super_block *sb,\n+\t\t\t\t  struct buffer_head *bh)\n {\n \tstruct mmp_struct *mmp = (struct mmp_struct *)(bh->b_data);\n \n-\t/*\n-\t * We protect against freezing so that we don't create dirty buffers\n-\t * on frozen filesystem.\n-\t */\n-\tsb_start_write(sb);\n \text4_mmp_csum_set(sb, mmp);\n \tlock_buffer(bh);\n \tbh->b_end_io = end_buffer_write_sync;\n \tget_bh(bh);\n \tsubmit_bh(REQ_OP_WRITE | REQ_SYNC | REQ_META | REQ_PRIO, bh);\n \twait_on_buffer(bh);\n-\tsb_end_write(sb);\n \tif (unlikely(!buffer_uptodate(bh)))\n \t\treturn -EIO;\n-\n \treturn 0;\n }\n \n+static int write_mmp_block(struct super_block *sb, struct buffer_head *bh)\n+{\n+\tint err;\n+\n+\t/*\n+\t * We protect against freezing so that we don't create dirty buffers\n+\t * on frozen filesystem.\n+\t */\n+\tsb_start_write(sb);\n+\terr = write_mmp_block_thawed(sb, bh);\n+\tsb_end_write(sb);\n+\treturn err;\n+}\n+\n /*\n  * Read the MMP block. It _must_ be read from disk and hence we clear the\n  * uptodate flag on the buffer.\n@@ -344,7 +352,11 @@ int ext4_multi_mount_protect(struct super_block *sb,\n \tseq = mmp_new_seq();\n \tmmp->mmp_seq = cpu_to_le32(seq);\n \n-\tretval = write_mmp_block(sb, bh);\n+\t/*\n+\t * On mount / remount we are protected against fs freezing (by s_umount\n+\t * semaphore) and grabbing freeze protection upsets lockdep\n+\t */\n+\tretval = write_mmp_block_thawed(sb, bh);\n \tif (retval)\n \t\tgoto failed;\n \n",
+    "patch_modified_files": [
+        "fs/ext4/mmp.c"
+    ]
+}

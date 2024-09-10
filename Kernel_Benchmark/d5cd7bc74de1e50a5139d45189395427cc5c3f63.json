@@ -1,0 +1,39 @@
+{
+    "version": 1,
+    "title": "general protection fault in btf_array_resolve",
+    "display-title": "general protection fault in btf_array_resolve",
+    "id": "d5cd7bc74de1e50a5139d45189395427cc5c3f63",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "bpf: fix NULL deref in btf_type_is_resolve_source_only",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e4f07120210a1794c1f1ae64d209a2fbc7bd2682",
+            "hash": "e4f07120210a1794c1f1ae64d209a2fbc7bd2682",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17695e31a00000",
+            "c-reproducer": "/text?tag=ReproC&x=1000362aa00000",
+            "kernel-config": "/text?tag=KernelConfig&x=28ec3437a5394ee0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=bed3c0d84e7e25c8e0964d297794f4c215b01f33",
+            "kernel-source-commit": "bed3c0d84e7e25c8e0964d297794f4c215b01f33",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/34bf9440bd06034f86b5d9ac8afbf078129cbdae",
+            "syzkaller-commit": "34bf9440bd06034f86b5d9ac8afbf078129cbdae",
+            "compiler-description": "clang version 9.0.0 (/home/glider/llvm/clang 80fee25776c2fb61e74c1ecb1a523375c2500b69)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=106376c6a00000"
+        }
+    ],
+    "subsystems": [
+        "bpf"
+    ],
+    "parent_of_fix_commit": "56f0f84e69c7a7f229dfa524b13b0ceb6ce9b09e",
+    "patch": "diff --git a/kernel/bpf/btf.c b/kernel/bpf/btf.c\nindex cad09858a5f2..546ebee39e2a 100644\n--- a/kernel/bpf/btf.c\n+++ b/kernel/bpf/btf.c\n@@ -1928,8 +1928,8 @@ static int btf_array_resolve(struct btf_verifier_env *env,\n \t/* Check array->index_type */\n \tindex_type_id = array->index_type;\n \tindex_type = btf_type_by_id(btf, index_type_id);\n-\tif (btf_type_is_resolve_source_only(index_type) ||\n-\t    btf_type_nosize_or_null(index_type)) {\n+\tif (btf_type_nosize_or_null(index_type) ||\n+\t    btf_type_is_resolve_source_only(index_type)) {\n \t\tbtf_verifier_log_type(env, v->t, \"Invalid index\");\n \t\treturn -EINVAL;\n \t}\n@@ -1948,8 +1948,8 @@ static int btf_array_resolve(struct btf_verifier_env *env,\n \t/* Check array->type */\n \telem_type_id = array->type;\n \telem_type = btf_type_by_id(btf, elem_type_id);\n-\tif (btf_type_is_resolve_source_only(elem_type) ||\n-\t    btf_type_nosize_or_null(elem_type)) {\n+\tif (btf_type_nosize_or_null(elem_type) ||\n+\t    btf_type_is_resolve_source_only(elem_type)) {\n \t\tbtf_verifier_log_type(env, v->t,\n \t\t\t\t      \"Invalid elem\");\n \t\treturn -EINVAL;\n@@ -2170,8 +2170,8 @@ static int btf_struct_resolve(struct btf_verifier_env *env,\n \t\tconst struct btf_type *member_type = btf_type_by_id(env->btf,\n \t\t\t\t\t\t\t\tmember_type_id);\n \n-\t\tif (btf_type_is_resolve_source_only(member_type) ||\n-\t\t    btf_type_nosize_or_null(member_type)) {\n+\t\tif (btf_type_nosize_or_null(member_type) ||\n+\t\t    btf_type_is_resolve_source_only(member_type)) {\n \t\t\tbtf_verifier_log_member(env, v->t, member,\n \t\t\t\t\t\t\"Invalid member\");\n \t\t\treturn -EINVAL;\n",
+    "patch_modified_files": [
+        "kernel/bpf/btf.c"
+    ]
+}

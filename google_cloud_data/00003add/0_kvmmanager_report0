@@ -1,0 +1,120 @@
+INFO: trying to register non-static key.
+The code is fine but needs lockdep annotation, or maybe
+you didn't initialize this object before use?
+turning off the locking correctness validator.
+CPU: 0 PID: 3655 Comm: syz-executor.1 Not tainted 6.0.0-rc3-syzkaller-00032-gd325dc6eb763 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1b1/0x28e
+ assign_lock_key+0x206/0x210
+ register_lock_class+0x18d/0x950
+ __lock_acquire+0xd3/0x1f80
+ lock_acquire+0x1ec/0x570
+ down_read+0x39/0x50
+ nilfs_bmap_lookup_at_level+0x89/0x350
+ nilfs_mdt_submit_block+0x2a0/0x860
+ nilfs_mdt_read_block+0xa5/0x450
+ nilfs_mdt_get_block+0x120/0xad0
+ nilfs_palloc_get_block+0x142/0x240
+ nilfs_palloc_get_entry_block+0x8a/0xa0
+ nilfs_ifile_get_inode_block+0xf1/0x1a0
+ nilfs_iget+0x256/0x8c0
+ nilfs_get_root_dentry+0x28/0x230
+ nilfs_fill_super+0x3dd/0x5d0
+ nilfs_mount+0x625/0x960
+ legacy_get_tree+0xeb/0x180
+ vfs_get_tree+0x88/0x270
+ do_new_mount+0x28b/0xad0
+ __se_sys_mount+0x2c5/0x3b0
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fcf79e7c57a
+Code: d8 64 89 02 48 c7 c0 ff ff ff ff eb a6 e8 de 09 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fcf7afe8ee8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
+RAX: ffffffffffffffda RBX: 00007fcf7afe8f80 RCX: 00007fcf79e7c57a
+RDX: 0000000020000000 RSI: 0000000020000100 RDI: 00007fcf7afe8f40
+RBP: 0000000020000000 R08: 00007fcf7afe8f80 R09: 0000000020000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000020000100
+R13: 0000000020000200 R14: 00007fcf7afe8f40 R15: 00000000200131c0
+ </TASK>
+general protection fault, probably for non-canonical address 0xdffffc0000000000: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+CPU: 0 PID: 3655 Comm: syz-executor.1 Not tainted 6.0.0-rc3-syzkaller-00032-gd325dc6eb763 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:nilfs_bmap_lookup_at_level+0xbb/0x350
+Code: 48 89 d8 48 c1 e8 03 42 80 3c 30 00 74 08 48 89 df e8 69 ff 99 fe 4c 8b 33 4c 89 f0 48 c1 e8 03 48 b9 00 00 00 00 00 fc ff df <80> 3c 08 00 74 08 4c 89 f7 e8 47 ff 99 fe 4c 89 e7 4c 89 fe 44 89
+RSP: 0018:ffffc90003f5f480 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: ffff888070ffa760 RCX: dffffc0000000000
+RDX: 0000000000000001 RSI: 0000000000000008 RDI: ffff888070ffa6c8
+RBP: ffffc90003f5f530 R08: dffffc0000000000 R09: ffffed100e1ff4da
+R10: 0000000000000000 R11: dffffc0000000001 R12: ffff888070ffa688
+R13: 0000000000000001 R14: 0000000000000000 R15: 0000000000000002
+FS:  00007fcf7afe96c0(0000) GS:ffff8880b9a00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f9766703440 CR3: 000000001d7ea000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ nilfs_mdt_submit_block+0x2a0/0x860
+ nilfs_mdt_read_block+0xa5/0x450
+ nilfs_mdt_get_block+0x120/0xad0
+ nilfs_palloc_get_block+0x142/0x240
+ nilfs_palloc_get_entry_block+0x8a/0xa0
+ nilfs_ifile_get_inode_block+0xf1/0x1a0
+ nilfs_iget+0x256/0x8c0
+ nilfs_get_root_dentry+0x28/0x230
+ nilfs_fill_super+0x3dd/0x5d0
+ nilfs_mount+0x625/0x960
+ legacy_get_tree+0xeb/0x180
+ vfs_get_tree+0x88/0x270
+ do_new_mount+0x28b/0xad0
+ __se_sys_mount+0x2c5/0x3b0
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fcf79e7c57a
+Code: d8 64 89 02 48 c7 c0 ff ff ff ff eb a6 e8 de 09 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fcf7afe8ee8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
+RAX: ffffffffffffffda RBX: 00007fcf7afe8f80 RCX: 00007fcf79e7c57a
+RDX: 0000000020000000 RSI: 0000000020000100 RDI: 00007fcf7afe8f40
+RBP: 0000000020000000 R08: 00007fcf7afe8f80 R09: 0000000020000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000020000100
+R13: 0000000020000200 R14: 00007fcf7afe8f40 R15: 00000000200131c0
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:nilfs_bmap_lookup_at_level+0xbb/0x350
+Code: 48 89 d8 48 c1 e8 03 42 80 3c 30 00 74 08 48 89 df e8 69 ff 99 fe 4c 8b 33 4c 89 f0 48 c1 e8 03 48 b9 00 00 00 00 00 fc ff df <80> 3c 08 00 74 08 4c 89 f7 e8 47 ff 99 fe 4c 89 e7 4c 89 fe 44 89
+RSP: 0018:ffffc90003f5f480 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: ffff888070ffa760 RCX: dffffc0000000000
+RDX: 0000000000000001 RSI: 0000000000000008 RDI: ffff888070ffa6c8
+RBP: ffffc90003f5f530 R08: dffffc0000000000 R09: ffffed100e1ff4da
+R10: 0000000000000000 R11: dffffc0000000001 R12: ffff888070ffa688
+R13: 0000000000000001 R14: 0000000000000000 R15: 0000000000000002
+FS:  00007fcf7afe96c0(0000) GS:ffff8880b9a00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fec54982440 CR3: 000000001d7ea000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	48 89 d8             	mov    %rbx,%rax
+   3:	48 c1 e8 03          	shr    $0x3,%rax
+   7:	42 80 3c 30 00       	cmpb   $0x0,(%rax,%r14,1)
+   c:	74 08                	je     0x16
+   e:	48 89 df             	mov    %rbx,%rdi
+  11:	e8 69 ff 99 fe       	call   0xfe99ff7f
+  16:	4c 8b 33             	mov    (%rbx),%r14
+  19:	4c 89 f0             	mov    %r14,%rax
+  1c:	48 c1 e8 03          	shr    $0x3,%rax
+  20:	48 b9 00 00 00 00 00 	movabs $0xdffffc0000000000,%rcx
+  27:	fc ff df
+* 2a:	80 3c 08 00          	cmpb   $0x0,(%rax,%rcx,1) <-- trapping instruction
+  2e:	74 08                	je     0x38
+  30:	4c 89 f7             	mov    %r14,%rdi
+  33:	e8 47 ff 99 fe       	call   0xfe99ff7f
+  38:	4c 89 e7             	mov    %r12,%rdi
+  3b:	4c 89 fe             	mov    %r15,%rsi
+  3e:	44                   	rex.R
+  3f:	89                   	.byte 0x89

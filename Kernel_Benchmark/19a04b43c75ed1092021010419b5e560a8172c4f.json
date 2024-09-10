@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "memory leak in hidraw_report_event",
+    "display-title": "memory leak in hidraw_report_event",
+    "id": "19a04b43c75ed1092021010419b5e560a8172c4f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "HID: hidraw: fix memory leak in hidraw_release()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a5623a203cffe2d2b84d2f6c989d9017db1856af",
+            "hash": "a5623a203cffe2d2b84d2f6c989d9017db1856af",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005d8c8805dfd6f470@google.com/T/",
+        "https://lore.kernel.org/all/20220902121356.732130937@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220902121358.773776406@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220902121359.177846782@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220902121400.219861128@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220902121403.569927325@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220902121404.435662285@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220902121404.772492078@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220910211623.69825-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/YuKuldGx55BB+hrd@karthik-strix-linux.karthek.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in hidraw_report_event",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14d91de5f00000",
+            "c-reproducer": "/text?tag=ReproC&x=10522639f00000",
+            "kernel-config": "/text?tag=KernelConfig&x=fb563a60820e68b9",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=aa051d36ce4ae23b488489f6b15abad68b59ca23",
+            "kernel-source-commit": "aa051d36ce4ae23b488489f6b15abad68b59ca23",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/647c0e2737b12e092ce23948537ddf7dd3992c53",
+            "syzkaller-commit": "647c0e2737b12e092ce23948537ddf7dd3992c53",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1123c5d6f00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "hidraw_release",
+            "drivers/hid/hidraw.c"
+        ]
+    ],
+    "patch_commit_date": "2022-07-28T15:43:17+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "input",
+        "usb"
+    ],
+    "parent_of_fix_commit": "cd11d1a6114bd4bc6450ae59f6e110ec47362126",
+    "patch": "diff --git a/drivers/hid/hidraw.c b/drivers/hid/hidraw.c\nindex 681614a8302a..197b1e7bf029 100644\n--- a/drivers/hid/hidraw.c\n+++ b/drivers/hid/hidraw.c\n@@ -350,6 +350,8 @@ static int hidraw_release(struct inode * inode, struct file * file)\n \tdown_write(&minors_rwsem);\n \n \tspin_lock_irqsave(&hidraw_table[minor]->list_lock, flags);\n+\tfor (int i = list->tail; i < list->head; i++)\n+\t\tkfree(list->buffer[i].value);\n \tlist_del(&list->node);\n \tspin_unlock_irqrestore(&hidraw_table[minor]->list_lock, flags);\n \tkfree(list);\n",
+    "patch_modified_files": [
+        "drivers/hid/hidraw.c"
+    ]
+}

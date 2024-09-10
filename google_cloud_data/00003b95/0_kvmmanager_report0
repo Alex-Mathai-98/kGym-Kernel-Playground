@@ -1,0 +1,142 @@
+R13: 000000000000006e R14: 00007f9e0f558050 R15: 00007ffcd33d6218
+ </TASK>
+kobject_add_internal failed for md1 with -EEXIST, don't try to register things with the same name in the same directory.
+==================================================================
+BUG: KASAN: use-after-free in disk_release_events+0xbc/0xe0
+Read of size 4 at addr ffff8880615bb4e8 by task syz-executor.3/25754
+
+CPU: 1 PID: 25754 Comm: syz-executor.3 Not tainted 5.16.0-rc3-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xfc/0x174
+ print_address_description.constprop.0.cold+0x8d/0x312
+ kasan_report.cold+0x83/0xdf
+ disk_release_events+0xbc/0xe0
+ disk_release+0x106/0x260
+ device_release+0x9d/0x230
+ kobject_put+0x1fd/0x5c0
+ put_device+0x1b/0x30
+ blk_cleanup_disk+0x6b/0x80
+ md_alloc+0x9e7/0xfd0
+ md_probe+0x6a/0x80
+ blk_request_module+0x111/0x1d0
+ blkdev_get_no_open+0x72/0x90
+ blkdev_get_by_dev.part.0+0x23/0xbc0
+ blkdev_get_by_dev+0x67/0x80
+ blkdev_open+0x154/0x2d0
+ do_dentry_open+0x84e/0x11f0
+ path_openat+0xd63/0x29b0
+ do_filp_open+0x1bf/0x420
+ do_sys_openat2+0x16b/0x4d0
+ __x64_sys_openat+0x171/0x210
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7f9e0f429f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f9e0e7890c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+RAX: ffffffffffffffda RBX: 00007f9e0f558050 RCX: 00007f9e0f429f69
+RDX: 0000000000000000 RSI: 00000000200020c0 RDI: ffffffffffffff9c
+RBP: 00007f9e0f4764a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000006e R14: 00007f9e0f558050 R15: 00007ffcd33d6218
+ </TASK>
+
+Allocated by task 25754:
+ kasan_save_stack+0x1c/0x40
+ __kasan_kmalloc+0xa7/0xd0
+ disk_alloc_events+0xe8/0x3c0
+ device_add_disk+0x113/0xcf0
+ md_alloc+0x85f/0xfd0
+ md_probe+0x6a/0x80
+ blk_request_module+0x111/0x1d0
+ blkdev_get_no_open+0x72/0x90
+ blkdev_get_by_dev.part.0+0x23/0xbc0
+ blkdev_get_by_dev+0x67/0x80
+ blkdev_open+0x154/0x2d0
+ do_dentry_open+0x84e/0x11f0
+ path_openat+0xd63/0x29b0
+ do_filp_open+0x1bf/0x420
+ do_sys_openat2+0x16b/0x4d0
+ __x64_sys_openat+0x171/0x210
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+Freed by task 25754:
+ kasan_save_stack+0x1c/0x40
+ kasan_set_track+0x21/0x30
+ kasan_set_free_info+0x20/0x30
+ __kasan_slab_free+0xfb/0x130
+ slab_free_freelist_hook+0xae/0x1e0
+ kfree+0xf6/0x550
+ device_add_disk+0x2e1/0xcf0
+ md_alloc+0x85f/0xfd0
+ md_probe+0x6a/0x80
+ blk_request_module+0x111/0x1d0
+ blkdev_get_no_open+0x72/0x90
+ blkdev_get_by_dev.part.0+0x23/0xbc0
+ blkdev_get_by_dev+0x67/0x80
+ blkdev_open+0x154/0x2d0
+ do_dentry_open+0x84e/0x11f0
+ path_openat+0xd63/0x29b0
+ do_filp_open+0x1bf/0x420
+ do_sys_openat2+0x16b/0x4d0
+ __x64_sys_openat+0x171/0x210
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+The buggy address belongs to the object at ffff8880615bb400
+ which belongs to the cache kmalloc-512 of size 512
+The buggy address is located 232 bytes inside of
+ 512-byte region [ffff8880615bb400, ffff8880615bb600)
+The buggy address belongs to the page:
+page:ffffea0001856e00 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x615b8
+head:ffffea0001856e00 order:2 compound_mapcount:0 compound_pincount:0
+flags: 0xfff00000010200(slab|head|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000010200 0000000000000000 dead000000000001 ffff888010c41c80
+raw: 0000000000000000 0000000000100010 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 2, migratetype Unmovable, gfp_mask 0xd20c0(__GFP_IO|__GFP_FS|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC), pid 25191, ts 249068418056, free_ts 248766770590
+ get_page_from_freelist+0x1642/0x3680
+ __alloc_pages+0x1b1/0x500
+ alloc_pages+0x1aa/0x300
+ new_slab+0x319/0x480
+ ___slab_alloc+0x8b4/0x10a0
+ __slab_alloc.constprop.0+0x4d/0xa0
+ __kmalloc_node_track_caller+0x15c/0x360
+ __alloc_skb+0xd9/0x330
+ alloc_uevent_skb+0x7d/0x210
+ kobject_uevent_env+0xaf5/0x1640
+ disk_uevent+0x120/0x460
+ device_add_disk+0xa9c/0xcf0
+ md_alloc+0x85f/0xfd0
+ md_probe+0x6a/0x80
+ blk_request_module+0x111/0x1d0
+ blkdev_get_no_open+0x72/0x90
+page last free stack trace:
+ free_pcp_prepare+0x359/0x810
+ free_unref_page+0x19/0x6a0
+ __unfreeze_partials+0x335/0x350
+ qlist_free_all+0x5a/0xc0
+ kasan_quarantine_reduce+0x176/0x1b0
+ __kasan_slab_alloc+0xa2/0xc0
+ kmem_cache_alloc+0x145/0x390
+ ext4_alloc_inode+0x1a/0x640
+ alloc_inode+0x5d/0x220
+ new_inode+0x25/0x2d0
+ __ext4_new_inode+0x36e/0x5cc0
+ ext4_symlink+0x379/0xcd0
+ vfs_symlink+0x388/0x5d0
+ do_symlinkat+0x27b/0x300
+ __x64_sys_symlinkat+0x93/0xc0
+ do_syscall_64+0x34/0xb0
+
+Memory state around the buggy address:
+ ffff8880615bb380: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8880615bb400: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>ffff8880615bb480: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                                          ^
+ ffff8880615bb500: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8880615bb580: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================

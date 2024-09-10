@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "memory leak in snd_seq_create_port",
+    "display-title": "memory leak in snd_seq_create_port",
+    "id": "0be1740a2972a1852f35a3ed7dc70577610edcbd",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ALSA: seq: Fix memory leak at error path in snd_seq_create_port()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=057849ccc3d898b8a2dc21933b50ed8fbddc963b",
+            "hash": "057849ccc3d898b8a2dc21933b50ed8fbddc963b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000098ed3a0600965f89@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in snd_seq_create_port",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15877dc2a80000",
+            "c-reproducer": "/text?tag=ReproC&x=12905004a80000",
+            "kernel-config": "/text?tag=KernelConfig&x=75da4f0a455bdbd3",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3f01e9fed8454dcd89727016c3e5b2fbb8f8e50c",
+            "kernel-source-commit": "3f01e9fed8454dcd89727016c3e5b2fbb8f8e50c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2f19aa4f873578acf44b3bf4d4ae98e52c2817ca",
+            "syzkaller-commit": "2f19aa4f873578acf44b3bf4d4ae98e52c2817ca",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11ab3812a80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "snd_seq_create_port",
+            "sound/core/seq/seq_ports.c"
+        ]
+    ],
+    "patch_commit_date": "2023-07-17T06:25:55+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "sound"
+    ],
+    "parent_of_fix_commit": "b2cb84d7802b75bc4029519bce2c4e0c9319ac42",
+    "patch": "diff --git a/sound/core/seq/seq_ports.c b/sound/core/seq/seq_ports.c\nindex 9b80f8275026..f3f14ff0f80f 100644\n--- a/sound/core/seq/seq_ports.c\n+++ b/sound/core/seq/seq_ports.c\n@@ -149,6 +149,7 @@ int snd_seq_create_port(struct snd_seq_client *client, int port,\n \twrite_lock_irq(&client->ports_lock);\n \tlist_for_each_entry(p, &client->ports_list_head, list) {\n \t\tif (p->addr.port == port) {\n+\t\t\tkfree(new_port);\n \t\t\tnum = -EBUSY;\n \t\t\tgoto unlock;\n \t\t}\n",
+    "patch_modified_files": [
+        "sound/core/seq/seq_ports.c"
+    ]
+}

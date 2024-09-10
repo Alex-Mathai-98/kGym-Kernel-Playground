@@ -1,0 +1,82 @@
+general protection fault, probably for non-canonical address 0xdffffc0000000062: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x0000000000000310-0x0000000000000317]
+CPU: 0 PID: 4371 Comm: syz-executor.3 Not tainted 5.5.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:strlen+0x1f/0xa0
+Code: ff ff 66 0f 1f 84 00 00 00 00 00 48 b8 00 00 00 00 00 fc ff df 55 48 89 fa 48 89 e5 48 c1 ea 03 41 54 49 89 fc 53 48 83 ec 08 <0f> b6 04 02 48 89 fa 83 e2 07 38 d0 7f 04 84 c0 75 4d 41 80 3c 24
+RSP: 0018:ffffc900014f6ea0 EFLAGS: 00010286
+RAX: dffffc0000000000 RBX: ffff8881d98e5a18 RCX: 0000000000000001
+RDX: 0000000000000062 RSI: ffffffff86818c81 RDI: 0000000000000314
+RBP: ffffc900014f6eb8 R08: 0000000000000004 R09: 0000000000000001
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000314
+R13: 0000000000000304 R14: ffff8881d9cbaf00 R15: ffff8881d9cbaf00
+FS:  00007f66a811c6c0(0000) GS:ffff8881f6400000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000555556290938 CR3: 00000001df5f2001 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ ip_set_comment_free+0x69/0xe0
+ hash_net4_add+0x2313/0x2a30
+ hash_net4_uadt+0x592/0x960
+ call_ad+0x133/0x6b0
+ ip_set_ad.constprop.0+0x589/0xb40
+ ip_set_uadd+0x37/0x50
+ nfnetlink_rcv_msg+0xc70/0xfe0
+ netlink_rcv_skb+0x186/0x470
+ nfnetlink_rcv+0x1b6/0x450
+ netlink_unicast+0x589/0x880
+ netlink_sendmsg+0x922/0xe90
+ sock_sendmsg+0xd2/0x120
+ ____sys_sendmsg+0x679/0x880
+ ___sys_sendmsg+0x11d/0x1b0
+ __x64_sys_sendmsg+0x149/0x230
+ do_syscall_64+0xf6/0x240
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f66a8dbcf69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f66a811c0c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f66a8eeb050 RCX: 00007f66a8dbcf69
+RDX: 0000000000000000 RSI: 0000000020000d00 RDI: 0000000000000004
+RBP: 00007f66a8e094a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000006e R14: 00007f66a8eeb050 R15: 00007ffde13d8f78
+Modules linked in:
+---[ end trace 71d4ca4c0ef7229e ]---
+RIP: 0010:strlen+0x1f/0xa0
+Code: ff ff 66 0f 1f 84 00 00 00 00 00 48 b8 00 00 00 00 00 fc ff df 55 48 89 fa 48 89 e5 48 c1 ea 03 41 54 49 89 fc 53 48 83 ec 08 <0f> b6 04 02 48 89 fa 83 e2 07 38 d0 7f 04 84 c0 75 4d 41 80 3c 24
+RSP: 0018:ffffc900014f6ea0 EFLAGS: 00010286
+RAX: dffffc0000000000 RBX: ffff8881d98e5a18 RCX: 0000000000000001
+RDX: 0000000000000062 RSI: ffffffff86818c81 RDI: 0000000000000314
+RBP: ffffc900014f6eb8 R08: 0000000000000004 R09: 0000000000000001
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000314
+R13: 0000000000000304 R14: ffff8881d9cbaf00 R15: ffff8881d9cbaf00
+FS:  00007f66a811c6c0(0000) GS:ffff8881f6400000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000555556290938 CR3: 00000001df5f2001 CR4: 00000000003606f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess), 2 bytes skipped:
+   0:	66 0f 1f 84 00 00 00 	nopw   0x0(%rax,%rax,1)
+   7:	00 00
+   9:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  10:	fc ff df
+  13:	55                   	push   %rbp
+  14:	48 89 fa             	mov    %rdi,%rdx
+  17:	48 89 e5             	mov    %rsp,%rbp
+  1a:	48 c1 ea 03          	shr    $0x3,%rdx
+  1e:	41 54                	push   %r12
+  20:	49 89 fc             	mov    %rdi,%r12
+  23:	53                   	push   %rbx
+  24:	48 83 ec 08          	sub    $0x8,%rsp
+* 28:	0f b6 04 02          	movzbl (%rdx,%rax,1),%eax <-- trapping instruction
+  2c:	48 89 fa             	mov    %rdi,%rdx
+  2f:	83 e2 07             	and    $0x7,%edx
+  32:	38 d0                	cmp    %dl,%al
+  34:	7f 04                	jg     0x3a
+  36:	84 c0                	test   %al,%al
+  38:	75 4d                	jne    0x87
+  3a:	41                   	rex.B
+  3b:	80                   	.byte 0x80
+  3c:	3c 24                	cmp    $0x24,%al

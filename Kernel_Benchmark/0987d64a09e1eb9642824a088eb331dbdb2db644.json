@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "WARNING in check_map_prog_compatibility",
+    "display-title": "WARNING in check_map_prog_compatibility",
+    "id": "0987d64a09e1eb9642824a088eb331dbdb2db644",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "bpf: Relax the requirement to use preallocated hash maps in tracing progs.",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=34dd3bad1a6f1dc7d18ee8dd53f1d31bffd2aee8",
+            "hash": "34dd3bad1a6f1dc7d18ee8dd53f1d31bffd2aee8",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000009da4c705dcb87735@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in check_map_prog_compatibility",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14960370f00000",
+            "c-reproducer": "/text?tag=ReproC&x=1412ff0f700000",
+            "kernel-config": "/text?tag=KernelConfig&x=9ac56d6828346c4e",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=ce522ba9ef7e2d9fb22a39eb3371c0c64e2a433e",
+            "kernel-source-commit": "ce522ba9ef7e2d9fb22a39eb3371c0c64e2a433e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/af01ee7dda3c1b644f43230ae466b6dc7ceb97c3",
+            "syzkaller-commit": "af01ee7dda3c1b644f43230ae466b6dc7ceb97c3",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16c4c538f00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "check_map_prog_compatibility",
+            "kernel/bpf/verifier.c"
+        ]
+    ],
+    "patch_commit_date": "2022-09-02T21:10:47+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "bpf"
+    ],
+    "parent_of_fix_commit": "89dc8d0c38e0df27e580876a1681a55c686a51ff",
+    "patch": "diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c\nindex 0194a36d0b36..3dce3166855f 100644\n--- a/kernel/bpf/verifier.c\n+++ b/kernel/bpf/verifier.c\n@@ -12629,10 +12629,12 @@ static int check_map_prog_compatibility(struct bpf_verifier_env *env,\n \t * For programs attached to PERF events this is mandatory as the\n \t * perf NMI can hit any arbitrary code sequence.\n \t *\n-\t * All other trace types using preallocated hash maps are unsafe as\n-\t * well because tracepoint or kprobes can be inside locked regions\n-\t * of the memory allocator or at a place where a recursion into the\n-\t * memory allocator would see inconsistent state.\n+\t * All other trace types using non-preallocated per-cpu hash maps are\n+\t * unsafe as well because tracepoint or kprobes can be inside locked\n+\t * regions of the per-cpu memory allocator or at a place where a\n+\t * recursion into the per-cpu memory allocator would see inconsistent\n+\t * state. Non per-cpu hash maps are using bpf_mem_alloc-tor which is\n+\t * safe to use from kprobe/fentry and in RT.\n \t *\n \t * On RT enabled kernels run-time allocation of all trace type\n \t * programs is strictly prohibited due to lock type constraints. On\n@@ -12642,15 +12644,26 @@ static int check_map_prog_compatibility(struct bpf_verifier_env *env,\n \t */\n \tif (is_tracing_prog_type(prog_type) && !is_preallocated_map(map)) {\n \t\tif (prog_type == BPF_PROG_TYPE_PERF_EVENT) {\n+\t\t\t/* perf_event bpf progs have to use preallocated hash maps\n+\t\t\t * because non-prealloc is still relying on call_rcu to free\n+\t\t\t * elements.\n+\t\t\t */\n \t\t\tverbose(env, \"perf_event programs can only use preallocated hash map\\n\");\n \t\t\treturn -EINVAL;\n \t\t}\n-\t\tif (IS_ENABLED(CONFIG_PREEMPT_RT)) {\n-\t\t\tverbose(env, \"trace type programs can only use preallocated hash map\\n\");\n-\t\t\treturn -EINVAL;\n+\t\tif (map->map_type == BPF_MAP_TYPE_PERCPU_HASH ||\n+\t\t    (map->inner_map_meta &&\n+\t\t     map->inner_map_meta->map_type == BPF_MAP_TYPE_PERCPU_HASH)) {\n+\t\t\tif (IS_ENABLED(CONFIG_PREEMPT_RT)) {\n+\t\t\t\tverbose(env,\n+\t\t\t\t\t\"trace type programs can only use preallocated per-cpu hash map\\n\");\n+\t\t\t\treturn -EINVAL;\n+\t\t\t}\n+\t\t\tWARN_ONCE(1, \"trace type BPF program uses run-time allocation\\n\");\n+\t\t\tverbose(env,\n+\t\t\t\t\"trace type programs with run-time allocated per-cpu hash maps are unsafe.\"\n+\t\t\t\t\" Switch to preallocated hash maps.\\n\");\n \t\t}\n-\t\tWARN_ONCE(1, \"trace type BPF program uses run-time allocation\\n\");\n-\t\tverbose(env, \"trace type programs with run-time allocated hash maps are unsafe. Switch to preallocated hash maps.\\n\");\n \t}\n \n \tif (map_value_has_spin_lock(map)) {\n",
+    "patch_modified_files": [
+        "kernel/bpf/verifier.c"
+    ]
+}

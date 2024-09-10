@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "memory leak in nft_chain_parse_hook",
+    "display-title": "memory leak in nft_chain_parse_hook",
+    "id": "6c4345574ac937d9ccc195fdadb44f7cc95a19f9",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: nf_tables: clean up hook list when offload flags check fails",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=77972a36ecc4db7fc7c68f0e80714263c5f03f65",
+            "hash": "77972a36ecc4db7fc7c68f0e80714263c5f03f65",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001a12f105e769b1eb@google.com/T/",
+        "https://lore.kernel.org/all/20220830095042.452456-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20220831112737.16018-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20220901071238.3044-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20220913140350.291927556@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220913140357.323297659@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220913140410.043243217@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in nft_chain_parse_hook",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1263c283080000",
+            "c-reproducer": "/text?tag=ReproC&x=111b6545080000",
+            "kernel-config": "/text?tag=KernelConfig&x=b1831d905b683446",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4c612826bec1441214816827979b62f84a097e91",
+            "kernel-source-commit": "4c612826bec1441214816827979b62f84a097e91",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/15195ea3c66cc18f348576f4cfb94d03dd13c747",
+            "syzkaller-commit": "15195ea3c66cc18f348576f4cfb94d03dd13c747",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=164d6e4d080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nft_basechain_init",
+            "net/netfilter/nf_tables_api.c"
+        ]
+    ],
+    "patch_commit_date": "2022-08-31T11:11:47+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "d047283a7034140ea5da759a494fd2274affdd46",
+    "patch": "diff --git a/net/netfilter/nf_tables_api.c b/net/netfilter/nf_tables_api.c\nindex 2ee50e23c9b7..816052089b33 100644\n--- a/net/netfilter/nf_tables_api.c\n+++ b/net/netfilter/nf_tables_api.c\n@@ -2166,8 +2166,10 @@ static int nft_basechain_init(struct nft_base_chain *basechain, u8 family,\n \tchain->flags |= NFT_CHAIN_BASE | flags;\n \tbasechain->policy = NF_ACCEPT;\n \tif (chain->flags & NFT_CHAIN_HW_OFFLOAD &&\n-\t    !nft_chain_offload_support(basechain))\n+\t    !nft_chain_offload_support(basechain)) {\n+\t\tlist_splice_init(&basechain->hook_list, &hook->list);\n \t\treturn -EOPNOTSUPP;\n+\t}\n \n \tflow_block_init(&basechain->flow_block);\n \n",
+    "patch_modified_files": [
+        "net/netfilter/nf_tables_api.c"
+    ]
+}

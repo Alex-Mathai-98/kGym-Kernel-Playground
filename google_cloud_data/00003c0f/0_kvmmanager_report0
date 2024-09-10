@@ -1,0 +1,623 @@
+vcan0: j1939_tp_rxtimer: 0xffff888070311c00: rx timeout, send abort
+======================================================
+WARNING: possible circular locking dependency detected
+6.3.0-rc3-syzkaller-00164-g45977e58ce65 #0 Not tainted
+------------------------------------------------------
+ksoftirqd/0/15 is trying to acquire lock:
+ffff888079fdd0d0 (&priv->j1939_socks_lock){+.-.}-{2:2}, at: j1939_sk_errqueue+0xa6/0x190
+
+but task is already holding lock:
+ffff888079fdd088 (&priv->active_session_list_lock){+.-.}-{2:2}, at: j1939_tp_rxtimer+0xe0/0x4b0
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #2 (&priv->active_session_list_lock){+.-.}-{2:2}:
+       _raw_spin_lock_bh+0x2f/0x40
+       j1939_session_activate+0x47/0x4a0
+       j1939_sk_queue_activate_next+0x2b8/0x4c0
+       j1939_session_completed+0xb7/0x170
+       j1939_xtp_rx_eoma+0x293/0x600
+       j1939_tp_recv+0x99f/0xf30
+       j1939_can_recv+0x787/0xa60
+       can_rcv_filter+0x2a5/0x8e0
+       can_receive+0x31d/0x5c0
+       can_rcv+0x1d8/0x270
+       __netif_receive_skb_one_core+0x115/0x180
+       __netif_receive_skb+0x1f/0x1b0
+       process_backlog+0x139/0x770
+       __napi_poll.constprop.0+0xb4/0x530
+       net_rx_action+0x8f1/0xd30
+       __do_softirq+0x1d4/0x8f9
+       run_ksoftirqd+0x2d/0x60
+       smpboot_thread_fn+0x669/0x9f0
+       kthread+0x2e0/0x390
+       ret_from_fork+0x1f/0x30
+
+-> #1 (&jsk->sk_session_queue_lock){+.-.}-{2:2}:
+       _raw_spin_lock_bh+0x2f/0x40
+       j1939_sk_queue_drop_all+0x3b/0x2f0
+       j1939_sk_netdev_event_netdown+0x7b/0x160
+       j1939_netdev_notify+0x19c/0x1d0
+       notifier_call_chain+0xb5/0x1e0
+       call_netdevice_notifiers_info+0xb5/0x130
+       __dev_notify_flags+0x1f1/0x2d0
+       dev_change_flags+0x11e/0x170
+       do_setlink+0xb55/0x3f00
+       __rtnl_newlink+0xbcf/0x1860
+       rtnl_newlink+0x63/0x90
+       rtnetlink_rcv_msg+0x435/0xd30
+       netlink_rcv_skb+0x162/0x430
+       netlink_unicast+0x52c/0x7f0
+       netlink_sendmsg+0x907/0xe10
+       sock_sendmsg+0xd5/0x180
+       ____sys_sendmsg+0x66d/0x910
+       ___sys_sendmsg+0x11d/0x1b0
+       __sys_sendmsg+0xf6/0x1c0
+       do_syscall_64+0x34/0xb0
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+-> #0 (&priv->j1939_socks_lock){+.-.}-{2:2}:
+       __lock_acquire+0x2e5c/0x5cd0
+       lock_acquire+0x1a8/0x510
+       _raw_spin_lock_bh+0x2f/0x40
+       j1939_sk_errqueue+0xa6/0x190
+       __j1939_session_cancel+0x3ac/0x450
+       j1939_tp_rxtimer+0x3db/0x4b0
+       __hrtimer_run_queues+0x1f9/0xbf0
+       hrtimer_run_softirq+0x179/0x350
+       __do_softirq+0x1d4/0x8f9
+       run_ksoftirqd+0x2d/0x60
+       smpboot_thread_fn+0x669/0x9f0
+       kthread+0x2e0/0x390
+       ret_from_fork+0x1f/0x30
+
+other info that might help us debug this:
+
+Chain exists of:
+  &priv->j1939_socks_lock --> &jsk->sk_session_queue_lock --> &priv->active_session_list_lock
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&priv->active_session_list_lock);
+                               lock(&jsk->sk_session_queue_lock);
+                               lock(&priv->active_session_list_lock);
+  lock(&priv->j1939_socks_lock);
+
+ *** DEADLOCK ***
+
+1 lock held by ksoftirqd/0/15:
+ #0: ffff888079fdd088 (&priv->active_session_list_lock){+.-.}-{2:2}, at: j1939_tp_rxtimer+0xe0/0x4b0
+
+stack backtrace:
+CPU: 0 PID: 15 Comm: ksoftirqd/0 Not tainted 6.3.0-rc3-syzkaller-00164-g45977e58ce65 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xd5/0x1b0
+ check_noncircular+0x268/0x310
+ __lock_acquire+0x2e5c/0x5cd0
+ lock_acquire+0x1a8/0x510
+ _raw_spin_lock_bh+0x2f/0x40
+ j1939_sk_errqueue+0xa6/0x190
+ __j1939_session_cancel+0x3ac/0x450
+ j1939_tp_rxtimer+0x3db/0x4b0
+ __hrtimer_run_queues+0x1f9/0xbf0
+ hrtimer_run_softirq+0x179/0x350
+ __do_softirq+0x1d4/0x8f9
+ run_ksoftirqd+0x2d/0x60
+ smpboot_thread_fn+0x669/0x9f0
+ kthread+0x2e0/0x390
+ ret_from_fork+0x1f/0x30
+ </TASK>
+vcan0: j1939_tp_rxtimer: 0xffff888070311c00: abort rx timeout. Force session deactivation
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_tp_rxtimer: 0xffff88806e4e6400: rx timeout, send abort
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_tp_rxtimer: 0xffff88806e4e6400: abort rx timeout. Force session deactivation
+vcan0: j1939_tp_rxtimer: 0xffff88814690a400: rx timeout, send abort
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806dd13400: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806dd12c00: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806dd30000: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806dd09000: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff888020de9000: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_tp_rxtimer: 0xffff88806df69000: rx timeout, send abort
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806dd12400: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806dd11c00: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_tp_rxtimer: 0xffff88814690a400: abort rx timeout. Force session deactivation
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat_one: 0xffff88806dd28000: last 00
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_tp_rxtimer: 0xffff88806df69000: abort rx timeout. Force session deactivation
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806dd28000: 0x00000: (5) Maximal retransmit request limit reached
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806dd28400: 0x00000: (5) Maximal retransmit request limit reached
+vcan0: j1939_tp_rxtimer: 0xffff8880214fc000: rx timeout, send abort
+vcan0: j1939_tp_rxtimer: 0xffff8880214fc000: abort rx timeout. Force session deactivation
+vcan0: j1939_tp_txtimer: 0xffff888029183400: tx aborted with unknown reason: -2
+vcan0: j1939_tp_rxtimer: 0xffff888029183400: abort rx timeout. Force session deactivation
+vcan0: j1939_tp_rxtimer: 0xffff88806ebab800: rx timeout, send abort
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806dd26800: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806dd26000: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff88801b000800: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_tp_rxtimer: 0xffff88806ebab800: abort rx timeout. Force session deactivation
+vcan0: j1939_tp_rxtimer: 0xffff8880273b5c00: rx timeout, send abort
+vcan0: j1939_tp_rxtimer: 0xffff8880273b6c00: rx timeout, send abort
+vcan0: j1939_xtp_rx_abort_one: 0xffff888070db1000: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff888070db0c00: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff888070094c00: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff888070095000: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff888070db1400: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_tp_rxtimer: 0xffff888071492000: rx timeout, send abort
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806da7f800: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806da7f000: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_abort_one: 0xffff88806d128c00: 0x00000: (3) A timeout occurred and this is the connection abort to close the session.
+vcan0: j1939_xtp_rx_dpo: no connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found
+vcan0: j1939_xtp_rx_dat: no rx connection found

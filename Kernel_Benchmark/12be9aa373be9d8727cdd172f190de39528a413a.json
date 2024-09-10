@@ -1,0 +1,76 @@
+{
+    "version": 1,
+    "title": "general protection fault in selinux_socket_recvmsg",
+    "display-title": "general protection fault in selinux_socket_recvmsg",
+    "id": "12be9aa373be9d8727cdd172f190de39528a413a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mptcp: avoid NULL-ptr derefence on fallback",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0a82e230c68860b7286dad8644d9d9f7cfd755d2",
+            "hash": "0a82e230c68860b7286dad8644d9d9f7cfd755d2",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "mptcp: consolidate synack processing.",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=263e1201a2c324b60b15ecda5de9ebf1e7293e31",
+        "hash": "263e1201a2c324b60b15ecda5de9ebf1e7293e31",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000054221d05a64b7ed8@google.com/T/",
+        "https://lore.kernel.org/all/d7d7f946ab9c43e96720d97e68645e38fb8b233c.1590417507.git.pabeni@redhat.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13eeacba100000",
+            "c-reproducer": "/text?tag=ReproC&x=167163e6100000",
+            "kernel-config": "/text?tag=KernelConfig&x=b3368ce0cc5f5ace",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=051143e1602d90ea71887d92363edd539d411de5",
+            "kernel-source-commit": "051143e1602d90ea71887d92363edd539d411de5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9682898d6f14dd27f95c419d059fd867bb91b22b",
+            "syzkaller-commit": "9682898d6f14dd27f95c419d059fd867bb91b22b",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=110b3d22100000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "mptcp_recvmsg",
+            "net/mptcp/protocol.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "tcp_rcv_synsent_state_process",
+            "net/ipv4/tcp_input.c"
+        ],
+        [
+            "mptcp_parse_option",
+            "include/net/mptcp.h"
+        ],
+        [
+            "mptcp_syn_options",
+            "net/mptcp/options.c"
+        ],
+        [
+            "subflow_finish_connect",
+            "net/mptcp/subflow.c"
+        ]
+    ],
+    "patch_commit_date": "2020-05-25T14:38:47+00:00",
+    "cause_commit_date": "2020-04-30T13:01:51+00:00",
+    "subsystems": [
+        "selinux"
+    ],
+    "parent_of_fix_commit": "f2fb6b6275eba9d312957ca44c487bd780da6169",
+    "patch": "diff --git a/net/mptcp/protocol.c b/net/mptcp/protocol.c\nindex 32ea8d35489a..c8675d2eb5b9 100644\n--- a/net/mptcp/protocol.c\n+++ b/net/mptcp/protocol.c\n@@ -954,7 +954,8 @@ static int mptcp_recvmsg(struct sock *sk, struct msghdr *msg, size_t len,\n \n \t\tpr_debug(\"block timeout %ld\", timeo);\n \t\tmptcp_wait_data(sk, &timeo);\n-\t\tif (unlikely(__mptcp_tcp_fallback(msk)))\n+\t\tssock = __mptcp_tcp_fallback(msk);\n+\t\tif (unlikely(ssock))\n \t\t\tgoto fallback;\n \t}\n \n",
+    "patch_modified_files": [
+        "net/mptcp/protocol.c"
+    ]
+}

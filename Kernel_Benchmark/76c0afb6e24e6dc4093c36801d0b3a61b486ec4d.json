@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "WARNING in nilfs_segctor_do_construct",
+    "display-title": "WARNING in nilfs_segctor_do_construct (2)",
+    "id": "76c0afb6e24e6dc4093c36801d0b3a61b486ec4d",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: fix possible out-of-bounds segment allocation in resize ioctl",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fee5eaecca86afa544355569b831c1f90f334b85",
+            "hash": "fee5eaecca86afa544355569b831c1f90f334b85",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005434c405fbbafdc5@google.com/T/",
+        "https://lore.kernel.org/all/20230524094348.3784-1-konishi.ryusuke@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in nilfs_segctor_do_construct",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1438dcc6280000",
+            "c-reproducer": "/text?tag=ReproC&x=124666a2280000",
+            "kernel-config": "/text?tag=KernelConfig&x=38526bf24c8d961b",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9a48d604672220545d209e9996c2a1edbb5637f6",
+            "kernel-source-commit": "9a48d604672220545d209e9996c2a1edbb5637f6",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2b9ba477a18ed0cc53e6b29a9641292709a7ba24",
+            "syzkaller-commit": "2b9ba477a18ed0cc53e6b29a9641292709a7ba24",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10c07646280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nilfs_sufile_resize",
+            "fs/nilfs2/sufile.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-24T09:43:48+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "88ac3bbcf73853880a9b2a65c67e6854390741cc",
+    "patch": "diff --git a/fs/nilfs2/sufile.c b/fs/nilfs2/sufile.c\nindex dc359b56fdfa..2c6078a6b8ec 100644\n--- a/fs/nilfs2/sufile.c\n+++ b/fs/nilfs2/sufile.c\n@@ -779,6 +779,15 @@ int nilfs_sufile_resize(struct inode *sufile, __u64 newnsegs)\n \t\t\tgoto out_header;\n \n \t\tsui->ncleansegs -= nsegs - newnsegs;\n+\n+\t\t/*\n+\t\t * If the sufile is successfully truncated, immediately adjust\n+\t\t * the segment allocation space while locking the semaphore\n+\t\t * \"mi_sem\" so that nilfs_sufile_alloc() never allocates\n+\t\t * segments in the truncated space.\n+\t\t */\n+\t\tsui->allocmax = newnsegs - 1;\n+\t\tsui->allocmin = 0;\n \t}\n \n \tkaddr = kmap_atomic(header_bh->b_page);\n",
+    "patch_modified_files": [
+        "fs/nilfs2/sufile.c"
+    ]
+}

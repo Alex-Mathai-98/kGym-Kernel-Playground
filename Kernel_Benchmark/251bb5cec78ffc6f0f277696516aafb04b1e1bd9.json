@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "WARNING in bpf_verifier_vlog",
+    "display-title": "WARNING in bpf_verifier_vlog",
+    "id": "251bb5cec78ffc6f0f277696516aafb04b1e1bd9",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "bpf: drop unnecessary user-triggerable WARN_ONCE in verifierl log",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cff36398bd4c7d322d424433db437f3c3391c491",
+            "hash": "cff36398bd4c7d322d424433db437f3c3391c491",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000042cd3a05fb517ddd@google.com/T/",
+        "https://lore.kernel.org/all/000000000000e506e905e836d9e7@google.com/T/",
+        "https://lore.kernel.org/all/20230516180409.3549088-1-andrii@kernel.org/T/",
+        "https://lore.kernel.org/all/20230709151255.512931-7-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in bpf_verifier_vlog",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1798cab7080000",
+            "c-reproducer": "/text?tag=ReproC&x=16ccbdc5080000",
+            "kernel-config": "/text?tag=KernelConfig&x=f4d613baa509128c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7e18e42e4b280c85b76967a9106a13ca61c16179",
+            "kernel-source-commit": "7e18e42e4b280c85b76967a9106a13ca61c16179",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/28811d0ac5274e8b3730fcf2ad0634d723fcd878",
+            "syzkaller-commit": "28811d0ac5274e8b3730fcf2ad0634d723fcd878",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=118ef71b080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "bpf_verifier_vlog",
+            "kernel/bpf/log.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-16T18:04:09+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "bpf"
+    ],
+    "parent_of_fix_commit": "34e78bab67c5de43e685c63cd8c27e0cd3239897",
+    "patch": "diff --git a/kernel/bpf/log.c b/kernel/bpf/log.c\nindex 046ddff37a76..850494423530 100644\n--- a/kernel/bpf/log.c\n+++ b/kernel/bpf/log.c\n@@ -62,9 +62,6 @@ void bpf_verifier_vlog(struct bpf_verifier_log *log, const char *fmt,\n \n \tn = vscnprintf(log->kbuf, BPF_VERIFIER_TMP_LOG_SIZE, fmt, args);\n \n-\tWARN_ONCE(n >= BPF_VERIFIER_TMP_LOG_SIZE - 1,\n-\t\t  \"verifier log line truncated - local buffer too short\\n\");\n-\n \tif (log->level == BPF_LOG_KERNEL) {\n \t\tbool newline = n > 0 && log->kbuf[n - 1] == '\\n';\n \n",
+    "patch_modified_files": [
+        "kernel/bpf/log.c"
+    ]
+}

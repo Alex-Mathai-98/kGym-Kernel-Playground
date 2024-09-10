@@ -1,0 +1,71 @@
+kasan: CONFIG_KASAN_INLINE enabled
+kasan: GPF could be caused by NULL-ptr deref or user memory access
+general protection fault: 0000 [#1] PREEMPT SMP KASAN
+CPU: 1 PID: 4417 Comm: syz-executor.2 Not tainted 5.2.0-rc3-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:btf_struct_resolve+0x41a/0xf40
+Code: 00 49 03 1c 24 48 89 d8 48 c1 e8 03 42 80 3c 28 00 74 08 48 89 df e8 45 88 24 00 4c 8b 23 4d 8d 7c 24 04 4c 89 fb 48 c1 eb 03 <42> 0f b6 04 2b 84 c0 0f 85 ee 03 00 00 45 8b 37 45 89 f5 41 81 e5
+RSP: 0018:ffff8881caccf510 EFLAGS: 00010247
+RAX: ffffffff81864355 RBX: 0000000000000000 RCX: ffff8881d20925c0
+RDX: 0000000000000000 RSI: 0000000000000005 RDI: 0000000000000001
+RBP: ffff8881caccf5b0 R08: ffffffff81864344 R09: 0000000000000000
+R10: dffffc0000000001 R11: fffffbfff121ff85 R12: 0000000000000000
+R13: dffffc0000000000 R14: ffff8881d2c1cdc0 R15: 0000000000000004
+FS:  00007f204c0b26c0(0000) GS:ffff8881f6700000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f204ce61988 CR3: 00000001d06c9004 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ btf_resolve+0x3e7/0xd90
+ btf_parse_type_sec+0xa54/0x1d50
+ btf_new_fd+0xa9a/0x11c0
+ __se_sys_bpf+0x12ae/0xc4a0
+ __x64_sys_bpf+0x7b/0x90
+ do_syscall_64+0xfd/0x140
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f204cd31f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f204c0b20c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000141
+RAX: ffffffffffffffda RBX: 00007f204ce5ff80 RCX: 00007f204cd31f69
+RDX: 0000000000000020 RSI: 0000000020000100 RDI: 0000000000000012
+RBP: 00007f204cd7e4a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f204ce5ff80 R15: 00007fffed0be788
+Modules linked in:
+---[ end trace f8dd76c7e94683dd ]---
+RIP: 0010:btf_struct_resolve+0x41a/0xf40
+Code: 00 49 03 1c 24 48 89 d8 48 c1 e8 03 42 80 3c 28 00 74 08 48 89 df e8 45 88 24 00 4c 8b 23 4d 8d 7c 24 04 4c 89 fb 48 c1 eb 03 <42> 0f b6 04 2b 84 c0 0f 85 ee 03 00 00 45 8b 37 45 89 f5 41 81 e5
+RSP: 0018:ffff8881caccf510 EFLAGS: 00010247
+RAX: ffffffff81864355 RBX: 0000000000000000 RCX: ffff8881d20925c0
+RDX: 0000000000000000 RSI: 0000000000000005 RDI: 0000000000000001
+RBP: ffff8881caccf5b0 R08: ffffffff81864344 R09: 0000000000000000
+R10: dffffc0000000001 R11: fffffbfff121ff85 R12: 0000000000000000
+R13: dffffc0000000000 R14: ffff8881d2c1cdc0 R15: 0000000000000004
+FS:  00007f204c0b26c0(0000) GS:ffff8881f6700000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f204ce61988 CR3: 00000001d06c9004 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	00 49 03             	add    %cl,0x3(%rcx)
+   3:	1c 24                	sbb    $0x24,%al
+   5:	48 89 d8             	mov    %rbx,%rax
+   8:	48 c1 e8 03          	shr    $0x3,%rax
+   c:	42 80 3c 28 00       	cmpb   $0x0,(%rax,%r13,1)
+  11:	74 08                	je     0x1b
+  13:	48 89 df             	mov    %rbx,%rdi
+  16:	e8 45 88 24 00       	call   0x248860
+  1b:	4c 8b 23             	mov    (%rbx),%r12
+  1e:	4d 8d 7c 24 04       	lea    0x4(%r12),%r15
+  23:	4c 89 fb             	mov    %r15,%rbx
+  26:	48 c1 eb 03          	shr    $0x3,%rbx
+* 2a:	42 0f b6 04 2b       	movzbl (%rbx,%r13,1),%eax <-- trapping instruction
+  2f:	84 c0                	test   %al,%al
+  31:	0f 85 ee 03 00 00    	jne    0x425
+  37:	45 8b 37             	mov    (%r15),%r14d
+  3a:	45 89 f5             	mov    %r14d,%r13d
+  3d:	41                   	rex.B
+  3e:	81                   	.byte 0x81
+  3f:	e5                   	.byte 0xe5

@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "kernel BUG in ext4_es_cache_extent",
+    "display-title": "kernel BUG in ext4_es_cache_extent",
+    "id": "31a3f2ad09a571fb7a5212efc400ce6bfc82e04c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: filter out EXT4_FC_REPLAY from on-disk superblock field s_state",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c878bea3c9d724ddfa05a813f30de3d25a0ba83f",
+            "hash": "c878bea3c9d724ddfa05a813f30de3d25a0ba83f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003d898d05d759c00a@google.com/T/",
+        "https://lore.kernel.org/all/20220420192312.1655305-1-phind.uet@gmail.com/T/",
+        "https://lore.kernel.org/all/20220607164908.521895282@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220607164934.766888869@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220607164948.980838585@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220607165002.659942637@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "kernel BUG in ext4_es_cache_extent",
+            "syz-reproducer": "/text?tag=ReproSyz&x=124e0abfb00000",
+            "c-reproducer": "/text?tag=ReproC&x=1758f610700000",
+            "kernel-config": "/text?tag=KernelConfig&x=b4a89edfcc8f7c74",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9f7fb8de5d9bac17b6392a14af40baf555d9129b",
+            "kernel-source-commit": "9f7fb8de5d9bac17b6392a14af40baf555d9129b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4ebb27982f8984ed57466f87099acc0b250a1b5c",
+            "syzkaller-commit": "4ebb27982f8984ed57466f87099acc0b250a1b5c",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12d1da24700000"
+        }
+    ],
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "ef09ed5d37b84d18562b30cf7253e57062d0db05",
+    "patch": "diff --git a/fs/ext4/super.c b/fs/ext4/super.c\nindex 7f6cd2473163..9cbb22045379 100644\n--- a/fs/ext4/super.c\n+++ b/fs/ext4/super.c\n@@ -4770,7 +4770,7 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)\n \t\t\t\t\tsbi->s_inodes_per_block;\n \tsbi->s_desc_per_block = blocksize / EXT4_DESC_SIZE(sb);\n \tsbi->s_sbh = bh;\n-\tsbi->s_mount_state = le16_to_cpu(es->s_state);\n+\tsbi->s_mount_state = le16_to_cpu(es->s_state) & ~EXT4_FC_REPLAY;\n \tsbi->s_addr_per_block_bits = ilog2(EXT4_ADDR_PER_BLOCK(sb));\n \tsbi->s_desc_per_block_bits = ilog2(EXT4_DESC_PER_BLOCK(sb));\n \n@@ -6333,7 +6333,8 @@ static int __ext4_remount(struct fs_context *fc, struct super_block *sb)\n \t\t\t\tif (err)\n \t\t\t\t\tgoto restore_opts;\n \t\t\t}\n-\t\t\tsbi->s_mount_state = le16_to_cpu(es->s_state);\n+\t\t\tsbi->s_mount_state = (le16_to_cpu(es->s_state) &\n+\t\t\t\t\t      ~EXT4_FC_REPLAY);\n \n \t\t\terr = ext4_setup_super(sb, es, 0);\n \t\t\tif (err)\n",
+    "patch_modified_files": [
+        "fs/ext4/super.c"
+    ]
+}

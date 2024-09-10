@@ -1,0 +1,50 @@
+============================================
+WARNING: possible recursive locking detected
+5.15.0-rc6-syzkaller #0 Not tainted
+--------------------------------------------
+syz-executor.5/3671 is trying to acquire lock:
+ffff8880600c0ed0 (&type->i_mutex_dir_key#6){++++}-{3:3}, at: fuse_reverse_inval_entry+0x208/0x540
+
+but task is already holding lock:
+ffff8880600c0150 (&type->i_mutex_dir_key#6){++++}-{3:3}, at: fuse_reverse_inval_entry+0x4c/0x540
+
+other info that might help us debug this:
+ Possible unsafe locking scenario:
+
+       CPU0
+       ----
+  lock(&type->i_mutex_dir_key#6);
+  lock(&type->i_mutex_dir_key#6);
+
+ *** DEADLOCK ***
+
+ May be due to missing lock nesting notation
+
+2 locks held by syz-executor.5/3671:
+ #0: ffff888075030338 (&fc->killsb){.+.+}-{3:3}, at: fuse_dev_do_write+0x2647/0x2bb0
+ #1: ffff8880600c0150 (&type->i_mutex_dir_key#6){++++}-{3:3}, at: fuse_reverse_inval_entry+0x4c/0x540
+
+stack backtrace:
+CPU: 0 PID: 3671 Comm: syz-executor.5 Not tainted 5.15.0-rc6-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack_lvl+0xfc/0x174
+ __lock_acquire.cold+0x16a/0x462
+ lock_acquire+0x1a8/0x4f0
+ down_write+0x93/0x150
+ fuse_reverse_inval_entry+0x208/0x540
+ fuse_dev_do_write+0xda8/0x2bb0
+ fuse_dev_write+0x144/0x1d0
+ new_sync_write+0x473/0x640
+ vfs_write+0x7d9/0xb00
+ ksys_write+0x131/0x250
+ do_syscall_64+0x34/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7ff58d1b8f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ff58c5390c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007ff58d2e6f80 RCX: 00007ff58d1b8f69
+RDX: 000000000000002e RSI: 00000000200000c0 RDI: 0000000000000003
+RBP: 00007ff58d2054a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007ff58d2e6f80 R15: 00007fff9a579a18

@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "memory leak in lapb_register",
+    "display-title": "memory leak in lapb_register",
+    "id": "05d0def6cba37ae08ca4138a8e49d01191e87b71",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "lapb: fixed leak of control-blocks.",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6be8e297f9bcea666ea85ac7a6cd9d52d6deaf92",
+            "hash": "6be8e297f9bcea666ea85ac7a6cd9d52d6deaf92",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005c5d1d0589660769@google.com/T/",
+        "https://lore.kernel.org/all/20190616155437.25299-1-jeremy@azazel.net/T/",
+        "https://lore.kernel.org/all/20190620174328.608036501@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190620174336.357373754@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190620174337.538228162@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190620174349.443386789@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190620174351.964339809@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11ea4654a00000",
+            "c-reproducer": "/text?tag=ReproC&x=100f6f44a00000",
+            "kernel-config": "/text?tag=KernelConfig&x=61dd9e15a761691d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f49aa1de98363b6c5fba4637678d6b0ba3d18065",
+            "kernel-source-commit": "f49aa1de98363b6c5fba4637678d6b0ba3d18065",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8285069f89c9942f65ce760a8f0a5a12254bfeeb",
+            "syzkaller-commit": "8285069f89c9942f65ce760a8f0a5a12254bfeeb",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1423518aa00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "lapb_unregister",
+            "net/lapb/lapb_iface.c"
+        ]
+    ],
+    "patch_commit_date": "2019-06-16T15:54:37+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "x25"
+    ],
+    "parent_of_fix_commit": "5cf02612b33f104fe1015b2dfaf1758ad3675588",
+    "patch": "diff --git a/net/lapb/lapb_iface.c b/net/lapb/lapb_iface.c\nindex 03f0cd872dce..5d2d1f746b91 100644\n--- a/net/lapb/lapb_iface.c\n+++ b/net/lapb/lapb_iface.c\n@@ -177,6 +177,7 @@ int lapb_unregister(struct net_device *dev)\n \tlapb = __lapb_devtostruct(dev);\n \tif (!lapb)\n \t\tgoto out;\n+\tlapb_put(lapb);\n \n \tlapb_stop_t1timer(lapb);\n \tlapb_stop_t2timer(lapb);\n",
+    "patch_modified_files": [
+        "net/lapb/lapb_iface.c"
+    ]
+}

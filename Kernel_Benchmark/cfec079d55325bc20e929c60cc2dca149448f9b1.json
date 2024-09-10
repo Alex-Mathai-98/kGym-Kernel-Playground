@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "memory leak in watch_queue_set_size",
+    "display-title": "memory leak in watch_queue_set_size",
+    "id": "cfec079d55325bc20e929c60cc2dca149448f9b1",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "watch_queue: Free the page array when watch_queue is dismantled",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b490207017ba237d97b735b2aa66dc241ccd18f5",
+            "hash": "b490207017ba237d97b735b2aa66dc241ccd18f5",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000084c28705db2374a7@google.com/T/",
+        "https://lore.kernel.org/all/164848722432.2645691.7772718304671310430.stgit@warthog.procyon.org.uk/T/",
+        "https://lore.kernel.org/all/20220322004654.618274-1-eric.dumazet@gmail.com/T/",
+        "https://lore.kernel.org/all/20220327154936.9353-1-mail@anirudhrb.com/T/",
+        "https://lore.kernel.org/all/20220405070258.802373272@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220405070339.801210740@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220405070354.155796697@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220405070407.513532867@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in watch_queue_set_size",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15dc9c95700000",
+            "c-reproducer": "/text?tag=ReproC&x=15dd7871700000",
+            "kernel-config": "/text?tag=KernelConfig&x=6c80259f3b3fdf91",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=34e047aa16c0123bbae8e2f6df33e5ecc1f56601",
+            "kernel-source-commit": "34e047aa16c0123bbae8e2f6df33e5ecc1f56601",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e2d91b1d0dd8c8b4760986ec8114469246022bb8",
+            "syzkaller-commit": "e2d91b1d0dd8c8b4760986ec8114469246022bb8",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16bccd33700000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__put_watch_queue",
+            "kernel/watch_queue.c"
+        ]
+    ],
+    "patch_commit_date": "2022-03-28T17:07:04+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "1cd927ad6f62f27d8908498dcbf61395c5dd5fe2",
+    "patch": "diff --git a/kernel/watch_queue.c b/kernel/watch_queue.c\nindex 3990e4df3d7b..230038d4f908 100644\n--- a/kernel/watch_queue.c\n+++ b/kernel/watch_queue.c\n@@ -370,6 +370,7 @@ static void __put_watch_queue(struct kref *kref)\n \n \tfor (i = 0; i < wqueue->nr_pages; i++)\n \t\t__free_page(wqueue->notes[i]);\n+\tkfree(wqueue->notes);\n \tbitmap_free(wqueue->notes_bitmap);\n \n \twfilter = rcu_access_pointer(wqueue->filter);\n",
+    "patch_modified_files": [
+        "kernel/watch_queue.c"
+    ]
+}

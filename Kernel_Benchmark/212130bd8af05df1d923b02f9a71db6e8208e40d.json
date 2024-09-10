@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "possible deadlock in blkdev_put",
+    "display-title": "possible deadlock in blkdev_put (3)",
+    "id": "212130bd8af05df1d923b02f9a71db6e8208e40d",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "loop: don't destroy lo->workqueue in __loop_clr_fd",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d292dc80686aeafc418d809b4f9598578a7f294f",
+            "hash": "d292dc80686aeafc418d809b4f9598578a7f294f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000099c4ca05da07e42f@google.com/T/",
+        "https://lore.kernel.org/all/20220316084519.2850118-9-hch@lst.de/T/",
+        "https://lore.kernel.org/all/20220324075119.1556334-14-hch@lst.de/T/",
+        "https://lore.kernel.org/all/20220325063929.1773899-15-hch@lst.de/T/",
+        "https://lore.kernel.org/all/20220330052917.2566582-16-hch@lst.de/T/",
+        "https://lore.kernel.org/all/613b094e-2b76-11b7-458b-553aafaf0df7@I-love.SAKURA.ne.jp/T/"
+    ],
+    "crashes": [
+        {
+            "title": "possible deadlock in blkdev_put",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1704bd29700000",
+            "c-reproducer": "/text?tag=ReproC&x=14f78d41700000",
+            "kernel-config": "/text?tag=KernelConfig&x=aba0ab2928a512c2",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f0e18b03fcafd8344539101f564ae358950ae892",
+            "kernel-source-commit": "f0e18b03fcafd8344539101f564ae358950ae892",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9e8eaa75a18a5cf8102e862be692c0781759e51b",
+            "syzkaller-commit": "9e8eaa75a18a5cf8102e862be692c0781759e51b",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=157c4ca9700000"
+        }
+    ],
+    "subsystems": [
+        "block"
+    ],
+    "parent_of_fix_commit": "a0e286b6a5b61d4da01bdf865071c4da417046d6",
+    "patch": "diff --git a/drivers/block/loop.c b/drivers/block/loop.c\nindex 204558d7a81d..0c7f0367200c 100644\n--- a/drivers/block/loop.c\n+++ b/drivers/block/loop.c\n@@ -812,7 +812,6 @@ struct loop_worker {\n };\n \n static void loop_workfn(struct work_struct *work);\n-static void loop_rootcg_workfn(struct work_struct *work);\n \n #ifdef CONFIG_BLK_CGROUP\n static inline int queue_on_root_worker(struct cgroup_subsys_state *css)\n@@ -1050,20 +1049,19 @@ static int loop_configure(struct loop_device *lo, fmode_t mode,\n \t    !file->f_op->write_iter)\n \t\tlo->lo_flags |= LO_FLAGS_READ_ONLY;\n \n-\tlo->workqueue = alloc_workqueue(\"loop%d\",\n-\t\t\t\t\tWQ_UNBOUND | WQ_FREEZABLE,\n-\t\t\t\t\t0,\n-\t\t\t\t\tlo->lo_number);\n \tif (!lo->workqueue) {\n-\t\terror = -ENOMEM;\n-\t\tgoto out_unlock;\n+\t\tlo->workqueue = alloc_workqueue(\"loop%d\",\n+\t\t\t\t\t\tWQ_UNBOUND | WQ_FREEZABLE,\n+\t\t\t\t\t\t0, lo->lo_number);\n+\t\tif (!lo->workqueue) {\n+\t\t\terror = -ENOMEM;\n+\t\t\tgoto out_unlock;\n+\t\t}\n \t}\n \n \tdisk_force_media_change(lo->lo_disk, DISK_EVENT_MEDIA_CHANGE);\n \tset_disk_ro(lo->lo_disk, (lo->lo_flags & LO_FLAGS_READ_ONLY) != 0);\n \n-\tINIT_WORK(&lo->rootcg_work, loop_rootcg_workfn);\n-\tINIT_LIST_HEAD(&lo->rootcg_cmd_list);\n \tlo->use_dio = lo->lo_flags & LO_FLAGS_DIRECT_IO;\n \tlo->lo_device = bdev;\n \tlo->lo_backing_file = file;\n@@ -1143,10 +1141,6 @@ static void __loop_clr_fd(struct loop_device *lo, bool release)\n \tif (!release)\n \t\tblk_mq_freeze_queue(lo->lo_queue);\n \n-\tdestroy_workqueue(lo->workqueue);\n-\tloop_free_idle_workers(lo, true);\n-\tdel_timer_sync(&lo->timer);\n-\n \tspin_lock_irq(&lo->lo_lock);\n \tfilp = lo->lo_backing_file;\n \tlo->lo_backing_file = NULL;\n@@ -1750,6 +1744,10 @@ static void lo_free_disk(struct gendisk *disk)\n {\n \tstruct loop_device *lo = disk->private_data;\n \n+\tif (lo->workqueue)\n+\t\tdestroy_workqueue(lo->workqueue);\n+\tloop_free_idle_workers(lo, true);\n+\tdel_timer_sync(&lo->timer);\n \tmutex_destroy(&lo->lo_mutex);\n \tkfree(lo);\n }\n@@ -2013,6 +2011,8 @@ static int loop_add(int i)\n \tlo->lo_number\t\t= i;\n \tspin_lock_init(&lo->lo_lock);\n \tspin_lock_init(&lo->lo_work_lock);\n+\tINIT_WORK(&lo->rootcg_work, loop_rootcg_workfn);\n+\tINIT_LIST_HEAD(&lo->rootcg_cmd_list);\n \tdisk->major\t\t= LOOP_MAJOR;\n \tdisk->first_minor\t= i << part_shift;\n \tdisk->minors\t\t= 1 << part_shift;\n",
+    "patch_modified_files": [
+        "drivers/block/loop.c"
+    ]
+}

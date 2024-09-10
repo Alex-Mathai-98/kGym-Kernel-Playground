@@ -1,0 +1,84 @@
+BUG: unable to handle page fault for address: ffffffffffffff84
+#PF: supervisor read access in kernel mode
+#PF: error_code(0x0000) - not-present page
+PGD b68f067 P4D b68f067 PUD b691067 PMD 0 
+Oops: 0000 [#1] PREEMPT SMP KASAN
+CPU: 0 PID: 5595 Comm: syz-executor.7 Not tainted 5.10.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:smc_nl_handle_smcr_dev+0x51d/0x1270
+Code: 00 00 fc ff df 49 8d 7c 24 84 48 89 fa 48 c1 ea 03 0f b6 14 02 48 89 f8 83 e0 07 83 c0 01 38 d0 7c 08 84 d2 0f 85 a0 0c 00 00 <41> 0f b7 44 24 84 49 8d 7c 24 86 48 89 fa 48 c1 ea 03 66 89 84 24
+RSP: 0018:ffffc90001f87220 EFLAGS: 00010246
+RAX: 0000000000000005 RBX: ffff888026fa5d40 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffffffffff84
+RBP: ffffffff8de92f40 R08: 0000000000000001 R09: ffffc90001f872e8
+R10: fffff520003f0e60 R11: 0000000000000000 R12: 0000000000000000
+R13: 000000001b556831 R14: dffffc0000000000 R15: ffff88802781c014
+FS:  00007f05c60596c0(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: ffffffffffffff84 CR3: 0000000027022000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ smcr_nl_get_device+0xa3/0x180
+ genl_lock_dumpit+0x63/0x90
+ netlink_dump+0x4ec/0xbc0
+ __netlink_dump_start+0x671/0x930
+ genl_family_rcv_msg_dumpit+0x2b5/0x310
+ genl_rcv_msg+0x43e/0x590
+ netlink_rcv_skb+0x154/0x420
+ genl_rcv+0x24/0x40
+ netlink_unicast+0x527/0x7e0
+ netlink_sendmsg+0x901/0xde0
+ sock_sendmsg+0xcd/0x130
+ ____sys_sendmsg+0x62e/0x810
+ ___sys_sendmsg+0x100/0x170
+ __sys_sendmsg+0xe5/0x1b0
+ do_syscall_64+0x2d/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7f05c6cd8f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f05c60590c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f05c6e06f80 RCX: 00007f05c6cd8f69
+RDX: 0000000000000000 RSI: 0000000020000180 RDI: 0000000000000004
+RBP: 00007f05c6d254a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f05c6e06f80 R15: 00007ffd8d3b91d8
+Modules linked in:
+CR2: ffffffffffffff84
+---[ end trace b5ce85e9f8e1ccc5 ]---
+RIP: 0010:smc_nl_handle_smcr_dev+0x51d/0x1270
+Code: 00 00 fc ff df 49 8d 7c 24 84 48 89 fa 48 c1 ea 03 0f b6 14 02 48 89 f8 83 e0 07 83 c0 01 38 d0 7c 08 84 d2 0f 85 a0 0c 00 00 <41> 0f b7 44 24 84 49 8d 7c 24 86 48 89 fa 48 c1 ea 03 66 89 84 24
+RSP: 0018:ffffc90001f87220 EFLAGS: 00010246
+RAX: 0000000000000005 RBX: ffff888026fa5d40 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffffffffff84
+RBP: ffffffff8de92f40 R08: 0000000000000001 R09: ffffc90001f872e8
+R10: fffff520003f0e60 R11: 0000000000000000 R12: 0000000000000000
+R13: 000000001b556831 R14: dffffc0000000000 R15: ffff88802781c014
+FS:  00007f05c60596c0(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: ffffffffffffff84 CR3: 0000000027022000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess), 4 bytes skipped:
+   0:	df 49 8d             	fisttps -0x73(%rcx)
+   3:	7c 24                	jl     0x29
+   5:	84 48 89             	test   %cl,-0x77(%rax)
+   8:	fa                   	cli
+   9:	48 c1 ea 03          	shr    $0x3,%rdx
+   d:	0f b6 14 02          	movzbl (%rdx,%rax,1),%edx
+  11:	48 89 f8             	mov    %rdi,%rax
+  14:	83 e0 07             	and    $0x7,%eax
+  17:	83 c0 01             	add    $0x1,%eax
+  1a:	38 d0                	cmp    %dl,%al
+  1c:	7c 08                	jl     0x26
+  1e:	84 d2                	test   %dl,%dl
+  20:	0f 85 a0 0c 00 00    	jne    0xcc6
+* 26:	41 0f b7 44 24 84    	movzwl -0x7c(%r12),%eax <-- trapping instruction
+  2c:	49 8d 7c 24 86       	lea    -0x7a(%r12),%rdi
+  31:	48 89 fa             	mov    %rdi,%rdx
+  34:	48 c1 ea 03          	shr    $0x3,%rdx
+  38:	66                   	data16
+  39:	89                   	.byte 0x89
+  3a:	84                   	.byte 0x84
+  3b:	24                   	.byte 0x24

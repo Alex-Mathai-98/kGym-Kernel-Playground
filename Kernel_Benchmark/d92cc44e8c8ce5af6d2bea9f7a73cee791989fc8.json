@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "WARNING: locking bug in ext4_xattr_inode_iget",
+    "display-title": "WARNING: locking bug in ext4_xattr_inode_iget",
+    "id": "d92cc44e8c8ce5af6d2bea9f7a73cee791989fc8",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: disallow ea_inodes with extended attributes",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2bc7e7c1a3bc9bd0cbf0f71006f6fe7ef24a00c2",
+            "hash": "2bc7e7c1a3bc9bd0cbf0f71006f6fe7ef24a00c2",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000000a12d05fb36b2eb@google.com/T/",
+        "https://lore.kernel.org/all/20230524034951.779531-1-tytso@mit.edu/T/",
+        "https://lore.kernel.org/all/20230525175542.GB821358@mit.edu/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING: locking bug in ext4_xattr_inode_iget",
+            "syz-reproducer": "/text?tag=ReproSyz&x=124dd084280000",
+            "c-reproducer": "/text?tag=ReproC&x=1266af88280000",
+            "kernel-config": "/text?tag=KernelConfig&x=73a06f6ef2d5b492",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1a5304fecee523060f26e2778d9d8e33c0562df3",
+            "kernel-source-commit": "1a5304fecee523060f26e2778d9d8e33c0562df3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/518a39a63148f6aee9c82e5b6b1c20889a21f698",
+            "syzkaller-commit": "518a39a63148f6aee9c82e5b6b1c20889a21f698",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1446826c280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "check_igot_inode",
+            "fs/ext4/inode.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-24T03:49:50+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "b928dfdcb27d8fa59917b794cfba53052a2f050f",
+    "patch": "diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c\nindex 258f3cbed347..02de439bf1f0 100644\n--- a/fs/ext4/inode.c\n+++ b/fs/ext4/inode.c\n@@ -4647,6 +4647,9 @@ static const char *check_igot_inode(struct inode *inode, ext4_iget_flags flags)\n \tif (flags & EXT4_IGET_EA_INODE) {\n \t\tif (!(EXT4_I(inode)->i_flags & EXT4_EA_INODE_FL))\n \t\t\treturn \"missing EA_INODE flag\";\n+\t\tif (ext4_test_inode_state(inode, EXT4_STATE_XATTR) ||\n+\t\t    EXT4_I(inode)->i_file_acl)\n+\t\t\treturn \"ea_inode with extended attributes\";\n \t} else {\n \t\tif ((EXT4_I(inode)->i_flags & EXT4_EA_INODE_FL))\n \t\t\treturn \"unexpected EA_INODE flag\";\n",
+    "patch_modified_files": [
+        "fs/ext4/inode.c"
+    ]
+}

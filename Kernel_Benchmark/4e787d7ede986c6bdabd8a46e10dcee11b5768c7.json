@@ -1,0 +1,59 @@
+{
+    "version": 1,
+    "title": "memory leak in video_usercopy",
+    "display-title": "memory leak in video_usercopy",
+    "id": "4e787d7ede986c6bdabd8a46e10dcee11b5768c7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: v4l: ioctl: Fix memory leak in video_usercopy",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fb18802a338b36f675a388fc03d2aa504a0d0899",
+            "hash": "fb18802a338b36f675a388fc03d2aa504a0d0899",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000025169705b6d100fa@google.com/T/",
+        "https://lore.kernel.org/all/20201220110651.13432-1-sakari.ailus@linux.intel.com/T/",
+        "https://lore.kernel.org/all/20201220201124.13688-1-sakari.ailus@linux.intel.com/T/",
+        "https://lore.kernel.org/all/20210301161201.679371205@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120849.381261651@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120851.255002428@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120851.751937389@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120853.659441428@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120857.341630346@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120903.276489876@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14d18f9b500000",
+            "c-reproducer": "/text?tag=ReproC&x=106a2c13500000",
+            "kernel-config": "/text?tag=KernelConfig&x=37c889fb8b2761af",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a409ed156a90093a03fe6a93721ddf4c591eac87",
+            "kernel-source-commit": "a409ed156a90093a03fe6a93721ddf4c591eac87",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/04201c0669446145fd9c347c5538da0ca13ff29b",
+            "syzkaller-commit": "04201c0669446145fd9c347c5538da0ca13ff29b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14122f17500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "video_usercopy",
+            "drivers/media/v4l2-core/v4l2-ioctl.c"
+        ]
+    ],
+    "patch_commit_date": "2020-12-19T22:29:58+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "media"
+    ],
+    "parent_of_fix_commit": "f7c7d6ccc503c0a5f4e5debb570b55bf2eb24c73",
+    "patch": "diff --git a/drivers/media/v4l2-core/v4l2-ioctl.c b/drivers/media/v4l2-core/v4l2-ioctl.c\nindex 3198abdd538c..9906b41004e9 100644\n--- a/drivers/media/v4l2-core/v4l2-ioctl.c\n+++ b/drivers/media/v4l2-core/v4l2-ioctl.c\n@@ -3283,7 +3283,7 @@ video_usercopy(struct file *file, unsigned int orig_cmd, unsigned long arg,\n \t       v4l2_kioctl func)\n {\n \tchar\tsbuf[128];\n-\tvoid    *mbuf = NULL;\n+\tvoid    *mbuf = NULL, *array_buf = NULL;\n \tvoid\t*parg = (void *)arg;\n \tlong\terr  = -EINVAL;\n \tbool\thas_array_args;\n@@ -3318,27 +3318,21 @@ video_usercopy(struct file *file, unsigned int orig_cmd, unsigned long arg,\n \thas_array_args = err;\n \n \tif (has_array_args) {\n-\t\t/*\n-\t\t * When adding new types of array args, make sure that the\n-\t\t * parent argument to ioctl (which contains the pointer to the\n-\t\t * array) fits into sbuf (so that mbuf will still remain\n-\t\t * unused up to here).\n-\t\t */\n-\t\tmbuf = kvmalloc(array_size, GFP_KERNEL);\n+\t\tarray_buf = kvmalloc(array_size, GFP_KERNEL);\n \t\terr = -ENOMEM;\n-\t\tif (NULL == mbuf)\n+\t\tif (array_buf == NULL)\n \t\t\tgoto out_array_args;\n \t\terr = -EFAULT;\n \t\tif (in_compat_syscall())\n-\t\t\terr = v4l2_compat_get_array_args(file, mbuf, user_ptr,\n-\t\t\t\t\t\t\t array_size, orig_cmd,\n-\t\t\t\t\t\t\t parg);\n+\t\t\terr = v4l2_compat_get_array_args(file, array_buf,\n+\t\t\t\t\t\t\t user_ptr, array_size,\n+\t\t\t\t\t\t\t orig_cmd, parg);\n \t\telse\n-\t\t\terr = copy_from_user(mbuf, user_ptr, array_size) ?\n+\t\t\terr = copy_from_user(array_buf, user_ptr, array_size) ?\n \t\t\t\t\t\t\t\t-EFAULT : 0;\n \t\tif (err)\n \t\t\tgoto out_array_args;\n-\t\t*kernel_ptr = mbuf;\n+\t\t*kernel_ptr = array_buf;\n \t}\n \n \t/* Handles IOCTL */\n@@ -3360,12 +3354,13 @@ video_usercopy(struct file *file, unsigned int orig_cmd, unsigned long arg,\n \t\tif (in_compat_syscall()) {\n \t\t\tint put_err;\n \n-\t\t\tput_err = v4l2_compat_put_array_args(file, user_ptr, mbuf,\n-\t\t\t\t\t\t\t     array_size, orig_cmd,\n-\t\t\t\t\t\t\t     parg);\n+\t\t\tput_err = v4l2_compat_put_array_args(file, user_ptr,\n+\t\t\t\t\t\t\t     array_buf,\n+\t\t\t\t\t\t\t     array_size,\n+\t\t\t\t\t\t\t     orig_cmd, parg);\n \t\t\tif (put_err)\n \t\t\t\terr = put_err;\n-\t\t} else if (copy_to_user(user_ptr, mbuf, array_size)) {\n+\t\t} else if (copy_to_user(user_ptr, array_buf, array_size)) {\n \t\t\terr = -EFAULT;\n \t\t}\n \t\tgoto out_array_args;\n@@ -3381,6 +3376,7 @@ video_usercopy(struct file *file, unsigned int orig_cmd, unsigned long arg,\n \tif (video_put_user((void __user *)arg, parg, cmd, orig_cmd))\n \t\terr = -EFAULT;\n out:\n+\tkvfree(array_buf);\n \tkvfree(mbuf);\n \treturn err;\n }\n",
+    "patch_modified_files": [
+        "drivers/media/v4l2-core/v4l2-ioctl.c"
+    ]
+}

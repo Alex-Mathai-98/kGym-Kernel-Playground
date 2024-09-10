@@ -1,0 +1,80 @@
+IPv6: RTM_NEWROUTE with no NLM_F_CREATE or NLM_F_REPLACE
+IPv6: NLM_F_CREATE should be set when creating new route
+IPv6: NLM_F_CREATE should be set when creating new route
+general protection fault, probably for non-canonical address 0xdffffc0000000010: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x0000000000000080-0x0000000000000087]
+CPU: 0 PID: 4236 Comm: syz-executor.0 Not tainted 5.9.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:nexthop_is_blackhole+0x147/0x250
+Code: 74 fa 49 83 c6 10 4c 89 f0 48 c1 e8 03 42 80 3c 38 00 74 08 4c 89 f7 e8 e7 96 b2 fa 49 8b 1e 48 83 eb 80 48 89 d8 48 c1 e8 03 <42> 80 3c 38 00 74 08 48 89 df e8 ca 96 b2 fa 48 8b 1b e8 22 86 ff
+RSP: 0018:ffffc90001507258 EFLAGS: 00010202
+RAX: 0000000000000010 RBX: 0000000000000080 RCX: ffff8881ea4543c0
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000001
+RBP: 0000000000000001 R08: ffffffff86feb359 R09: ffffed103d539e09
+R10: 0000000000000000 R11: dffffc0000000001 R12: dffffc0000000000
+R13: ffff8881ea9cf017 R14: ffff8881d7c75210 R15: dffffc0000000000
+FS:  00007fa3d7b046c0(0000) GS:ffff8881f6200000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fc5efe6d6c6 CR3: 00000001eab50006 CR4: 00000000003706f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ rt6_fill_node+0xee4/0x1930
+ inet6_rt_notify+0x2ac/0x500
+ fib6_add+0x1f58/0x3ae0
+ ip6_route_add+0x84/0x120
+ inet6_rtm_newroute+0x21c/0x1e90
+ rtnetlink_rcv_msg+0xa21/0xd10
+ netlink_rcv_skb+0x188/0x3d0
+ netlink_unicast+0x765/0x910
+ netlink_sendmsg+0x97a/0xd00
+ ____sys_sendmsg+0x520/0x800
+ ___sys_sendmsg+0x19d/0x200
+ __x64_sys_sendmsg+0x16c/0x1f0
+ do_syscall_64+0x30/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7fa3d8783f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fa3d7b040c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007fa3d88b1f80 RCX: 00007fa3d8783f69
+RDX: 0000000000000000 RSI: 0000000020000300 RDI: 0000000000000003
+RBP: 00007fa3d87d04a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fa3d88b1f80 R15: 00007ffd291e0df8
+Modules linked in:
+---[ end trace 541606ecc9138573 ]---
+RIP: 0010:nexthop_is_blackhole+0x147/0x250
+Code: 74 fa 49 83 c6 10 4c 89 f0 48 c1 e8 03 42 80 3c 38 00 74 08 4c 89 f7 e8 e7 96 b2 fa 49 8b 1e 48 83 eb 80 48 89 d8 48 c1 e8 03 <42> 80 3c 38 00 74 08 48 89 df e8 ca 96 b2 fa 48 8b 1b e8 22 86 ff
+RSP: 0018:ffffc90001507258 EFLAGS: 00010202
+RAX: 0000000000000010 RBX: 0000000000000080 RCX: ffff8881ea4543c0
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000001
+RBP: 0000000000000001 R08: ffffffff86feb359 R09: ffffed103d539e09
+R10: 0000000000000000 R11: dffffc0000000001 R12: dffffc0000000000
+R13: ffff8881ea9cf017 R14: ffff8881d7c75210 R15: dffffc0000000000
+FS:  00007fa3d7b046c0(0000) GS:ffff8881f6200000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fc5efe6d6c6 CR3: 00000001eab50006 CR4: 00000000003706f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	74 fa                	je     0xfffffffc
+   2:	49 83 c6 10          	add    $0x10,%r14
+   6:	4c 89 f0             	mov    %r14,%rax
+   9:	48 c1 e8 03          	shr    $0x3,%rax
+   d:	42 80 3c 38 00       	cmpb   $0x0,(%rax,%r15,1)
+  12:	74 08                	je     0x1c
+  14:	4c 89 f7             	mov    %r14,%rdi
+  17:	e8 e7 96 b2 fa       	call   0xfab29703
+  1c:	49 8b 1e             	mov    (%r14),%rbx
+  1f:	48 83 eb 80          	sub    $0xffffffffffffff80,%rbx
+  23:	48 89 d8             	mov    %rbx,%rax
+  26:	48 c1 e8 03          	shr    $0x3,%rax
+* 2a:	42 80 3c 38 00       	cmpb   $0x0,(%rax,%r15,1) <-- trapping instruction
+  2f:	74 08                	je     0x39
+  31:	48 89 df             	mov    %rbx,%rdi
+  34:	e8 ca 96 b2 fa       	call   0xfab29703
+  39:	48 8b 1b             	mov    (%rbx),%rbx
+  3c:	e8                   	.byte 0xe8
+  3d:	22                   	.byte 0x22
+  3e:	86 ff                	xchg   %bh,%bh

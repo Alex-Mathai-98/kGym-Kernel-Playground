@@ -1,0 +1,46 @@
+{
+    "version": 1,
+    "title": "memory leak in virtio_transport_send_pkt_info",
+    "display-title": "memory leak in virtio_transport_send_pkt_info",
+    "id": "7be7d262d5aae39f2dd7683de0ba6646857007bc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "vsock/virtio: free queued packets when closing socket",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8432b8114957235f42e070a16118a7f750de9d39",
+            "hash": "8432b8114957235f42e070a16118a7f750de9d39",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000069a2e905bad5d02e@google.com/T/",
+        "https://lore.kernel.org/all/20210420110727.139945-1-sgarzare@redhat.com/T/",
+        "https://lore.kernel.org/all/20210512144819.664462530@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210512144827.811958675@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210512144837.204217980@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in virtio_transport_send_pkt_info",
+            "syz-reproducer": "/text?tag=ReproSyz&x=135dd494d00000",
+            "c-reproducer": "/text?tag=ReproC&x=128787e7500000",
+            "kernel-config": "/text?tag=KernelConfig&x=162a0109d6ff731f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9f29bd8b2e7132b409178d1367dae1813017bd0e",
+            "kernel-source-commit": "9f29bd8b2e7132b409178d1367dae1813017bd0e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d4f4eca56fbea6f58a4d5adfd19cb5e0dc32fe46",
+            "syzkaller-commit": "d4f4eca56fbea6f58a4d5adfd19cb5e0dc32fe46",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11b6d920d00000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "eeddfd8e8d392bc94968d87e7a408ba9e9be4722",
+    "patch": "diff --git a/net/vmw_vsock/virtio_transport_common.c b/net/vmw_vsock/virtio_transport_common.c\nindex e4370b1b7494..902cb6dd710b 100644\n--- a/net/vmw_vsock/virtio_transport_common.c\n+++ b/net/vmw_vsock/virtio_transport_common.c\n@@ -733,6 +733,23 @@ static int virtio_transport_reset_no_sock(const struct virtio_transport *t,\n \treturn t->send_pkt(reply);\n }\n \n+/* This function should be called with sk_lock held and SOCK_DONE set */\n+static void virtio_transport_remove_sock(struct vsock_sock *vsk)\n+{\n+\tstruct virtio_vsock_sock *vvs = vsk->trans;\n+\tstruct virtio_vsock_pkt *pkt, *tmp;\n+\n+\t/* We don't need to take rx_lock, as the socket is closing and we are\n+\t * removing it.\n+\t */\n+\tlist_for_each_entry_safe(pkt, tmp, &vvs->rx_queue, list) {\n+\t\tlist_del(&pkt->list);\n+\t\tvirtio_transport_free_pkt(pkt);\n+\t}\n+\n+\tvsock_remove_sock(vsk);\n+}\n+\n static void virtio_transport_wait_close(struct sock *sk, long timeout)\n {\n \tif (timeout) {\n@@ -765,7 +782,7 @@ static void virtio_transport_do_close(struct vsock_sock *vsk,\n \t    (!cancel_timeout || cancel_delayed_work(&vsk->close_work))) {\n \t\tvsk->close_work_scheduled = false;\n \n-\t\tvsock_remove_sock(vsk);\n+\t\tvirtio_transport_remove_sock(vsk);\n \n \t\t/* Release refcnt obtained when we scheduled the timeout */\n \t\tsock_put(sk);\n@@ -828,22 +845,15 @@ static bool virtio_transport_close(struct vsock_sock *vsk)\n \n void virtio_transport_release(struct vsock_sock *vsk)\n {\n-\tstruct virtio_vsock_sock *vvs = vsk->trans;\n-\tstruct virtio_vsock_pkt *pkt, *tmp;\n \tstruct sock *sk = &vsk->sk;\n \tbool remove_sock = true;\n \n \tif (sk->sk_type == SOCK_STREAM)\n \t\tremove_sock = virtio_transport_close(vsk);\n \n-\tlist_for_each_entry_safe(pkt, tmp, &vvs->rx_queue, list) {\n-\t\tlist_del(&pkt->list);\n-\t\tvirtio_transport_free_pkt(pkt);\n-\t}\n-\n \tif (remove_sock) {\n \t\tsock_set_flag(sk, SOCK_DONE);\n-\t\tvsock_remove_sock(vsk);\n+\t\tvirtio_transport_remove_sock(vsk);\n \t}\n }\n EXPORT_SYMBOL_GPL(virtio_transport_release);\n",
+    "patch_modified_files": [
+        "net/vmw_vsock/virtio_transport_common.c"
+    ]
+}

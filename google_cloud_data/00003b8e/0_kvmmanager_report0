@@ -1,0 +1,29 @@
+==================================================================
+BUG: KASAN: null-ptr-deref in filp_close+0x22/0x170
+Read of size 8 at addr 0000000000000077 by task syz-executor.2/5608
+
+CPU: 1 PID: 5608 Comm: syz-executor.2 Not tainted 5.10.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x107/0x163
+ kasan_report.cold+0x5/0x37
+ check_memory_region+0x13b/0x190
+ filp_close+0x22/0x170
+ put_files_struct+0x1d7/0x360
+ exit_files+0x12a/0x170
+ do_exit+0xb5f/0x2a20
+ do_group_exit+0x125/0x310
+ get_signal+0x3db/0x2320
+ arch_do_signal_or_restart+0x1e6/0x1cc0
+ exit_to_user_mode_prepare+0x11c/0x1f0
+ syscall_exit_to_user_mode+0x19/0x50
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7f7fda7cdf69
+Code: Unable to access opcode bytes at RIP 0x7f7fda7cdf3f.
+RSP: 002b:00007f7fd9b4e178 EFLAGS: 00000246 ORIG_RAX: 00000000000000ca
+RAX: 0000000000000001 RBX: 00007f7fda8fbf88 RCX: 00007f7fda7cdf69
+RDX: 00000000000f4240 RSI: 0000000000000081 RDI: 00007f7fda8fbf8c
+RBP: 00007f7fda8fbf80 R08: 0000000000745a46 R09: 00007f7fd9b4e6c0
+R10: 0000000000000000 R11: 0000000000000246 R12: 00007f7fda8fbf8c
+R13: 000000000000000b R14: 00007ffe59434e70 R15: 00007ffe59434f58
+==================================================================

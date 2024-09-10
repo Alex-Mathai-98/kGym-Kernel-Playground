@@ -1,0 +1,19 @@
+BUG: memory leak
+unreferenced object 0xffff888120136980 (size 96):
+  comm "syz-executor.7", pid 5575, jiffies 4294942726 (age 9.650s)
+  hex dump (first 32 bytes):
+    01 00 00 00 00 00 00 00 ff ff ff ff 00 00 00 00  ................
+    bf 95 16 00 00 00 00 00 00 00 01 00 01 00 05 00  ................
+  backtrace:
+    [<00000000a914dc3a>] virtio_transport_alloc_pkt+0x4a/0x290
+    [<00000000a2654b31>] virtio_transport_send_pkt_info+0x101/0x1b0
+    [<000000002dd0f011>] virtio_transport_stream_enqueue+0x58/0x80
+    [<00000000e9a32232>] vsock_stream_sendmsg+0x4fa/0x590
+    [<0000000026d92a12>] sock_sendmsg+0x52/0x70
+    [<000000000908072f>] ____sys_sendmsg+0x116/0x380
+    [<00000000de27b2b2>] ___sys_sendmsg+0x95/0xd0
+    [<00000000a99d01bf>] __sys_sendmmsg+0x102/0x2f0
+    [<000000003d7ca1a3>] __x64_sys_sendmmsg+0x21/0x30
+    [<00000000d1ef6be5>] do_syscall_64+0x2d/0x70
+    [<0000000060582af9>] entry_SYSCALL_64_after_hwframe+0x44/0xae
+

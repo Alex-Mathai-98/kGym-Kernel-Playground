@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "WARNING in io_sync_cancel",
+    "display-title": "WARNING in io_sync_cancel",
+    "id": "7ba391f8e821454d748011f0dbd3ed0f862dfb78",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring/cancel: re-grab ctx mutex after finishing wait",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=23fffb2f09ce1145cbd751801d45ba74acaa6542",
+            "hash": "23fffb2f09ce1145cbd751801d45ba74acaa6542",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003a14a905f05050b0@google.com/T/",
+        "https://lore.kernel.org/all/20230103183934.2022663-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in io_sync_cancel",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14ac9ee7880000",
+            "c-reproducer": "/text?tag=ReproC&x=142b36b7880000",
+            "kernel-config": "/text?tag=KernelConfig&x=334a10f27a9ee2e0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=77856d911a8c8724ee8e2b09d55979fc1de8f1c0",
+            "kernel-source-commit": "77856d911a8c8724ee8e2b09d55979fc1de8f1c0",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/05494336991504e3c6137b89eeddd492e17af6b6",
+            "syzkaller-commit": "05494336991504e3c6137b89eeddd492e17af6b6",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10adaa57880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "io_sync_cancel",
+            "io_uring/cancel.c"
+        ]
+    ],
+    "patch_commit_date": "2022-12-21T14:11:33+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "52ea806ad983490b3132a9e526e11a10dc2fd10c",
+    "patch": "diff --git a/io_uring/cancel.c b/io_uring/cancel.c\nindex 2291a53cdabd..b4f5dfacc0c3 100644\n--- a/io_uring/cancel.c\n+++ b/io_uring/cancel.c\n@@ -288,24 +288,23 @@ int io_sync_cancel(struct io_ring_ctx *ctx, void __user *arg)\n \n \t\tret = __io_sync_cancel(current->io_uring, &cd, sc.fd);\n \n+\t\tmutex_unlock(&ctx->uring_lock);\n \t\tif (ret != -EALREADY)\n \t\t\tbreak;\n \n-\t\tmutex_unlock(&ctx->uring_lock);\n \t\tret = io_run_task_work_sig(ctx);\n-\t\tif (ret < 0) {\n-\t\t\tmutex_lock(&ctx->uring_lock);\n+\t\tif (ret < 0)\n \t\t\tbreak;\n-\t\t}\n \t\tret = schedule_hrtimeout(&timeout, HRTIMER_MODE_ABS);\n-\t\tmutex_lock(&ctx->uring_lock);\n \t\tif (!ret) {\n \t\t\tret = -ETIME;\n \t\t\tbreak;\n \t\t}\n+\t\tmutex_lock(&ctx->uring_lock);\n \t} while (1);\n \n \tfinish_wait(&ctx->cq_wait, &wait);\n+\tmutex_lock(&ctx->uring_lock);\n \n \tif (ret == -ENOENT || ret > 0)\n \t\tret = 0;\n",
+    "patch_modified_files": [
+        "io_uring/cancel.c"
+    ]
+}

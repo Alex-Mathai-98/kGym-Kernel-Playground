@@ -1,0 +1,55 @@
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): veth1_to_batadv: link is not ready
+kasan: CONFIG_KASAN_INLINE enabled
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+kasan: GPF could be caused by NULL-ptr deref or user memory access
+general protection fault: 0000 [#1] SMP KASAN
+Modules linked in:
+CPU: 1 PID: 5259 Comm: syz-executor.3 Tainted: G        W         4.17.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:smc_setsockopt+0x86/0x100
+RSP: 0018:ffff8801d53e7db0 EFLAGS: 00010216
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_0: link is not ready
+RAX: dffffc0000000000 RBX: 0000000000000000 RCX: 0000000020000000
+RDX: 0000000000000005 RSI: ffffffff872c54e5 RDI: 0000000000000028
+RBP: ffff8801d53e7de0 R08: 0000000000000000 R09: 0000000000000005
+R10: 0000000000000001 R11: ffff8801d4bce040 R12: 0000000000000021
+R13: 000000000000000d R14: 0000000020000000 R15: 0000000000000000
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+FS:  00007f91503026c0(0000) GS:ffff8801f6700000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000555e32fcab68 CR3: 00000001d55aa000 CR4: 00000000003406e0
+Call Trace:
+ __sys_setsockopt+0x1a2/0x370
+ __x64_sys_setsockopt+0xbd/0x150
+ do_syscall_64+0x16e/0x230
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f9150780f69
+RSP: 002b:00007f91503020c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000036
+RAX: ffffffffffffffda RBX: 00007f91508aef80 RCX: 00007f9150780f69
+RDX: 000000000000000d RSI: 0000000000000021 RDI: 0000000000000004
+RBP: 00007f91507cd4a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000020000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f91508aef80 R15: 00007ffe85917c58
+Code: fa 48 c1 ea 03 80 3c 02 00 0f 85 88 00 00 00 48 8b 9b 50 04 00 00 48 b8 00 00 00 00 00 fc ff df 48 8d 7b 28 48 89 fa 48 c1 ea 03 <80> 3c 02 00 75 5f 48 ba 00 00 00 00 00 fc ff df 48 8b 43 28 48 
+RIP: smc_setsockopt+0x86/0x100 RSP: ffff8801d53e7db0
+---[ end trace c3c4927270c0f154 ]---
+IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+----------------
+Code disassembly (best guess):
+   0:	fa                   	cli
+   1:	48 c1 ea 03          	shr    $0x3,%rdx
+   5:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1)
+   9:	0f 85 88 00 00 00    	jne    0x97
+   f:	48 8b 9b 50 04 00 00 	mov    0x450(%rbx),%rbx
+  16:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
+  1d:	fc ff df
+  20:	48 8d 7b 28          	lea    0x28(%rbx),%rdi
+  24:	48 89 fa             	mov    %rdi,%rdx
+  27:	48 c1 ea 03          	shr    $0x3,%rdx
+* 2b:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1) <-- trapping instruction
+  2f:	75 5f                	jne    0x90
+  31:	48 ba 00 00 00 00 00 	movabs $0xdffffc0000000000,%rdx
+  38:	fc ff df
+  3b:	48 8b 43 28          	mov    0x28(%rbx),%rax
+  3f:	48                   	rex.W

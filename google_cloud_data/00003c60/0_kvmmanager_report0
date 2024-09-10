@@ -1,0 +1,123 @@
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+kasan: GPF could be caused by NULL-ptr deref or user memory access
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+general protection fault: 0000 [#1] PREEMPT SMP KASAN
+CPU: 1 PID: 4134 Comm: syz-executor.6 Not tainted 4.19.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+kobject: 'tx-1' (00000000421901c2): kobject_uevent_env
+RIP: 0010:icmp_timeout_obj_to_nlattr+0x77/0x160
+Code: 5e 86 c7 00 f1 f1 f1 f1 c7 40 04 04 f3 f3 f3 65 48 8b 04 25 28 00 00 00 48 89 45 d0 31 c0 e8 70 67 1f fb 48 89 d8 48 c1 e8 03 <42> 0f b6 14 30 48 89 d8 83 e0 07 83 c0 03 38 d0 7c 08 84 d2 0f 85
+RSP: 0018:ffff8801eeaf72d8 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffffffff86613340
+RDX: 0000000000000000 RSI: ffffffff865e3c30 RDI: ffff8801eece4940
+kobject: 'tx-1' (00000000421901c2): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim11/net/wlan1/queues/tx-1'
+RBP: ffff8801eeaf7360 R08: 0000000000000000 R09: 0000000000000005
+R10: 0000000000000000 R11: 0000000000000000 R12: 1ffff1003dd5ee5b
+R13: ffff8801eece4940 R14: dffffc0000000000 R15: ffff8801eeaf7338
+FS:  00007fd7513796c0(0000) GS:ffff8801f6700000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f315720a440 CR3: 00000001cc19b004 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+kobject: 'tx-2' (00000000abf03c6b): kobject_add_internal: parent: 'queues', set: 'queues'
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+kobject: 'tx-2' (00000000abf03c6b): kobject_uevent_env
+ cttimeout_default_get+0x62e/0x9c0
+ nfnetlink_rcv_msg+0xd59/0x10f0
+kobject: 'tx-2' (00000000abf03c6b): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim11/net/wlan1/queues/tx-2'
+kobject: 'tx-3' (0000000031a917a9): kobject_add_internal: parent: 'queues', set: 'queues'
+kobject: 'tx-3' (0000000031a917a9): kobject_uevent_env
+ netlink_rcv_skb+0x183/0x410
+kobject: 'tx-3' (0000000031a917a9): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim11/net/wlan1/queues/tx-3'
+ nfnetlink_rcv+0x1bc/0x4c0
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+ netlink_unicast+0x8b2/0x1000
+kobject: 'hwsim12' (00000000d308b650): kobject_add_internal: parent: 'mac80211_hwsim', set: 'devices'
+ netlink_sendmsg+0xa0d/0xf80
+kobject: 'hwsim12' (00000000d308b650): kobject_uevent_env
+ sock_sendmsg+0xd5/0x120
+kobject: 'hwsim12' (00000000d308b650): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim12'
+ ___sys_sendmsg+0x77a/0x970
+kobject: 'hwsim12' (00000000d308b650): kobject_uevent_env
+kobject: 'hwsim12' (00000000d308b650): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim12'
+kobject: 'ieee80211' (000000002b3eb808): kobject_add_internal: parent: 'hwsim12', set: '(null)'
+ __x64_sys_sendmsg+0x165/0x2e0
+kobject: 'phy12' (000000008688feb8): kobject_add_internal: parent: 'ieee80211', set: 'devices'
+ do_syscall_64+0x183/0x270
+kobject: 'phy12' (000000008688feb8): kobject_uevent_env
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7fd751ff8f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fd7513790c8 EFLAGS: 00000246
+kobject: 'phy12' (000000008688feb8): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim12/ieee80211/phy12'
+ ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007fd752126f80 RCX: 00007fd751ff8f69
+RDX: 0000000000000000 RSI: 0000000020dddfc8 RDI: 0000000000000003
+RBP: 00007fd7520454a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fd752126f80 R15: 00007fffb36e0458
+kobject: 'rfkill22' (0000000039193aef): kobject_add_internal: parent: 'phy12', set: 'devices'
+Modules linked in:
+kobject: 'loop0' (00000000467aafff): kobject_uevent_env
+kobject: 'rfkill22' (0000000039193aef): kobject_uevent_env
+netlink: 'syz-executor.0': attribute type 3 has an invalid length.
+kobject: 'rfkill22' (0000000039193aef): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim12/ieee80211/phy12/rfkill22'
+kobject: 'loop0' (00000000467aafff): fill_kobj_path: path = '/devices/virtual/block/loop0'
+ieee80211 phy12: Selected rate control algorithm 'minstrel_ht'
+netlink: 'syz-executor.0': attribute type 2 has an invalid length.
+kobject: 'net' (000000008d059f67): kobject_add_internal: parent: 'hwsim12', set: '(null)'
+---[ end trace 2233e67fa825a826 ]---
+kobject: 'wlan0' (00000000f37463a1): kobject_add_internal: parent: 'net', set: 'devices'
+RIP: 0010:icmp_timeout_obj_to_nlattr+0x77/0x160
+kobject: 'wlan0' (00000000f37463a1): kobject_uevent_env
+Code: 5e 86 c7 00 f1 f1 f1 f1 c7 40 04 04 f3 f3 f3 65 48 8b 04 25 28 00 00 00 48 89 45 d0 31 c0 e8 70 67 1f fb 48 89 d8 48 c1 e8 03 <42> 0f b6 14 30 48 89 d8 83 e0 07 83 c0 03 38 d0 7c 08 84 d2 0f 85
+kobject: 'wlan0' (00000000f37463a1): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim12/net/wlan0'
+RSP: 0018:ffff8801eeaf72d8 EFLAGS: 00010246
+kobject: 'queues' (00000000bd8c5220): kobject_add_internal: parent: 'wlan0', set: '<NULL>'
+kobject: 'queues' (00000000bd8c5220): kobject_uevent_env
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffffffff86613340
+kobject: 'queues' (00000000bd8c5220): kobject_uevent_env: filter function caused the event to drop!
+RDX: 0000000000000000 RSI: ffffffff865e3c30 RDI: ffff8801eece4940
+kobject: 'rx-0' (00000000e9d8fbef): kobject_add_internal: parent: 'queues', set: 'queues'
+RBP: ffff8801eeaf7360 R08: 0000000000000000 R09: 0000000000000005
+kobject: 'rx-0' (00000000e9d8fbef): kobject_uevent_env
+R10: 0000000000000000 R11: 0000000000000000 R12: 1ffff1003dd5ee5b
+kobject: 'rx-0' (00000000e9d8fbef): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim12/net/wlan0/queues/rx-0'
+R13: ffff8801eece4940 R14: dffffc0000000000 R15: ffff8801eeaf7338
+kobject: 'tx-0' (00000000195cd404): kobject_add_internal: parent: 'queues', set: 'queues'
+FS:  00007fd7513796c0(0000) GS:ffff8801f6700000(0000) knlGS:0000000000000000
+kobject: 'tx-0' (00000000195cd404): kobject_uevent_env
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+kobject: 'tx-0' (00000000195cd404): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim12/net/wlan0/queues/tx-0'
+CR2: 00007f0deb79a440 CR3: 00000001cc19b002 CR4: 00000000003606e0
+kobject: 'tx-1' (00000000ebadc341): kobject_add_internal: parent: 'queues', set: 'queues'
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+kobject: 'tx-1' (00000000ebadc341): kobject_uevent_env
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+kobject: 'tx-1' (00000000ebadc341): fill_kobj_path: path = '/devices/virtual/mac80211_hwsim/hwsim12/net/wlan0/queues/tx-1'
+----------------
+Code disassembly (best guess):
+   0:	5e                   	pop    %rsi
+   1:	86 c7                	xchg   %al,%bh
+   3:	00 f1                	add    %dh,%cl
+   5:	f1                   	int1
+   6:	f1                   	int1
+   7:	f1                   	int1
+   8:	c7 40 04 04 f3 f3 f3 	movl   $0xf3f3f304,0x4(%rax)
+   f:	65 48 8b 04 25 28 00 	mov    %gs:0x28,%rax
+  16:	00 00
+  18:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+  1c:	31 c0                	xor    %eax,%eax
+  1e:	e8 70 67 1f fb       	call   0xfb1f6793
+  23:	48 89 d8             	mov    %rbx,%rax
+  26:	48 c1 e8 03          	shr    $0x3,%rax
+* 2a:	42 0f b6 14 30       	movzbl (%rax,%r14,1),%edx <-- trapping instruction
+  2f:	48 89 d8             	mov    %rbx,%rax
+  32:	83 e0 07             	and    $0x7,%eax
+  35:	83 c0 03             	add    $0x3,%eax
+  38:	38 d0                	cmp    %dl,%al
+  3a:	7c 08                	jl     0x44
+  3c:	84 d2                	test   %dl,%dl
+  3e:	0f                   	.byte 0xf
+  3f:	85                   	.byte 0x85

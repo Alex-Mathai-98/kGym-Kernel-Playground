@@ -1,0 +1,447 @@
+audit: type=1400 audit(1713285669.200:108): avc:  denied  { read write } for  pid=3943 comm="syz-executor.3" name="loop3" dev="devtmpfs" ino=15779 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fixed_disk_device_t tclass=blk_file permissive=1
+device veth0_macvtap entered promiscuous mode
+INFO: trying to register non-static key.
+the code is fine but needs lockdep annotation.
+IPv6: ADDRCONF(NETDEV_UP): macvtap0: link is not ready
+turning off the locking correctness validator.
+CPU: 0 PID: 4199 Comm: syz-executor.3 Not tainted 5.0.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x16c/0x1ef
+IPv6: ADDRCONF(NETDEV_UP): veth1_to_batadv: link is not ready
+ register_lock_class+0xd1b/0x1190
+device veth0_macvtap entered promiscuous mode
+IPv6: ADDRCONF(NETDEV_UP): macvtap0: link is not ready
+device veth1_macvtap entered promiscuous mode
+IPv6: ADDRCONF(NETDEV_UP): macsec0: link is not ready
+ __lock_acquire+0x116/0x4670
+IPv6: ADDRCONF(NETDEV_UP): veth0_to_batadv: link is not ready
+IPv6: ADDRCONF(NETDEV_UP): veth1_to_batadv: link is not ready
+ lock_acquire+0x16d/0x420
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+ __flush_work+0x3f5/0x850
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+ flush_work+0x17/0x20
+ vkms_atomic_crtc_destroy_state+0x2b/0x40
+ drm_atomic_state_default_clear+0x37c/0xd80
+ __drm_atomic_state_free+0x128/0x250
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_0: link is not ready
+ drm_atomic_helper_set_config+0xe4/0x150
+batman_adv: batadv0: Interface activated: batadv_slave_0
+ drm_mode_setcrtc+0xb6f/0x1660
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+ drm_ioctl_kernel+0x22f/0x2e0
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+ drm_ioctl+0x523/0xa90
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+ do_vfs_ioctl+0xd67/0x1390
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_1: link is not ready
+batman_adv: batadv0: Interface activated: batadv_slave_1
+ ksys_ioctl+0xad/0xd0
+ __x64_sys_ioctl+0x72/0xb0
+ do_syscall_64+0xff/0x190
+audit: type=1400 audit(1713285669.200:109): avc:  denied  { open } for  pid=3943 comm="syz-executor.3" path="/dev/loop3" dev="devtmpfs" ino=15779 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fixed_disk_device_t tclass=blk_file permissive=1
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f6355006f69
+audit: type=1400 audit(1713285669.200:110): avc:  denied  { ioctl } for  pid=3943 comm="syz-executor.3" path="/dev/loop3" dev="devtmpfs" ino=15779 ioctlcmd=0x4c01 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:fixed_disk_device_t tclass=blk_file permissive=1
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f63543870c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+audit: type=1400 audit(1713285669.250:111): avc:  denied  { read } for  pid=4198 comm="syz-executor.3" name="card1" dev="devtmpfs" ino=334 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:dri_device_t tclass=chr_file permissive=1
+RAX: ffffffffffffffda RBX: 00007f6355134f80 RCX: 00007f6355006f69
+RDX: 0000000020000000 RSI: 00000000c06864a2 RDI: 0000000000000003
+RBP: 00007f63550534a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f6355134f80 R15: 00007ffd01a0c8f8
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+audit: type=1400 audit(1713285669.250:112): avc:  denied  { open } for  pid=4198 comm="syz-executor.3" path="/dev/dri/card1" dev="devtmpfs" ino=334 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:dri_device_t tclass=chr_file permissive=1
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+device veth0_macvtap entered promiscuous mode
+audit: type=1400 audit(1713285669.260:113): avc:  denied  { ioctl } for  pid=4198 comm="syz-executor.3" path="/dev/dri/card1" dev="devtmpfs" ino=334 ioctlcmd=0x64a2 scontext=root:sysadm_r:sysadm_t tcontext=system_u:object_r:dri_device_t tclass=chr_file permissive=1
+IPv6: ADDRCONF(NETDEV_UP): macvtap0: link is not ready
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+audit: type=1400 audit(1713285669.260:114): avc:  denied  { mounton } for  pid=3955 comm="syz-executor.5" path="/dev/binderfs" dev="devtmpfs" ino=22182 scontext=root:sysadm_r:sysadm_t tcontext=root:object_r:device_t tclass=dir permissive=1
+device veth1_macvtap entered promiscuous mode
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+audit: type=1400 audit(1713285669.950:115): avc:  denied  { write } for  pid=3924 comm="syz-execprog" path="pipe:[20537]" dev="pipefs" ino=20537 scontext=root:sysadm_r:sysadm_t tcontext=system_u:system_r:sshd_t tclass=fifo_file permissive=1
+IPv6: ADDRCONF(NETDEV_UP): macsec0: link is not ready
+kobject: 'loop3' (00000000420138d9): kobject_uevent_env
+IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+kobject: 'loop3' (00000000420138d9): fill_kobj_path: path = '/devices/virtual/block/loop3'
+IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+kobject: 'loop3' (00000000420138d9): kobject_uevent_env
+IPv6: ADDRCONF(NETDEV_CHANGE): macsec0: link becomes ready
+kobject: 'loop3' (00000000420138d9): fill_kobj_path: path = '/devices/virtual/block/loop3'
+IPv6: ADDRCONF(NETDEV_CHANGE): veth1_macvtap: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth0_macvtap: link becomes ready
+kobject: 'loop3' (00000000420138d9): kobject_uevent_env
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+kobject: 'loop3' (00000000420138d9): fill_kobj_path: path = '/devices/virtual/block/loop3'
+IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+device veth0_macvtap entered promiscuous mode
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+IPv6: ADDRCONF(NETDEV_UP): macvtap0: link is not ready
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+device veth1_macvtap entered promiscuous mode
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_0: link is not ready
+batman_adv: batadv0: Interface activated: batadv_slave_0
+IPv6: ADDRCONF(NETDEV_UP): veth0_to_batadv: link is not ready
+device veth1_macvtap entered promiscuous mode
+IPv6: ADDRCONF(NETDEV_UP): veth0_to_batadv: link is not ready
+IPv6: ADDRCONF(NETDEV_CHANGE): macvtap0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_1: link is not ready
+batman_adv: batadv0: Interface activated: batadv_slave_1
+IPv6: ADDRCONF(NETDEV_UP): veth1_to_batadv: link is not ready
+IPv6: ADDRCONF(NETDEV_UP): veth0_to_batadv: link is not ready
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_0: link is not ready
+batman_adv: batadv0: Interface activated: batadv_slave_0
+IPv6: ADDRCONF(NETDEV_UP): veth1_to_batadv: link is not ready
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_0: link is not ready
+batman_adv: batadv0: Interface activated: batadv_slave_0
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_1: link is not ready
+batman_adv: batadv0: Interface activated: batadv_slave_1
+IPv6: ADDRCONF(NETDEV_UP): veth1_to_batadv: link is not ready
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_1: link is not ready
+batman_adv: batadv0: Interface activated: batadv_slave_1
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3e) already exists on: batadv_slave_0
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_0: link is not ready
+batman_adv: batadv0: Interface activated: batadv_slave_0
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+batman_adv: The newly added mac address (aa:aa:aa:aa:aa:3f) already exists on: batadv_slave_1
+batman_adv: It is strongly recommended to keep mac addresses unique to avoid problems!
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_1: link is not ready
+batman_adv: batadv0: Interface activated: batadv_slave_1
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop1' (00000000bcaecb23): kobject_uevent_env
+kobject: 'loop1' (00000000bcaecb23): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop0' (0000000023c04008): kobject_uevent_env
+kobject: 'loop0' (0000000023c04008): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop7' (00000000345e02df): kobject_uevent_env
+kobject: 'loop7' (00000000345e02df): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop1' (00000000bcaecb23): kobject_uevent_env
+kobject: 'loop1' (00000000bcaecb23): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop0' (0000000023c04008): kobject_uevent_env
+kobject: 'loop0' (0000000023c04008): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop3' (00000000420138d9): kobject_uevent_env
+kobject: 'loop3' (00000000420138d9): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop7' (00000000345e02df): kobject_uevent_env
+kobject: 'loop7' (00000000345e02df): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop3' (00000000420138d9): kobject_uevent_env
+kobject: 'loop3' (00000000420138d9): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop1' (00000000bcaecb23): kobject_uevent_env
+kobject: 'loop1' (00000000bcaecb23): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop0' (0000000023c04008): kobject_uevent_env
+kobject: 'loop0' (0000000023c04008): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop7' (00000000345e02df): kobject_uevent_env
+kobject: 'loop7' (00000000345e02df): fill_kobj_path: path = '/devices/virtual/block/loop7'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop3' (00000000420138d9): kobject_uevent_env
+kobject: 'loop3' (00000000420138d9): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop1' (00000000bcaecb23): kobject_uevent_env
+kobject: 'loop1' (00000000bcaecb23): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop0' (0000000023c04008): kobject_uevent_env
+kobject: 'loop0' (0000000023c04008): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop0' (0000000023c04008): kobject_uevent_env
+kobject: 'loop0' (0000000023c04008): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop1' (00000000bcaecb23): kobject_uevent_env
+kobject: 'loop1' (00000000bcaecb23): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop3' (00000000420138d9): kobject_uevent_env
+kobject: 'loop3' (00000000420138d9): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop0' (0000000023c04008): kobject_uevent_env
+kobject: 'loop0' (0000000023c04008): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop3' (00000000420138d9): kobject_uevent_env
+kobject: 'loop3' (00000000420138d9): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop1' (00000000bcaecb23): kobject_uevent_env
+kobject: 'loop1' (00000000bcaecb23): fill_kobj_path: path = '/devices/virtual/block/loop1'
+kobject: 'loop0' (0000000023c04008): kobject_uevent_env
+kobject: 'loop0' (0000000023c04008): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop3' (00000000420138d9): kobject_uevent_env
+kobject: 'loop3' (00000000420138d9): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop0' (0000000023c04008): kobject_uevent_env
+kobject: 'loop0' (0000000023c04008): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop0' (0000000023c04008): kobject_uevent_env
+kobject: 'loop0' (0000000023c04008): fill_kobj_path: path = '/devices/virtual/block/loop0'
+kobject: 'loop3' (00000000420138d9): kobject_uevent_env
+kobject: 'loop3' (00000000420138d9): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop3' (00000000420138d9): kobject_uevent_env
+kobject: 'loop3' (00000000420138d9): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop3' (00000000420138d9): kobject_uevent_env
+kobject: 'loop3' (00000000420138d9): fill_kobj_path: path = '/devices/virtual/block/loop3'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop5' (00000000727384bd): kobject_uevent_env
+kobject: 'loop5' (00000000727384bd): fill_kobj_path: path = '/devices/virtual/block/loop5'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop2' (0000000054d52060): kobject_uevent_env
+kobject: 'loop2' (0000000054d52060): fill_kobj_path: path = '/devices/virtual/block/loop2'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop6' (0000000068412e00): kobject_uevent_env
+kobject: 'loop6' (0000000068412e00): fill_kobj_path: path = '/devices/virtual/block/loop6'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+kobject: 'loop4' (00000000294e4a28): kobject_uevent_env
+kobject: 'loop4' (00000000294e4a28): fill_kobj_path: path = '/devices/virtual/block/loop4'
+----------------
+Code disassembly (best guess):
+   0:	28 00                	sub    %al,(%rax)
+   2:	00 00                	add    %al,(%rax)
+   4:	75 05                	jne    0xb
+   6:	48 83 c4 28          	add    $0x28,%rsp
+   a:	c3                   	ret
+   b:	e8 e1 20 00 00       	call   0x20f1
+  10:	90                   	nop
+  11:	48 89 f8             	mov    %rdi,%rax
+  14:	48 89 f7             	mov    %rsi,%rdi
+  17:	48 89 d6             	mov    %rdx,%rsi
+  1a:	48 89 ca             	mov    %rcx,%rdx
+  1d:	4d 89 c2             	mov    %r8,%r10
+  20:	4d 89 c8             	mov    %r9,%r8
+  23:	4c 8b 4c 24 08       	mov    0x8(%rsp),%r9
+  28:	0f 05                	syscall
+* 2a:	48 3d 01 f0 ff ff    	cmp    $0xfffffffffffff001,%rax <-- trapping instruction
+  30:	73 01                	jae    0x33
+  32:	c3                   	ret
+  33:	48 c7 c1 b0 ff ff ff 	mov    $0xffffffffffffffb0,%rcx
+  3a:	f7 d8                	neg    %eax
+  3c:	64 89 01             	mov    %eax,%fs:(%rcx)
+  3f:	48                   	rex.W

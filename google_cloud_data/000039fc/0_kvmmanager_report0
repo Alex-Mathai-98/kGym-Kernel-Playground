@@ -1,0 +1,74 @@
+==================================================================
+BUG: KASAN: use-after-free in tipc_nl_node_dump_monitor_peer+0x574/0x5a0
+Read of size 2 at addr ffff8881eac8d414 by task syz-executor.7/5410
+
+CPU: 1 PID: 5410 Comm: syz-executor.7 Not tainted 5.8.0-rc2-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x1f0/0x314
+ print_address_description+0x63/0x560
+ kasan_report+0x134/0x1c0
+ tipc_nl_node_dump_monitor_peer+0x574/0x5a0
+ genl_lock_dumpit+0x86/0xa0
+ netlink_dump+0x4d0/0x1020
+ __netlink_dump_start+0x52e/0x6f0
+ genl_rcv_msg+0xbe2/0xef0
+ netlink_rcv_skb+0x188/0x3d0
+ genl_rcv+0x24/0x40
+ netlink_unicast+0x765/0x910
+ netlink_sendmsg+0x97a/0xd00
+ ____sys_sendmsg+0x520/0x800
+ ___sys_sendmsg+0x19d/0x200
+ __x64_sys_sendmsg+0x16a/0x1f0
+ do_syscall_64+0x76/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7fbf631e7f69
+Code: Bad RIP value.
+RSP: 002b:00007fbf625680c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007fbf63315f80 RCX: 00007fbf631e7f69
+RDX: 0000000000000000 RSI: 00000000200000c0 RDI: 0000000000000003
+RBP: 00007fbf632344a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007fbf63315f80 R15: 00007ffd863b37e8
+
+Allocated by task 5413:
+ __kasan_kmalloc+0x10a/0x140
+ __alloc_skb+0xc2/0x4f0
+ netlink_sendmsg+0x646/0xd00
+ ____sys_sendmsg+0x520/0x800
+ ___sys_sendmsg+0x19d/0x200
+ __x64_sys_sendmsg+0x16a/0x1f0
+ do_syscall_64+0x76/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+Freed by task 5413:
+ __kasan_slab_free+0x114/0x170
+ kfree+0x171/0x310
+ consume_skb+0xa3/0x140
+ netlink_unicast+0x76d/0x910
+ netlink_sendmsg+0x97a/0xd00
+ ____sys_sendmsg+0x520/0x800
+ ___sys_sendmsg+0x19d/0x200
+ __x64_sys_sendmsg+0x16a/0x1f0
+ do_syscall_64+0x76/0xe0
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+The buggy address belongs to the object at ffff8881eac8d400
+ which belongs to the cache kmalloc-512 of size 512
+The buggy address is located 20 bytes inside of
+ 512-byte region [ffff8881eac8d400, ffff8881eac8d600)
+The buggy address belongs to the page:
+page:ffffea0007ab2340 refcount:1 mapcount:0 mapping:0000000000000000 index:0xffff8881eac8dc00
+flags: 0x17ffe0000000200(slab)
+raw: 017ffe0000000200 ffffea00076bf208 ffffea00075f38c8 ffff8881f5000a80
+raw: ffff8881eac8dc00 ffff8881eac8d000 0000000100000001 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff8881eac8d300: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8881eac8d380: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff8881eac8d400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                         ^
+ ffff8881eac8d480: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8881eac8d500: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================

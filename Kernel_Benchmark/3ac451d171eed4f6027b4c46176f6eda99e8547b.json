@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "possible deadlock in f_getown",
+    "display-title": "possible deadlock in f_getown",
+    "id": "3ac451d171eed4f6027b4c46176f6eda99e8547b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fcntl: fix potential deadlocks for &fown_struct.lock",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f671a691e299f58835d4660d642582bf0e8f6fda",
+            "hash": "f671a691e299f58835d4660d642582bf0e8f6fda",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "locking: More accurate annotations for read_lock()",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e918188611f073063415f40fae568fa4d86d9044",
+        "hash": "e918188611f073063415f40fae568fa4d86d9044",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000bf710a05b05ae3f6@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11b43d79500000",
+            "c-reproducer": "/text?tag=ReproC&x=16f2ed79500000",
+            "kernel-config": "/text?tag=KernelConfig&x=b3a044ccf5b03ac4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b65054597872ce3aefbc6a666385eabdf9e288da",
+            "kernel-source-commit": "b65054597872ce3aefbc6a666385eabdf9e288da",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a0092f9dfdd33924abe5cf5565e4ec4748217c7b",
+            "syzkaller-commit": "a0092f9dfdd33924abe5cf5565e4ec4748217c7b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14ddd4ab500000"
+        }
+    ],
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "9ff50bf2f2ff5fab01cac26d8eed21a89308e6ef",
+    "patch": "diff --git a/fs/fcntl.c b/fs/fcntl.c\nindex f946bec8f1f1..932ec1e9f5bf 100644\n--- a/fs/fcntl.c\n+++ b/fs/fcntl.c\n@@ -150,7 +150,8 @@ void f_delown(struct file *filp)\n pid_t f_getown(struct file *filp)\n {\n \tpid_t pid = 0;\n-\tread_lock(&filp->f_owner.lock);\n+\n+\tread_lock_irq(&filp->f_owner.lock);\n \trcu_read_lock();\n \tif (pid_task(filp->f_owner.pid, filp->f_owner.pid_type)) {\n \t\tpid = pid_vnr(filp->f_owner.pid);\n@@ -158,7 +159,7 @@ pid_t f_getown(struct file *filp)\n \t\t\tpid = -pid;\n \t}\n \trcu_read_unlock();\n-\tread_unlock(&filp->f_owner.lock);\n+\tread_unlock_irq(&filp->f_owner.lock);\n \treturn pid;\n }\n \n@@ -208,7 +209,7 @@ static int f_getown_ex(struct file *filp, unsigned long arg)\n \tstruct f_owner_ex owner = {};\n \tint ret = 0;\n \n-\tread_lock(&filp->f_owner.lock);\n+\tread_lock_irq(&filp->f_owner.lock);\n \trcu_read_lock();\n \tif (pid_task(filp->f_owner.pid, filp->f_owner.pid_type))\n \t\towner.pid = pid_vnr(filp->f_owner.pid);\n@@ -231,7 +232,7 @@ static int f_getown_ex(struct file *filp, unsigned long arg)\n \t\tret = -EINVAL;\n \t\tbreak;\n \t}\n-\tread_unlock(&filp->f_owner.lock);\n+\tread_unlock_irq(&filp->f_owner.lock);\n \n \tif (!ret) {\n \t\tret = copy_to_user(owner_p, &owner, sizeof(owner));\n@@ -249,10 +250,10 @@ static int f_getowner_uids(struct file *filp, unsigned long arg)\n \tuid_t src[2];\n \tint err;\n \n-\tread_lock(&filp->f_owner.lock);\n+\tread_lock_irq(&filp->f_owner.lock);\n \tsrc[0] = from_kuid(user_ns, filp->f_owner.uid);\n \tsrc[1] = from_kuid(user_ns, filp->f_owner.euid);\n-\tread_unlock(&filp->f_owner.lock);\n+\tread_unlock_irq(&filp->f_owner.lock);\n \n \terr  = put_user(src[0], &dst[0]);\n \terr |= put_user(src[1], &dst[1]);\n",
+    "patch_modified_files": [
+        "fs/fcntl.c"
+    ]
+}

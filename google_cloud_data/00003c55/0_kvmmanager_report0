@@ -1,0 +1,144 @@
+IPv6: ADDRCONF(NETDEV_UP): veth1_to_batadv: link is not ready
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_0: link is not ready
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+==================================================================
+BUG: KASAN: slab-out-of-bounds in sctp_getsockopt+0x6977/0x7a69
+Read of size 8 at addr ffff8801d99f69e8 by task syz-executor.3/4174
+
+CPU: 0 PID: 4174 Comm: syz-executor.3 Not tainted 4.19.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x1c2/0x2af
+ print_address_description.cold+0x4b/0x2a1
+ kasan_report_error.cold+0x8a/0x213
+ __asan_report_load8_noabort+0x89/0x90
+ sctp_getsockopt+0x6977/0x7a69
+ sock_common_getsockopt+0x96/0xd0
+ __sys_getsockopt+0x19e/0x380
+ __x64_sys_getsockopt+0xbd/0x150
+ do_syscall_64+0x183/0x270
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7eff6c62af69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007eff6b9ab0c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000037
+RAX: ffffffffffffffda RBX: 00007eff6c758f80 RCX: 00007eff6c62af69
+RDX: 0000000000000074 RSI: 0000000000000084 RDI: 0000000000000003
+RBP: 00007eff6c6774a4 R08: 0000000020000040 R09: 0000000000000000
+R10: 0000000020000080 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007eff6c758f80 R15: 00007fff3e4e86c8
+
+Allocated by task 4179:
+ save_stack+0x43/0xc0
+ kasan_kmalloc+0xce/0xf0
+ kmem_cache_alloc_trace+0x136/0x390
+ sctp_stream_init_ext+0x4d/0x100
+ sctp_sendmsg_to_asoc+0x13ec/0x1aa0
+ sctp_sendmsg+0x13c8/0x1da0
+ inet_sendmsg+0x1a1/0x6a0
+ sock_sendmsg+0xd5/0x120
+ __sys_sendto+0x3a8/0x5e0
+ __x64_sys_sendto+0xe0/0x1a0
+ do_syscall_64+0x183/0x270
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+Freed by task 3672:
+ save_stack+0x43/0xc0
+ __kasan_slab_free+0xfe/0x140
+ kasan_slab_free+0xe/0x10
+ kfree+0xcd/0x220
+ kzfree+0x28/0x30
+ apparmor_file_free_security+0x133/0x1a0
+ security_file_free+0x4a/0x80
+ __fput+0x4e1/0xa30
+ ____fput+0x15/0x20
+ task_work_run+0x1fc/0x2b0
+ exit_to_usermode_loop+0x321/0x380
+ syscall_return_slowpath+0x695/0xbc0
+ do_syscall_64+0x1b5/0x270
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+The buggy address belongs to the object at ffff8801d99f6980
+ which belongs to the cache kmalloc-96 of size 96
+The buggy address is located 8 bytes to the right of
+ 96-byte region [ffff8801d99f6980, ffff8801d99f69e0)
+The buggy address belongs to the page:
+page:ffffea0007667d80 count:1 mapcount:0 mapping:ffff8801f60004c0 index:0x0
+flags: 0x2fffc0000000200(slab)
+raw: 02fffc0000000200 ffffea0007667a48 ffffea000766f848 ffff8801f60004c0
+raw: 0000000000000000 ffff8801d99f6000 0000000100000020 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff8801d99f6880: fb fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+ ffff8801d99f6900: fb fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+>ffff8801d99f6980: 00 00 00 00 00 00 00 00 00 00 00 fc fc fc fc fc
+                                                          ^
+ ffff8801d99f6a00: fb fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+ ffff8801d99f6a80: fb fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+==================================================================
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_0: link is not ready
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_1: link is not ready
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_0: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth0_to_batadv: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): batadv_slave_1: link is not ready
+IPv6: ADDRCONF(NETDEV_CHANGE): batadv_slave_1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): veth1_to_batadv: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan0: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan0: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready

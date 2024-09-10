@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in hfs_cat_keycmp",
+    "display-title": "KASAN: slab-out-of-bounds Read in hfs_cat_keycmp",
+    "id": "dad6a582c4d54162ae8d096210ca126b659fd8c0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "hfs: Fix OOB Write in hfs_asc2mac",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c53ed55cb275344086e32a7080a6b19cb183650b",
+            "hash": "c53ed55cb275344086e32a7080a6b19cb183650b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000be147305f0071869@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Read in hfs_cat_keycmp",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1261813b880000",
+            "c-reproducer": "/text?tag=ReproC&x=114306af880000",
+            "kernel-config": "/text?tag=KernelConfig&x=f3de84cba2ef4a23",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3a28c2c89f4b412b648761430720d40a8dc326ef",
+            "kernel-source-commit": "3a28c2c89f4b412b648761430720d40a8dc326ef",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/67be1ae742603edad9c97d30b6ed69f9bbe2ffa8",
+            "syzkaller-commit": "67be1ae742603edad9c97d30b6ed69f9bbe2ffa8",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10aa7b57880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "hfs_asc2mac",
+            "fs/hfs/trans.c"
+        ]
+    ],
+    "patch_commit_date": "2022-12-02T03:00:38+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "hfs"
+    ],
+    "parent_of_fix_commit": "8d824e69d9f3fa3121b2dda25053bae71e2460d2",
+    "patch": "diff --git a/fs/hfs/trans.c b/fs/hfs/trans.c\nindex 39f5e343bf4d..fdb0edb8a607 100644\n--- a/fs/hfs/trans.c\n+++ b/fs/hfs/trans.c\n@@ -109,7 +109,7 @@ void hfs_asc2mac(struct super_block *sb, struct hfs_name *out, const struct qstr\n \tif (nls_io) {\n \t\twchar_t ch;\n \n-\t\twhile (srclen > 0) {\n+\t\twhile (srclen > 0 && dstlen > 0) {\n \t\t\tsize = nls_io->char2uni(src, srclen, &ch);\n \t\t\tif (size < 0) {\n \t\t\t\tch = '?';\n",
+    "patch_modified_files": [
+        "fs/hfs/trans.c"
+    ]
+}

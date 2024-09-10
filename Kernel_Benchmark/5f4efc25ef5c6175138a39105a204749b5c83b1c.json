@@ -1,0 +1,65 @@
+{
+    "version": 1,
+    "title": "memory leak in cinergyt2_fe_attach",
+    "display-title": "memory leak in cinergyt2_fe_attach",
+    "id": "5f4efc25ef5c6175138a39105a204749b5c83b1c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: dvd_usb: memory leak in cinergyt2_fe_attach",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9ad1efee086e0e913914fa2b2173efb830bad68c",
+            "hash": "9ad1efee086e0e913914fa2b2173efb830bad68c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000009d17f405b3ea44ab@google.com/T/",
+        "https://lore.kernel.org/all/20210525053359.1147899-1-mudongliangabcd@gmail.com/T/",
+        "https://lore.kernel.org/all/20210525130652.1498800-1-mudongliangabcd@gmail.com/T/",
+        "https://lore.kernel.org/all/20210704230420.1488358-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210704230616.1489200-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210704230804.1490078-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210704230938.1490742-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210704231043.1491209-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210704231123.1491517-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210712060659.886176320@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210712060843.180606720@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210712060912.995381202@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210712060924.797321836@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210719144942.861561397@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210719144946.310399455@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1781dd4e500000",
+            "c-reproducer": "/text?tag=ReproC&x=1636b181500000",
+            "kernel-config": "/text?tag=KernelConfig&x=a3f13716fa0212fd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3d5e28bff7ad55aea081c1af516cc1c94a5eca7d",
+            "kernel-source-commit": "3d5e28bff7ad55aea081c1af516cc1c94a5eca7d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/77a55c8ea6070a9a88715db4c17e9612a7f99b21",
+            "syzkaller-commit": "77a55c8ea6070a9a88715db4c17e9612a7f99b21",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=175291e6500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "cinergyt2_frontend_attach",
+            "drivers/media/usb/dvb-usb/cinergyT2-core.c"
+        ]
+    ],
+    "patch_commit_date": "2021-05-25T13:06:52+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "usb",
+        "media"
+    ],
+    "parent_of_fix_commit": "321c0d383dc3aa1b00a1a1e0957f1543fc84a028",
+    "patch": "diff --git a/drivers/media/usb/dvb-usb/cinergyT2-core.c b/drivers/media/usb/dvb-usb/cinergyT2-core.c\nindex 969a7ec71dff..4116ba5c45fc 100644\n--- a/drivers/media/usb/dvb-usb/cinergyT2-core.c\n+++ b/drivers/media/usb/dvb-usb/cinergyT2-core.c\n@@ -78,6 +78,8 @@ static int cinergyt2_frontend_attach(struct dvb_usb_adapter *adap)\n \n \tret = dvb_usb_generic_rw(d, st->data, 1, st->data, 3, 0);\n \tif (ret < 0) {\n+\t\tif (adap->fe_adap[0].fe)\n+\t\t\tadap->fe_adap[0].fe->ops.release(adap->fe_adap[0].fe);\n \t\tdeb_rc(\"cinergyt2_power_ctrl() Failed to retrieve sleep state info\\n\");\n \t}\n \tmutex_unlock(&d->data_mutex);\n",
+    "patch_modified_files": [
+        "drivers/media/usb/dvb-usb/cinergyT2-core.c"
+    ]
+}

@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "WARNING in ext4_xattr_block_set",
+    "display-title": "WARNING in ext4_xattr_block_set (2)",
+    "id": "6513f6cb5cd6b5fc9f37e3bb70d273b94be9c34c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: don't clear SB_RDONLY when remounting r/w until quota is re-enabled",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a44be64bbecb15a452496f60db6eacfee2b59c79",
+            "hash": "a44be64bbecb15a452496f60db6eacfee2b59c79",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000006a0df05f6667499@google.com/T/",
+        "https://lore.kernel.org/all/20230506142419.984260-1-tytso@mit.edu/T/",
+        "https://lore.kernel.org/all/20230608044056.GA1418535@mit.edu/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in ext4_xattr_block_set",
+            "syz-reproducer": "/text?tag=ReproSyz&x=120ab7acc80000",
+            "c-reproducer": "/text?tag=ReproC&x=17459908c80000",
+            "kernel-config": "/text?tag=KernelConfig&x=f763d89e26d3d4c4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=0988a0ea791999ebbf95693f2676381825b05033",
+            "kernel-source-commit": "0988a0ea791999ebbf95693f2676381825b05033",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f8902b5747fbe3d5b860bd782eec63fc9c7da6e7",
+            "syzkaller-commit": "f8902b5747fbe3d5b860bd782eec63fc9c7da6e7",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10e227b0c80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__ext4_remount",
+            "fs/ext4/super.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-06T01:02:30+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "fa83c34e3e56b3c672af38059e066242655271b1",
+    "patch": "diff --git a/fs/ext4/super.c b/fs/ext4/super.c\nindex 425b95a7a0ab..c7bc4a2709cc 100644\n--- a/fs/ext4/super.c\n+++ b/fs/ext4/super.c\n@@ -6387,6 +6387,7 @@ static int __ext4_remount(struct fs_context *fc, struct super_block *sb)\n \tstruct ext4_mount_options old_opts;\n \text4_group_t g;\n \tint err = 0;\n+\tint enable_rw = 0;\n #ifdef CONFIG_QUOTA\n \tint enable_quota = 0;\n \tint i, j;\n@@ -6573,7 +6574,7 @@ static int __ext4_remount(struct fs_context *fc, struct super_block *sb)\n \t\t\tif (err)\n \t\t\t\tgoto restore_opts;\n \n-\t\t\tsb->s_flags &= ~SB_RDONLY;\n+\t\t\tenable_rw = 1;\n \t\t\tif (ext4_has_feature_mmp(sb)) {\n \t\t\t\terr = ext4_multi_mount_protect(sb,\n \t\t\t\t\t\tle64_to_cpu(es->s_mmp_block));\n@@ -6632,6 +6633,9 @@ static int __ext4_remount(struct fs_context *fc, struct super_block *sb)\n \tif (!test_opt(sb, BLOCK_VALIDITY) && sbi->s_system_blks)\n \t\text4_release_system_zone(sb);\n \n+\tif (enable_rw)\n+\t\tsb->s_flags &= ~SB_RDONLY;\n+\n \tif (!ext4_has_feature_mmp(sb) || sb_rdonly(sb))\n \t\text4_stop_mmpd(sbi);\n \n",
+    "patch_modified_files": [
+        "fs/ext4/super.c"
+    ]
+}

@@ -1,0 +1,68 @@
+==================================================================
+BUG: KASAN: use-after-free in hci_send_acl+0xaca/0xc70
+Read of size 8 at addr ffff88810b095e18 by task kworker/u5:2/3969
+
+CPU: 1 PID: 3969 Comm: kworker/u5:2 Not tainted 5.11.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: hci1 hci_rx_work
+Call Trace:
+ dump_stack+0x181/0x1e0
+ print_address_description.constprop.0.cold+0x50/0x345
+ kasan_report.cold+0x79/0xd5
+ hci_send_acl+0xaca/0xc70
+ l2cap_send_cmd+0x6cc/0x8b0
+ l2cap_recv_frame+0x7800/0xb3e0
+ l2cap_recv_acldata+0x8a4/0xa30
+ hci_rx_work+0x49c/0xb50
+ process_one_work+0x9e6/0x1630
+ worker_thread+0x676/0x1170
+ kthread+0x3a2/0x490
+ ret_from_fork+0x1f/0x30
+
+Allocated by task 3995:
+ kasan_save_stack+0x19/0x40
+ ____kasan_kmalloc.constprop.0+0x82/0xb0
+ kmem_cache_alloc_trace+0x1f9/0x3f0
+ hci_chan_create+0x98/0x310
+ l2cap_conn_add.part.0+0x1a/0xdb0
+ l2cap_connect_cfm+0x25a/0x10d0
+ hci_remote_features_evt.isra.0+0x6a6/0xbf0
+ hci_event_packet+0x38d8/0x8180
+ hci_rx_work+0x206/0xb50
+ process_one_work+0x9e6/0x1630
+ worker_thread+0x676/0x1170
+ kthread+0x3a2/0x490
+ ret_from_fork+0x1f/0x30
+
+Freed by task 3969:
+ kasan_save_stack+0x19/0x40
+ kasan_set_track+0x1c/0x30
+ kasan_set_free_info+0x20/0x30
+ ____kasan_slab_free+0xb1/0xe0
+ kfree+0x10f/0x2d0
+ hci_event_packet+0x1947/0x8180
+ hci_rx_work+0x206/0xb50
+ process_one_work+0x9e6/0x1630
+ worker_thread+0x676/0x1170
+ kthread+0x3a2/0x490
+ ret_from_fork+0x1f/0x30
+
+The buggy address belongs to the object at ffff88810b095e00
+ which belongs to the cache kmalloc-128 of size 128
+The buggy address is located 24 bytes inside of
+ 128-byte region [ffff88810b095e00, ffff88810b095e80)
+The buggy address belongs to the page:
+page:00000000eea838e7 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x10b095
+flags: 0x17ffe0000000200(slab)
+raw: 017ffe0000000200 ffffea00043192c8 ffffea00043f8588 ffff888100040400
+raw: 0000000000000000 ffff88810b095000 0000000100000010 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff88810b095d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff88810b095d80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff88810b095e00: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                            ^
+ ffff88810b095e80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88810b095f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 fc
+==================================================================

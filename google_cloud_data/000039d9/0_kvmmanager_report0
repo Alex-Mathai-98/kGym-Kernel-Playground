@@ -1,0 +1,30 @@
+==================================================================
+BUG: KASAN: vmalloc-out-of-bounds in __ebt_unregister_table+0xcd8/0xcf0
+Read of size 4 at addr ffffc90003615000 by task kworker/u4:6/5051
+
+CPU: 1 PID: 5051 Comm: kworker/u4:6 Not tainted 6.2.0-rc6-syzkaller-00180-gefb056e5f1f0 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: netns cleanup_net
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x100/0x178
+ print_report+0x167/0x46c
+ kasan_report+0xbf/0x1e0
+ __ebt_unregister_table+0xcd8/0xcf0
+ ebt_unregister_table+0x34/0x40
+ ops_exit_list+0xb0/0x170
+ cleanup_net+0x505/0xb20
+ process_one_work+0xa33/0x1720
+ worker_thread+0x67d/0x10e0
+ kthread+0x2e4/0x3a0
+ ret_from_fork+0x1f/0x30
+ </TASK>
+
+Memory state around the buggy address:
+ ffffc90003614f00: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8
+ ffffc90003614f80: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8
+>ffffc90003615000: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8
+                   ^
+ ffffc90003615080: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8
+ ffffc90003615100: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8
+==================================================================

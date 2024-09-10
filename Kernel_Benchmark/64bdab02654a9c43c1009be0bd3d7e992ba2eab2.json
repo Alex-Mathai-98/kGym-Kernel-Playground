@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in devlink_get_from_attrs",
+    "display-title": "KASAN: use-after-free Read in devlink_get_from_attrs",
+    "id": "64bdab02654a9c43c1009be0bd3d7e992ba2eab2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "genetlink: get rid of family->attrbuf",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bf64ff4c2aac65d680dc639a511c781cf6b6ec08",
+            "hash": "bf64ff4c2aac65d680dc639a511c781cf6b6ec08",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000744a6805a93b969a@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=108b3df9100000",
+            "c-reproducer": "/text?tag=ReproC&x=11d426e3100000",
+            "kernel-config": "/text?tag=KernelConfig&x=bf3aec367b9ab569",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4e99b32169e84b4ece5a1d74eb0b7e4ef07866b3",
+            "kernel-source-commit": "4e99b32169e84b4ece5a1d74eb0b7e4ef07866b3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a2cdad9d42694059bd75f809d297ed9bf853da12",
+            "syzkaller-commit": "a2cdad9d42694059bd75f809d297ed9bf853da12",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=123ee8f5100000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "33c568ba49e2b0ff7c3daead5d9427be797a4c43",
+    "patch": "diff --git a/include/net/genetlink.h b/include/net/genetlink.h\nindex 74950663bb00..ad71ed4f55ff 100644\n--- a/include/net/genetlink.h\n+++ b/include/net/genetlink.h\n@@ -41,7 +41,6 @@ struct genl_info;\n  *\tNote that unbind() will not be called symmetrically if the\n  *\tgeneric netlink family is removed while there are still open\n  *\tsockets.\n- * @attrbuf: buffer to store parsed attributes (private)\n  * @mcgrps: multicast groups used by this family\n  * @n_mcgrps: number of multicast groups\n  * @mcgrp_offset: starting number of multicast group IDs in this family\n@@ -66,7 +65,6 @@ struct genl_family {\n \t\t\t\t\t     struct genl_info *info);\n \tint\t\t\t(*mcast_bind)(struct net *net, int group);\n \tvoid\t\t\t(*mcast_unbind)(struct net *net, int group);\n-\tstruct nlattr **\tattrbuf;\t/* private */\n \tconst struct genl_ops *\tops;\n \tconst struct genl_multicast_group *mcgrps;\n \tunsigned int\t\tn_ops;\ndiff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c\nindex 55ee680e9db1..a914b9365a46 100644\n--- a/net/netlink/genetlink.c\n+++ b/net/netlink/genetlink.c\n@@ -351,22 +351,11 @@ int genl_register_family(struct genl_family *family)\n \t\tstart = end = GENL_ID_VFS_DQUOT;\n \t}\n \n-\tif (family->maxattr && !family->parallel_ops) {\n-\t\tfamily->attrbuf = kmalloc_array(family->maxattr + 1,\n-\t\t\t\t\t\tsizeof(struct nlattr *),\n-\t\t\t\t\t\tGFP_KERNEL);\n-\t\tif (family->attrbuf == NULL) {\n-\t\t\terr = -ENOMEM;\n-\t\t\tgoto errout_locked;\n-\t\t}\n-\t} else\n-\t\tfamily->attrbuf = NULL;\n-\n \tfamily->id = idr_alloc_cyclic(&genl_fam_idr, family,\n \t\t\t\t      start, end + 1, GFP_KERNEL);\n \tif (family->id < 0) {\n \t\terr = family->id;\n-\t\tgoto errout_free;\n+\t\tgoto errout_locked;\n \t}\n \n \terr = genl_validate_assign_mc_groups(family);\n@@ -385,8 +374,6 @@ int genl_register_family(struct genl_family *family)\n \n errout_remove:\n \tidr_remove(&genl_fam_idr, family->id);\n-errout_free:\n-\tkfree(family->attrbuf);\n errout_locked:\n \tgenl_unlock_all();\n \treturn err;\n@@ -419,8 +406,6 @@ int genl_unregister_family(const struct genl_family *family)\n \t\t   atomic_read(&genl_sk_destructing_cnt) == 0);\n \tgenl_unlock();\n \n-\tkfree(family->attrbuf);\n-\n \tgenl_ctrl_event(CTRL_CMD_DELFAMILY, family, NULL, 0);\n \n \treturn 0;\n@@ -485,30 +470,23 @@ genl_family_rcv_msg_attrs_parse(const struct genl_family *family,\n \tif (!family->maxattr)\n \t\treturn NULL;\n \n-\tif (family->parallel_ops) {\n-\t\tattrbuf = kmalloc_array(family->maxattr + 1,\n-\t\t\t\t\tsizeof(struct nlattr *), GFP_KERNEL);\n-\t\tif (!attrbuf)\n-\t\t\treturn ERR_PTR(-ENOMEM);\n-\t} else {\n-\t\tattrbuf = family->attrbuf;\n-\t}\n+\tattrbuf = kmalloc_array(family->maxattr + 1,\n+\t\t\t\tsizeof(struct nlattr *), GFP_KERNEL);\n+\tif (!attrbuf)\n+\t\treturn ERR_PTR(-ENOMEM);\n \n \terr = __nlmsg_parse(nlh, hdrlen, attrbuf, family->maxattr,\n \t\t\t    family->policy, validate, extack);\n \tif (err) {\n-\t\tif (family->parallel_ops)\n-\t\t\tkfree(attrbuf);\n+\t\tkfree(attrbuf);\n \t\treturn ERR_PTR(err);\n \t}\n \treturn attrbuf;\n }\n \n-static void genl_family_rcv_msg_attrs_free(const struct genl_family *family,\n-\t\t\t\t\t   struct nlattr **attrbuf)\n+static void genl_family_rcv_msg_attrs_free(struct nlattr **attrbuf)\n {\n-\tif (family->parallel_ops)\n-\t\tkfree(attrbuf);\n+\tkfree(attrbuf);\n }\n \n struct genl_start_context {\n@@ -542,7 +520,7 @@ static int genl_start(struct netlink_callback *cb)\n no_attrs:\n \tinfo = genl_dumpit_info_alloc();\n \tif (!info) {\n-\t\tgenl_family_rcv_msg_attrs_free(ctx->family, attrs);\n+\t\tgenl_family_rcv_msg_attrs_free(attrs);\n \t\treturn -ENOMEM;\n \t}\n \tinfo->family = ctx->family;\n@@ -559,7 +537,7 @@ static int genl_start(struct netlink_callback *cb)\n \t}\n \n \tif (rc) {\n-\t\tgenl_family_rcv_msg_attrs_free(info->family, info->attrs);\n+\t\tgenl_family_rcv_msg_attrs_free(info->attrs);\n \t\tgenl_dumpit_info_free(info);\n \t\tcb->data = NULL;\n \t}\n@@ -588,7 +566,7 @@ static int genl_lock_done(struct netlink_callback *cb)\n \t\trc = ops->done(cb);\n \t\tgenl_unlock();\n \t}\n-\tgenl_family_rcv_msg_attrs_free(info->family, info->attrs);\n+\tgenl_family_rcv_msg_attrs_free(info->attrs);\n \tgenl_dumpit_info_free(info);\n \treturn rc;\n }\n@@ -601,7 +579,7 @@ static int genl_parallel_done(struct netlink_callback *cb)\n \n \tif (ops->done)\n \t\trc = ops->done(cb);\n-\tgenl_family_rcv_msg_attrs_free(info->family, info->attrs);\n+\tgenl_family_rcv_msg_attrs_free(info->attrs);\n \tgenl_dumpit_info_free(info);\n \treturn rc;\n }\n@@ -694,7 +672,7 @@ static int genl_family_rcv_msg_doit(const struct genl_family *family,\n \t\tfamily->post_doit(ops, skb, &info);\n \n out:\n-\tgenl_family_rcv_msg_attrs_free(family, attrbuf);\n+\tgenl_family_rcv_msg_attrs_free(attrbuf);\n \n \treturn err;\n }\n",
+    "patch_modified_files": [
+        "include/net/genetlink.h",
+        "net/netlink/genetlink.c"
+    ]
+}

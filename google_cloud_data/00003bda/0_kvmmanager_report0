@@ -1,0 +1,110 @@
+R10: 000000007ffff000 R11: 0000000000000246 R12: 0000000000000001
+R13: 000000000000000b R14: 00007f7b34d9bf80 R15: 00007ffee52871d8
+ </TASK>
+==================================================================
+BUG: KASAN: invalid-free in init_file+0x195/0x200
+Free of addr ffff88814b397400 by task syz-executor.7/5161
+
+CPU: 1 PID: 5161 Comm: syz-executor.7 Not tainted 6.4.0-syzkaller-10098-g995b406c7e97 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x1e7/0x2d0
+ print_report+0x163/0x540
+ kasan_report_invalid_free+0xeb/0x110
+ ____kasan_slab_free+0xfb/0x120
+ kmem_cache_free+0x292/0x500
+ init_file+0x195/0x200
+ alloc_empty_backing_file+0x67/0xd0
+ backing_file_open+0x26/0x100
+ ovl_open_realfile+0x1f6/0x350
+ ovl_real_fdget_meta+0x3be/0x4b0
+ ovl_splice_read+0x1a5/0x670
+ splice_direct_to_actor+0x2c4/0x9e0
+ do_splice_direct+0x2ac/0x3f0
+ do_sendfile+0x623/0x1070
+ __se_sys_sendfile64+0x17c/0x1e0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f7b34c7cbe9
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f7b359ae0c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
+RAX: ffffffffffffffda RBX: 00007f7b34d9bf80 RCX: 00007f7b34c7cbe9
+RDX: 0000000000000000 RSI: 0000000000000004 RDI: 0000000000000005
+RBP: 00007f7b359ae120 R08: 0000000000000000 R09: 0000000000000000
+R10: 000000007ffff000 R11: 0000000000000246 R12: 0000000000000001
+R13: 000000000000000b R14: 00007f7b34d9bf80 R15: 00007ffee52871d8
+ </TASK>
+
+Allocated by task 5161:
+ kasan_set_track+0x4f/0x70
+ __kasan_kmalloc+0x98/0xb0
+ alloc_empty_backing_file+0x52/0xd0
+ backing_file_open+0x26/0x100
+ ovl_open_realfile+0x1f6/0x350
+ ovl_real_fdget_meta+0x3be/0x4b0
+ ovl_splice_read+0x1a5/0x670
+ splice_direct_to_actor+0x2c4/0x9e0
+ do_splice_direct+0x2ac/0x3f0
+ do_sendfile+0x623/0x1070
+ __se_sys_sendfile64+0x17c/0x1e0
+ do_syscall_64+0x41/0xc0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+The buggy address belongs to the object at ffff88814b397400
+ which belongs to the cache kmalloc-512 of size 512
+The buggy address is located 0 bytes inside of
+ 480-byte region [ffff88814b397400, ffff88814b3975e0)
+
+The buggy address belongs to the physical page:
+page:ffffea00052ce500 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x14b394
+head:ffffea00052ce500 order:2 entire_mapcount:0 nr_pages_mapped:0 pincount:0
+flags: 0x57ff00000010200(slab|head|node=1|zone=2|lastcpupid=0x7ff)
+page_type: 0xffffffff()
+raw: 057ff00000010200 ffff888012841c80 dead000000000100 dead000000000122
+raw: 0000000000000000 0000000000100010 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 2, migratetype Unmovable, gfp_mask 0xd2040(__GFP_IO|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC), pid 1, tgid 1 (swapper/0), ts 18665477781, free_ts 18625762244
+ post_alloc_hook+0x1e6/0x210
+ get_page_from_freelist+0x31e8/0x3370
+ __alloc_pages+0x255/0x670
+ alloc_page_interleave+0x22/0x1d0
+ alloc_slab_page+0x6a/0x160
+ new_slab+0x84/0x2f0
+ ___slab_alloc+0xade/0x1100
+ __kmem_cache_alloc_node+0x1af/0x270
+ __kmalloc+0xa8/0x230
+ tomoyo_init_log+0x1b2c/0x2040
+ tomoyo_write_log2+0x3e0/0x8e0
+ tomoyo_supervisor+0x159/0x11f0
+ tomoyo_mount_permission+0x755/0xb40
+ security_sb_mount+0x8c/0xc0
+ path_mount+0xb9/0xfa0
+ init_mount+0xd4/0x130
+page last free stack trace:
+ free_unref_page_prepare+0x903/0xa30
+ free_unref_page+0x37/0x3f0
+ __stack_depot_save+0x4ef/0x650
+ kasan_set_track+0x61/0x70
+ kasan_save_free_info+0x28/0x40
+ ____kasan_slab_free+0xd6/0x120
+ kmem_cache_free+0x292/0x500
+ add_system_zone+0x349/0x650
+ ext4_setup_system_zone+0x324/0xea0
+ ext4_fill_super+0x5b88/0x6ce0
+ get_tree_bdev+0x468/0x6c0
+ vfs_get_tree+0x8c/0x270
+ do_new_mount+0x28f/0xae0
+ init_mount+0xd4/0x130
+ do_mount_root+0x98/0x230
+ mount_root_generic+0x193/0x3b0
+
+Memory state around the buggy address:
+ ffff88814b397300: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88814b397380: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff88814b397400: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+                   ^
+ ffff88814b397480: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff88814b397500: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+==================================================================

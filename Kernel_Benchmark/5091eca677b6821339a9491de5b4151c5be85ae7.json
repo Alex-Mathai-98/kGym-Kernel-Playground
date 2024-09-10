@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "memory leak in mld_newpack",
+    "display-title": "memory leak in mld_newpack",
+    "id": "5091eca677b6821339a9491de5b4151c5be85ae7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "usbnet: Fix memory leak in usbnet_disconnect()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a43206156263fbaf1f2b7f96257441f331e91bb7",
+            "hash": "a43206156263fbaf1f2b7f96257441f331e91bb7",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000006b15c805c7fbd885@google.com/T/",
+        "https://lore.kernel.org/all/20220923042551.2745-1-yepeilin.cs@gmail.com/T/",
+        "https://lore.kernel.org/all/20221003070715.406550966@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221003070716.269502440@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221003070718.687440096@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221003070721.971297651@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221003070724.490989164@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221024112949.358278806@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221024112956.797777597@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in mld_newpack",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11842b37080000",
+            "c-reproducer": "/text?tag=ReproC&x=15078ed5080000",
+            "kernel-config": "/text?tag=KernelConfig&x=a4afe4efcad47dde",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=6879c2d3b96039ff1668b4328a4d0dd3ea952cff",
+            "kernel-source-commit": "6879c2d3b96039ff1668b4328a4d0dd3ea952cff",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/dd9a85ff356d74a765888403f1b70faece9e642b",
+            "syzkaller-commit": "dd9a85ff356d74a765888403f1b70faece9e642b",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1259b680880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "usbnet_disconnect",
+            "drivers/net/usb/usbnet.c"
+        ]
+    ],
+    "patch_commit_date": "2022-09-23T04:25:51+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "6052a4c11fd893234e085edf7bf2e00a33a79d4e",
+    "patch": "diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c\nindex aaa89b4cfd50..e368b0780753 100644\n--- a/drivers/net/usb/usbnet.c\n+++ b/drivers/net/usb/usbnet.c\n@@ -1598,6 +1598,7 @@ void usbnet_disconnect (struct usb_interface *intf)\n \tstruct usbnet\t\t*dev;\n \tstruct usb_device\t*xdev;\n \tstruct net_device\t*net;\n+\tstruct urb\t\t*urb;\n \n \tdev = usb_get_intfdata(intf);\n \tusb_set_intfdata(intf, NULL);\n@@ -1614,7 +1615,11 @@ void usbnet_disconnect (struct usb_interface *intf)\n \tnet = dev->net;\n \tunregister_netdev (net);\n \n-\tusb_scuttle_anchored_urbs(&dev->deferred);\n+\twhile ((urb = usb_get_from_anchor(&dev->deferred))) {\n+\t\tdev_kfree_skb(urb->context);\n+\t\tkfree(urb->sg);\n+\t\tusb_free_urb(urb);\n+\t}\n \n \tif (dev->driver_info->unbind)\n \t\tdev->driver_info->unbind(dev, intf);\n",
+    "patch_modified_files": [
+        "drivers/net/usb/usbnet.c"
+    ]
+}

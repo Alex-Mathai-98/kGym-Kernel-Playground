@@ -1,0 +1,40 @@
+usb 1-1: USB disconnect, device number 3
+------------[ cut here ]------------
+remove_proc_entry: removing non-empty directory 'scsi/ums-sddr09', leaking at least '5'
+WARNING: CPU: 0 PID: 5075 at fs/proc/generic.c:718 remove_proc_entry+0x275/0x2b0
+Modules linked in:
+CPU: 0 PID: 5075 Comm: kworker/0:4 Not tainted 6.3.0-rc1-syzkaller-00028-g4b1a2c2a8e0d #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: usb_hub_wq hub_event
+RIP: 0010:remove_proc_entry+0x275/0x2b0
+Code: ff 48 8b 45 f0 48 c7 c6 40 55 c7 84 48 c7 c7 10 a8 83 85 48 8b 4d 18 4c 8b 83 a0 00 00 00 48 8b 90 a0 00 00 00 e8 0b 2a b3 ff <0f> 0b e9 47 ff ff ff e8 ef b9 c7 ff 48 8b 75 18 48 c7 c7 e8 a7 83
+RSP: 0018:ffffc90002a07ac0 EFLAGS: 00010282
+RAX: 0000000000000000 RBX: ffff888117c66cc0 RCX: 0000000000000000
+RDX: ffff8881153c81c0 RSI: ffffffff8127d643 RDI: 0000000000000001
+RBP: ffff888117dfb688 R08: 0000000000000001 R09: 0000000000000000
+R10: 0000000000000001 R11: 705f65766f6d6572 R12: ffff888117dfb600
+R13: ffff888117dfb680 R14: ffffffff857a921e R15: ffff88814016c600
+FS:  0000000000000000(0000) GS:ffff88813bc00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007efebe4a7b39 CR3: 00000001187af000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ scsi_proc_hostdir_rm+0xb8/0x120
+ scsi_remove_host+0xc0/0x200
+ usb_stor_disconnect+0x72/0xf0
+ usb_unbind_interface+0xe3/0x3f0
+ device_remove+0x6d/0x80
+ device_release_driver_internal+0x25d/0x2f0
+ bus_remove_device+0xf6/0x140
+ device_del+0x1e1/0x4b0
+ usb_disable_device+0x145/0x240
+ usb_disconnect+0x149/0x390
+ hub_event+0x119d/0x24c0
+ process_one_work+0x2e5/0x650
+ worker_thread+0x330/0x5c0
+ kthread+0x123/0x160
+ ret_from_fork+0x1f/0x30
+ </TASK>
+---[ end trace 0000000000000000 ]---

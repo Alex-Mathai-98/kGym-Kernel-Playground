@@ -1,0 +1,60 @@
+================================
+WARNING: inconsistent lock state
+5.5.0-syzkaller #0 Not tainted
+--------------------------------
+inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
+ksoftirqd/1/16 [HC0[0]:SC1[1]:HE1:SE0] takes:
+ffffffff8a8cc958 (rxrpc_conn_id_lock){+.?.}, at: rxrpc_put_client_conn+0x55c/0x7c0
+{SOFTIRQ-ON-W} state was registered at:
+  lock_acquire+0x19b/0x3d0
+  _raw_spin_lock+0x2d/0x40
+  rxrpc_connect_call+0x885/0x37a0
+  rxrpc_new_client_call+0x7d2/0x1180
+  rxrpc_do_sendmsg+0xb65/0x19a0
+  rxrpc_sendmsg+0x429/0x600
+  sock_sendmsg+0xd2/0x120
+  ____sys_sendmsg+0x2a7/0x880
+  ___sys_sendmsg+0x11d/0x1b0
+  __sys_sendmmsg+0x1ba/0x4c0
+  __x64_sys_sendmmsg+0x9c/0x100
+  do_syscall_64+0xf6/0x240
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+irq event stamp: 210010
+hardirqs last  enabled at (210010): [<ffffffff87ede746>] _raw_spin_unlock_irqrestore+0x66/0xe0
+hardirqs last disabled at (210009): [<ffffffff87ede5ae>] _raw_spin_lock_irqsave+0x6e/0xd0
+softirqs last  enabled at (209970): [<ffffffff88200704>] __do_softirq+0x704/0xa10
+softirqs last disabled at (209975): [<ffffffff81479cce>] run_ksoftirqd+0x8e/0x110
+
+other info that might help us debug this:
+ Possible unsafe locking scenario:
+
+       CPU0
+       ----
+  lock(rxrpc_conn_id_lock);
+  <Interrupt>
+    lock(rxrpc_conn_id_lock);
+
+ *** DEADLOCK ***
+
+1 lock held by ksoftirqd/1/16:
+ #0: ffffffff89babc00 (rcu_callback){....}, at: rcu_core+0x593/0x11d0
+
+stack backtrace:
+CPU: 1 PID: 16 Comm: ksoftirqd/1 Not tainted 5.5.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ dump_stack+0x191/0x20f
+ print_usage_bug.cold+0x321/0x372
+ mark_lock+0xa56/0x1210
+ __lock_acquire+0xaf5/0x4d80
+ lock_acquire+0x19b/0x3d0
+ _raw_spin_lock+0x2d/0x40
+ rxrpc_put_client_conn+0x55c/0x7c0
+ rxrpc_rcu_destroy_call+0xb9/0x1f0
+ rcu_core+0x600/0x11d0
+ rcu_core_si+0x9/0x10
+ __do_softirq+0x325/0xa10
+ run_ksoftirqd+0x8e/0x110
+ smpboot_thread_fn+0x6e4/0xab0
+ kthread+0x35c/0x430
+ ret_from_fork+0x24/0x30

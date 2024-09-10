@@ -1,0 +1,42 @@
+Bad or missing usercopy whitelist? Kernel memory exposure attempt detected from SLAB object 'fanotify_event' (offset 40, size 8)!
+WARNING: CPU: 1 PID: 4236 at mm/usercopy.c:78 usercopy_warn+0xf3/0x110
+Modules linked in:
+CPU: 1 PID: 4236 Comm: syz-executor.5 Not tainted 5.0.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+RIP: 0010:usercopy_warn+0xf3/0x110
+Code: c0 c0 ff 4d 89 e9 4c 89 e1 ff 75 c8 4c 89 fa 48 89 de 48 c7 c7 60 ae 74 87 ff 75 d0 48 8b 45 c0 50 4c 8b 45 b8 e8 bb 22 94 ff <0f> 0b 48 83 c4 18 e9 42 ff ff ff 49 c7 c5 e0 ac 74 87 4c 89 e8 4d
+RSP: 0018:ffff8881d6d9fb18 EFLAGS: 00010282
+RAX: 0000000000000000 RBX: ffffffff8774ada0 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: ffffffff815a4685 RDI: ffffed103adb3f55
+RBP: ffff8881d6d9fb78 R08: 0000000080000000 R09: 0000000000000005
+R10: 0000000000000000 R11: 0000000000000000 R12: ffffffff88547e29
+R13: ffffffff8775a9e0 R14: 0000000000000000 R15: ffffffff8774ad60
+FS:  00007f2e263276c0(0000) GS:ffff8881f6700000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000055c23dd90c38 CR3: 00000001d0ade004 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ __check_heap_object+0x86/0xb3
+ __check_object_size+0x331/0x3e4
+ fanotify_read+0x7e7/0x14f0
+ __vfs_read+0x8b/0x110
+ vfs_read+0x199/0x3e0
+ ksys_read+0xe9/0x1f0
+ __x64_sys_read+0x72/0xb0
+ do_syscall_64+0xff/0x190
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f2e26fa6f69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f2e263270c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+RAX: ffffffffffffffda RBX: 00007f2e270d4f80 RCX: 00007f2e26fa6f69
+RDX: 000000000000006b RSI: 0000000020000000 RDI: 0000000000000004
+RBP: 00007f2e26ff34a4 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000000000b R14: 00007f2e270d4f80 R15: 00007ffe58dfc1e8
+irq event stamp: 344
+hardirqs last  enabled at (343): [<ffffffff870916a7>] _raw_spin_unlock_irq+0x27/0x90
+hardirqs last disabled at (344): [<ffffffff81006705>] trace_hardirqs_off_thunk+0x1a/0x1c
+softirqs last  enabled at (320): [<ffffffff8740069b>] __do_softirq+0x69b/0x9b6
+softirqs last disabled at (225): [<ffffffff8144bf2a>] irq_exit+0x22a/0x270
+---[ end trace ef7a166707a69a3a ]---

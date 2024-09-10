@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in ethnl_update_bitset32",
+    "display-title": "KASAN: slab-out-of-bounds Read in ethnl_update_bitset32",
+    "id": "8d31c0d56f794feb72c2d359795c74908dab34c0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ethtool: limit bitset size",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e34f1753eebc428c312527662eb1b529cf260240",
+            "hash": "e34f1753eebc428c312527662eb1b529cf260240",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000011953b059f4e27f7@google.com/T/",
+        "https://lore.kernel.org/all/20200224194212.426B4E1E06@unicorn.suse.cz/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1399a3d9e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=3b8906eb6a7d6028",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d2eee25858f246051b49c42c411629c78513e2a8",
+            "kernel-source-commit": "d2eee25858f246051b49c42c411629c78513e2a8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d801cb0223da621d7abb7af8b96a848d8976cc9f",
+            "syzkaller-commit": "d801cb0223da621d7abb7af8b96a848d8976cc9f",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=141e03d9e00000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "6e11d1578fba8d09d03a286740ffcf336d53928c",
+    "patch": "diff --git a/net/ethtool/bitset.c b/net/ethtool/bitset.c\nindex 8977fe1f3946..ef9197541cb3 100644\n--- a/net/ethtool/bitset.c\n+++ b/net/ethtool/bitset.c\n@@ -305,7 +305,8 @@ int ethnl_put_bitset32(struct sk_buff *skb, int attrtype, const u32 *val,\n static const struct nla_policy bitset_policy[ETHTOOL_A_BITSET_MAX + 1] = {\n \t[ETHTOOL_A_BITSET_UNSPEC]\t= { .type = NLA_REJECT },\n \t[ETHTOOL_A_BITSET_NOMASK]\t= { .type = NLA_FLAG },\n-\t[ETHTOOL_A_BITSET_SIZE]\t\t= { .type = NLA_U32 },\n+\t[ETHTOOL_A_BITSET_SIZE]\t\t= NLA_POLICY_MAX(NLA_U32,\n+\t\t\t\t\t\t\t ETHNL_MAX_BITSET_SIZE),\n \t[ETHTOOL_A_BITSET_BITS]\t\t= { .type = NLA_NESTED },\n \t[ETHTOOL_A_BITSET_VALUE]\t= { .type = NLA_BINARY },\n \t[ETHTOOL_A_BITSET_MASK]\t\t= { .type = NLA_BINARY },\ndiff --git a/net/ethtool/bitset.h b/net/ethtool/bitset.h\nindex b8247e34109d..b849f9d19676 100644\n--- a/net/ethtool/bitset.h\n+++ b/net/ethtool/bitset.h\n@@ -3,6 +3,8 @@\n #ifndef _NET_ETHTOOL_BITSET_H\n #define _NET_ETHTOOL_BITSET_H\n \n+#define ETHNL_MAX_BITSET_SIZE S16_MAX\n+\n typedef const char (*const ethnl_string_array_t)[ETH_GSTRING_LEN];\n \n int ethnl_bitset_is_compact(const struct nlattr *bitset, bool *compact);\n",
+    "patch_modified_files": [
+        "net/ethtool/bitset.c",
+        "net/ethtool/bitset.h"
+    ]
+}

@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in hid_report_raw_event",
+    "display-title": "UBSAN: shift-out-of-bounds in hid_report_raw_event (2)",
+    "id": "ac6fc97113de554dc57614c3ffa4c6a2c2668a97",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "HID: core: fix shift-out-of-bounds in hid_report_raw_event",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ec61b41918587be530398b0d1c9a0d16619397e5",
+            "hash": "ec61b41918587be530398b0d1c9a0d16619397e5",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005c4be705ed85de52@google.com/T/",
+        "https://lore.kernel.org/all/20221116071428.191437-1-zhangpeng362@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "UBSAN: shift-out-of-bounds in hid_report_raw_event",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13556dfe880000",
+            "c-reproducer": "/text?tag=ReproC&x=16de4db9880000",
+            "kernel-config": "/text?tag=KernelConfig&x=480ba0fb2fd243ac",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4bbf3422df78029f03161640dcb1e9d1ed64d1ea",
+            "kernel-source-commit": "4bbf3422df78029f03161640dcb1e9d1ed64d1ea",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3ead01ade920906b89aff0066a9d5e922ee270c8",
+            "syzkaller-commit": "3ead01ade920906b89aff0066a9d5e922ee270c8",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17578f25880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "snto32",
+            "drivers/hid/hid-core.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-16T07:14:28+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "input",
+        "usb"
+    ],
+    "parent_of_fix_commit": "3405a4beaaa852f3ed2a5eb3b5149932d5c3779b",
+    "patch": "diff --git a/drivers/hid/hid-core.c b/drivers/hid/hid-core.c\nindex 9c1d31f63f85..bd47628da6be 100644\n--- a/drivers/hid/hid-core.c\n+++ b/drivers/hid/hid-core.c\n@@ -1315,6 +1315,9 @@ static s32 snto32(__u32 value, unsigned n)\n \tif (!value || !n)\n \t\treturn 0;\n \n+\tif (n > 32)\n+\t\tn = 32;\n+\n \tswitch (n) {\n \tcase 8:  return ((__s8)value);\n \tcase 16: return ((__s16)value);\n",
+    "patch_modified_files": [
+        "drivers/hid/hid-core.c"
+    ]
+}

@@ -1,0 +1,28 @@
+=============================
+WARNING: suspicious RCU usage
+5.9.0-rc1-syzkaller #0 Not tainted
+-----------------------------
+net/tipc/bearer.c:466 suspicious rcu_dereference_check() usage!
+
+other info that might help us debug this:
+
+
+rcu_scheduler_active = 2, debug_locks = 1
+2 locks held by kworker/0:2/2749:
+ #0: ffff8881f2101d38 ((wq_completion)cryptd){+.+.}-{0:0}, at: process_one_work+0x88e/0x1680
+ #1: ffffc90008617d98 ((work_completion)(&cpu_queue->work)){+.+.}-{0:0}, at: process_one_work+0x8c2/0x1680
+
+stack backtrace:
+CPU: 0 PID: 2749 Comm: kworker/0:2 Not tainted 5.9.0-rc1-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Workqueue: cryptd cryptd_queue_worker
+Call Trace:
+ dump_stack+0x188/0x1ff
+ tipc_l2_send_msg+0x356/0x410
+ tipc_aead_encrypt_done+0x20b/0x390
+ cryptd_aead_crypt+0xe8/0x1d0
+ cryptd_queue_worker+0x115/0x1b0
+ process_one_work+0x9ad/0x1680
+ worker_thread+0x676/0x1170
+ kthread+0x3a6/0x490
+ ret_from_fork+0x1f/0x30

@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "memory leak in prctl",
+    "display-title": "memory leak in prctl",
+    "id": "1a201ce4f0f4ab2f165b93d0ce5c15ebe1a5b321",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm: fix vma->anon_name memory leak for anonymous shmem VMAs",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a1193de562f54c7c9f60ca9f2db96e50a7608de1",
+            "hash": "a1193de562f54c7c9f60ca9f2db96e50a7608de1",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001b2b2e05f04f3ddb@google.com/T/",
+        "https://lore.kernel.org/all/20221228194249.170354-1-surenb@google.com/T/",
+        "https://lore.kernel.org/all/20230105000241.1450843-1-surenb@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in prctl",
+            "syz-reproducer": "/text?tag=ReproSyz&x=153ff26f880000",
+            "c-reproducer": "/text?tag=ReproC&x=1073a993880000",
+            "kernel-config": "/text?tag=KernelConfig&x=6b1ea4fdbd78230a",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=77856d911a8c8724ee8e2b09d55979fc1de8f1c0",
+            "kernel-source-commit": "77856d911a8c8724ee8e2b09d55979fc1de8f1c0",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/05494336991504e3c6137b89eeddd492e17af6b6",
+            "syzkaller-commit": "05494336991504e3c6137b89eeddd492e17af6b6",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15a10410480000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "free_anon_vma_name",
+            "include/linux/mm_inline.h"
+        ]
+    ],
+    "patch_commit_date": "2023-01-05T00:02:40+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "3de0c269adc6c2fac0bb1fb11965f0de699dc32b",
+    "patch": "diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h\nindex e8ed225d8f7c..ff3f3f23f649 100644\n--- a/include/linux/mm_inline.h\n+++ b/include/linux/mm_inline.h\n@@ -413,8 +413,7 @@ static inline void free_anon_vma_name(struct vm_area_struct *vma)\n \t * Not using anon_vma_name because it generates a warning if mmap_lock\n \t * is not held, which might be the case here.\n \t */\n-\tif (!vma->vm_file)\n-\t\tanon_vma_name_put(vma->anon_name);\n+\tanon_vma_name_put(vma->anon_name);\n }\n \n static inline bool anon_vma_name_eq(struct anon_vma_name *anon_name1,\n",
+    "patch_modified_files": [
+        "include/linux/mm_inline.h"
+    ]
+}
