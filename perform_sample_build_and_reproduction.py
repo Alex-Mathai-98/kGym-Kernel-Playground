@@ -164,6 +164,20 @@ class KVMManager () :
         return kvm_manager
 
     @classmethod
+    def modify_c_reproducer(cls, reproducer_text:str) :
+        """Add a print statement so that syzkaller will recognise that the execution is alive. """
+        if "executed programs:" in reproducer_text :
+            # c reproducer already has the printing statement
+            return reproducer_text
+        else :
+            crepro = 'int __syz_main'.join(reproducer_text.split('int main'))
+            crepro += '\n\n\n'
+            crepro += '#include <unistd.h>\n#include <stdio.h>\n'
+            crepro += 'int main() { int p = fork(); if (p != 0) { __syz_main(); } else { for (;;) { printf("executed programs: 0\\n"); fflush(stdout); sleep(5); } } }'
+            crepro += '\n\n\n'
+        return crepro
+
+    @classmethod
     def fill_kvm_manager_params_from_bug_folder(cls, data_folder_path, bug_id, kvm_manager_dict, nproc: int=8,
                         restart_time: str='10m', machine_type: str='gce:e2-standard-2', reproducer_type:str="c",
                         ninstance:int=1) :
@@ -188,6 +202,8 @@ class KVMManager () :
             if reproducer_type == "c" :
                 kvm_manager_dict["reproducer-type"] = 'c'
                 kvm_manager_dict["reproducer-text"] = crash.get('c-reproducer-data', '')
+                if kvm_manager_dict["reproducer-text"] != "" :
+                    kvm_manager_dict["reproducer-text"] = KVMManager.modify_c_reproducer(kvm_manager_dict["reproducer-text"])
                 kvm_manager_dict["nproc"] = nproc
                 kvm_manager_dict["restart-time"] = restart_time
                 kvm_manager_dict["syzkaller-checkout"] = crash.get("syzkaller-commit","")
