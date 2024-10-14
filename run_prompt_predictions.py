@@ -46,7 +46,8 @@ def read_benchmark_info(golden_subset) :
 def main(prediction_file, 
         benchmark_dump_path, 
         golden_subset,
-        prediction_type) :
+        prediction_type,
+        reproducer_type) :
 
     # sanity checks
     assert(prediction_type in prediction_file)
@@ -106,7 +107,7 @@ def main(prediction_file,
                                                                                                     complete_argument_dict=complete_argument_dict,
                                                                                                     get_parent_commit=True,
                                                                                                     get_fix_commit=False,
-                                                                                                    reproducer_type="log",
+                                                                                                    reproducer_type=reproducer_type,
                                                                                                     ninstance=5)
             elif prediction_type == "original_commit" : 
                 complete_argument_dict = KReproducer.fill_kbuilder_kvm_manager_params_from_bug_folder(data_path=benchmark_dump_path,
@@ -114,7 +115,7 @@ def main(prediction_file,
                                                                                                     complete_argument_dict=complete_argument_dict,
                                                                                                     get_parent_commit=False,
                                                                                                     get_fix_commit=False,
-                                                                                                    reproducer_type="log",
+                                                                                                    reproducer_type=reproducer_type,
                                                                                                     ninstance=5)
             complete_argument_dict["kvm_builder_parameters"]["user_img"] = benchmark_bug_data[bug_id]["image"]
             complete_argument_dict["kvm_builder_parameters"]["patch"] = model_patch
@@ -169,10 +170,18 @@ if __name__ == '__main__' :
         choices=["parent_commit","original_commit"],
         help="One of parent_commit/original_commit"
     )
+    parser.add_argument(
+        "--reproducer_type",
+        type=str,
+        default="log",
+        choices=["c","log"],
+        help="One of 'c'/'log'"
+    )
 
     args = parser.parse_args()
 
     main(prediction_file=args.prediction_file,
         benchmark_dump_path=args.benchmark_dump_path,
         golden_subset=args.golden_subset,
-        prediction_type=args.prediction_type)
+        prediction_type=args.prediction_type,
+        reproducer_type=args.reproducer_type)
