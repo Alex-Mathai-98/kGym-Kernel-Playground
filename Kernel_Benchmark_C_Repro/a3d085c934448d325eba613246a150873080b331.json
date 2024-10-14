@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "WARNING in mark_buffer_dirty",
+    "display-title": "WARNING in mark_buffer_dirty (5)",
+    "id": "a3d085c934448d325eba613246a150873080b331",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: fix WARNING in mark_buffer_dirty due to discarded buffer reuse",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cdaac8e7e5a059f9b5e816cda257f08d0abffacd",
+            "hash": "cdaac8e7e5a059f9b5e816cda257f08d0abffacd",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "nilfs2: do not write dirty data after degenerating to read-only",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=28a65b49eb53e172d23567005465019658bfdb4d",
+        "hash": "28a65b49eb53e172d23567005465019658bfdb4d",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000002087490601b41a01@google.com/T/",
+        "https://lore.kernel.org/all/0000000000003da75f05fdeffd12@google.com/T/",
+        "https://lore.kernel.org/all/000000000000d6218f05ff40dd65@google.com/T/",
+        "https://lore.kernel.org/all/20230818131804.7758-1-konishi.ryusuke@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in mark_buffer_dirty",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17a18595280000",
+            "c-reproducer": "/text?tag=ReproC&x=141c5463280000",
+            "kernel-config": "/text?tag=KernelConfig&x=7474de833c217bf4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=5f63595ebd82f56a2dd36ca013dd7f5ff2e2416a",
+            "kernel-source-commit": "5f63595ebd82f56a2dd36ca013dd7f5ff2e2416a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/058b3a5a6a945a55767811552eb7b9f4a20307f8",
+            "syzkaller-commit": "058b3a5a6a945a55767811552eb7b9f4a20307f8",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13a2e7b5280000"
+        }
+    ],
+    "subsystems": [
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "198430f7f785e072d5d70fe522b6c7abdf41068a",
+    "patch": "diff --git a/fs/nilfs2/alloc.c b/fs/nilfs2/alloc.c\nindex 6ce8617b562d..7342de296ec3 100644\n--- a/fs/nilfs2/alloc.c\n+++ b/fs/nilfs2/alloc.c\n@@ -205,7 +205,8 @@ static int nilfs_palloc_get_block(struct inode *inode, unsigned long blkoff,\n \tint ret;\n \n \tspin_lock(lock);\n-\tif (prev->bh && blkoff == prev->blkoff) {\n+\tif (prev->bh && blkoff == prev->blkoff &&\n+\t    likely(buffer_uptodate(prev->bh))) {\n \t\tget_bh(prev->bh);\n \t\t*bhp = prev->bh;\n \t\tspin_unlock(lock);\ndiff --git a/fs/nilfs2/inode.c b/fs/nilfs2/inode.c\nindex a8ce522ac747..5c9154c29678 100644\n--- a/fs/nilfs2/inode.c\n+++ b/fs/nilfs2/inode.c\n@@ -1025,7 +1025,7 @@ int nilfs_load_inode_block(struct inode *inode, struct buffer_head **pbh)\n \tint err;\n \n \tspin_lock(&nilfs->ns_inode_lock);\n-\tif (ii->i_bh == NULL) {\n+\tif (ii->i_bh == NULL || unlikely(!buffer_uptodate(ii->i_bh))) {\n \t\tspin_unlock(&nilfs->ns_inode_lock);\n \t\terr = nilfs_ifile_get_inode_block(ii->i_root->ifile,\n \t\t\t\t\t\t  inode->i_ino, pbh);\n@@ -1034,7 +1034,10 @@ int nilfs_load_inode_block(struct inode *inode, struct buffer_head **pbh)\n \t\tspin_lock(&nilfs->ns_inode_lock);\n \t\tif (ii->i_bh == NULL)\n \t\t\tii->i_bh = *pbh;\n-\t\telse {\n+\t\telse if (unlikely(!buffer_uptodate(ii->i_bh))) {\n+\t\t\t__brelse(ii->i_bh);\n+\t\t\tii->i_bh = *pbh;\n+\t\t} else {\n \t\t\tbrelse(*pbh);\n \t\t\t*pbh = ii->i_bh;\n \t\t}\n",
+    "patch_modified_files": [
+        "fs/nilfs2/alloc.c",
+        "fs/nilfs2/inode.c"
+    ]
+}

@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in bio_poll",
+    "display-title": "KASAN: use-after-free Read in bio_poll",
+    "id": "a59816f87c8e514d1b5ed891ae85341fbef1e553",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "block: ignore RWF_HIPRI hint for sync dio",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9650b453a3d4b1b8ed4ea8bcb9b40109608d1faf",
+            "hash": "9650b453a3d4b1b8ed4ea8bcb9b40109608d1faf",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "blk-mq: cleanup blk_mq_submit_bio",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0f38d76646157357fcfa02f50575ea044830c494",
+        "hash": "0f38d76646157357fcfa02f50575ea044830c494",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000029572505de968021@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in bio_poll",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12311571f00000",
+            "c-reproducer": "/text?tag=ReproC&x=177a2e86f00000",
+            "kernel-config": "/text?tag=KernelConfig&x=79caa0035f59d385",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c5eb0a61238dd6faf37f58c9ce61c9980aaffd7a",
+            "kernel-source-commit": "c5eb0a61238dd6faf37f58c9ce61c9980aaffd7a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8b277b8e2ac2f385eec24532a4786cc4ad12e9ae",
+            "syzkaller-commit": "8b277b8e2ac2f385eec24532a4786cc4ad12e9ae",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15aac0faf00000"
+        }
+    ],
+    "subsystems": [
+        "block"
+    ],
+    "parent_of_fix_commit": "e233fe1aa02815f38588a5a965a197bbcabfb125",
+    "patch": "diff --git a/block/fops.c b/block/fops.c\nindex e3643362c244..b9b83030e0df 100644\n--- a/block/fops.c\n+++ b/block/fops.c\n@@ -44,14 +44,6 @@ static unsigned int dio_bio_write_op(struct kiocb *iocb)\n \n #define DIO_INLINE_BIO_VECS 4\n \n-static void blkdev_bio_end_io_simple(struct bio *bio)\n-{\n-\tstruct task_struct *waiter = bio->bi_private;\n-\n-\tWRITE_ONCE(bio->bi_private, NULL);\n-\tblk_wake_io_task(waiter);\n-}\n-\n static ssize_t __blkdev_direct_IO_simple(struct kiocb *iocb,\n \t\tstruct iov_iter *iter, unsigned int nr_pages)\n {\n@@ -83,8 +75,6 @@ static ssize_t __blkdev_direct_IO_simple(struct kiocb *iocb,\n \t\tbio_init(&bio, bdev, vecs, nr_pages, dio_bio_write_op(iocb));\n \t}\n \tbio.bi_iter.bi_sector = pos >> SECTOR_SHIFT;\n-\tbio.bi_private = current;\n-\tbio.bi_end_io = blkdev_bio_end_io_simple;\n \tbio.bi_ioprio = iocb->ki_ioprio;\n \n \tret = bio_iov_iter_get_pages(&bio, iter);\n@@ -97,18 +87,8 @@ static ssize_t __blkdev_direct_IO_simple(struct kiocb *iocb,\n \n \tif (iocb->ki_flags & IOCB_NOWAIT)\n \t\tbio.bi_opf |= REQ_NOWAIT;\n-\tif (iocb->ki_flags & IOCB_HIPRI)\n-\t\tbio_set_polled(&bio, iocb);\n \n-\tsubmit_bio(&bio);\n-\tfor (;;) {\n-\t\tset_current_state(TASK_UNINTERRUPTIBLE);\n-\t\tif (!READ_ONCE(bio.bi_private))\n-\t\t\tbreak;\n-\t\tif (!(iocb->ki_flags & IOCB_HIPRI) || !bio_poll(&bio, NULL, 0))\n-\t\t\tblk_io_schedule();\n-\t}\n-\t__set_current_state(TASK_RUNNING);\n+\tsubmit_bio_wait(&bio);\n \n \tbio_release_pages(&bio, should_dirty);\n \tif (unlikely(bio.bi_status))\ndiff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c\nindex 62da020d02a1..80f9b047aa1b 100644\n--- a/fs/iomap/direct-io.c\n+++ b/fs/iomap/direct-io.c\n@@ -56,7 +56,8 @@ static void iomap_dio_submit_bio(const struct iomap_iter *iter,\n {\n \tatomic_inc(&dio->ref);\n \n-\tif (dio->iocb->ki_flags & IOCB_HIPRI) {\n+\t/* Sync dio can't be polled reliably */\n+\tif ((dio->iocb->ki_flags & IOCB_HIPRI) && !is_sync_kiocb(dio->iocb)) {\n \t\tbio_set_polled(bio, dio->iocb);\n \t\tdio->submit.poll_bio = bio;\n \t}\n@@ -653,9 +654,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,\n \t\t\tif (!READ_ONCE(dio->submit.waiter))\n \t\t\t\tbreak;\n \n-\t\t\tif (!dio->submit.poll_bio ||\n-\t\t\t    !bio_poll(dio->submit.poll_bio, NULL, 0))\n-\t\t\t\tblk_io_schedule();\n+\t\t\tblk_io_schedule();\n \t\t}\n \t\t__set_current_state(TASK_RUNNING);\n \t}\ndiff --git a/mm/page_io.c b/mm/page_io.c\nindex 89fbf3cae30f..3fbdab6a940e 100644\n--- a/mm/page_io.c\n+++ b/mm/page_io.c\n@@ -360,7 +360,6 @@ int swap_readpage(struct page *page, bool synchronous)\n \t * attempt to access it in the page fault retry time check.\n \t */\n \tif (synchronous) {\n-\t\tbio->bi_opf |= REQ_POLLED;\n \t\tget_task_struct(current);\n \t\tbio->bi_private = current;\n \t}\n@@ -372,8 +371,7 @@ int swap_readpage(struct page *page, bool synchronous)\n \t\tif (!READ_ONCE(bio->bi_private))\n \t\t\tbreak;\n \n-\t\tif (!bio_poll(bio, NULL, 0))\n-\t\t\tblk_io_schedule();\n+\t\tblk_io_schedule();\n \t}\n \t__set_current_state(TASK_RUNNING);\n \tbio_put(bio);\n",
+    "patch_modified_files": [
+        "block/fops.c",
+        "fs/iomap/direct-io.c",
+        "mm/page_io.c"
+    ]
+}

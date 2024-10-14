@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "WARNING: filesystem loop0 was created with 512 inodes, the real maximum is 511, mounting anywa",
+    "display-title": "WARNING: filesystem loop0 was created with 512 inodes, the real maximum is 511, mounting anywa",
+    "id": "da205accc13a9080d2f8991b8cd6950b5486317c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "bfs: don't use WARNING: string when it's just info.",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=dc889b8d4a8122549feabe99eead04e6b23b6513",
+            "hash": "dc889b8d4a8122549feabe99eead04e6b23b6513",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Merge branch 'for-linus-4.21-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/rw/uml",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6aa293d8ff0939802a6c86cee6cd152c1b0a7a0d",
+        "hash": "6aa293d8ff0939802a6c86cee6cd152c1b0a7a0d",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000fbb4f505b5df4eea@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=152b05ab500000",
+            "c-reproducer": "/text?tag=ReproC&x=14fc3fad500000",
+            "kernel-config": "/text?tag=KernelConfig&x=b3a044ccf5b03ac4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=34816d20f173a90389c8a7e641166d8ea9dce70a",
+            "kernel-source-commit": "34816d20f173a90389c8a7e641166d8ea9dce70a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e6b0d3140b98e8456fbd089d584e932e19257d94",
+            "syzkaller-commit": "e6b0d3140b98e8456fbd089d584e932e19257d94",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=176387c9500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "bfs_fill_super",
+            "fs/bfs/inode.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "clean_crash_report": [],
+    "crash_kernel_id": null,
+    "patch_commit_date": "2020-12-16T04:45:44+00:00",
+    "cause_commit_date": "2019-01-03T02:39:22+00:00",
+    "subsystems": [
+        "bfs"
+    ],
+    "parent_of_fix_commit": "26ecea089f422b6f518f2906495a2d64ca7938d7",
+    "patch": "diff --git a/fs/bfs/inode.c b/fs/bfs/inode.c\nindex 3ac7611ef7ce..fd691e4815c5 100644\n--- a/fs/bfs/inode.c\n+++ b/fs/bfs/inode.c\n@@ -350,7 +350,7 @@ static int bfs_fill_super(struct super_block *s, void *data, int silent)\n \n \tinfo->si_lasti = (le32_to_cpu(bfs_sb->s_start) - BFS_BSIZE) / sizeof(struct bfs_inode) + BFS_ROOT_INO - 1;\n \tif (info->si_lasti == BFS_MAX_LASTI)\n-\t\tprintf(\"WARNING: filesystem %s was created with 512 inodes, the real maximum is 511, mounting anyway\\n\", s->s_id);\n+\t\tprintf(\"NOTE: filesystem %s was created with 512 inodes, the real maximum is 511, mounting anyway\\n\", s->s_id);\n \telse if (info->si_lasti > BFS_MAX_LASTI) {\n \t\tprintf(\"Impossible last inode number %lu > %d on %s\\n\", info->si_lasti, BFS_MAX_LASTI, s->s_id);\n \t\tgoto out1;\n",
+    "patch_modified_files": [
+        "fs/bfs/inode.c"
+    ]
+}

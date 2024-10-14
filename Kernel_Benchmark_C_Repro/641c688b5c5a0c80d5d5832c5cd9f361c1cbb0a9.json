@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "memory leak in raw_open",
+    "display-title": "memory leak in raw_open",
+    "id": "641c688b5c5a0c80d5d5832c5cd9f361c1cbb0a9",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "USB: gadget: Fix the memory leak in raw_gadget driver",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=83e30f2bf86ef7c38fbd476ed81a88522b620628",
+            "hash": "83e30f2bf86ef7c38fbd476ed81a88522b620628",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000009db51a06005b64e9@google.com/T/",
+        "https://lore.kernel.org/all/20230714074011.20989-1-qiang.zhang1211@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in raw_open",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1776519ca80000",
+            "c-reproducer": "/text?tag=ReproC&x=117f9778a80000",
+            "kernel-config": "/text?tag=KernelConfig&x=832b404e095b70c0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1c7873e3364570ec89343ff4877e0f27a7b21a61",
+            "kernel-source-commit": "1c7873e3364570ec89343ff4877e0f27a7b21a61",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/668cb1fa42960ece96b7da8d9204e486ba6dcdf6",
+            "syzkaller-commit": "668cb1fa42960ece96b7da8d9204e486ba6dcdf6",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=115e3154a80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "gadget_bind",
+            "drivers/usb/gadget/legacy/raw_gadget.c"
+        ]
+    ],
+    "patch_commit_date": "2023-07-14T07:40:11+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "6237390644fb92b81f5262877fe545d0d2c7b5d7",
+    "patch": "diff --git a/drivers/usb/gadget/legacy/raw_gadget.c b/drivers/usb/gadget/legacy/raw_gadget.c\nindex 2acece16b890..e549022642e5 100644\n--- a/drivers/usb/gadget/legacy/raw_gadget.c\n+++ b/drivers/usb/gadget/legacy/raw_gadget.c\n@@ -310,13 +310,15 @@ static int gadget_bind(struct usb_gadget *gadget,\n \tdev->eps_num = i;\n \tspin_unlock_irqrestore(&dev->lock, flags);\n \n-\t/* Matches kref_put() in gadget_unbind(). */\n-\tkref_get(&dev->count);\n-\n \tret = raw_queue_event(dev, USB_RAW_EVENT_CONNECT, 0, NULL);\n-\tif (ret < 0)\n+\tif (ret < 0) {\n \t\tdev_err(&gadget->dev, \"failed to queue event\\n\");\n+\t\tset_gadget_data(gadget, NULL);\n+\t\treturn ret;\n+\t}\n \n+\t/* Matches kref_put() in gadget_unbind(). */\n+\tkref_get(&dev->count);\n \treturn ret;\n }\n \n",
+    "patch_modified_files": [
+        "drivers/usb/gadget/legacy/raw_gadget.c"
+    ]
+}

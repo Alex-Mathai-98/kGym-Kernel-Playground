@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "WARNING in ext4_xattr_block_set",
+    "display-title": "WARNING in ext4_xattr_block_set",
+    "id": "4f4531908efc47fa22cc64aacbb920d7afb4e222",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: init quota for 'old.inode' in 'ext4_rename'",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fae381a3d79bb94aa2eb752170d47458d778b797",
+            "hash": "fae381a3d79bb94aa2eb752170d47458d778b797",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000500ba305eca77f88@google.com/T/",
+        "https://lore.kernel.org/all/20221107015335.2524319-1-yebin@huaweicloud.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in ext4_xattr_block_set",
+            "syz-reproducer": "/text?tag=ReproSyz&x=168cc339880000",
+            "c-reproducer": "/text?tag=ReproC&x=119ac77a880000",
+            "kernel-config": "/text?tag=KernelConfig&x=1d3548a4365ba17d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b229b6ca5abbd63ff40c1396095b1b36b18139c3",
+            "kernel-source-commit": "b229b6ca5abbd63ff40c1396095b1b36b18139c3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/7a2ebf95abdfd7af12ac4453060f347771375b07",
+            "syzkaller-commit": "7a2ebf95abdfd7af12ac4453060f347771375b07",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12e70e41880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ext4_rename",
+            "fs/ext4/namei.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-07T01:53:35+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "8805dbcb3e83a4e5a6c91edc15643a7498e576ce",
+    "patch": "diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c\nindex a789ea9b61a0..1c5518a4bdf9 100644\n--- a/fs/ext4/namei.c\n+++ b/fs/ext4/namei.c\n@@ -3796,6 +3796,9 @@ static int ext4_rename(struct user_namespace *mnt_userns, struct inode *old_dir,\n \t\treturn -EXDEV;\n \n \tretval = dquot_initialize(old.dir);\n+\tif (retval)\n+\t\treturn retval;\n+\tretval = dquot_initialize(old.inode);\n \tif (retval)\n \t\treturn retval;\n \tretval = dquot_initialize(new.dir);\n",
+    "patch_modified_files": [
+        "fs/ext4/namei.c"
+    ]
+}

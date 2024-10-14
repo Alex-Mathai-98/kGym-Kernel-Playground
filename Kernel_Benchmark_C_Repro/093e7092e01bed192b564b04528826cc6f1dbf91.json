@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "BUG: pagefault on kernel address ADDR in non-whitelisted uaccess",
+    "display-title": "BUG: pagefault on kernel address ADDR in non-whitelisted uaccess",
+    "id": "093e7092e01bed192b564b04528826cc6f1dbf91",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: vivid: free bitmap_cap when updating std/timings/etc.",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=560ccb75c2caa6b1039dec1a53cd2ef526f5bf03",
+            "hash": "560ccb75c2caa6b1039dec1a53cd2ef526f5bf03",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000fd734c05799d3c90@google.com/T/",
+        "https://lore.kernel.org/all/20190107104437.308206189@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190107104452.953560660@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190107105330.280153213@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190107105330.372621917@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190111130956.170952125@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190111131045.137499039@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/87284cfc-feea-41fe-cbbd-879a14ae8a6b@xs4all.nl/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=112736eb400000",
+            "c-reproducer": "/text?tag=ReproC&x=14e2d82b400000",
+            "kernel-config": "/text?tag=KernelConfig&x=9384ecb1c973baed",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=5f21585384a4a69b8bfdd2cae7e3648ae805f57d",
+            "kernel-source-commit": "5f21585384a4a69b8bfdd2cae7e3648ae805f57d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8bd6bd63656d411729c450d452e1355b42adf900",
+            "syzkaller-commit": "8bd6bd63656d411729c450d452e1355b42adf900",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13047825400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "vivid_update_format_cap",
+            "drivers/media/platform/vivid/vivid-vid-cap.c"
+        ]
+    ],
+    "patch_commit_date": "2018-11-09T13:37:44+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "media"
+    ],
+    "parent_of_fix_commit": "e5f71a27fa12c1a1b02ad478a568e76260f1815e",
+    "patch": "diff --git a/drivers/media/platform/vivid/vivid-vid-cap.c b/drivers/media/platform/vivid/vivid-vid-cap.c\nindex 8213297ee9dc..a1ed5fdabc75 100644\n--- a/drivers/media/platform/vivid/vivid-vid-cap.c\n+++ b/drivers/media/platform/vivid/vivid-vid-cap.c\n@@ -451,6 +451,8 @@ void vivid_update_format_cap(struct vivid_dev *dev, bool keep_controls)\n \t\ttpg_s_rgb_range(&dev->tpg, v4l2_ctrl_g_ctrl(dev->rgb_range_cap));\n \t\tbreak;\n \t}\n+\tvfree(dev->bitmap_cap);\n+\tdev->bitmap_cap = NULL;\n \tvivid_update_quality(dev);\n \ttpg_reset_source(&dev->tpg, dev->src_rect.width, dev->src_rect.height, dev->field_cap);\n \tdev->crop_cap = dev->src_rect;\n",
+    "patch_modified_files": [
+        "drivers/media/platform/vivid/vivid-vid-cap.c"
+    ]
+}

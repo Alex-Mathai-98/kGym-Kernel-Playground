@@ -1,0 +1,76 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Write in mpol_parse_str",
+    "display-title": "KASAN: slab-out-of-bounds Write in mpol_parse_str",
+    "id": "3d67d693e0529df8ac89ba55b00b54e5d967e021",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm/mempolicy.c: fix out of bounds write in mpol_parse_str()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c7a91bc7c2e17e0a9c8b9745a2cb118891218fd1",
+            "hash": "c7a91bc7c2e17e0a9c8b9745a2cb118891218fd1",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "shmem_parse_one(): switch to use of fs_parse()",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=626c3920aeb4575f53c96b0d4ad4e651a21cbb66",
+        "hash": "626c3920aeb4575f53c96b0d4ad4e651a21cbb66",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000006a8b8f059c24672a@google.com/T/",
+        "https://lore.kernel.org/all/20200115055426.vdjwvry44nfug7yy@kili.mountain/T/",
+        "https://lore.kernel.org/all/20200131061107.US9oQYBpA%akpm@linux-foundation.org/T/",
+        "https://lore.kernel.org/all/20200203161902.288335885@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200203161902.714326084@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200203161904.705434837@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200203161912.158976871@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200203161916.847439465@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200203161917.612554987@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/lsq.1589984008.673931885@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15ddc8d1e00000",
+            "c-reproducer": "/text?tag=ReproC&x=15851c85e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=18698c0c240ba616",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e69ec487b2c7c82ef99b4b15122f58a2a99289a3",
+            "kernel-source-commit": "e69ec487b2c7c82ef99b4b15122f58a2a99289a3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4de4e9f01d7139b72102ae0b8a1e810730467774",
+            "syzkaller-commit": "4de4e9f01d7139b72102ae0b8a1e810730467774",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1129a915e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "mpol_parse_str",
+            "mm/mempolicy.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "shmem_parse_options",
+            "mm/shmem.c"
+        ],
+        [
+            "shmem_parse_one",
+            "mm/shmem.c"
+        ]
+    ],
+    "patch_commit_date": "2020-01-31T06:11:07+00:00",
+    "cause_commit_date": "2019-09-09T00:28:06+00:00",
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "68f23b89067fdf187763e75a56087550624fdbee",
+    "patch": "diff --git a/mm/mempolicy.c b/mm/mempolicy.c\nindex b2920ae87a61..977c641f78cf 100644\n--- a/mm/mempolicy.c\n+++ b/mm/mempolicy.c\n@@ -2821,6 +2821,9 @@ int mpol_parse_str(char *str, struct mempolicy **mpol)\n \tchar *flags = strchr(str, '=');\n \tint err = 1, mode;\n \n+\tif (flags)\n+\t\t*flags++ = '\\0';\t/* terminate mode string */\n+\n \tif (nodelist) {\n \t\t/* NUL-terminate mode or flags string */\n \t\t*nodelist++ = '\\0';\n@@ -2831,9 +2834,6 @@ int mpol_parse_str(char *str, struct mempolicy **mpol)\n \t} else\n \t\tnodes_clear(nodes);\n \n-\tif (flags)\n-\t\t*flags++ = '\\0';\t/* terminate mode string */\n-\n \tmode = match_string(policy_modes, MPOL_MAX, str);\n \tif (mode < 0)\n \t\tgoto out;\n",
+    "patch_modified_files": [
+        "mm/mempolicy.c"
+    ]
+}

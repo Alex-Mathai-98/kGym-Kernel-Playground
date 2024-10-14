@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "WARNING in ieee80211_ibss_csa_beacon",
+    "display-title": "WARNING in ieee80211_ibss_csa_beacon",
+    "id": "05603ef4ae8926761b678d2939a3b2ad28ab9ca6",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "wifi: mac80211: Don't finalize CSA in IBSS mode if state is disconnected",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=15bc8966b6d3a5b9bfe4c9facfa02f2b69b1e5f0",
+            "hash": "15bc8966b6d3a5b9bfe4c9facfa02f2b69b1e5f0",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000008c848805b123f174@google.com/T/",
+        "https://lore.kernel.org/all/20220814151512.9985-1-code@siddh.me/T/",
+        "https://lore.kernel.org/all/20220906132816.936069583@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220906132821.713989422@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220906132829.417117002@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220913140342.228397194@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220913140346.422813036@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220913140348.835121645@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220913140353.549108748@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15131837500000",
+            "c-reproducer": "/text?tag=ReproC&x=14550ecf500000",
+            "kernel-config": "/text?tag=KernelConfig&x=e49433cfed49b7d9",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e87297fa080a7ed6b431873c771b3801cab573f5",
+            "kernel-source-commit": "e87297fa080a7ed6b431873c771b3801cab573f5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/20366b870db78f1d58502dad9ffcf6dad618fae7",
+            "syzkaller-commit": "20366b870db78f1d58502dad9ffcf6dad618fae7",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11733b07500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ieee80211_ibss_finish_csa",
+            "net/mac80211/ibss.c"
+        ]
+    ],
+    "patch_commit_date": "2022-08-14T15:15:12+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "62b03f45c6352410d13bf0710d24ef6290632eb1",
+    "patch": "diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c\nindex d56890e3fabb..9b283bbc7bb4 100644\n--- a/net/mac80211/ibss.c\n+++ b/net/mac80211/ibss.c\n@@ -530,6 +530,10 @@ int ieee80211_ibss_finish_csa(struct ieee80211_sub_if_data *sdata)\n \n \tsdata_assert_lock(sdata);\n \n+\t/* When not connected/joined, sending CSA doesn't make sense. */\n+\tif (ifibss->state != IEEE80211_IBSS_MLME_JOINED)\n+\t\treturn -ENOLINK;\n+\n \t/* update cfg80211 bss information with the new channel */\n \tif (!is_zero_ether_addr(ifibss->bssid)) {\n \t\tcbss = cfg80211_get_bss(sdata->local->hw.wiphy,\n",
+    "patch_modified_files": [
+        "net/mac80211/ibss.c"
+    ]
+}

@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "inconsistent lock state in rxrpc_put_client_connection_id",
+    "display-title": "inconsistent lock state in rxrpc_put_client_connection_id",
+    "id": "1bd2e7a7bb0310b1b0974022c78ee23975119187",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "rxrpc: Fix call RCU cleanup using non-bh-safe locks",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=963485d436ccc2810177a7b08af22336ec2af67b",
+            "hash": "963485d436ccc2810177a7b08af22336ec2af67b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "rxrpc: Fix NULL pointer deref due to call->conn being cleared on disconnect",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5273a191dca65a675dc0bcf3909e59c6933e2831",
+        "hash": "5273a191dca65a675dc0bcf3909e59c6933e2831",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f0baeb059db8b055@google.com/T/",
+        "https://lore.kernel.org/all/158099746025.2198892.1158535190228552910.stgit@warthog.procyon.org.uk/T/",
+        "https://lore.kernel.org/all/20200227132214.553656188@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200227132228.710492098@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200227132232.815448360@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14317dbee00000",
+            "c-reproducer": "/text?tag=ReproC&x=145a44f6e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=f22d38d7f9a488a8",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=6992ca0dd017ebaa2bf8e9dcc49f1c3b7033b082",
+            "kernel-source-commit": "6992ca0dd017ebaa2bf8e9dcc49f1c3b7033b082",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/662cf49ae315772e243d80a1c87dcdee1a304196",
+            "syzkaller-commit": "662cf49ae315772e243d80a1c87dcdee1a304196",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11ceb8f6e00000"
+        }
+    ],
+    "subsystems": [
+        "net",
+        "afs"
+    ],
+    "parent_of_fix_commit": "b39a934ec72fa2b5a74123891f25273a38378b90",
+    "patch": "diff --git a/net/rxrpc/call_object.c b/net/rxrpc/call_object.c\nindex dbdbc4f18b5e..c9f34b0a11df 100644\n--- a/net/rxrpc/call_object.c\n+++ b/net/rxrpc/call_object.c\n@@ -562,11 +562,11 @@ void rxrpc_put_call(struct rxrpc_call *call, enum rxrpc_call_trace op)\n }\n \n /*\n- * Final call destruction under RCU.\n+ * Final call destruction - but must be done in process context.\n  */\n-static void rxrpc_rcu_destroy_call(struct rcu_head *rcu)\n+static void rxrpc_destroy_call(struct work_struct *work)\n {\n-\tstruct rxrpc_call *call = container_of(rcu, struct rxrpc_call, rcu);\n+\tstruct rxrpc_call *call = container_of(work, struct rxrpc_call, processor);\n \tstruct rxrpc_net *rxnet = call->rxnet;\n \n \trxrpc_put_connection(call->conn);\n@@ -578,6 +578,22 @@ static void rxrpc_rcu_destroy_call(struct rcu_head *rcu)\n \t\twake_up_var(&rxnet->nr_calls);\n }\n \n+/*\n+ * Final call destruction under RCU.\n+ */\n+static void rxrpc_rcu_destroy_call(struct rcu_head *rcu)\n+{\n+\tstruct rxrpc_call *call = container_of(rcu, struct rxrpc_call, rcu);\n+\n+\tif (in_softirq()) {\n+\t\tINIT_WORK(&call->processor, rxrpc_destroy_call);\n+\t\tif (!rxrpc_queue_work(&call->processor))\n+\t\t\tBUG();\n+\t} else {\n+\t\trxrpc_destroy_call(&call->processor);\n+\t}\n+}\n+\n /*\n  * clean up a call\n  */\n",
+    "patch_modified_files": [
+        "net/rxrpc/call_object.c"
+    ]
+}

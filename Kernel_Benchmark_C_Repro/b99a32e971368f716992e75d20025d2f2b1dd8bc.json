@@ -1,0 +1,85 @@
+{
+    "version": 1,
+    "title": "BUG: corrupted list in nf_tables_commit",
+    "display-title": "BUG: corrupted list in nf_tables_commit",
+    "id": "b99a32e971368f716992e75d20025d2f2b1dd8bc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: nf_tables: fix flowtable list del corruption",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=335178d5429c4cee61b58f4ac80688f556630818",
+            "hash": "335178d5429c4cee61b58f4ac80688f556630818",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "netfilter: flow table support for the mixed IPv4/IPv6 family",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7c23b629a8085b11daccd68c62b5116ff498f84a",
+        "hash": "7c23b629a8085b11daccd68c62b5116ff498f84a",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b3599c059c36db0d@google.com/T/",
+        "https://lore.kernel.org/all/20200116110301.4875-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20200116195044.326614-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20200122092803.587683021@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200122092833.339495161@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200124141817.28793-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200124142012.29752-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16ad1821e00000",
+            "c-reproducer": "/text?tag=ReproC&x=17d8fc35e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=d9290aeb7e6cf1c4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=51d69817519f5f00041a1a039277f0367d76c82c",
+            "kernel-source-commit": "51d69817519f5f00041a1a039277f0367d76c82c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f9b6950728295eb8f52b05a0d9e5dccd99f93eaa",
+            "syzkaller-commit": "f9b6950728295eb8f52b05a0d9e5dccd99f93eaa",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16b29b3ee00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nft_flush_table",
+            "net/netfilter/nf_tables_api.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "obj",
+            "net/netfilter/Makefile"
+        ],
+        [
+            "nf_flow_offload_ipv6_hook",
+            "net/ipv6/netfilter/nf_flow_table_ipv6.c"
+        ],
+        [
+            "nf_flow_exceeds_mtu",
+            "net/ipv6/netfilter/nf_flow_table_ipv6.c"
+        ],
+        [
+            "nf_flow_offload_ip_hook",
+            "net/ipv4/netfilter/nf_flow_table_ipv4.c"
+        ],
+        [
+            "nf_flow_exceeds_mtu",
+            "net/ipv4/netfilter/nf_flow_table_ipv4.c"
+        ]
+    ],
+    "patch_commit_date": "2020-01-16T11:03:01+00:00",
+    "cause_commit_date": "2018-01-07T00:04:22+00:00",
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "cd77e75b5e4632d05d61fec5383052713c8ede2b",
+    "patch": "diff --git a/net/netfilter/nf_tables_api.c b/net/netfilter/nf_tables_api.c\nindex 896a6e8aff91..65f51a2e9c2a 100644\n--- a/net/netfilter/nf_tables_api.c\n+++ b/net/netfilter/nf_tables_api.c\n@@ -1048,12 +1048,18 @@ static int nft_flush_table(struct nft_ctx *ctx)\n \t}\n \n \tlist_for_each_entry_safe(flowtable, nft, &ctx->table->flowtables, list) {\n+\t\tif (!nft_is_active_next(ctx->net, flowtable))\n+\t\t\tcontinue;\n+\n \t\terr = nft_delflowtable(ctx, flowtable);\n \t\tif (err < 0)\n \t\t\tgoto out;\n \t}\n \n \tlist_for_each_entry_safe(obj, ne, &ctx->table->objects, list) {\n+\t\tif (!nft_is_active_next(ctx->net, obj))\n+\t\t\tcontinue;\n+\n \t\terr = nft_delobj(ctx, obj);\n \t\tif (err < 0)\n \t\t\tgoto out;\n",
+    "patch_modified_files": [
+        "net/netfilter/nf_tables_api.c"
+    ]
+}

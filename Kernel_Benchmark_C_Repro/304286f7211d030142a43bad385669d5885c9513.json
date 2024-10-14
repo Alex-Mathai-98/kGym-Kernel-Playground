@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "WARNING: bad unlock balance in gtp_encap_enable_socket",
+    "display-title": "WARNING: bad unlock balance in gtp_encap_enable_socket",
+    "id": "304286f7211d030142a43bad385669d5885c9513",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net-backports: gtp: fix bad unlock balance in gtp_encap_enable_socket",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=90d72256addff9e5f8ad645e8f632750dd1f8935",
+            "hash": "90d72256addff9e5f8ad645e8f632750dd1f8935",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1549b9fee00000",
+            "c-reproducer": "/text?tag=ReproC&x=17737615e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=42c82694f792b2f5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c79f46a282390e0f5b306007bf7b11a46d529538",
+            "kernel-source-commit": "c79f46a282390e0f5b306007bf7b11a46d529538",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/438e1227121e9d4bbca7b12b6e1b715524d512c2",
+            "syzkaller-commit": "438e1227121e9d4bbca7b12b6e1b715524d512c2",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15ed5e49e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "gtp_encap_enable_socket",
+            "drivers/net/gtp.c"
+        ]
+    ],
+    "patch_commit_date": "2020-01-06T14:45:37+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "d9e15a2733067c9328fb56d98fe8e574fa19ec31",
+    "patch": "diff --git a/drivers/net/gtp.c b/drivers/net/gtp.c\nindex fca471e27f39..f6222ada6818 100644\n--- a/drivers/net/gtp.c\n+++ b/drivers/net/gtp.c\n@@ -813,7 +813,7 @@ static struct sock *gtp_encap_enable_socket(int fd, int type,\n \tlock_sock(sock->sk);\n \tif (sock->sk->sk_user_data) {\n \t\tsk = ERR_PTR(-EBUSY);\n-\t\tgoto out_sock;\n+\t\tgoto out_rel_sock;\n \t}\n \n \tsk = sock->sk;\n@@ -826,8 +826,9 @@ static struct sock *gtp_encap_enable_socket(int fd, int type,\n \n \tsetup_udp_tunnel_sock(sock_net(sock->sk), sock, &tuncfg);\n \n-out_sock:\n+out_rel_sock:\n \trelease_sock(sock->sk);\n+out_sock:\n \tsockfd_put(sock);\n \treturn sk;\n }\n",
+    "patch_modified_files": [
+        "drivers/net/gtp.c"
+    ]
+}

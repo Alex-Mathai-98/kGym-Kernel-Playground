@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "memory leak in snd_pcm_hw_params",
+    "display-title": "memory leak in snd_pcm_hw_params",
+    "id": "8869bc1c5a1b787c023bb419926f8f02119592ed",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ALSA: pcm: Fix memory leak at closing a stream without hw_free",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=66f2d19f8116e16898f8d82e28573a384ddc430d",
+            "hash": "66f2d19f8116e16898f8d82e28573a384ddc430d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000017ad0d059d498531@google.com/T/",
+        "https://lore.kernel.org/all/20200210122423.695146547@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14e97735e00000",
+            "c-reproducer": "/text?tag=ReproC&x=13cd9bc9e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=e97a1bc78afb77f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b3a6082223369203d7e7db7e81253ac761377644",
+            "kernel-source-commit": "b3a6082223369203d7e7db7e81253ac761377644",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c8e81ce4c7e3b59e7c83c6fab56c217916f3b3b6",
+            "syzkaller-commit": "c8e81ce4c7e3b59e7c83c6fab56c217916f3b3b6",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=106c2fd1e00000"
+        }
+    ],
+    "subsystems": [
+        "sound"
+    ],
+    "parent_of_fix_commit": "46b770f720bdd8a7de1c04a1cab5d4e9e21d6666",
+    "patch": "diff --git a/sound/core/pcm_native.c b/sound/core/pcm_native.c\nindex bb23f5066654..4ac42ee1238c 100644\n--- a/sound/core/pcm_native.c\n+++ b/sound/core/pcm_native.c\n@@ -786,10 +786,22 @@ static int snd_pcm_hw_params_user(struct snd_pcm_substream *substream,\n \treturn err;\n }\n \n+static int do_hw_free(struct snd_pcm_substream *substream)\n+{\n+\tint result = 0;\n+\n+\tsnd_pcm_sync_stop(substream);\n+\tif (substream->ops->hw_free)\n+\t\tresult = substream->ops->hw_free(substream);\n+\tif (substream->managed_buffer_alloc)\n+\t\tsnd_pcm_lib_free_pages(substream);\n+\treturn result;\n+}\n+\n static int snd_pcm_hw_free(struct snd_pcm_substream *substream)\n {\n \tstruct snd_pcm_runtime *runtime;\n-\tint result = 0;\n+\tint result;\n \n \tif (PCM_RUNTIME_CHECK(substream))\n \t\treturn -ENXIO;\n@@ -806,11 +818,7 @@ static int snd_pcm_hw_free(struct snd_pcm_substream *substream)\n \tsnd_pcm_stream_unlock_irq(substream);\n \tif (atomic_read(&substream->mmap_count))\n \t\treturn -EBADFD;\n-\tsnd_pcm_sync_stop(substream);\n-\tif (substream->ops->hw_free)\n-\t\tresult = substream->ops->hw_free(substream);\n-\tif (substream->managed_buffer_alloc)\n-\t\tsnd_pcm_lib_free_pages(substream);\n+\tresult = do_hw_free(substream);\n \tsnd_pcm_set_state(substream, SNDRV_PCM_STATE_OPEN);\n \tpm_qos_remove_request(&substream->latency_pm_qos_req);\n \treturn result;\n@@ -2529,9 +2537,7 @@ void snd_pcm_release_substream(struct snd_pcm_substream *substream)\n \n \tsnd_pcm_drop(substream);\n \tif (substream->hw_opened) {\n-\t\tif (substream->ops->hw_free &&\n-\t\t    substream->runtime->status->state != SNDRV_PCM_STATE_OPEN)\n-\t\t\tsubstream->ops->hw_free(substream);\n+\t\tdo_hw_free(substream);\n \t\tsubstream->ops->close(substream);\n \t\tsubstream->hw_opened = 0;\n \t}\n",
+    "patch_modified_files": [
+        "sound/core/pcm_native.c"
+    ]
+}

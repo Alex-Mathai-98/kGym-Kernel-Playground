@@ -1,0 +1,42 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Write in queue_stack_map_push_elem",
+    "display-title": "KASAN: slab-out-of-bounds Write in queue_stack_map_push_elem",
+    "id": "1163cf8b96699285da33559ca268ef1edcffd104",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "bpf: fix integer overflow in queue_stack_map",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=813961de3ee6474dd5703e883471fd941d6c8f69",
+            "hash": "813961de3ee6474dd5703e883471fd941d6c8f69",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000059915f057b7d7e66@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12baac5d400000",
+            "c-reproducer": "/text?tag=ReproC&x=1471df7b400000",
+            "kernel-config": "/text?tag=KernelConfig&x=73e2bc0cb6463446",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e195ca6cb6f21633e56322d5aa11ed59cdb22fb2",
+            "kernel-source-commit": "e195ca6cb6f21633e56322d5aa11ed59cdb22fb2",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3d3ec9072b339276e51abc997721b68d90430bb2",
+            "syzkaller-commit": "3d3ec9072b339276e51abc997721b68d90430bb2",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12624533400000"
+        }
+    ],
+    "subsystems": [
+        "bpf"
+    ],
+    "parent_of_fix_commit": "dde7011a824cfa815b03f853ec985ff46b740939",
+    "patch": "diff --git a/kernel/bpf/queue_stack_maps.c b/kernel/bpf/queue_stack_maps.c\nindex 8bbd72d3a121..b384ea9f3254 100644\n--- a/kernel/bpf/queue_stack_maps.c\n+++ b/kernel/bpf/queue_stack_maps.c\n@@ -7,6 +7,7 @@\n #include <linux/bpf.h>\n #include <linux/list.h>\n #include <linux/slab.h>\n+#include <linux/capability.h>\n #include \"percpu_freelist.h\"\n \n #define QUEUE_STACK_CREATE_FLAG_MASK \\\n@@ -45,8 +46,12 @@ static bool queue_stack_map_is_full(struct bpf_queue_stack *qs)\n /* Called from syscall */\n static int queue_stack_map_alloc_check(union bpf_attr *attr)\n {\n+\tif (!capable(CAP_SYS_ADMIN))\n+\t\treturn -EPERM;\n+\n \t/* check sanity of attributes */\n \tif (attr->max_entries == 0 || attr->key_size != 0 ||\n+\t    attr->value_size == 0 ||\n \t    attr->map_flags & ~QUEUE_STACK_CREATE_FLAG_MASK)\n \t\treturn -EINVAL;\n \n@@ -63,15 +68,10 @@ static struct bpf_map *queue_stack_map_alloc(union bpf_attr *attr)\n {\n \tint ret, numa_node = bpf_map_attr_numa_node(attr);\n \tstruct bpf_queue_stack *qs;\n-\tu32 size, value_size;\n-\tu64 queue_size, cost;\n-\n-\tsize = attr->max_entries + 1;\n-\tvalue_size = attr->value_size;\n-\n-\tqueue_size = sizeof(*qs) + (u64) value_size * size;\n+\tu64 size, queue_size, cost;\n \n-\tcost = queue_size;\n+\tsize = (u64) attr->max_entries + 1;\n+\tcost = queue_size = sizeof(*qs) + size * attr->value_size;\n \tif (cost >= U32_MAX - PAGE_SIZE)\n \t\treturn ERR_PTR(-E2BIG);\n \n",
+    "patch_modified_files": [
+        "kernel/bpf/queue_stack_maps.c"
+    ]
+}

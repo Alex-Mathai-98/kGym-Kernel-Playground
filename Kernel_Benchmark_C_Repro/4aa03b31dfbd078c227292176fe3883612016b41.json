@@ -1,0 +1,137 @@
+{
+    "version": 1,
+    "title": "WARNING in ovs_dp_reset_user_features",
+    "display-title": "WARNING in ovs_dp_reset_user_features",
+    "id": "4aa03b31dfbd078c227292176fe3883612016b41",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "openvswitch: switch from WARN to pr_warn",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fd954cc1919e35cb92f78671cab6e42d661945a3",
+            "hash": "fd954cc1919e35cb92f78671cab6e42d661945a3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "fs: dlm: don't use deprecated timeout features by default",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6b0afc0cc3e9a9a91f5a76d0965d449781441e18",
+        "hash": "6b0afc0cc3e9a9a91f5a76d0965d449781441e18",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000097399505ead9ef34@google.com/T/",
+        "https://lore.kernel.org/all/20221019183054.105815-1-aconole@redhat.com/T/",
+        "https://lore.kernel.org/all/20221025105018.466157-1-aconole@redhat.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in ovs_dp_reset_user_features",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12173a34880000",
+            "c-reproducer": "/text?tag=ReproC&x=1792461a880000",
+            "kernel-config": "/text?tag=KernelConfig&x=7579993da6496f03",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e8bc52cb8df80c31c73c726ab58ea9746e9ff734",
+            "kernel-source-commit": "e8bc52cb8df80c31c73c726ab58ea9746e9ff734",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/aea5da898f473385f3b66c94f8aa49ca9a1c9744",
+            "syzkaller-commit": "aea5da898f473385f3b66c94f8aa49ca9a1c9744",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=121c8da2880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ovs_dp_reset_user_features",
+            "net/openvswitch/datapath.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "dlm_our_addr",
+            "fs/dlm/config.c"
+        ],
+        [
+            "new_lockspace",
+            "fs/dlm/lockspace.c"
+        ],
+        [
+            "set_lock_args",
+            "fs/dlm/lock.c"
+        ],
+        [
+            "dlm_recover_waiters_pre",
+            "fs/dlm/lock.h"
+        ],
+        [
+            "confirm_master",
+            "fs/dlm/lock.c"
+        ],
+        [
+            "device_user_lock",
+            "fs/dlm/user.c"
+        ],
+        [
+            "dlm_user_convert",
+            "fs/dlm/lock.c"
+        ],
+        [
+            "dlm_user_request",
+            "fs/dlm/lock.c"
+        ],
+        [
+            "dlm_put_lkb",
+            "fs/dlm/lock.h"
+        ],
+        [
+            "queue_cast",
+            "fs/dlm/lock.c"
+        ],
+        [
+            "dlm_scan_rsbs",
+            "fs/dlm/lock.c"
+        ],
+        [
+            "dlm_adjust_timeouts",
+            "fs/dlm/lock.c"
+        ],
+        [
+            "CLUSTER_ATTR",
+            "fs/dlm/config.c"
+        ],
+        [
+            "dlm_no_directory",
+            "fs/dlm/dlm_internal.h"
+        ],
+        [
+            "validate_lock_args",
+            "fs/dlm/lock.c"
+        ],
+        [
+            "dlm_recover_process_copy",
+            "fs/dlm/lock.c"
+        ],
+        [
+            "dlm_lock",
+            "fs/dlm/lock.c"
+        ],
+        [
+            "_create_lkb",
+            "fs/dlm/lock.c"
+        ],
+        [
+            "make_cluster",
+            "fs/dlm/config.c"
+        ]
+    ],
+    "patch_commit_date": "2022-10-25T10:50:17+00:00",
+    "cause_commit_date": "2022-06-22T18:45:23+00:00",
+    "subsystems": [
+        "openvswitch"
+    ],
+    "parent_of_fix_commit": "e2badb4bd33abe13ddc35975bd7f7f8693955a4b",
+    "patch": "diff --git a/net/openvswitch/datapath.c b/net/openvswitch/datapath.c\nindex c8a9075ddd0a..155263e73512 100644\n--- a/net/openvswitch/datapath.c\n+++ b/net/openvswitch/datapath.c\n@@ -1616,7 +1616,8 @@ static void ovs_dp_reset_user_features(struct sk_buff *skb,\n \tif (IS_ERR(dp))\n \t\treturn;\n \n-\tWARN(dp->user_features, \"Dropping previously announced user features\\n\");\n+\tpr_warn(\"%s: Dropping previously announced user features\\n\",\n+\t\tovs_dp_name(dp));\n \tdp->user_features = 0;\n }\n \n",
+    "patch_modified_files": [
+        "net/openvswitch/datapath.c"
+    ]
+}

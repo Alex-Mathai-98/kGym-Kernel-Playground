@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "memory leak in raw_sendmsg",
+    "display-title": "memory leak in raw_sendmsg",
+    "id": "7224e9c643550e5aa242404449aa2baa0efd556b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "can: purge socket error queue on sock destruct",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fd704bd5ee749d560e86c4f1fd2ef486d8abf7cf",
+            "hash": "fd704bd5ee749d560e86c4f1fd2ef486d8abf7cf",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001bb6d7058a716205@google.com/T/",
+        "https://lore.kernel.org/all/20190607204607.250375-1-willemdebruijn.kernel@gmail.com/T/",
+        "https://lore.kernel.org/all/20190607211541.16095-10-mkl@pengutronix.de/T/",
+        "https://lore.kernel.org/all/20190624092305.919204959@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190624092313.788773607@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190624092320.652599624@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190708150513.136580595@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190708150525.973820964@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/lsq.1570043210.379046399@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12e42092a00000",
+            "c-reproducer": "/text?tag=ReproC&x=1327b0a6a00000",
+            "kernel-config": "/text?tag=KernelConfig&x=50393f7bfe444ff6",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3ab4436f688c2d2f221793953cd05435ca84261c",
+            "kernel-source-commit": "3ab4436f688c2d2f221793953cd05435ca84261c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/53c81ea5385ee17c68d0afa4e524b6aead37c903",
+            "syzkaller-commit": "53c81ea5385ee17c68d0afa4e524b6aead37c903",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16270636a00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "EXPORT_SYMBOL",
+            "net/can/af_can.c"
+        ]
+    ],
+    "patch_commit_date": "2019-06-07T20:46:07+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "can"
+    ],
+    "parent_of_fix_commit": "eb503004a7e563d543c9cb869907156de7efe720",
+    "patch": "diff --git a/net/can/af_can.c b/net/can/af_can.c\nindex 743470680127..80281ef2ccbd 100644\n--- a/net/can/af_can.c\n+++ b/net/can/af_can.c\n@@ -99,6 +99,7 @@ EXPORT_SYMBOL(can_ioctl);\n static void can_sock_destruct(struct sock *sk)\n {\n \tskb_queue_purge(&sk->sk_receive_queue);\n+\tskb_queue_purge(&sk->sk_error_queue);\n }\n \n static const struct can_proto *can_get_proto(int protocol)\n",
+    "patch_modified_files": [
+        "net/can/af_can.c"
+    ]
+}

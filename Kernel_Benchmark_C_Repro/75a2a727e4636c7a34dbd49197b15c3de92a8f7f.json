@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "WARNING in hugetlb_wp",
+    "display-title": "WARNING in hugetlb_wp",
+    "id": "75a2a727e4636c7a34dbd49197b15c3de92a8f7f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm/gup: disallow FOLL_FORCE|FOLL_WRITE on hugetlb mappings",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f347454d034184b4f0a2caf6e14daf7848cea01c",
+            "hash": "f347454d034184b4f0a2caf6e14daf7848cea01c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ed009f05ec257623@google.com/T/",
+        "https://lore.kernel.org/all/20221031152524.173644-1-david@redhat.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in hugetlb_wp",
+            "syz-reproducer": "/text?tag=ReproSyz&x=112217b4880000",
+            "c-reproducer": "/text?tag=ReproC&x=105f4616880000",
+            "kernel-config": "/text?tag=KernelConfig&x=a66c6c673fb555e8",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=247f34f7b80357943234f93f247a1ae6b6c3a740",
+            "kernel-source-commit": "247f34f7b80357943234f93f247a1ae6b6c3a740",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/ff2fe65db3b673b60a5c11df17a3de7f1ec2b96e",
+            "syzkaller-commit": "ff2fe65db3b673b60a5c11df17a3de7f1ec2b96e",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=173c39ba880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "check_vma_flags",
+            "mm/gup.c"
+        ]
+    ],
+    "patch_commit_date": "2022-10-31T15:25:24+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "052d9b0f7ae1200b4a0783cf934ee4a987d37fd7",
+    "patch": "diff --git a/mm/gup.c b/mm/gup.c\nindex 39c84a200f06..90ae44f24870 100644\n--- a/mm/gup.c\n+++ b/mm/gup.c\n@@ -1009,6 +1009,9 @@ static int check_vma_flags(struct vm_area_struct *vma, unsigned long gup_flags)\n \t\tif (!(vm_flags & VM_WRITE)) {\n \t\t\tif (!(gup_flags & FOLL_FORCE))\n \t\t\t\treturn -EFAULT;\n+\t\t\t/* hugetlb does not support FOLL_FORCE|FOLL_WRITE. */\n+\t\t\tif (is_vm_hugetlb_page(vma))\n+\t\t\t\treturn -EFAULT;\n \t\t\t/*\n \t\t\t * We used to let the write,force case do COW in a\n \t\t\t * VM_MAYWRITE VM_SHARED !VM_WRITE vma, so ptrace could\n",
+    "patch_modified_files": [
+        "mm/gup.c"
+    ]
+}

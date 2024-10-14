@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "INFO: trying to register non-static key in exfat_cache_inval_inode",
+    "display-title": "INFO: trying to register non-static key in exfat_cache_inval_inode",
+    "id": "339f188f0066d7b4b7a766ca5c49fe8a33cdb778",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "exfat: fix use of uninitialized spinlock on error path",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8ff006e57ad3a25f909c456d053aa498b6673a39",
+            "hash": "8ff006e57ad3a25f909c456d053aa498b6673a39",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000003bbaa05b05a9963@google.com/T/",
+        "https://lore.kernel.org/all/20200929025105.14341-1-namjae.jeon@samsung.com/T/",
+        "https://lore.kernel.org/all/20201012133146.834528783@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=178b6303900000",
+            "c-reproducer": "/text?tag=ReproC&x=16c5a039900000",
+            "kernel-config": "/text?tag=KernelConfig&x=6184b75aa6d48d66",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=171d4ff79f965c1f164705ef0aaea102a6ad238b",
+            "kernel-source-commit": "171d4ff79f965c1f164705ef0aaea102a6ad238b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4a006f636cdc7ecce6c16385b5aee54ddb717c2a",
+            "syzkaller-commit": "4a006f636cdc7ecce6c16385b5aee54ddb717c2a",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1799b14b900000"
+        }
+    ],
+    "subsystems": [
+        "exfat"
+    ],
+    "parent_of_fix_commit": "d6c9efd92443b23307995f34246c2374056ebbd8",
+    "patch": "diff --git a/fs/exfat/cache.c b/fs/exfat/cache.c\nindex 03d0824fc368..5a2f119b7e8c 100644\n--- a/fs/exfat/cache.c\n+++ b/fs/exfat/cache.c\n@@ -17,7 +17,6 @@\n #include \"exfat_raw.h\"\n #include \"exfat_fs.h\"\n \n-#define EXFAT_CACHE_VALID\t0\n #define EXFAT_MAX_CACHE\t\t16\n \n struct exfat_cache {\n@@ -61,16 +60,6 @@ void exfat_cache_shutdown(void)\n \tkmem_cache_destroy(exfat_cachep);\n }\n \n-void exfat_cache_init_inode(struct inode *inode)\n-{\n-\tstruct exfat_inode_info *ei = EXFAT_I(inode);\n-\n-\tspin_lock_init(&ei->cache_lru_lock);\n-\tei->nr_caches = 0;\n-\tei->cache_valid_id = EXFAT_CACHE_VALID + 1;\n-\tINIT_LIST_HEAD(&ei->cache_lru);\n-}\n-\n static inline struct exfat_cache *exfat_cache_alloc(void)\n {\n \treturn kmem_cache_alloc(exfat_cachep, GFP_NOFS);\ndiff --git a/fs/exfat/exfat_fs.h b/fs/exfat/exfat_fs.h\nindex 95d717f8620c..c013fe931d9c 100644\n--- a/fs/exfat/exfat_fs.h\n+++ b/fs/exfat/exfat_fs.h\n@@ -248,6 +248,8 @@ struct exfat_sb_info {\n \tstruct rcu_head rcu;\n };\n \n+#define EXFAT_CACHE_VALID\t0\n+\n /*\n  * EXFAT file system inode in-memory data\n  */\n@@ -428,7 +430,6 @@ extern const struct dentry_operations exfat_utf8_dentry_ops;\n /* cache.c */\n int exfat_cache_init(void);\n void exfat_cache_shutdown(void);\n-void exfat_cache_init_inode(struct inode *inode);\n void exfat_cache_inval_inode(struct inode *inode);\n int exfat_get_cluster(struct inode *inode, unsigned int cluster,\n \t\tunsigned int *fclus, unsigned int *dclus,\ndiff --git a/fs/exfat/inode.c b/fs/exfat/inode.c\nindex 7f90204adef5..a6de17cac3df 100644\n--- a/fs/exfat/inode.c\n+++ b/fs/exfat/inode.c\n@@ -611,8 +611,6 @@ static int exfat_fill_inode(struct inode *inode, struct exfat_dir_entry *info)\n \tei->i_crtime = info->crtime;\n \tinode->i_atime = info->atime;\n \n-\texfat_cache_init_inode(inode);\n-\n \treturn 0;\n }\n \ndiff --git a/fs/exfat/super.c b/fs/exfat/super.c\nindex 3b6a1659892f..60b941ba557b 100644\n--- a/fs/exfat/super.c\n+++ b/fs/exfat/super.c\n@@ -376,7 +376,6 @@ static int exfat_read_root(struct inode *inode)\n \tinode->i_mtime = inode->i_atime = inode->i_ctime = ei->i_crtime =\n \t\tcurrent_time(inode);\n \texfat_truncate_atime(&inode->i_atime);\n-\texfat_cache_init_inode(inode);\n \treturn 0;\n }\n \n@@ -763,6 +762,10 @@ static void exfat_inode_init_once(void *foo)\n {\n \tstruct exfat_inode_info *ei = (struct exfat_inode_info *)foo;\n \n+\tspin_lock_init(&ei->cache_lru_lock);\n+\tei->nr_caches = 0;\n+\tei->cache_valid_id = EXFAT_CACHE_VALID + 1;\n+\tINIT_LIST_HEAD(&ei->cache_lru);\n \tINIT_HLIST_NODE(&ei->i_hash_fat);\n \tinode_init_once(&ei->vfs_inode);\n }\n",
+    "patch_modified_files": [
+        "fs/exfat/cache.c",
+        "fs/exfat/exfat_fs.h",
+        "fs/exfat/inode.c",
+        "fs/exfat/super.c"
+    ]
+}

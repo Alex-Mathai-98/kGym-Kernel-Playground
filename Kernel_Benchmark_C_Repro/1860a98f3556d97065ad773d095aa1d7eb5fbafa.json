@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "memory leak in smc_create",
+    "display-title": "memory leak in smc_create (2)",
+    "id": "1860a98f3556d97065ad773d095aa1d7eb5fbafa",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/smc: Fix sock leak when release after smc_shutdown()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1a74e99323746353bba11562a2f2d0aa8102f402",
+            "hash": "1a74e99323746353bba11562a2f2d0aa8102f402",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000070bc9405db4d96b8@google.com/T/",
+        "https://lore.kernel.org/all/20220414075102.84366-1-tonylu@linux.alibaba.com/T/",
+        "https://lore.kernel.org/all/20220426081737.209637816@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220426081741.202366502@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220426081747.286685339@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220426081750.051179617@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in smc_create",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16431151700000",
+            "c-reproducer": "/text?tag=ReproC&x=15f44cdb700000",
+            "kernel-config": "/text?tag=KernelConfig&x=8414405fa34d7154",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=ed4643521e6af8ab8ed1e467630a85884d2696cf",
+            "kernel-source-commit": "ed4643521e6af8ab8ed1e467630a85884d2696cf",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/89bc860804252dbacb8c2bea60b9204859f4afd7",
+            "syzkaller-commit": "89bc860804252dbacb8c2bea60b9204859f4afd7",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15296899700000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "smc_shutdown",
+            "net/smc/af_smc.c"
+        ]
+    ],
+    "patch_commit_date": "2022-04-14T07:51:03+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net",
+        "s390"
+    ],
+    "parent_of_fix_commit": "ee3b0826b4764f6c13ad6db67495c5a1c38e9025",
+    "patch": "diff --git a/net/smc/af_smc.c b/net/smc/af_smc.c\nindex 14ddc40149e8..fc7b6eb22143 100644\n--- a/net/smc/af_smc.c\n+++ b/net/smc/af_smc.c\n@@ -2674,8 +2674,10 @@ static int smc_shutdown(struct socket *sock, int how)\n \tif (smc->use_fallback) {\n \t\trc = kernel_sock_shutdown(smc->clcsock, how);\n \t\tsk->sk_shutdown = smc->clcsock->sk->sk_shutdown;\n-\t\tif (sk->sk_shutdown == SHUTDOWN_MASK)\n+\t\tif (sk->sk_shutdown == SHUTDOWN_MASK) {\n \t\t\tsk->sk_state = SMC_CLOSED;\n+\t\t\tsock_put(sk);\n+\t\t}\n \t\tgoto out;\n \t}\n \tswitch (how) {\n",
+    "patch_modified_files": [
+        "net/smc/af_smc.c"
+    ]
+}

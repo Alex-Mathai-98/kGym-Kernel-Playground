@@ -1,0 +1,92 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel NULL pointer dereference in kiocb_done",
+    "display-title": "BUG: unable to handle kernel NULL pointer dereference in kiocb_done",
+    "id": "8575e3bcd022538ad1196033b0c5d67054bef625",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: don't submit half-prepared drain request",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b8ce1b9d25ccf81e1bbabd45b963ed98b2222df8",
+            "hash": "b8ce1b9d25ccf81e1bbabd45b963ed98b2222df8",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "drm/i915: Use a table for i915_init/exit (v2)",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a04ea6ae7c6728cd834709f3477e75d4f74583da",
+        "hash": "a04ea6ae7c6728cd834709f3477e75d4f74583da",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000000d4da305cb1d2467@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "BUG: unable to handle kernel NULL pointer dereference in kiocb_done",
+            "syz-reproducer": "/text?tag=ReproSyz&x=124a3b49300000",
+            "c-reproducer": "/text?tag=ReproC&x=142e610b300000",
+            "kernel-config": "/text?tag=KernelConfig&x=3c3a5498e99259cf",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4ac6d90867a4de2e12117e755dbd76e08d88697f",
+            "kernel-source-commit": "4ac6d90867a4de2e12117e755dbd76e08d88697f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/15cea0a381c6ef9a7b4ffb2770360ce8882274c5",
+            "syzkaller-commit": "15cea0a381c6ef9a7b4ffb2770360ce8882274c5",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=125c5783300000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "io_drain_req",
+            "fs/io_uring.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "module_param_named",
+            "drivers/gpu/drm/i915/selftests/i915_selftest.c"
+        ],
+        [
+            "i915_pci_shutdown",
+            "drivers/gpu/drm/i915/i915_pci.c"
+        ],
+        [
+            "i915_perf_fini",
+            "drivers/gpu/drm/i915/i915_perf.h"
+        ],
+        [
+            "i915_mock_selftests",
+            "drivers/gpu/drm/i915/selftests/i915_selftest.c"
+        ],
+        [
+            "i915_pmu_init",
+            "drivers/gpu/drm/i915/i915_pmu.c"
+        ],
+        [
+            "i915_init",
+            "drivers/gpu/drm/i915/i915_pci.c"
+        ],
+        [
+            "destroy_config",
+            "drivers/gpu/drm/i915/i915_perf.c"
+        ],
+        [
+            "i915_pmu_cpu_offline",
+            "drivers/gpu/drm/i915/i915_pmu.c"
+        ]
+    ],
+    "patch_commit_date": "2021-08-31T13:13:11+00:00",
+    "cause_commit_date": "2021-07-21T15:23:55+00:00",
+    "subsystems": [
+        "fs",
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "c6d3d9cbd659de8f2176b4e4721149c88ac096d4",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex 78f3d3ac2280..4a5eb9e856f0 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -6238,6 +6238,11 @@ static bool io_drain_req(struct io_kiocb *req)\n \tint ret;\n \tu32 seq;\n \n+\tif (req->flags & REQ_F_FAIL) {\n+\t\tio_req_complete_fail_submit(req);\n+\t\treturn true;\n+\t}\n+\n \t/*\n \t * If we need to drain a request in the middle of a link, drain the\n \t * head request and the next request/link after the current link.\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

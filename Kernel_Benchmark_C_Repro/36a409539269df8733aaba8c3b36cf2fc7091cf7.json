@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "memory leak in regulatory_hint_core",
+    "display-title": "memory leak in regulatory_hint_core",
+    "id": "36a409539269df8733aaba8c3b36cf2fc7091cf7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: sched: fix memory leak in tcindex_set_parms",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=399ab7fe0fa0d846881685fd4e57e9a8ef7559f7",
+            "hash": "399ab7fe0fa0d846881685fd4e57e9a8ef7559f7",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001de5c505ebc9ec59@google.com/T/",
+        "https://lore.kernel.org/all/20221031060835.11722-1-yin31149@gmail.com/T/",
+        "https://lore.kernel.org/all/20221113170507.8205-1-yin31149@gmail.com/T/",
+        "https://lore.kernel.org/all/20221129025249.463833-1-yin31149@gmail.com/T/",
+        "https://lore.kernel.org/all/20221222035119.7118-1-yin31149@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in regulatory_hint_core",
+            "syz-reproducer": "/text?tag=ReproSyz&x=124b8de2880000",
+            "c-reproducer": "/text?tag=ReproC&x=12ae6a4a880000",
+            "kernel-config": "/text?tag=KernelConfig&x=d2f454d7d3b63980",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=aae703b02f92bde9264366c545e87cec451de471",
+            "kernel-source-commit": "aae703b02f92bde9264366c545e87cec451de471",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/b31320fc8f3519e40494f64ebf77c13d16284bfd",
+            "syzkaller-commit": "b31320fc8f3519e40494f64ebf77c13d16284bfd",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=125d9886880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "tcindex_set_parms",
+            "net/sched/cls_tcindex.c"
+        ]
+    ],
+    "patch_commit_date": "2022-12-22T03:51:19+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "be1236fce5f4ac94915cdca8c61bb6e0e1503b81",
+    "patch": "diff --git a/net/sched/cls_tcindex.c b/net/sched/cls_tcindex.c\nindex eb0e9458e722..ee2a050c887b 100644\n--- a/net/sched/cls_tcindex.c\n+++ b/net/sched/cls_tcindex.c\n@@ -333,7 +333,7 @@ tcindex_set_parms(struct net *net, struct tcf_proto *tp, unsigned long base,\n \t\t  struct tcindex_filter_result *r, struct nlattr **tb,\n \t\t  struct nlattr *est, u32 flags, struct netlink_ext_ack *extack)\n {\n-\tstruct tcindex_filter_result new_filter_result, *old_r = r;\n+\tstruct tcindex_filter_result new_filter_result;\n \tstruct tcindex_data *cp = NULL, *oldp;\n \tstruct tcindex_filter *f = NULL; /* make gcc behave */\n \tstruct tcf_result cr = {};\n@@ -402,7 +402,7 @@ tcindex_set_parms(struct net *net, struct tcf_proto *tp, unsigned long base,\n \terr = tcindex_filter_result_init(&new_filter_result, cp, net);\n \tif (err < 0)\n \t\tgoto errout_alloc;\n-\tif (old_r)\n+\tif (r)\n \t\tcr = r->res;\n \n \terr = -EBUSY;\n@@ -479,14 +479,6 @@ tcindex_set_parms(struct net *net, struct tcf_proto *tp, unsigned long base,\n \t\ttcf_bind_filter(tp, &cr, base);\n \t}\n \n-\tif (old_r && old_r != r) {\n-\t\terr = tcindex_filter_result_init(old_r, cp, net);\n-\t\tif (err < 0) {\n-\t\t\tkfree(f);\n-\t\t\tgoto errout_alloc;\n-\t\t}\n-\t}\n-\n \toldp = p;\n \tr->res = cr;\n \ttcf_exts_change(&r->exts, &e);\n",
+    "patch_modified_files": [
+        "net/sched/cls_tcindex.c"
+    ]
+}

@@ -1,0 +1,67 @@
+{
+    "version": 1,
+    "title": "WARNING in unlock_new_inode",
+    "display-title": "WARNING in unlock_new_inode",
+    "id": "ef79070d08a744686c4db202d9ba6817bba86ebb",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "reiserfs: only call unlock_new_inode() if I_NEW",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8859bf2b1278d064a139e3031451524a49a56bd0",
+            "hash": "8859bf2b1278d064a139e3031451524a49a56bd0",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000002ab8c5056a35b12b@google.com/T/",
+        "https://lore.kernel.org/all/20190709202641.GK641@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20190724023019.GS643@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20200628070057.820213-1-ebiggers@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018191807.4052726-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192026.4053674-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192231.4054535-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192417.4055228-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192530.4055730-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192635.4056198-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192728.4056577-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201027134900.532249571@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027134902.130312227@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027134909.701581493@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135430.632029009@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135450.497324313@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135455.027547757@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135522.655719020@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12dd12c7800000",
+            "c-reproducer": "/text?tag=ReproC&x=144d6a5b800000",
+            "kernel-config": "/text?tag=KernelConfig&x=191a2635dcad1c46",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=87ef12027b9b1dd0e0b12cf311fbcb19f9d92539",
+            "kernel-source-commit": "87ef12027b9b1dd0e0b12cf311fbcb19f9d92539",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3642839c105d2c84160c10866805f903a22fa343",
+            "syzkaller-commit": "3642839c105d2c84160c10866805f903a22fa343",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12646917800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "reiserfs_new_inode",
+            "fs/reiserfs/inode.c"
+        ]
+    ],
+    "patch_commit_date": "2020-06-28T07:00:57+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "reiserfs"
+    ],
+    "parent_of_fix_commit": "c53ec7bcc780fde4916e7a563d68b90b20b0b6bc",
+    "patch": "diff --git a/fs/reiserfs/inode.c b/fs/reiserfs/inode.c\nindex 1509775da040..e3af44c61524 100644\n--- a/fs/reiserfs/inode.c\n+++ b/fs/reiserfs/inode.c\n@@ -2163,7 +2163,8 @@ int reiserfs_new_inode(struct reiserfs_transaction_handle *th,\n out_inserted_sd:\n \tclear_nlink(inode);\n \tth->t_trans_id = 0;\t/* so the caller can't use this handle later */\n-\tunlock_new_inode(inode); /* OK to do even if we hadn't locked it */\n+\tif (inode->i_state & I_NEW)\n+\t\tunlock_new_inode(inode);\n \tiput(inode);\n \treturn err;\n }\n",
+    "patch_modified_files": [
+        "fs/reiserfs/inode.c"
+    ]
+}

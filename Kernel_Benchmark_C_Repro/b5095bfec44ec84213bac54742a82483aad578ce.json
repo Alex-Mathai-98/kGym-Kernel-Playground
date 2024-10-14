@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "possible deadlock in seq_read",
+    "display-title": "possible deadlock in seq_read",
+    "id": "b5095bfec44ec84213bac54742a82483aad578ce",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/open.c: allow opening only regular files during execve()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=73601ea5b7b18eb234219ae2adf77530f389da79",
+            "hash": "73601ea5b7b18eb234219ae2adf77530f389da79",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/1552044017-7890-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp/T/",
+        "https://lore.kernel.org/all/20190401170044.243719205@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190401170045.246405031@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190401170048.449559024@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190401170103.398401360@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/d1e2488f-a969-30d4-5023-6fa85a4e3833@I-love.SAKURA.ne.jp/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=155e73df200000",
+            "c-reproducer": "/text?tag=ReproC&x=179f7643200000",
+            "kernel-config": "/text?tag=KernelConfig&x=8dcdce25ea72bedf",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=8c2ffd9174779014c3fe1f96d9dc3641d9175f00",
+            "kernel-source-commit": "8c2ffd9174779014c3fe1f96d9dc3641d9175f00",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/55684ce16ba7a9f7050fc1bba1cdff5d4ed5420d",
+            "syzkaller-commit": "55684ce16ba7a9f7050fc1bba1cdff5d4ed5420d",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=169a358b200000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "do_dentry_open",
+            "fs/open.c"
+        ]
+    ],
+    "patch_commit_date": "2019-03-29T03:43:30+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "c1e287c11b752b055257196c5e98e4e91f401b32",
+    "patch": "diff --git a/fs/open.c b/fs/open.c\nindex 0285ce7dbd51..f1c2f855fd43 100644\n--- a/fs/open.c\n+++ b/fs/open.c\n@@ -733,6 +733,12 @@ static int do_dentry_open(struct file *f,\n \t\treturn 0;\n \t}\n \n+\t/* Any file opened for execve()/uselib() has to be a regular file. */\n+\tif (unlikely(f->f_flags & FMODE_EXEC && !S_ISREG(inode->i_mode))) {\n+\t\terror = -EACCES;\n+\t\tgoto cleanup_file;\n+\t}\n+\n \tif (f->f_mode & FMODE_WRITE && !special_file(inode->i_mode)) {\n \t\terror = get_write_access(inode);\n \t\tif (unlikely(error))\n",
+    "patch_modified_files": [
+        "fs/open.c"
+    ]
+}

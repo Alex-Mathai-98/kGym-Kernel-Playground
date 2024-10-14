@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in bitmap_port_gc",
+    "display-title": "KASAN: slab-out-of-bounds Read in bitmap_port_gc",
+    "id": "ee5da46ebbcbd1e2247d54c26d00b06a7e8dae37",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: ipset: use bitmap infrastructure completely",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=32c72165dbd0e246e69d16a3ad348a4851afd415",
+            "hash": "32c72165dbd0e246e69d16a3ad348a4851afd415",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "hsr: implement dellink to clean up resources",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b9a1e627405d68d475a3c1f35e685ccfb5bbe668",
+        "hash": "b9a1e627405d68d475a3c1f35e685ccfb5bbe668",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000006de432059c6cabb1@google.com/T/",
+        "https://lore.kernel.org/all/20200125173415.191571-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20200128135749.822297911@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200128135809.344954797@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200128135817.238524998@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200128135829.486060649@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200128135852.449088278@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/alpine.DEB.2.20.2001192203200.18095@blackhole.kfki.hu/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16da6faee00000",
+            "c-reproducer": "/text?tag=ReproC&x=115e8faee00000",
+            "kernel-config": "/text?tag=KernelConfig&x=d9290aeb7e6cf1c4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=25e73aadf297d78cf528841795cd37bad8320642",
+            "kernel-source-commit": "25e73aadf297d78cf528841795cd37bad8320642",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3de7aabbb79a6c2267f5d7ee8a8aaa83f63305b7",
+            "syzkaller-commit": "3de7aabbb79a6c2267f5d7ee8a8aaa83f63305b7",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=104660f1e00000"
+        }
+    ],
+    "subsystems": [],
+    "parent_of_fix_commit": "7eaecf7963c1c8f62d62c6a8e7c439b0e7f2d365",
+    "patch": "diff --git a/include/linux/netfilter/ipset/ip_set.h b/include/linux/netfilter/ipset/ip_set.h\nindex 4d8b1eaf7708..908d38dbcb91 100644\n--- a/include/linux/netfilter/ipset/ip_set.h\n+++ b/include/linux/netfilter/ipset/ip_set.h\n@@ -426,13 +426,6 @@ ip6addrptr(const struct sk_buff *skb, bool src, struct in6_addr *addr)\n \t       sizeof(*addr));\n }\n \n-/* Calculate the bytes required to store the inclusive range of a-b */\n-static inline int\n-bitmap_bytes(u32 a, u32 b)\n-{\n-\treturn 4 * ((((b - a + 8) / 8) + 3) / 4);\n-}\n-\n /* How often should the gc be run by default */\n #define IPSET_GC_TIME\t\t\t(3 * 60)\n \ndiff --git a/net/netfilter/ipset/ip_set_bitmap_gen.h b/net/netfilter/ipset/ip_set_bitmap_gen.h\nindex 077a2cb65fcb..26ab0e9612d8 100644\n--- a/net/netfilter/ipset/ip_set_bitmap_gen.h\n+++ b/net/netfilter/ipset/ip_set_bitmap_gen.h\n@@ -75,7 +75,7 @@ mtype_flush(struct ip_set *set)\n \n \tif (set->extensions & IPSET_EXT_DESTROY)\n \t\tmtype_ext_cleanup(set);\n-\tmemset(map->members, 0, map->memsize);\n+\tbitmap_zero(map->members, map->elements);\n \tset->elements = 0;\n \tset->ext_size = 0;\n }\ndiff --git a/net/netfilter/ipset/ip_set_bitmap_ip.c b/net/netfilter/ipset/ip_set_bitmap_ip.c\nindex abe8f77d7d23..0a2196f59106 100644\n--- a/net/netfilter/ipset/ip_set_bitmap_ip.c\n+++ b/net/netfilter/ipset/ip_set_bitmap_ip.c\n@@ -37,7 +37,7 @@ MODULE_ALIAS(\"ip_set_bitmap:ip\");\n \n /* Type structure */\n struct bitmap_ip {\n-\tvoid *members;\t\t/* the set members */\n+\tunsigned long *members;\t/* the set members */\n \tu32 first_ip;\t\t/* host byte order, included in range */\n \tu32 last_ip;\t\t/* host byte order, included in range */\n \tu32 elements;\t\t/* number of max elements in the set */\n@@ -220,7 +220,7 @@ init_map_ip(struct ip_set *set, struct bitmap_ip *map,\n \t    u32 first_ip, u32 last_ip,\n \t    u32 elements, u32 hosts, u8 netmask)\n {\n-\tmap->members = ip_set_alloc(map->memsize);\n+\tmap->members = bitmap_zalloc(elements, GFP_KERNEL | __GFP_NOWARN);\n \tif (!map->members)\n \t\treturn false;\n \tmap->first_ip = first_ip;\n@@ -322,7 +322,7 @@ bitmap_ip_create(struct net *net, struct ip_set *set, struct nlattr *tb[],\n \tif (!map)\n \t\treturn -ENOMEM;\n \n-\tmap->memsize = bitmap_bytes(0, elements - 1);\n+\tmap->memsize = BITS_TO_LONGS(elements) * sizeof(unsigned long);\n \tset->variant = &bitmap_ip;\n \tif (!init_map_ip(set, map, first_ip, last_ip,\n \t\t\t elements, hosts, netmask)) {\ndiff --git a/net/netfilter/ipset/ip_set_bitmap_ipmac.c b/net/netfilter/ipset/ip_set_bitmap_ipmac.c\nindex b618713297da..739e343efaf6 100644\n--- a/net/netfilter/ipset/ip_set_bitmap_ipmac.c\n+++ b/net/netfilter/ipset/ip_set_bitmap_ipmac.c\n@@ -42,7 +42,7 @@ enum {\n \n /* Type structure */\n struct bitmap_ipmac {\n-\tvoid *members;\t\t/* the set members */\n+\tunsigned long *members;\t/* the set members */\n \tu32 first_ip;\t\t/* host byte order, included in range */\n \tu32 last_ip;\t\t/* host byte order, included in range */\n \tu32 elements;\t\t/* number of max elements in the set */\n@@ -299,7 +299,7 @@ static bool\n init_map_ipmac(struct ip_set *set, struct bitmap_ipmac *map,\n \t       u32 first_ip, u32 last_ip, u32 elements)\n {\n-\tmap->members = ip_set_alloc(map->memsize);\n+\tmap->members = bitmap_zalloc(elements, GFP_KERNEL | __GFP_NOWARN);\n \tif (!map->members)\n \t\treturn false;\n \tmap->first_ip = first_ip;\n@@ -360,7 +360,7 @@ bitmap_ipmac_create(struct net *net, struct ip_set *set, struct nlattr *tb[],\n \tif (!map)\n \t\treturn -ENOMEM;\n \n-\tmap->memsize = bitmap_bytes(0, elements - 1);\n+\tmap->memsize = BITS_TO_LONGS(elements) * sizeof(unsigned long);\n \tset->variant = &bitmap_ipmac;\n \tif (!init_map_ipmac(set, map, first_ip, last_ip, elements)) {\n \t\tkfree(map);\ndiff --git a/net/netfilter/ipset/ip_set_bitmap_port.c b/net/netfilter/ipset/ip_set_bitmap_port.c\nindex 23d6095cb196..b49978dd810d 100644\n--- a/net/netfilter/ipset/ip_set_bitmap_port.c\n+++ b/net/netfilter/ipset/ip_set_bitmap_port.c\n@@ -30,7 +30,7 @@ MODULE_ALIAS(\"ip_set_bitmap:port\");\n \n /* Type structure */\n struct bitmap_port {\n-\tvoid *members;\t\t/* the set members */\n+\tunsigned long *members;\t/* the set members */\n \tu16 first_port;\t\t/* host byte order, included in range */\n \tu16 last_port;\t\t/* host byte order, included in range */\n \tu32 elements;\t\t/* number of max elements in the set */\n@@ -231,7 +231,7 @@ static bool\n init_map_port(struct ip_set *set, struct bitmap_port *map,\n \t      u16 first_port, u16 last_port)\n {\n-\tmap->members = ip_set_alloc(map->memsize);\n+\tmap->members = bitmap_zalloc(map->elements, GFP_KERNEL | __GFP_NOWARN);\n \tif (!map->members)\n \t\treturn false;\n \tmap->first_port = first_port;\n@@ -271,7 +271,7 @@ bitmap_port_create(struct net *net, struct ip_set *set, struct nlattr *tb[],\n \t\treturn -ENOMEM;\n \n \tmap->elements = elements;\n-\tmap->memsize = bitmap_bytes(0, map->elements);\n+\tmap->memsize = BITS_TO_LONGS(elements) * sizeof(unsigned long);\n \tset->variant = &bitmap_port;\n \tif (!init_map_port(set, map, first_port, last_port)) {\n \t\tkfree(map);\n",
+    "patch_modified_files": [
+        "include/linux/netfilter/ipset/ip_set.h",
+        "net/netfilter/ipset/ip_set_bitmap_gen.h",
+        "net/netfilter/ipset/ip_set_bitmap_ip.c",
+        "net/netfilter/ipset/ip_set_bitmap_ipmac.c",
+        "net/netfilter/ipset/ip_set_bitmap_port.c"
+    ]
+}

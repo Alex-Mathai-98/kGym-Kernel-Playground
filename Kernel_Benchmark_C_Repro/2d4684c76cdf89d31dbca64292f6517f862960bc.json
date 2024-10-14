@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in slip_open",
+    "display-title": "KASAN: use-after-free Read in slip_open",
+    "id": "2d4684c76cdf89d31dbca64292f6517f862960bc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "slip: Fix use-after-free Read in slip_open",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e58c1912418980f57ba2060017583067f5f71e52",
+            "hash": "e58c1912418980f57ba2060017583067f5f71e52",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000078348e0597fd08f4@google.com/T/",
+        "https://lore.kernel.org/all/20191125122343.17904-1-jouni.hogander@unikie.com/T/",
+        "https://lore.kernel.org/all/20191203212705.175425505@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20191203213005.828543156@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20191203223427.103571230@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20191204174327.215426506@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20191204175308.377746305@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20191204175321.609072813@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/lsq.1591725831.850867383@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13d90bbae00000",
+            "c-reproducer": "/text?tag=ReproC&x=16e529d2e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=4737c15fc47048f2",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=af42d3466bdc8f39806b26f593604fdc54140bcb",
+            "kernel-source-commit": "af42d3466bdc8f39806b26f593604fdc54140bcb",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/5bc702124e611ab9f14217760c163fd8b4e10a7d",
+            "syzkaller-commit": "5bc702124e611ab9f14217760c163fd8b4e10a7d",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12d332f2e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "slip_open",
+            "drivers/net/slip/slip.c"
+        ]
+    ],
+    "patch_commit_date": "2019-11-25T12:23:43+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "9bca3a0a923fc3f0fb9e41391be1d0f291e86858",
+    "patch": "diff --git a/drivers/net/slip/slip.c b/drivers/net/slip/slip.c\nindex 4d479e3c817d..2a91c192659f 100644\n--- a/drivers/net/slip/slip.c\n+++ b/drivers/net/slip/slip.c\n@@ -855,6 +855,7 @@ static int slip_open(struct tty_struct *tty)\n \tsl->tty = NULL;\n \ttty->disc_data = NULL;\n \tclear_bit(SLF_INUSE, &sl->flags);\n+\tsl_free_netdev(sl->dev);\n \tfree_netdev(sl->dev);\n \n err_exit:\n",
+    "patch_modified_files": [
+        "drivers/net/slip/slip.c"
+    ]
+}

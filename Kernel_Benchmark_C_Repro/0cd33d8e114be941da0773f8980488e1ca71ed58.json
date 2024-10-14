@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "title": "WARNING: bad unlock balance in rxrpc_recvmsg",
+    "display-title": "WARNING: bad unlock balance in rxrpc_recvmsg",
+    "id": "0cd33d8e114be941da0773f8980488e1ca71ed58",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "rxrpc: bad unlock balance in rxrpc_recvmsg",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6dce3c20ac429e7a651d728e375853370c796e8d",
+            "hash": "6dce3c20ac429e7a651d728e375853370c796e8d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16183127400000",
+            "c-reproducer": "/text?tag=ReproC&x=10356b98c00000",
+            "kernel-config": "/text?tag=KernelConfig&x=f1b4c0a504a4bfc5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=24b888d8d59847871387aa3b241b524661070a6e",
+            "kernel-source-commit": "24b888d8d59847871387aa3b241b524661070a6e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c198d5ddeb35c810b03f6e7042bc64b5f7a8726c",
+            "syzkaller-commit": "c198d5ddeb35c810b03f6e7042bc64b5f7a8726c",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16744adf400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "rxrpc_recvmsg",
+            "net/rxrpc/recvmsg.c"
+        ]
+    ],
+    "patch_commit_date": "2019-02-04T16:36:06+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "afs",
+        "net"
+    ],
+    "parent_of_fix_commit": "bdcc5bc25548ef6b08e2e43937148f907c212292",
+    "patch": "diff --git a/net/rxrpc/recvmsg.c b/net/rxrpc/recvmsg.c\nindex eaf19ebaa964..3f7bb11f3290 100644\n--- a/net/rxrpc/recvmsg.c\n+++ b/net/rxrpc/recvmsg.c\n@@ -596,6 +596,7 @@ int rxrpc_recvmsg(struct socket *sock, struct msghdr *msg, size_t len,\n \t}\n error_no_call:\n \trelease_sock(&rx->sk);\n+error_trace:\n \ttrace_rxrpc_recvmsg(call, rxrpc_recvmsg_return, 0, 0, 0, ret);\n \treturn ret;\n \n@@ -604,7 +605,7 @@ int rxrpc_recvmsg(struct socket *sock, struct msghdr *msg, size_t len,\n wait_error:\n \tfinish_wait(sk_sleep(&rx->sk), &wait);\n \tcall = NULL;\n-\tgoto error_no_call;\n+\tgoto error_trace;\n }\n \n /**\n",
+    "patch_modified_files": [
+        "net/rxrpc/recvmsg.c"
+    ]
+}

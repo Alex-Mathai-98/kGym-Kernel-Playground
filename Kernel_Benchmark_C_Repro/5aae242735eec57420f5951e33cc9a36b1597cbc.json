@@ -1,0 +1,39 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in ip_cmsg_recv_offset",
+    "display-title": "KASAN: use-after-free Read in ip_cmsg_recv_offset",
+    "id": "5aae242735eec57420f5951e33cc9a36b1597cbc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net-backports: ipv4: fix use-after-free in ip_cmsg_recv_dstaddr()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=64199fc0a46ba211362472f7f942f900af9492fd",
+            "hash": "64199fc0a46ba211362472f7f942f900af9492fd",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10c939c6400000",
+            "c-reproducer": "/text?tag=ReproC&x=167d827e400000",
+            "kernel-config": "/text?tag=KernelConfig&x=a8212f992609a887",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e704966c45e48d0220d1ee5e463034ae493a95b2",
+            "kernel-source-commit": "e704966c45e48d0220d1ee5e463034ae493a95b2",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/41e4b32952f4590341ae872db0abf819b4004713",
+            "syzkaller-commit": "41e4b32952f4590341ae872db0abf819b4004713",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15b2923a400000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "b9f1bcb22091aacc0202c9ff6181e696cd1dc7dc",
+    "patch": "diff --git a/net/ipv4/ip_sockglue.c b/net/ipv4/ip_sockglue.c\nindex c0fe5ad996f2..26c36cccabdc 100644\n--- a/net/ipv4/ip_sockglue.c\n+++ b/net/ipv4/ip_sockglue.c\n@@ -149,7 +149,6 @@ static void ip_cmsg_recv_security(struct msghdr *msg, struct sk_buff *skb)\n static void ip_cmsg_recv_dstaddr(struct msghdr *msg, struct sk_buff *skb)\n {\n \tstruct sockaddr_in sin;\n-\tconst struct iphdr *iph = ip_hdr(skb);\n \t__be16 *ports;\n \tint end;\n \n@@ -164,7 +163,7 @@ static void ip_cmsg_recv_dstaddr(struct msghdr *msg, struct sk_buff *skb)\n \tports = (__be16 *)skb_transport_header(skb);\n \n \tsin.sin_family = AF_INET;\n-\tsin.sin_addr.s_addr = iph->daddr;\n+\tsin.sin_addr.s_addr = ip_hdr(skb)->daddr;\n \tsin.sin_port = ports[1];\n \tmemset(sin.sin_zero, 0, sizeof(sin.sin_zero));\n \n",
+    "patch_modified_files": [
+        "net/ipv4/ip_sockglue.c"
+    ]
+}

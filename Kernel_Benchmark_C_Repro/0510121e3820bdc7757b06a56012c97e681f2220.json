@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "KASAN: stack-out-of-bounds Read in iov_iter_revert",
+    "display-title": "KASAN: stack-out-of-bounds Read in iov_iter_revert",
+    "id": "0510121e3820bdc7757b06a56012c97e681f2220",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: reexpand under-reexpanded iters",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=89c2b3b74918200e46699338d7bcc19b1ea12110",
+            "hash": "89c2b3b74918200e46699338d7bcc19b1ea12110",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c3e60005c95cea4b@google.com/T/",
+        "https://lore.kernel.org/all/YT8sVh7+Vr+fmVnC@kroah.com/T/",
+        "https://lore.kernel.org/all/YT8skKSjmYJQ7VS2@kroah.com/T/",
+        "https://lore.kernel.org/all/cover.1628780390.git.asml.silence@gmail.com/T/",
+        "https://lore.kernel.org/all/cover.1629713020.git.asml.silence@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: stack-out-of-bounds Read in iov_iter_revert",
+            "syz-reproducer": "/text?tag=ReproSyz&x=119dcaf6300000",
+            "c-reproducer": "/text?tag=ReproC&x=120d216e300000",
+            "kernel-config": "/text?tag=KernelConfig&x=e3a20bae04b96ccd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1746f4db513563bb22e0ba0c419d0c90912dfae1",
+            "kernel-source-commit": "1746f4db513563bb22e0ba0c419d0c90912dfae1",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/6972b10616d785401dea17cec890cca8916424a7",
+            "syzkaller-commit": "6972b10616d785401dea17cec890cca8916424a7",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1670aa5e300000"
+        }
+    ],
+    "subsystems": [
+        "fs",
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "2112ff5ce0c1128fe7b4d19cfe7f2b8ce5b595fa",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex d94fb5835a20..71639d39caf9 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -3281,6 +3281,7 @@ static int io_read(struct io_kiocb *req, unsigned int issue_flags)\n \t\tif (req->flags & REQ_F_NOWAIT)\n \t\t\tgoto done;\n \t\t/* some cases will consume bytes even on error returns */\n+\t\tiov_iter_reexpand(iter, iter->count + iter->truncated);\n \t\tiov_iter_revert(iter, io_size - iov_iter_count(iter));\n \t\tret = 0;\n \t} else if (ret == -EIOCBQUEUED) {\n@@ -3420,6 +3421,7 @@ static int io_write(struct io_kiocb *req, unsigned int issue_flags)\n \t} else {\n copy_iov:\n \t\t/* some cases will consume bytes even on error returns */\n+\t\tiov_iter_reexpand(iter, iter->count + iter->truncated);\n \t\tiov_iter_revert(iter, io_size - iov_iter_count(iter));\n \t\tret = io_setup_async_rw(req, iovec, inline_vecs, iter, false);\n \t\treturn ret ?: -EAGAIN;\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

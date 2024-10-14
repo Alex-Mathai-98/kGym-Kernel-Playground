@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "divide error in encrypt_packet",
+    "display-title": "divide error in encrypt_packet",
+    "id": "a1a049fcf154a2c466232111c09a030ac656a833",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "wireguard: send: account for mtu=0 devices",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=175f1ca9a9ed8689d2028da1a7c624bb4fb4ff7e",
+            "hash": "175f1ca9a9ed8689d2028da1a7c624bb4fb4ff7e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "net: WireGuard secure network tunnel",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e7096c131e5161fa3b8e52a650d7719d2857adfd",
+        "hash": "e7096c131e5161fa3b8e52a650d7719d2857adfd",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16328aa1e00000",
+            "c-reproducer": "/text?tag=ReproC&x=1019aae6e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=735296e4dd620b10",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=0bf999f9c5e74c7ecf9dafb527146601e5c848b9",
+            "kernel-source-commit": "0bf999f9c5e74c7ecf9dafb527146601e5c848b9",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c5ed587f4af5e639f7373d8ebf10ac049cb9c71b",
+            "syzkaller-commit": "c5ed587f4af5e639f7373d8ebf10ac049cb9c71b",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=175cfc09e00000"
+        }
+    ],
+    "subsystems": [
+        "wireguard"
+    ],
+    "parent_of_fix_commit": "2a8a4df36462aa85b0db87b7c5ea145ba67e34a8",
+    "patch": "diff --git a/drivers/net/wireguard/device.c b/drivers/net/wireguard/device.c\nindex 43db442b1373..cdc96968b0f4 100644\n--- a/drivers/net/wireguard/device.c\n+++ b/drivers/net/wireguard/device.c\n@@ -258,6 +258,8 @@ static void wg_setup(struct net_device *dev)\n \tenum { WG_NETDEV_FEATURES = NETIF_F_HW_CSUM | NETIF_F_RXCSUM |\n \t\t\t\t    NETIF_F_SG | NETIF_F_GSO |\n \t\t\t\t    NETIF_F_GSO_SOFTWARE | NETIF_F_HIGHDMA };\n+\tconst int overhead = MESSAGE_MINIMUM_LENGTH + sizeof(struct udphdr) +\n+\t\t\t     max(sizeof(struct ipv6hdr), sizeof(struct iphdr));\n \n \tdev->netdev_ops = &netdev_ops;\n \tdev->hard_header_len = 0;\n@@ -271,9 +273,8 @@ static void wg_setup(struct net_device *dev)\n \tdev->features |= WG_NETDEV_FEATURES;\n \tdev->hw_features |= WG_NETDEV_FEATURES;\n \tdev->hw_enc_features |= WG_NETDEV_FEATURES;\n-\tdev->mtu = ETH_DATA_LEN - MESSAGE_MINIMUM_LENGTH -\n-\t\t   sizeof(struct udphdr) -\n-\t\t   max(sizeof(struct ipv6hdr), sizeof(struct iphdr));\n+\tdev->mtu = ETH_DATA_LEN - overhead;\n+\tdev->max_mtu = round_down(INT_MAX, MESSAGE_PADDING_MULTIPLE) - overhead;\n \n \tSET_NETDEV_DEVTYPE(dev, &device_type);\n \ndiff --git a/drivers/net/wireguard/send.c b/drivers/net/wireguard/send.c\nindex c13260563446..7348c10cbae3 100644\n--- a/drivers/net/wireguard/send.c\n+++ b/drivers/net/wireguard/send.c\n@@ -143,16 +143,22 @@ static void keep_key_fresh(struct wg_peer *peer)\n \n static unsigned int calculate_skb_padding(struct sk_buff *skb)\n {\n+\tunsigned int padded_size, last_unit = skb->len;\n+\n+\tif (unlikely(!PACKET_CB(skb)->mtu))\n+\t\treturn ALIGN(last_unit, MESSAGE_PADDING_MULTIPLE) - last_unit;\n+\n \t/* We do this modulo business with the MTU, just in case the networking\n \t * layer gives us a packet that's bigger than the MTU. In that case, we\n \t * wouldn't want the final subtraction to overflow in the case of the\n-\t * padded_size being clamped.\n+\t * padded_size being clamped. Fortunately, that's very rarely the case,\n+\t * so we optimize for that not happening.\n \t */\n-\tunsigned int last_unit = skb->len % PACKET_CB(skb)->mtu;\n-\tunsigned int padded_size = ALIGN(last_unit, MESSAGE_PADDING_MULTIPLE);\n+\tif (unlikely(last_unit > PACKET_CB(skb)->mtu))\n+\t\tlast_unit %= PACKET_CB(skb)->mtu;\n \n-\tif (padded_size > PACKET_CB(skb)->mtu)\n-\t\tpadded_size = PACKET_CB(skb)->mtu;\n+\tpadded_size = min(PACKET_CB(skb)->mtu,\n+\t\t\t  ALIGN(last_unit, MESSAGE_PADDING_MULTIPLE));\n \treturn padded_size - last_unit;\n }\n \n",
+    "patch_modified_files": [
+        "drivers/net/wireguard/device.c",
+        "drivers/net/wireguard/send.c"
+    ]
+}

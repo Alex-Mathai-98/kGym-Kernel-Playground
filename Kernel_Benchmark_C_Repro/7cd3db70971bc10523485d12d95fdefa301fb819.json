@@ -1,0 +1,61 @@
+{
+    "version": 1,
+    "title": "WARNING: syz-executor still has locks held!",
+    "display-title": "WARNING: syz-executor still has locks held!",
+    "id": "7cd3db70971bc10523485d12d95fdefa301fb819",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Revert \"exec: make de_thread() freezable\"",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a72173ecfc6774cf2d55de9fb29421ce69e3428c",
+            "hash": "a72173ecfc6774cf2d55de9fb29421ce69e3428c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "exec: make de_thread() freezable",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c22397888f1eed98cd59f0a88f2a5f6925f80e15",
+        "hash": "c22397888f1eed98cd59f0a88f2a5f6925f80e15",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000000e4a41057b6c9792@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16c9e26d400000",
+            "c-reproducer": "/text?tag=ReproC&x=14e1234d400000",
+            "kernel-config": "/text?tag=KernelConfig&x=73e2bc0cb6463446",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7c98a42618271210c60b79128b220107d35938d9",
+            "kernel-source-commit": "7c98a42618271210c60b79128b220107d35938d9",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/ecc7c8709106080bdf3dd84baffe353c00163fb0",
+            "syzkaller-commit": "ecc7c8709106080bdf3dd84baffe353c00163fb0",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11cd426d400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "de_thread",
+            "fs/exec.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "de_thread",
+            "fs/exec.c"
+        ]
+    ],
+    "patch_commit_date": "2018-12-03T12:04:18+00:00",
+    "cause_commit_date": "2018-11-12T03:54:45+00:00",
+    "subsystems": [],
+    "parent_of_fix_commit": "2595646791c319cadfdbf271563aac97d0843dc7",
+    "patch": "diff --git a/fs/exec.c b/fs/exec.c\nindex acc3a5536384..fc281b738a98 100644\n--- a/fs/exec.c\n+++ b/fs/exec.c\n@@ -62,7 +62,6 @@\n #include <linux/oom.h>\n #include <linux/compat.h>\n #include <linux/vmalloc.h>\n-#include <linux/freezer.h>\n \n #include <linux/uaccess.h>\n #include <asm/mmu_context.h>\n@@ -1084,7 +1083,7 @@ static int de_thread(struct task_struct *tsk)\n \twhile (sig->notify_count) {\n \t\t__set_current_state(TASK_KILLABLE);\n \t\tspin_unlock_irq(lock);\n-\t\tfreezable_schedule();\n+\t\tschedule();\n \t\tif (unlikely(__fatal_signal_pending(tsk)))\n \t\t\tgoto killed;\n \t\tspin_lock_irq(lock);\n@@ -1112,7 +1111,7 @@ static int de_thread(struct task_struct *tsk)\n \t\t\t__set_current_state(TASK_KILLABLE);\n \t\t\twrite_unlock_irq(&tasklist_lock);\n \t\t\tcgroup_threadgroup_change_end(tsk);\n-\t\t\tfreezable_schedule();\n+\t\t\tschedule();\n \t\t\tif (unlikely(__fatal_signal_pending(tsk)))\n \t\t\t\tgoto killed;\n \t\t}\n",
+    "patch_modified_files": [
+        "fs/exec.c"
+    ]
+}

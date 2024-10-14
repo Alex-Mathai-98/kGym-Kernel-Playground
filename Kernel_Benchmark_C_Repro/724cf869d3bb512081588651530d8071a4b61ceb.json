@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "general protection fault in start_transaction",
+    "display-title": "general protection fault in start_transaction",
+    "id": "724cf869d3bb512081588651530d8071a4b61ceb",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "btrfs: fix race between quota rescan and disable leading to NULL pointer deref",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b7adbf9ada3513d2092362c8eac5cddc5b651f5c",
+            "hash": "b7adbf9ada3513d2092362c8eac5cddc5b651f5c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e5454b05f065a803@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in start_transaction",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1382a02a480000",
+            "c-reproducer": "/text?tag=ReproC&x=15c7f2c2480000",
+            "kernel-config": "/text?tag=KernelConfig&x=9babfdc3dd4772d0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=69b41ac87e4a664de78a395ff97166f0b2943210",
+            "kernel-source-commit": "69b41ac87e4a664de78a395ff97166f0b2943210",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/1dac8c7a01e2bdd35cb04eb4901ddb157291ac2d",
+            "syzkaller-commit": "1dac8c7a01e2bdd35cb04eb4901ddb157291ac2d",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17b0d6e6480000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "btrfs_qgroup_rescan_worker",
+            "fs/btrfs/qgroup.c"
+        ]
+    ],
+    "patch_commit_date": "2023-01-12T16:31:08+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "btrfs"
+    ],
+    "parent_of_fix_commit": "1f55ee6d0901d915801618bda0af4e5b937e3db7",
+    "patch": "diff --git a/fs/btrfs/qgroup.c b/fs/btrfs/qgroup.c\nindex 00851c86aa8a..af97413abcf4 100644\n--- a/fs/btrfs/qgroup.c\n+++ b/fs/btrfs/qgroup.c\n@@ -3367,6 +3367,7 @@ static void btrfs_qgroup_rescan_worker(struct btrfs_work *work)\n \tint err = -ENOMEM;\n \tint ret = 0;\n \tbool stopped = false;\n+\tbool did_leaf_rescans = false;\n \n \tpath = btrfs_alloc_path();\n \tif (!path)\n@@ -3387,6 +3388,7 @@ static void btrfs_qgroup_rescan_worker(struct btrfs_work *work)\n \t\t}\n \n \t\terr = qgroup_rescan_leaf(trans, path);\n+\t\tdid_leaf_rescans = true;\n \n \t\tif (err > 0)\n \t\t\tbtrfs_commit_transaction(trans);\n@@ -3407,16 +3409,23 @@ static void btrfs_qgroup_rescan_worker(struct btrfs_work *work)\n \tmutex_unlock(&fs_info->qgroup_rescan_lock);\n \n \t/*\n-\t * only update status, since the previous part has already updated the\n-\t * qgroup info.\n+\t * Only update status, since the previous part has already updated the\n+\t * qgroup info, and only if we did any actual work. This also prevents\n+\t * race with a concurrent quota disable, which has already set\n+\t * fs_info->quota_root to NULL and cleared BTRFS_FS_QUOTA_ENABLED at\n+\t * btrfs_quota_disable().\n \t */\n-\ttrans = btrfs_start_transaction(fs_info->quota_root, 1);\n-\tif (IS_ERR(trans)) {\n-\t\terr = PTR_ERR(trans);\n+\tif (did_leaf_rescans) {\n+\t\ttrans = btrfs_start_transaction(fs_info->quota_root, 1);\n+\t\tif (IS_ERR(trans)) {\n+\t\t\terr = PTR_ERR(trans);\n+\t\t\ttrans = NULL;\n+\t\t\tbtrfs_err(fs_info,\n+\t\t\t\t  \"fail to start transaction for status update: %d\",\n+\t\t\t\t  err);\n+\t\t}\n+\t} else {\n \t\ttrans = NULL;\n-\t\tbtrfs_err(fs_info,\n-\t\t\t  \"fail to start transaction for status update: %d\",\n-\t\t\t  err);\n \t}\n \n \tmutex_lock(&fs_info->qgroup_rescan_lock);\n",
+    "patch_modified_files": [
+        "fs/btrfs/qgroup.c"
+    ]
+}

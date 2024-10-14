@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "memory leak in ntfs_init_fs_context",
+    "display-title": "memory leak in ntfs_init_fs_context",
+    "id": "332ba47915d0e39e94b42a622f195f0804ecb67f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/ntfs3: Fix memory leak on ntfs_fill_super() error path",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=51e76a232f8c037f1d9e9922edc25b003d5f3414",
+            "hash": "51e76a232f8c037f1d9e9922edc25b003d5f3414",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000cb172905e6e28808@google.com/T/",
+        "https://lore.kernel.org/all/20220823103205.1380235-1-syoshida@redhat.com/T/",
+        "https://lore.kernel.org/all/20220914111643.14411-1-code@siddh.me/T/",
+        "https://lore.kernel.org/all/20221227203249.1213526-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221227203342.1213918-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221227203433.1214255-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/Yw7k0VQm+8l8JKWr@karthik-strix-linux.karthek.com/T/",
+        "https://lore.kernel.org/all/Yw7kc+eNDImk7+w+@karthik-strix-linux.karthek.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in ntfs_init_fs_context",
+            "syz-reproducer": "/text?tag=ReproSyz&x=161472f3080000",
+            "c-reproducer": "/text?tag=ReproC&x=145f3e2d080000",
+            "kernel-config": "/text?tag=KernelConfig&x=b1831d905b683446",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1c23f9e627a7b412978b4e852793c5e3c3efc555",
+            "kernel-source-commit": "1c23f9e627a7b412978b4e852793c5e3c3efc555",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/26a13b3872cf54f3e68ec48a93c9866423fc3304",
+            "syzkaller-commit": "26a13b3872cf54f3e68ec48a93c9866423fc3304",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14b28d03080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ntfs_fill_super",
+            "fs/ntfs3/super.c"
+        ]
+    ],
+    "patch_commit_date": "2022-08-23T10:32:05+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ntfs3"
+    ],
+    "parent_of_fix_commit": "92f017c4aee6e2bb79593adeacccbea3afe62223",
+    "patch": "diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c\nindex 27a36a0b08ec..569f38a2a51f 100644\n--- a/fs/ntfs3/super.c\n+++ b/fs/ntfs3/super.c\n@@ -1307,6 +1307,7 @@ static int ntfs_fill_super(struct super_block *sb, struct fs_context *fc)\n \t * Free resources here.\n \t * ntfs_fs_free will be called with fc->s_fs_info = NULL\n \t */\n+\tput_mount_options(sbi->options);\n \tput_ntfs(sbi);\n \tsb->s_fs_info = NULL;\n \n",
+    "patch_modified_files": [
+        "fs/ntfs3/super.c"
+    ]
+}

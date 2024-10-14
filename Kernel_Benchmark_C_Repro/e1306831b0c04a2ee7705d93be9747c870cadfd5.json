@@ -1,0 +1,72 @@
+{
+    "version": 1,
+    "title": "INFO: rcu detected stall in sys_setxattr",
+    "display-title": "INFO: rcu detected stall in sys_setxattr (2)",
+    "id": "e1306831b0c04a2ee7705d93be9747c870cadfd5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs: unset MNT_WRITE_HOLD on failure",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0014edaedfd804dbf35b009808789325ca615716",
+            "hash": "0014edaedfd804dbf35b009808789325ca615716",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "mount_setattr(): clean the control flow and calling conventions",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e257039f0fc7da36ac3a522ef9a5cb4ae7852e67",
+        "hash": "e257039f0fc7da36ac3a522ef9a5cb4ae7852e67",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000007cc21d05dd0432b8@google.com/T/",
+        "https://lore.kernel.org/all/20220420131925.2464685-1-brauner@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "INFO: rcu detected stall in sys_setxattr",
+            "syz-reproducer": "/text?tag=ReproSyz&x=104a88e8f00000",
+            "c-reproducer": "/text?tag=ReproC&x=132a840cf00000",
+            "kernel-config": "/text?tag=KernelConfig&x=6cb89c879305f336",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b2d229d4ddb17db541098b83524d901257e93845",
+            "kernel-source-commit": "b2d229d4ddb17db541098b83524d901257e93845",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8bcc32a67bc7180173447e1a78c03dae096b4231",
+            "syzkaller-commit": "8bcc32a67bc7180173447e1a78c03dae096b4231",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1387e194f00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "mount_setattr_prepare",
+            "fs/namespace.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "do_idmap_mount",
+            "fs/namespace.c"
+        ],
+        [
+            "mnt_allow_writers",
+            "fs/namespace.c"
+        ],
+        [
+            "do_mount_setattr",
+            "fs/namespace.c"
+        ]
+    ],
+    "patch_commit_date": "2022-04-20T13:19:25+00:00",
+    "cause_commit_date": "2022-03-01T04:04:20+00:00",
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "b2d229d4ddb17db541098b83524d901257e93845",
+    "patch": "diff --git a/fs/namespace.c b/fs/namespace.c\nindex a0a36bfa3aa0..afe2b64b14f1 100644\n--- a/fs/namespace.c\n+++ b/fs/namespace.c\n@@ -4058,10 +4058,22 @@ static int mount_setattr_prepare(struct mount_kattr *kattr, struct mount *mnt)\n \tif (err) {\n \t\tstruct mount *p;\n \n-\t\tfor (p = mnt; p != m; p = next_mnt(p, mnt)) {\n+\t\t/*\n+\t\t * If we had to call mnt_hold_writers() MNT_WRITE_HOLD will\n+\t\t * be set in @mnt_flags. The loop unsets MNT_WRITE_HOLD for all\n+\t\t * mounts and needs to take care to include the first mount.\n+\t\t */\n+\t\tfor (p = mnt; p; p = next_mnt(p, mnt)) {\n \t\t\t/* If we had to hold writers unblock them. */\n \t\t\tif (p->mnt.mnt_flags & MNT_WRITE_HOLD)\n \t\t\t\tmnt_unhold_writers(p);\n+\n+\t\t\t/*\n+\t\t\t * We're done once the first mount we changed got\n+\t\t\t * MNT_WRITE_HOLD unset.\n+\t\t\t */\n+\t\t\tif (p == m)\n+\t\t\t\tbreak;\n \t\t}\n \t}\n \treturn err;\n",
+    "patch_modified_files": [
+        "fs/namespace.c"
+    ]
+}

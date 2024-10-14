@@ -1,0 +1,63 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in unmap_page_range",
+    "display-title": "KASAN: use-after-free Read in unmap_page_range (2)",
+    "id": "6c294537f9de9bb5f89347208d40eee18c5576fe",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm/oom_kill.c: prevent a race between process_mrelease and exit_mmap",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=337546e83fc7e50917f44846beee936abb9c9f1f",
+            "hash": "337546e83fc7e50917f44846beee936abb9c9f1f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "drm/i915/guc: Relax CTB response timeout",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1ccf7294b76d28d5151f024351c747ccf101d66e",
+        "hash": "1ccf7294b76d28d5151f024351c747ccf101d66e",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000335eea05cfa98e32@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in unmap_page_range",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15d15ad4b00000",
+            "c-reproducer": "/text?tag=ReproC&x=142a0b64b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=9646ff3aa1daf1a8",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1fc596a56b334f4d593a2b49e5ff55af6aaa0816",
+            "kernel-source-commit": "1fc596a56b334f4d593a2b49e5ff55af6aaa0816",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/be531bb42381b245eed805e49fd889d1c2118c76",
+            "syzkaller-commit": "be531bb42381b245eed805e49fd889d1c2118c76",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11f0c38cb00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "SYSCALL_DEFINE2",
+            "mm/oom_kill.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "wait_for_ct_request_update",
+            "drivers/gpu/drm/i915/gt/uc/intel_guc_ct.c"
+        ]
+    ],
+    "patch_commit_date": "2021-10-28T21:36:14+00:00",
+    "cause_commit_date": "2021-07-08T16:20:49+00:00",
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "eac96c3efdb593df1a57bb5b95dbe037bfa9a522",
+    "patch": "diff --git a/mm/oom_kill.c b/mm/oom_kill.c\nindex 831340e7ad8b..989f35a2bbb1 100644\n--- a/mm/oom_kill.c\n+++ b/mm/oom_kill.c\n@@ -1150,7 +1150,7 @@ SYSCALL_DEFINE2(process_mrelease, int, pidfd, unsigned int, flags)\n \tstruct task_struct *task;\n \tstruct task_struct *p;\n \tunsigned int f_flags;\n-\tbool reap = true;\n+\tbool reap = false;\n \tstruct pid *pid;\n \tlong ret = 0;\n \n@@ -1177,15 +1177,15 @@ SYSCALL_DEFINE2(process_mrelease, int, pidfd, unsigned int, flags)\n \t\tgoto put_task;\n \t}\n \n-\tmm = p->mm;\n-\tmmgrab(mm);\n-\n-\t/* If the work has been done already, just exit with success */\n-\tif (test_bit(MMF_OOM_SKIP, &mm->flags))\n-\t\treap = false;\n-\telse if (!task_will_free_mem(p)) {\n-\t\treap = false;\n-\t\tret = -EINVAL;\n+\tif (mmget_not_zero(p->mm)) {\n+\t\tmm = p->mm;\n+\t\tif (task_will_free_mem(p))\n+\t\t\treap = true;\n+\t\telse {\n+\t\t\t/* Error only if the work has not been done already */\n+\t\t\tif (!test_bit(MMF_OOM_SKIP, &mm->flags))\n+\t\t\t\tret = -EINVAL;\n+\t\t}\n \t}\n \ttask_unlock(p);\n \n@@ -1201,7 +1201,8 @@ SYSCALL_DEFINE2(process_mrelease, int, pidfd, unsigned int, flags)\n \tmmap_read_unlock(mm);\n \n drop_mm:\n-\tmmdrop(mm);\n+\tif (mm)\n+\t\tmmput(mm);\n put_task:\n \tput_task_struct(task);\n put_pid:\n",
+    "patch_modified_files": [
+        "mm/oom_kill.c"
+    ]
+}

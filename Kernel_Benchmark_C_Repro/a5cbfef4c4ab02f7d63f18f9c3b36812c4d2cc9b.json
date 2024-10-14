@@ -1,0 +1,42 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in iput",
+    "display-title": "KASAN: use-after-free Read in iput",
+    "id": "a5cbfef4c4ab02f7d63f18f9c3b36812c4d2cc9b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "tracing: Fix bad use of igrab in trace_uprobe.c",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0c92c7a3c5d416f47b32c5f20a611dfeca5d5f2e",
+            "hash": "0c92c7a3c5d416f47b32c5f20a611dfeca5d5f2e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b607cf056a150083@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=124fce17800000",
+            "c-reproducer": "/text?tag=ReproC&x=1407e8c7800000",
+            "kernel-config": "/text?tag=KernelConfig&x=adeb81fdb5db9d72",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a27fc14219f2e3c4a46ba9177b04d9b52c875532",
+            "kernel-source-commit": "a27fc14219f2e3c4a46ba9177b04d9b52c875532",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/b80fd3b5d429f4d59731a40bf2bcda0c571365e0",
+            "syzkaller-commit": "b80fd3b5d429f4d59731a40bf2bcda0c571365e0",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=147f48c7800000"
+        }
+    ],
+    "subsystems": [
+        "fuse"
+    ],
+    "parent_of_fix_commit": "9a0fd675304d410f3a9586e1b333e16f4658d56c",
+    "patch": "diff --git a/kernel/trace/trace_uprobe.c b/kernel/trace/trace_uprobe.c\nindex 34fd0e0ec51d..ac892878dbe6 100644\n--- a/kernel/trace/trace_uprobe.c\n+++ b/kernel/trace/trace_uprobe.c\n@@ -55,6 +55,7 @@ struct trace_uprobe {\n \tstruct list_head\t\tlist;\n \tstruct trace_uprobe_filter\tfilter;\n \tstruct uprobe_consumer\t\tconsumer;\n+\tstruct path\t\t\tpath;\n \tstruct inode\t\t\t*inode;\n \tchar\t\t\t\t*filename;\n \tunsigned long\t\t\toffset;\n@@ -289,7 +290,7 @@ static void free_trace_uprobe(struct trace_uprobe *tu)\n \tfor (i = 0; i < tu->tp.nr_args; i++)\n \t\ttraceprobe_free_probe_arg(&tu->tp.args[i]);\n \n-\tiput(tu->inode);\n+\tpath_put(&tu->path);\n \tkfree(tu->tp.call.class->system);\n \tkfree(tu->tp.call.name);\n \tkfree(tu->filename);\n@@ -363,7 +364,6 @@ static int register_trace_uprobe(struct trace_uprobe *tu)\n static int create_trace_uprobe(int argc, char **argv)\n {\n \tstruct trace_uprobe *tu;\n-\tstruct inode *inode;\n \tchar *arg, *event, *group, *filename;\n \tchar buf[MAX_EVENT_NAME_LEN];\n \tstruct path path;\n@@ -371,7 +371,6 @@ static int create_trace_uprobe(int argc, char **argv)\n \tbool is_delete, is_return;\n \tint i, ret;\n \n-\tinode = NULL;\n \tret = 0;\n \tis_delete = false;\n \tis_return = false;\n@@ -437,21 +436,16 @@ static int create_trace_uprobe(int argc, char **argv)\n \t}\n \t/* Find the last occurrence, in case the path contains ':' too. */\n \targ = strrchr(argv[1], ':');\n-\tif (!arg) {\n-\t\tret = -EINVAL;\n-\t\tgoto fail_address_parse;\n-\t}\n+\tif (!arg)\n+\t\treturn -EINVAL;\n \n \t*arg++ = '\\0';\n \tfilename = argv[1];\n \tret = kern_path(filename, LOOKUP_FOLLOW, &path);\n \tif (ret)\n-\t\tgoto fail_address_parse;\n-\n-\tinode = igrab(d_real_inode(path.dentry));\n-\tpath_put(&path);\n+\t\treturn ret;\n \n-\tif (!inode || !S_ISREG(inode->i_mode)) {\n+\tif (!d_is_reg(path.dentry)) {\n \t\tret = -EINVAL;\n \t\tgoto fail_address_parse;\n \t}\n@@ -490,7 +484,7 @@ static int create_trace_uprobe(int argc, char **argv)\n \t\tgoto fail_address_parse;\n \t}\n \ttu->offset = offset;\n-\ttu->inode = inode;\n+\ttu->path = path;\n \ttu->filename = kstrdup(filename, GFP_KERNEL);\n \n \tif (!tu->filename) {\n@@ -558,7 +552,7 @@ static int create_trace_uprobe(int argc, char **argv)\n \treturn ret;\n \n fail_address_parse:\n-\tiput(inode);\n+\tpath_put(&path);\n \n \tpr_info(\"Failed to parse address or file.\\n\");\n \n@@ -922,6 +916,7 @@ probe_event_enable(struct trace_uprobe *tu, struct trace_event_file *file,\n \t\tgoto err_flags;\n \n \ttu->consumer.filter = filter;\n+\ttu->inode = d_real_inode(tu->path.dentry);\n \tret = uprobe_register(tu->inode, tu->offset, &tu->consumer);\n \tif (ret)\n \t\tgoto err_buffer;\n@@ -967,6 +962,7 @@ probe_event_disable(struct trace_uprobe *tu, struct trace_event_file *file)\n \tWARN_ON(!uprobe_filter_is_empty(&tu->filter));\n \n \tuprobe_unregister(tu->inode, tu->offset, &tu->consumer);\n+\ttu->inode = NULL;\n \ttu->tp.flags &= file ? ~TP_FLAG_TRACE : ~TP_FLAG_PROFILE;\n \n \tuprobe_buffer_disable();\n@@ -1337,7 +1333,6 @@ struct trace_event_call *\n create_local_trace_uprobe(char *name, unsigned long offs, bool is_return)\n {\n \tstruct trace_uprobe *tu;\n-\tstruct inode *inode;\n \tstruct path path;\n \tint ret;\n \n@@ -1345,11 +1340,8 @@ create_local_trace_uprobe(char *name, unsigned long offs, bool is_return)\n \tif (ret)\n \t\treturn ERR_PTR(ret);\n \n-\tinode = igrab(d_inode(path.dentry));\n-\tpath_put(&path);\n-\n-\tif (!inode || !S_ISREG(inode->i_mode)) {\n-\t\tiput(inode);\n+\tif (!d_is_reg(path.dentry)) {\n+\t\tpath_put(&path);\n \t\treturn ERR_PTR(-EINVAL);\n \t}\n \n@@ -1364,11 +1356,12 @@ create_local_trace_uprobe(char *name, unsigned long offs, bool is_return)\n \tif (IS_ERR(tu)) {\n \t\tpr_info(\"Failed to allocate trace_uprobe.(%d)\\n\",\n \t\t\t(int)PTR_ERR(tu));\n+\t\tpath_put(&path);\n \t\treturn ERR_CAST(tu);\n \t}\n \n \ttu->offset = offs;\n-\ttu->inode = inode;\n+\ttu->path = path;\n \ttu->filename = kstrdup(name, GFP_KERNEL);\n \tinit_trace_event_call(tu, &tu->tp.call);\n \n",
+    "patch_modified_files": [
+        "kernel/trace/trace_uprobe.c"
+    ]
+}

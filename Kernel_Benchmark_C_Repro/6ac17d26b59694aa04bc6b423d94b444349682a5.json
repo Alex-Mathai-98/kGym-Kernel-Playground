@@ -1,0 +1,67 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in btrfs_scan_one_device",
+    "display-title": "KASAN: slab-out-of-bounds Read in btrfs_scan_one_device",
+    "id": "6ac17d26b59694aa04bc6b423d94b444349682a5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "btrfs: don't access possibly stale fs_info data for printing duplicate device",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0697d9a610998b8bdee6b2390836cb2391d8fd1a",
+            "hash": "0697d9a610998b8bdee6b2390836cb2391d8fd1a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "btrfs: add sha256 to checksumming algorithm",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3831bf0094abed51e71cbeca8b6edf8b88c2644b",
+        "hash": "3831bf0094abed51e71cbeca8b6edf8b88c2644b",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000002ae6eb05b3bd420c@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16296f5c500000",
+            "c-reproducer": "/text?tag=ReproC&x=1614e746500000",
+            "kernel-config": "/text?tag=KernelConfig&x=e791ddf0875adf65",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=521b619acdc8f1f5acdac15b84f81fd9515b2aff",
+            "kernel-source-commit": "521b619acdc8f1f5acdac15b84f81fd9515b2aff",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/64069d48f293e0be98d4a78a6f7be23861cc1e06",
+            "syzkaller-commit": "64069d48f293e0be98d4a78a6f7be23861cc1e06",
+            "compiler-description": "clang version 11.0.0 (https://github.com/llvm/llvm-project.git ca2dcbd030eadbf0aa9b660efe864ff08af6e18b)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14a4a3a8500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "device_list_add",
+            "fs/btrfs/volumes.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "btrfs_supported_super_csum",
+            "fs/btrfs/disk-io.c"
+        ],
+        [
+            "module_exit",
+            "fs/btrfs/super.c"
+        ]
+    ],
+    "patch_commit_date": "2020-11-18T09:03:26+00:00",
+    "cause_commit_date": "2019-10-07T09:11:02+00:00",
+    "subsystems": [
+        "btrfs"
+    ],
+    "parent_of_fix_commit": "1a49a97df657c63a4e8ffcd1ea9b6ed95581789b",
+    "patch": "diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c\nindex a6406b3b8c2b..78637665166e 100644\n--- a/fs/btrfs/volumes.c\n+++ b/fs/btrfs/volumes.c\n@@ -940,7 +940,13 @@ static noinline struct btrfs_device *device_list_add(const char *path,\n \t\t\tif (device->bdev != path_bdev) {\n \t\t\t\tbdput(path_bdev);\n \t\t\t\tmutex_unlock(&fs_devices->device_list_mutex);\n-\t\t\t\tbtrfs_warn_in_rcu(device->fs_info,\n+\t\t\t\t/*\n+\t\t\t\t * device->fs_info may not be reliable here, so\n+\t\t\t\t * pass in a NULL instead. This avoids a\n+\t\t\t\t * possible use-after-free when the fs_info and\n+\t\t\t\t * fs_info->sb are already torn down.\n+\t\t\t\t */\n+\t\t\t\tbtrfs_warn_in_rcu(NULL,\n \t\"duplicate device %s devid %llu generation %llu scanned by %s (%d)\",\n \t\t\t\t\t\t  path, devid, found_transid,\n \t\t\t\t\t\t  current->comm,\n",
+    "patch_modified_files": [
+        "fs/btrfs/volumes.c"
+    ]
+}

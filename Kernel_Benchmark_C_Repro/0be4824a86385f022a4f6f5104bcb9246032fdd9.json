@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "WARNING: kmalloc bug in snd_pcm_plugin_alloc",
+    "display-title": "WARNING: kmalloc bug in snd_pcm_plugin_alloc (2)",
+    "id": "0be4824a86385f022a4f6f5104bcb9246032fdd9",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ALSA: oss: Fix PCM OSS buffer allocation overflow",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=efb6402c3c4a7c26d97c92d70186424097b6e366",
+            "hash": "efb6402c3c4a7c26d97c92d70186424097b6e366",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "mm: don't allow oversized kvmalloc() calls",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7661809d493b426e979f39ab512e3adf41fbcc69",
+        "hash": "7661809d493b426e979f39ab512e3adf41fbcc69",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000085b1b305da5a66f3@google.com/T/",
+        "https://lore.kernel.org/all/20220325150417.010265747@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220325150418.585286754@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220325150419.757836392@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220325150419.931802116@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220325150420.046488912@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220325150420.245733653@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING: kmalloc bug in snd_pcm_plugin_alloc",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13636d79700000",
+            "c-reproducer": "/text?tag=ReproC&x=128fcd03700000",
+            "kernel-config": "/text?tag=KernelConfig&x=442f8ac61e60a75e",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=68453767131a5deec1e8f9ac92a9042f929e585d",
+            "kernel-source-commit": "68453767131a5deec1e8f9ac92a9042f929e585d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9e8eaa75a18a5cf8102e862be692c0781759e51b",
+            "syzkaller-commit": "9e8eaa75a18a5cf8102e862be692c0781759e51b",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15694303700000"
+        }
+    ],
+    "subsystems": [
+        "sound"
+    ],
+    "parent_of_fix_commit": "c14231cc04337c2c2a937db084af342ce704dbde",
+    "patch": "diff --git a/sound/core/oss/pcm_oss.c b/sound/core/oss/pcm_oss.c\nindex 3ee9edf85815..f158f0abd25d 100644\n--- a/sound/core/oss/pcm_oss.c\n+++ b/sound/core/oss/pcm_oss.c\n@@ -774,6 +774,11 @@ static int snd_pcm_oss_period_size(struct snd_pcm_substream *substream,\n \n \tif (oss_period_size < 16)\n \t\treturn -EINVAL;\n+\n+\t/* don't allocate too large period; 1MB period must be enough */\n+\tif (oss_period_size > 1024 * 1024)\n+\t\treturn -ENOMEM;\n+\n \truntime->oss.period_bytes = oss_period_size;\n \truntime->oss.period_frames = 1;\n \truntime->oss.periods = oss_periods;\n@@ -1043,10 +1048,9 @@ static int snd_pcm_oss_change_params_locked(struct snd_pcm_substream *substream)\n \t\t\tgoto failure;\n \t}\n #endif\n-\toss_period_size *= oss_frame_size;\n-\n-\toss_buffer_size = oss_period_size * runtime->oss.periods;\n-\tif (oss_buffer_size < 0) {\n+\toss_period_size = array_size(oss_period_size, oss_frame_size);\n+\toss_buffer_size = array_size(oss_period_size, runtime->oss.periods);\n+\tif (oss_buffer_size <= 0) {\n \t\terr = -EINVAL;\n \t\tgoto failure;\n \t}\ndiff --git a/sound/core/oss/pcm_plugin.c b/sound/core/oss/pcm_plugin.c\nindex 061ba06bc926..82e180c776ae 100644\n--- a/sound/core/oss/pcm_plugin.c\n+++ b/sound/core/oss/pcm_plugin.c\n@@ -62,7 +62,10 @@ static int snd_pcm_plugin_alloc(struct snd_pcm_plugin *plugin, snd_pcm_uframes_t\n \twidth = snd_pcm_format_physical_width(format->format);\n \tif (width < 0)\n \t\treturn width;\n-\tsize = frames * format->channels * width;\n+\tsize = array3_size(frames, format->channels, width);\n+\t/* check for too large period size once again */\n+\tif (size > 1024 * 1024)\n+\t\treturn -ENOMEM;\n \tif (snd_BUG_ON(size % 8))\n \t\treturn -ENXIO;\n \tsize /= 8;\n",
+    "patch_modified_files": [
+        "sound/core/oss/pcm_oss.c",
+        "sound/core/oss/pcm_plugin.c"
+    ]
+}

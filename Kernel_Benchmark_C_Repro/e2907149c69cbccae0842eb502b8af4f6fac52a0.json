@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in xfs_btree_lookup_get_block",
+    "display-title": "KASAN: use-after-free Read in xfs_btree_lookup_get_block",
+    "id": "e2907149c69cbccae0842eb502b8af4f6fac52a0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "xfs: verify buffer contents when we skip log replay",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=22ed903eee23a5b174e240f1cdfa9acf393a5210",
+            "hash": "22ed903eee23a5b174e240f1cdfa9acf393a5210",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001ca8c205f0f3ee00@google.com/T/",
+        "https://lore.kernel.org/all/000000000000529f1805f81b23c2@google.com/T/",
+        "https://lore.kernel.org/all/20230601164439.15404-2-listdansp@mail.ru/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Read in xfs_btree_lookup_get_block",
+            "syz-reproducer": "/text?tag=ReproSyz&x=172ff2e4480000",
+            "c-reproducer": "/text?tag=ReproC&x=11715ea8480000",
+            "kernel-config": "/text?tag=KernelConfig&x=68e0be42c8ee4bb4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1b929c02afd37871d5afb9d498426f83432e71c2",
+            "kernel-source-commit": "1b929c02afd37871d5afb9d498426f83432e71c2",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9da18ae8fa827d046ef8da48cc23c97418553c23",
+            "syzkaller-commit": "9da18ae8fa827d046ef8da48cc23c97418553c23",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1398d2ac480000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "xlog_recover_buf_commit_pass2",
+            "fs/xfs/xfs_buf_item_recover.c"
+        ]
+    ],
+    "patch_commit_date": "2023-04-12T05:49:23+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "xfs"
+    ],
+    "parent_of_fix_commit": "c95356ca884885db702670e24933ee7f2b9f1754",
+    "patch": "diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c\nindex ffa94102094d..43167f543afc 100644\n--- a/fs/xfs/xfs_buf_item_recover.c\n+++ b/fs/xfs/xfs_buf_item_recover.c\n@@ -943,6 +943,16 @@ xlog_recover_buf_commit_pass2(\n \tif (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {\n \t\ttrace_xfs_log_recover_buf_skip(log, buf_f);\n \t\txlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);\n+\n+\t\t/*\n+\t\t * We're skipping replay of this buffer log item due to the log\n+\t\t * item LSN being behind the ondisk buffer.  Verify the buffer\n+\t\t * contents since we aren't going to run the write verifier.\n+\t\t */\n+\t\tif (bp->b_ops) {\n+\t\t\tbp->b_ops->verify_read(bp);\n+\t\t\terror = bp->b_error;\n+\t\t}\n \t\tgoto out_release;\n \t}\n \n",
+    "patch_modified_files": [
+        "fs/xfs/xfs_buf_item_recover.c"
+    ]
+}

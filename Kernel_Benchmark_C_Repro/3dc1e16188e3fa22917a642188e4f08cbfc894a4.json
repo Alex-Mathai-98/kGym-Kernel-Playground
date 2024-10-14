@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in add_wait_queue",
+    "display-title": "KASAN: use-after-free Read in add_wait_queue",
+    "id": "3dc1e16188e3fa22917a642188e4f08cbfc894a4",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: fix assuming triggered poll waitqueue is the single poll",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d89a4fac0fbc6fe5fc24d1c9a889440dcf410368",
+            "hash": "d89a4fac0fbc6fe5fc24d1c9a889440dcf410368",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "io_uring: cache poll/double-poll state with a request flag",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=91eac1c69c202d9dad8bf717ae5b92db70bfe5cf",
+        "hash": "91eac1c69c202d9dad8bf717ae5b92db70bfe5cf",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000012e22c05dacabb11@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in add_wait_queue",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14506ddb700000",
+            "c-reproducer": "/text?tag=ReproC&x=139b2093700000",
+            "kernel-config": "/text?tag=KernelConfig&x=63af44f0631a5c3a",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b47d5a4f6b8d42f8a8fbe891b36215e4fddc53be",
+            "kernel-source-commit": "b47d5a4f6b8d42f8a8fbe891b36215e4fddc53be",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d88ef0c5c80d45a060e170c2706371f6b2957f55",
+            "syzkaller-commit": "d88ef0c5c80d45a060e170c2706371f6b2957f55",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15a2fb5b700000"
+        }
+    ],
+    "subsystems": [
+        "fs",
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "e2c0cb7c0cc72939b61a7efee376206725796625",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex e8d88f0cdad3..6395393eaf9e 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -6027,10 +6027,13 @@ static void io_poll_cancel_req(struct io_kiocb *req)\n \tio_poll_execute(req, 0, 0);\n }\n \n+#define wqe_to_req(wait)\t((void *)((unsigned long) (wait)->private & ~1))\n+#define wqe_is_double(wait)\t((unsigned long) (wait)->private & 1)\n+\n static int io_poll_wake(struct wait_queue_entry *wait, unsigned mode, int sync,\n \t\t\tvoid *key)\n {\n-\tstruct io_kiocb *req = wait->private;\n+\tstruct io_kiocb *req = wqe_to_req(wait);\n \tstruct io_poll_iocb *poll = container_of(wait, struct io_poll_iocb,\n \t\t\t\t\t\t wait);\n \t__poll_t mask = key_to_poll(key);\n@@ -6068,7 +6071,10 @@ static int io_poll_wake(struct wait_queue_entry *wait, unsigned mode, int sync,\n \t\tif (mask && poll->events & EPOLLONESHOT) {\n \t\t\tlist_del_init(&poll->wait.entry);\n \t\t\tpoll->head = NULL;\n-\t\t\treq->flags &= ~REQ_F_SINGLE_POLL;\n+\t\t\tif (wqe_is_double(wait))\n+\t\t\t\treq->flags &= ~REQ_F_DOUBLE_POLL;\n+\t\t\telse\n+\t\t\t\treq->flags &= ~REQ_F_SINGLE_POLL;\n \t\t}\n \t\t__io_poll_execute(req, mask, poll->events);\n \t}\n@@ -6080,6 +6086,7 @@ static void __io_queue_proc(struct io_poll_iocb *poll, struct io_poll_table *pt,\n \t\t\t    struct io_poll_iocb **poll_ptr)\n {\n \tstruct io_kiocb *req = pt->req;\n+\tunsigned long wqe_private = (unsigned long) req;\n \n \t/*\n \t * The file being polled uses multiple waitqueues for poll handling\n@@ -6105,6 +6112,8 @@ static void __io_queue_proc(struct io_poll_iocb *poll, struct io_poll_table *pt,\n \t\t\tpt->error = -ENOMEM;\n \t\t\treturn;\n \t\t}\n+\t\t/* mark as double wq entry */\n+\t\twqe_private |= 1;\n \t\treq->flags |= REQ_F_DOUBLE_POLL;\n \t\tio_init_poll_iocb(poll, first->events, first->wait.func);\n \t\t*poll_ptr = poll;\n@@ -6115,7 +6124,7 @@ static void __io_queue_proc(struct io_poll_iocb *poll, struct io_poll_table *pt,\n \treq->flags |= REQ_F_SINGLE_POLL;\n \tpt->nr_entries++;\n \tpoll->head = head;\n-\tpoll->wait.private = req;\n+\tpoll->wait.private = (void *) wqe_private;\n \n \tif (poll->events & EPOLLEXCLUSIVE)\n \t\tadd_wait_queue_exclusive(head, &poll->wait);\n@@ -6142,7 +6151,6 @@ static int __io_arm_poll_handler(struct io_kiocb *req,\n \tINIT_HLIST_NODE(&req->hash_node);\n \tio_init_poll_iocb(poll, mask, io_poll_wake);\n \tpoll->file = req->file;\n-\tpoll->wait.private = req;\n \n \tipt->pt._key = mask;\n \tipt->req = req;\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

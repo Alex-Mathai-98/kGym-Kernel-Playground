@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "WARNING: kobject bug in gfs2_sys_fs_add",
+    "display-title": "WARNING: kobject bug in gfs2_sys_fs_add",
+    "id": "057673a56dab61b3a447989b67f10b205111c8f4",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "kobject: don't use WARN for registration failures",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3e14c6abbfb5c94506edda9d8e2c145d79375798",
+            "hash": "3e14c6abbfb5c94506edda9d8e2c145d79375798",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/20180411152243.101848-1-dvyukov@google.com/T/",
+        "https://lore.kernel.org/all/20180430183910.801976983@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180430183951.312721450@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180430184004.216234025@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180430184015.043892819@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180430190946.093694747@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15d9643b800000",
+            "c-reproducer": "/text?tag=ReproC&x=14360617800000",
+            "kernel-config": "/text?tag=KernelConfig&x=8525b44abc777c17",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=18b7fd1c93e5204355ddbf2608a097d64df81b88",
+            "kernel-source-commit": "18b7fd1c93e5204355ddbf2608a097d64df81b88",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/7a67784ca8bdc3b26cce2f0ec9a40d2dd9ec9396",
+            "syzkaller-commit": "7a67784ca8bdc3b26cce2f0ec9a40d2dd9ec9396",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17025687800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "kobject_add_internal",
+            "lib/kobject.c"
+        ]
+    ],
+    "patch_commit_date": "2018-04-11T15:22:43+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "gfs2"
+    ],
+    "parent_of_fix_commit": "df9267f1fb6b56fa573cc93c611009b0bd126878",
+    "patch": "diff --git a/lib/kobject.c b/lib/kobject.c\nindex e1d1f290bf35..18989b5b3b56 100644\n--- a/lib/kobject.c\n+++ b/lib/kobject.c\n@@ -233,13 +233,12 @@ static int kobject_add_internal(struct kobject *kobj)\n \n \t\t/* be noisy on error issues */\n \t\tif (error == -EEXIST)\n-\t\t\tWARN(1,\n-\t\t\t     \"%s failed for %s with -EEXIST, don't try to register things with the same name in the same directory.\\n\",\n-\t\t\t     __func__, kobject_name(kobj));\n+\t\t\tpr_err(\"%s failed for %s with -EEXIST, don't try to register things with the same name in the same directory.\\n\",\n+\t\t\t       __func__, kobject_name(kobj));\n \t\telse\n-\t\t\tWARN(1, \"%s failed for %s (error: %d parent: %s)\\n\",\n-\t\t\t     __func__, kobject_name(kobj), error,\n-\t\t\t     parent ? kobject_name(parent) : \"'none'\");\n+\t\t\tpr_err(\"%s failed for %s (error: %d parent: %s)\\n\",\n+\t\t\t       __func__, kobject_name(kobj), error,\n+\t\t\t       parent ? kobject_name(parent) : \"'none'\");\n \t} else\n \t\tkobj->state_in_sysfs = 1;\n \n",
+    "patch_modified_files": [
+        "lib/kobject.c"
+    ]
+}

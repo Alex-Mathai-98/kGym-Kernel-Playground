@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "BUG: corrupted list in p9_fd_cancel",
+    "display-title": "BUG: corrupted list in p9_fd_cancel (2)",
+    "id": "5e2e50e2c145ca06459e9e0900c20eefd1a0877e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "9p/fd: fix issue of list_del corruption in p9_fd_cancel()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=11c10956515b8ec44cf4f2a7b9d8bf8b9dc05ec4",
+            "hash": "11c10956515b8ec44cf4f2a7b9d8bf8b9dc05ec4",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000009763b605ebb1519a@google.com/T/",
+        "https://lore.kernel.org/all/20221110122606.383352-1-shaozhengchao@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "BUG: corrupted list in p9_fd_cancel",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1076cb7c880000",
+            "c-reproducer": "/text?tag=ReproC&x=102eabd2880000",
+            "kernel-config": "/text?tag=KernelConfig&x=4789759e8a6d5f57",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d47136c2801540e80f41ec7e063d8d592568ad76",
+            "kernel-source-commit": "d47136c2801540e80f41ec7e063d8d592568ad76",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c0b80a55c9c8cfe75e77c555ed0d4ae7aa373cc2",
+            "syzkaller-commit": "c0b80a55c9c8cfe75e77c555ed0d4ae7aa373cc2",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=151268ce880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "p9_conn_cancel",
+            "net/9p/trans_fd.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-10T12:26:06+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "v9fs",
+        "fuse"
+    ],
+    "parent_of_fix_commit": "f0c4d9fc9cc9462659728d168387191387e903cc",
+    "patch": "diff --git a/net/9p/trans_fd.c b/net/9p/trans_fd.c\nindex 56a186768750..bd28e63d7666 100644\n--- a/net/9p/trans_fd.c\n+++ b/net/9p/trans_fd.c\n@@ -202,9 +202,11 @@ static void p9_conn_cancel(struct p9_conn *m, int err)\n \n \tlist_for_each_entry_safe(req, rtmp, &m->req_list, req_list) {\n \t\tlist_move(&req->req_list, &cancel_list);\n+\t\treq->status = REQ_STATUS_ERROR;\n \t}\n \tlist_for_each_entry_safe(req, rtmp, &m->unsent_req_list, req_list) {\n \t\tlist_move(&req->req_list, &cancel_list);\n+\t\treq->status = REQ_STATUS_ERROR;\n \t}\n \n \tspin_unlock(&m->req_lock);\n",
+    "patch_modified_files": [
+        "net/9p/trans_fd.c"
+    ]
+}

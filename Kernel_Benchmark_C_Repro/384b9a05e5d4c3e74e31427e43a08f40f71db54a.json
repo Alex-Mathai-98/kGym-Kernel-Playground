@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-use-after-free Read in afs_dynroot_test_super",
+    "display-title": "KASAN: slab-use-after-free Read in afs_dynroot_test_super",
+    "id": "384b9a05e5d4c3e74e31427e43a08f40f71db54a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "super: ensure valid info",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=dc3216b1416056b04712e53431f6e9aefdc83177",
+            "hash": "dc3216b1416056b04712e53431f6e9aefdc83177",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "super: wait until we passed kill super",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2c18a63b760a0f68f14cb8bb4c3840bb0b63b73e",
+        "hash": "2c18a63b760a0f68f14cb8bb4c3840bb0b63b73e",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003849fc0604607941@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-use-after-free Read in afs_dynroot_test_super",
+            "syz-reproducer": "/text?tag=ReproSyz&x=115b0c70680000",
+            "c-reproducer": "/text?tag=ReproC&x=170267b7a80000",
+            "kernel-config": "/text?tag=KernelConfig&x=4940ad7c14cda5c7",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1c59d383390f970b891b503b7f79b63a02db2ec5",
+            "kernel-source-commit": "1c59d383390f970b891b503b7f79b63a02db2ec5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/7ba13a158b1ad89a23920bb64208ba34fed27b08",
+            "syzkaller-commit": "7ba13a158b1ad89a23920bb64208ba34fed27b08",
+            "compiler-description": "Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14f87cc0680000"
+        }
+    ],
+    "subsystems": [
+        "afs"
+    ],
+    "parent_of_fix_commit": "345a5c4a0b635fa3fc658e6e0cd7fd2217c667cd",
+    "patch": "diff --git a/fs/super.c b/fs/super.c\nindex 779247eb219c..ad7ac3a24d38 100644\n--- a/fs/super.c\n+++ b/fs/super.c\n@@ -434,6 +434,33 @@ void put_super(struct super_block *sb)\n \tspin_unlock(&sb_lock);\n }\n \n+static void kill_super_notify(struct super_block *sb)\n+{\n+\tlockdep_assert_not_held(&sb->s_umount);\n+\n+\t/* already notified earlier */\n+\tif (sb->s_flags & SB_DEAD)\n+\t\treturn;\n+\n+\t/*\n+\t * Remove it from @fs_supers so it isn't found by new\n+\t * sget{_fc}() walkers anymore. Any concurrent mounter still\n+\t * managing to grab a temporary reference is guaranteed to\n+\t * already see SB_DYING and will wait until we notify them about\n+\t * SB_DEAD.\n+\t */\n+\tspin_lock(&sb_lock);\n+\thlist_del_init(&sb->s_instances);\n+\tspin_unlock(&sb_lock);\n+\n+\t/*\n+\t * Let concurrent mounts know that this thing is really dead.\n+\t * We don't need @sb->s_umount here as every concurrent caller\n+\t * will see SB_DYING and either discard the superblock or wait\n+\t * for SB_DEAD.\n+\t */\n+\tsuper_wake(sb, SB_DEAD);\n+}\n \n /**\n  *\tdeactivate_locked_super\t-\tdrop an active reference to superblock\n@@ -453,6 +480,8 @@ void deactivate_locked_super(struct super_block *s)\n \t\tunregister_shrinker(&s->s_shrink);\n \t\tfs->kill_sb(s);\n \n+\t\tkill_super_notify(s);\n+\n \t\t/*\n \t\t * Since list_lru_destroy() may sleep, we cannot call it from\n \t\t * put_super(), where we hold the sb_lock. Therefore we destroy\n@@ -461,25 +490,6 @@ void deactivate_locked_super(struct super_block *s)\n \t\tlist_lru_destroy(&s->s_dentry_lru);\n \t\tlist_lru_destroy(&s->s_inode_lru);\n \n-\t\t/*\n-\t\t * Remove it from @fs_supers so it isn't found by new\n-\t\t * sget{_fc}() walkers anymore. Any concurrent mounter still\n-\t\t * managing to grab a temporary reference is guaranteed to\n-\t\t * already see SB_DYING and will wait until we notify them about\n-\t\t * SB_DEAD.\n-\t\t */\n-\t\tspin_lock(&sb_lock);\n-\t\thlist_del_init(&s->s_instances);\n-\t\tspin_unlock(&sb_lock);\n-\n-\t\t/*\n-\t\t * Let concurrent mounts know that this thing is really dead.\n-\t\t * We don't need @sb->s_umount here as every concurrent caller\n-\t\t * will see SB_DYING and either discard the superblock or wait\n-\t\t * for SB_DEAD.\n-\t\t */\n-\t\tsuper_wake(s, SB_DEAD);\n-\n \t\tput_filesystem(fs);\n \t\tput_super(s);\n \t} else {\n@@ -1260,6 +1270,7 @@ void kill_anon_super(struct super_block *sb)\n {\n \tdev_t dev = sb->s_dev;\n \tgeneric_shutdown_super(sb);\n+\tkill_super_notify(sb);\n \tfree_anon_bdev(dev);\n }\n EXPORT_SYMBOL(kill_anon_super);\n",
+    "patch_modified_files": [
+        "fs/super.c"
+    ]
+}

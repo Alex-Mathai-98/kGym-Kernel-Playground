@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "INFO: task hung in write_cache_pages",
+    "display-title": "INFO: task hung in write_cache_pages (2)",
+    "id": "47ff89a13ed39d393e043ec2715452a5b23ce8b2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "migrate_pages: fix deadlock in batched migration",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fb3592c41a4427601f9643b2a84e55bb99f5cd7c",
+            "hash": "fb3592c41a4427601f9643b2a84e55bb99f5cd7c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "ntfs: Remove check for PageError",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=17bb55487988c5dac32d55a4f085e52f875f98cc",
+        "hash": "17bb55487988c5dac32d55a4f085e52f875f98cc",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e794f505f5e0029c@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "INFO: task hung in write_cache_pages",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16dc6960c80000",
+            "c-reproducer": "/text?tag=ReproC&x=16f39d50c80000",
+            "kernel-config": "/text?tag=KernelConfig&x=cbfa7a73c540248d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=489fa31ea873282b41046d412ec741f93946fc2d",
+            "kernel-source-commit": "489fa31ea873282b41046d412ec741f93946fc2d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/ee50e71ca65deab5f014ff0481809c7b2afa5427",
+            "syzkaller-commit": "ee50e71ca65deab5f014ff0481809c7b2afa5427",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=149dd650c80000"
+        }
+    ],
+    "subsystems": [
+        "mm",
+        "fs"
+    ],
+    "parent_of_fix_commit": "89a004508081e1d1a498f10ea6d4f7f97a820438",
+    "patch": "diff --git a/mm/migrate.c b/mm/migrate.c\nindex 98f1c11197a8..f348e0a7b1df 100644\n--- a/mm/migrate.c\n+++ b/mm/migrate.c\n@@ -1112,7 +1112,7 @@ static void migrate_folio_done(struct folio *src,\n /* Obtain the lock on page, remove all ptes. */\n static int migrate_folio_unmap(new_page_t get_new_page, free_page_t put_new_page,\n \t\t\t       unsigned long private, struct folio *src,\n-\t\t\t       struct folio **dstp, int force, bool avoid_force_lock,\n+\t\t\t       struct folio **dstp, int force,\n \t\t\t       enum migrate_mode mode, enum migrate_reason reason,\n \t\t\t       struct list_head *ret)\n {\n@@ -1163,17 +1163,6 @@ static int migrate_folio_unmap(new_page_t get_new_page, free_page_t put_new_page\n \t\tif (current->flags & PF_MEMALLOC)\n \t\t\tgoto out;\n \n-\t\t/*\n-\t\t * We have locked some folios and are going to wait to lock\n-\t\t * this folio.  To avoid a potential deadlock, let's bail\n-\t\t * out and not do that. The locked folios will be moved and\n-\t\t * unlocked, then we can wait to lock this folio.\n-\t\t */\n-\t\tif (avoid_force_lock) {\n-\t\t\trc = -EDEADLOCK;\n-\t\t\tgoto out;\n-\t\t}\n-\n \t\tfolio_lock(src);\n \t}\n \tlocked = true;\n@@ -1253,7 +1242,7 @@ static int migrate_folio_unmap(new_page_t get_new_page, free_page_t put_new_page\n \t\t/* Establish migration ptes */\n \t\tVM_BUG_ON_FOLIO(folio_test_anon(src) &&\n \t\t\t       !folio_test_ksm(src) && !anon_vma, src);\n-\t\ttry_to_migrate(src, TTU_BATCH_FLUSH);\n+\t\ttry_to_migrate(src, mode == MIGRATE_ASYNC ? TTU_BATCH_FLUSH : 0);\n \t\tpage_was_mapped = 1;\n \t}\n \n@@ -1267,7 +1256,7 @@ static int migrate_folio_unmap(new_page_t get_new_page, free_page_t put_new_page\n \t * A folio that has not been unmapped will be restored to\n \t * right list unless we want to retry.\n \t */\n-\tif (rc == -EAGAIN || rc == -EDEADLOCK)\n+\tif (rc == -EAGAIN)\n \t\tret = NULL;\n \n \tmigrate_folio_undo_src(src, page_was_mapped, anon_vma, locked, ret);\n@@ -1618,6 +1607,11 @@ static int migrate_hugetlbs(struct list_head *from, new_page_t get_new_page,\n /*\n  * migrate_pages_batch() first unmaps folios in the from list as many as\n  * possible, then move the unmapped folios.\n+ *\n+ * We only batch migration if mode == MIGRATE_ASYNC to avoid to wait a\n+ * lock or bit when we have locked more than one folio.  Which may cause\n+ * deadlock (e.g., for loop device).  So, if mode != MIGRATE_ASYNC, the\n+ * length of the from list must be <= 1.\n  */\n static int migrate_pages_batch(struct list_head *from, new_page_t get_new_page,\n \t\tfree_page_t put_new_page, unsigned long private,\n@@ -1640,11 +1634,11 @@ static int migrate_pages_batch(struct list_head *from, new_page_t get_new_page,\n \tLIST_HEAD(dst_folios);\n \tbool nosplit = (reason == MR_NUMA_MISPLACED);\n \tbool no_split_folio_counting = false;\n-\tbool avoid_force_lock;\n \n+\tVM_WARN_ON_ONCE(mode != MIGRATE_ASYNC &&\n+\t\t\t!list_empty(from) && !list_is_singular(from));\n retry:\n \trc_saved = 0;\n-\tavoid_force_lock = false;\n \tretry = 1;\n \tfor (pass = 0;\n \t     pass < NR_MAX_MIGRATE_PAGES_RETRY && (retry || large_retry);\n@@ -1689,15 +1683,14 @@ static int migrate_pages_batch(struct list_head *from, new_page_t get_new_page,\n \t\t\t}\n \n \t\t\trc = migrate_folio_unmap(get_new_page, put_new_page, private,\n-\t\t\t\t\t\t folio, &dst, pass > 2, avoid_force_lock,\n-\t\t\t\t\t\t mode, reason, ret_folios);\n+\t\t\t\t\t\t folio, &dst, pass > 2, mode,\n+\t\t\t\t\t\t reason, ret_folios);\n \t\t\t/*\n \t\t\t * The rules are:\n \t\t\t *\tSuccess: folio will be freed\n \t\t\t *\tUnmap: folio will be put on unmap_folios list,\n \t\t\t *\t       dst folio put on dst_folios list\n \t\t\t *\t-EAGAIN: stay on the from list\n-\t\t\t *\t-EDEADLOCK: stay on the from list\n \t\t\t *\t-ENOMEM: stay on the from list\n \t\t\t *\tOther errno: put on ret_folios list\n \t\t\t */\n@@ -1749,14 +1742,6 @@ static int migrate_pages_batch(struct list_head *from, new_page_t get_new_page,\n \t\t\t\t\tgoto out;\n \t\t\t\telse\n \t\t\t\t\tgoto move;\n-\t\t\tcase -EDEADLOCK:\n-\t\t\t\t/*\n-\t\t\t\t * The folio cannot be locked for potential deadlock.\n-\t\t\t\t * Go move (and unlock) all locked folios.  Then we can\n-\t\t\t\t * try again.\n-\t\t\t\t */\n-\t\t\t\trc_saved = rc;\n-\t\t\t\tgoto move;\n \t\t\tcase -EAGAIN:\n \t\t\t\tif (is_large) {\n \t\t\t\t\tlarge_retry++;\n@@ -1771,11 +1756,6 @@ static int migrate_pages_batch(struct list_head *from, new_page_t get_new_page,\n \t\t\t\tstats->nr_thp_succeeded += is_thp;\n \t\t\t\tbreak;\n \t\t\tcase MIGRATEPAGE_UNMAP:\n-\t\t\t\t/*\n-\t\t\t\t * We have locked some folios, don't force lock\n-\t\t\t\t * to avoid deadlock.\n-\t\t\t\t */\n-\t\t\t\tavoid_force_lock = true;\n \t\t\t\tlist_move_tail(&folio->lru, &unmap_folios);\n \t\t\t\tlist_add_tail(&dst->lru, &dst_folios);\n \t\t\t\tbreak;\n@@ -1900,17 +1880,15 @@ static int migrate_pages_batch(struct list_head *from, new_page_t get_new_page,\n \t\t */\n \t\tlist_splice_init(from, ret_folios);\n \t\tlist_splice_init(&split_folios, from);\n+\t\t/*\n+\t\t * Force async mode to avoid to wait lock or bit when we have\n+\t\t * locked more than one folios.\n+\t\t */\n+\t\tmode = MIGRATE_ASYNC;\n \t\tno_split_folio_counting = true;\n \t\tgoto retry;\n \t}\n \n-\t/*\n-\t * We have unlocked all locked folios, so we can force lock now, let's\n-\t * try again.\n-\t */\n-\tif (rc == -EDEADLOCK)\n-\t\tgoto retry;\n-\n \treturn rc;\n }\n \n@@ -1945,7 +1923,7 @@ int migrate_pages(struct list_head *from, new_page_t get_new_page,\n \t\tenum migrate_mode mode, int reason, unsigned int *ret_succeeded)\n {\n \tint rc, rc_gather;\n-\tint nr_pages;\n+\tint nr_pages, batch;\n \tstruct folio *folio, *folio2;\n \tLIST_HEAD(folios);\n \tLIST_HEAD(ret_folios);\n@@ -1959,6 +1937,11 @@ int migrate_pages(struct list_head *from, new_page_t get_new_page,\n \t\t\t\t     mode, reason, &stats, &ret_folios);\n \tif (rc_gather < 0)\n \t\tgoto out;\n+\n+\tif (mode == MIGRATE_ASYNC)\n+\t\tbatch = NR_MAX_BATCHED_MIGRATION;\n+\telse\n+\t\tbatch = 1;\n again:\n \tnr_pages = 0;\n \tlist_for_each_entry_safe(folio, folio2, from, lru) {\n@@ -1969,11 +1952,11 @@ int migrate_pages(struct list_head *from, new_page_t get_new_page,\n \t\t}\n \n \t\tnr_pages += folio_nr_pages(folio);\n-\t\tif (nr_pages > NR_MAX_BATCHED_MIGRATION)\n+\t\tif (nr_pages >= batch)\n \t\t\tbreak;\n \t}\n-\tif (nr_pages > NR_MAX_BATCHED_MIGRATION)\n-\t\tlist_cut_before(&folios, from, &folio->lru);\n+\tif (nr_pages >= batch)\n+\t\tlist_cut_before(&folios, from, &folio2->lru);\n \telse\n \t\tlist_splice_init(from, &folios);\n \trc = migrate_pages_batch(&folios, get_new_page, put_new_page, private,\n",
+    "patch_modified_files": [
+        "mm/migrate.c"
+    ]
+}

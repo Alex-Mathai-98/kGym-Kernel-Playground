@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "memory leak in llc_ui_create",
+    "display-title": "memory leak in llc_ui_create",
+    "id": "61318630f216fec89e9be95e621470084000d7bc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "llc: fix skb leak in llc_build_and_send_ui_pkt()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8fb44d60d4142cd2a440620cd291d346e23c131e",
+            "hash": "8fb44d60d4142cd2a440620cd291d346e23c131e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11805ebca00000",
+            "c-reproducer": "/text?tag=ReproC&x=1463ece4a00000",
+            "kernel-config": "/text?tag=KernelConfig&x=61dd9e15a761691d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=5bdd9ad875b6edf213f54ec3986ed9e8640c5cf9",
+            "kernel-source-commit": "5bdd9ad875b6edf213f54ec3986ed9e8640c5cf9",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/13427bd9a952fddd2f59aaca90a76fe209f6c9c9",
+            "syzkaller-commit": "13427bd9a952fddd2f59aaca90a76fe209f6c9c9",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10cce654a00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "llc_build_and_send_ui_pkt",
+            "net/llc/llc_output.c"
+        ]
+    ],
+    "patch_commit_date": "2019-05-28T00:35:52+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "73f51d151e6c760d74d7d4bde75337ebe5693b3e",
+    "patch": "diff --git a/net/llc/llc_output.c b/net/llc/llc_output.c\nindex 94425e421213..9e4b6bcf6920 100644\n--- a/net/llc/llc_output.c\n+++ b/net/llc/llc_output.c\n@@ -72,6 +72,8 @@ int llc_build_and_send_ui_pkt(struct llc_sap *sap, struct sk_buff *skb,\n \trc = llc_mac_hdr_init(skb, skb->dev->dev_addr, dmac);\n \tif (likely(!rc))\n \t\trc = dev_queue_xmit(skb);\n+\telse\n+\t\tkfree_skb(skb);\n \treturn rc;\n }\n \n",
+    "patch_modified_files": [
+        "net/llc/llc_output.c"
+    ]
+}

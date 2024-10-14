@@ -1,0 +1,65 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in std_validate",
+    "display-title": "UBSAN: shift-out-of-bounds in std_validate",
+    "id": "7f34dec8b4c3be61baad2f552b05d2011d64ae87",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: v4l2-ctrls.c: fix shift-out-of-bounds in std_validate",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=048c96e28674f15c0403deba2104ffba64544a06",
+            "hash": "048c96e28674f15c0403deba2104ffba64544a06",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Linux 5.3",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4d856f72c10ecb060868ed10ff1b1453943fc6c8",
+        "hash": "4d856f72c10ecb060868ed10ff1b1453943fc6c8",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f1136d05b9452773@google.com/T/",
+        "https://lore.kernel.org/all/20210120094306.784318-1-hverkuil-cisco@xs4all.nl/T/",
+        "https://lore.kernel.org/all/20210224125026.481804-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210224125212.482485-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210224125340.483162-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210305120857.341630346@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120903.166929741@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120903.276489876@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "UBSAN: shift-out-of-bounds in std_validate",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12166d58d00000",
+            "c-reproducer": "/text?tag=ReproC&x=14dfc294d00000",
+            "kernel-config": "/text?tag=KernelConfig&x=41e68e7e8a23ad09",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1e2a199f6ccdc15cf111d68d212e2fd4ce65682e",
+            "kernel-source-commit": "1e2a199f6ccdc15cf111d68d212e2fd4ce65682e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/63631df1539816bc62c7be40779c5f3e23b23b2f",
+            "syzkaller-commit": "63631df1539816bc62c7be40779c5f3e23b23b2f",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=149de968d00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "std_validate",
+            "drivers/media/v4l2-core/v4l2-ctrls.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2021-01-20T08:28:02+00:00",
+    "cause_commit_date": "2019-09-15T21:19:32+00:00",
+    "subsystems": [
+        "media"
+    ],
+    "parent_of_fix_commit": "036bf04f14a1bfc6db771e8e1b8f53eb3f092006",
+    "patch": "diff --git a/drivers/media/v4l2-core/v4l2-ctrls.c b/drivers/media/v4l2-core/v4l2-ctrls.c\nindex f7b310240af2..016cf6204cbb 100644\n--- a/drivers/media/v4l2-core/v4l2-ctrls.c\n+++ b/drivers/media/v4l2-core/v4l2-ctrls.c\n@@ -2181,7 +2181,8 @@ static int std_validate(const struct v4l2_ctrl *ctrl, u32 idx,\n \tcase V4L2_CTRL_TYPE_INTEGER_MENU:\n \t\tif (ptr.p_s32[idx] < ctrl->minimum || ptr.p_s32[idx] > ctrl->maximum)\n \t\t\treturn -ERANGE;\n-\t\tif (ctrl->menu_skip_mask & (1ULL << ptr.p_s32[idx]))\n+\t\tif (ptr.p_s32[idx] < BITS_PER_LONG_LONG &&\n+\t\t    (ctrl->menu_skip_mask & BIT_ULL(ptr.p_s32[idx])))\n \t\t\treturn -EINVAL;\n \t\tif (ctrl->type == V4L2_CTRL_TYPE_MENU &&\n \t\t    ctrl->qmenu[ptr.p_s32[idx]][0] == '\\0')\n",
+    "patch_modified_files": [
+        "drivers/media/v4l2-core/v4l2-ctrls.c"
+    ]
+}

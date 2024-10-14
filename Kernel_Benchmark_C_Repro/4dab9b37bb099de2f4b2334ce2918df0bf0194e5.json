@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "INFO: task hung in io_uring_cancel_generic",
+    "display-title": "INFO: task hung in io_uring_cancel_generic (2)",
+    "id": "4dab9b37bb099de2f4b2334ce2918df0bf0194e5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: ensure task_work gets run as part of cancelations",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=78a780602075d8b00c98070fa26e389b3b3efa72",
+            "hash": "78a780602075d8b00c98070fa26e389b3b3efa72",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "btrfs: subpage: make end_compressed_bio_writeback() compatible",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=741ec653ab58f5f263f2b6df38157997661c7a50",
+        "hash": "741ec653ab58f5f263f2b6df38157997661c7a50",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e016c205d1025f4c@google.com/T/",
+        "https://lore.kernel.org/all/20211209155956.383317-1-axboe@kernel.dk/T/",
+        "https://lore.kernel.org/all/20211213092945.091487407@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "INFO: task hung in io_uring_cancel_generic",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1218dce1b00000",
+            "c-reproducer": "/text?tag=ReproC&x=16f91d89b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=5247c9e141823545",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=cd8c917a56f20f48748dd43d9ae3caff51d5b987",
+            "kernel-source-commit": "cd8c917a56f20f48748dd43d9ae3caff51d5b987",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0230ba3e7ee638765ace8e2c3b436e703017b46c",
+            "syzkaller-commit": "0230ba3e7ee638765ace8e2c3b436e703017b46c",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10440141b00000"
+        }
+    ],
+    "subsystems": [
+        "io-uring",
+        "fs"
+    ],
+    "parent_of_fix_commit": "e47498afeca9a0c6d07eeeacc46d563555a3f677",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex c4f217613f56..d5ab0e9a3f29 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -9824,7 +9824,7 @@ static __cold void io_uring_drop_tctx_refs(struct task_struct *task)\n \n /*\n  * Find any io_uring ctx that this task has registered or done IO on, and cancel\n- * requests. @sqd should be not-null IIF it's an SQPOLL thread cancellation.\n+ * requests. @sqd should be not-null IFF it's an SQPOLL thread cancellation.\n  */\n static __cold void io_uring_cancel_generic(bool cancel_all,\n \t\t\t\t\t   struct io_sq_data *sqd)\n@@ -9866,8 +9866,10 @@ static __cold void io_uring_cancel_generic(bool cancel_all,\n \t\t\t\t\t\t\t     cancel_all);\n \t\t}\n \n-\t\tprepare_to_wait(&tctx->wait, &wait, TASK_UNINTERRUPTIBLE);\n+\t\tprepare_to_wait(&tctx->wait, &wait, TASK_INTERRUPTIBLE);\n+\t\tio_run_task_work();\n \t\tio_uring_drop_tctx_refs(current);\n+\n \t\t/*\n \t\t * If we've seen completions, retry without waiting. This\n \t\t * avoids a race where a completion comes in before we did\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

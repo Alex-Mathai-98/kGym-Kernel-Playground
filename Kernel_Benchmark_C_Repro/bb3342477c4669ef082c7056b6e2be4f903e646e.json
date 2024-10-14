@@ -1,0 +1,59 @@
+{
+    "version": 1,
+    "title": "INFO: trying to register non-static key in nilfs_bmap_lookup_at_level",
+    "display-title": "INFO: trying to register non-static key in nilfs_bmap_lookup_at_level",
+    "id": "bb3342477c4669ef082c7056b6e2be4f903e646e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: fix NULL pointer dereference at nilfs_bmap_lookup_at_level()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=21a87d88c2253350e115029f14fe2a10a7e6c856",
+            "hash": "21a87d88c2253350e115029f14fe2a10a7e6c856",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000eb0ba805e9d6e30e@google.com/T/",
+        "https://lore.kernel.org/all/20221002030804.29978-1-konishi.ryusuke@gmail.com/T/",
+        "https://lore.kernel.org/all/20221013175143.518476113@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221013175144.245431424@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221013175145.236739253@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221013175146.507746257@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221013175147.337501757@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221024112949.358278806@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221024112956.797777597@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221024112959.085534368@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "INFO: trying to register non-static key in nilfs_bmap_lookup_at_level",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14e930c0880000",
+            "c-reproducer": "/text?tag=ReproC&x=157ce604880000",
+            "kernel-config": "/text?tag=KernelConfig&x=ba0d23aa7e1ffaf5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3800a713b6070d4f03fb43613a7b7d536a99b2b7",
+            "kernel-source-commit": "3800a713b6070d4f03fb43613a7b7d536a99b2b7",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/10323ddf71b1e5ea30453d7bf17f0815d9e0514a",
+            "syzkaller-commit": "10323ddf71b1e5ea30453d7bf17f0815d9e0514a",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16b7b7ef080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nilfs_read_inode_common",
+            "fs/nilfs2/inode.c"
+        ]
+    ],
+    "patch_commit_date": "2022-10-02T03:08:04+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "d325dc6eb763c10f591c239550b8c7e5466a5d09",
+    "patch": "diff --git a/fs/nilfs2/inode.c b/fs/nilfs2/inode.c\nindex b074144f6f83..232dd7b6cca1 100644\n--- a/fs/nilfs2/inode.c\n+++ b/fs/nilfs2/inode.c\n@@ -455,6 +455,8 @@ int nilfs_read_inode_common(struct inode *inode,\n \tinode->i_atime.tv_nsec = le32_to_cpu(raw_inode->i_mtime_nsec);\n \tinode->i_ctime.tv_nsec = le32_to_cpu(raw_inode->i_ctime_nsec);\n \tinode->i_mtime.tv_nsec = le32_to_cpu(raw_inode->i_mtime_nsec);\n+\tif (nilfs_is_metadata_file_inode(inode) && !S_ISREG(inode->i_mode))\n+\t\treturn -EIO; /* this inode is for metadata and corrupted */\n \tif (inode->i_nlink == 0)\n \t\treturn -ESTALE; /* this inode is deleted */\n \n",
+    "patch_modified_files": [
+        "fs/nilfs2/inode.c"
+    ]
+}

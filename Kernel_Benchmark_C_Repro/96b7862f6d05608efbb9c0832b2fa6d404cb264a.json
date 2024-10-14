@@ -1,0 +1,59 @@
+{
+    "version": 1,
+    "title": "kernel BUG at drivers/vhost/vhost.c:LINE!",
+    "display-title": "kernel BUG at drivers/vhost/vhost.c:LINE! (2)",
+    "id": "96b7862f6d05608efbb9c0832b2fa6d404cb264a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "vhost: fix vhost_vq_access_ok() log check",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d14d2b78090c7de0557362b26a4ca591aa6a9faa",
+            "hash": "d14d2b78090c7de0557362b26a4ca591aa6a9faa",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/001a11449424f11322056932b09c@google.com/T/",
+        "https://lore.kernel.org/all/20180409131021.5132-1-stefanha@redhat.com/T/",
+        "https://lore.kernel.org/all/20180410052630.11270-1-stefanha@redhat.com/T/",
+        "https://lore.kernel.org/all/20180411023541.15776-1-stefanha@redhat.com/T/",
+        "https://lore.kernel.org/all/20180417155645.868055442@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180417155715.032245882@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180417155723.091120060@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180417155749.341779147@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1539919b800000",
+            "c-reproducer": "/text?tag=ReproC&x=17669ccb800000",
+            "kernel-config": "/text?tag=KernelConfig&x=af525d2902766246",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=38c23685b273cfb4ccf31a199feccce3bdcb5d83",
+            "kernel-source-commit": "38c23685b273cfb4ccf31a199feccce3bdcb5d83",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4f1152d4db952aaaae79b6efd3a12c983d9f7bb6",
+            "syzkaller-commit": "4f1152d4db952aaaae79b6efd3a12c983d9f7bb6",
+            "compiler-description": "gcc (GCC) 8.0.1 20180301 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11aa51b3800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "vq_log_access_ok",
+            "drivers/vhost/vhost.c"
+        ]
+    ],
+    "patch_commit_date": "2018-04-11T02:35:40+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "kvm",
+        "net",
+        "virt"
+    ],
+    "parent_of_fix_commit": "7ced6c98c7ab7a1f6743931e28671b833af79b1e",
+    "patch": "diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c\nindex f44aead98d60..9a18535fafba 100644\n--- a/drivers/vhost/vhost.c\n+++ b/drivers/vhost/vhost.c\n@@ -1244,10 +1244,12 @@ static int vq_log_access_ok(struct vhost_virtqueue *vq,\n /* Caller should have vq mutex and device mutex */\n int vhost_vq_access_ok(struct vhost_virtqueue *vq)\n {\n-\tint ret = vq_log_access_ok(vq, vq->log_base);\n+\tif (!vq_log_access_ok(vq, vq->log_base))\n+\t\treturn 0;\n \n-\tif (ret || vq->iotlb)\n-\t\treturn ret;\n+\t/* Access validation occurs at prefetch time with IOTLB */\n+\tif (vq->iotlb)\n+\t\treturn 1;\n \n \treturn vq_access_ok(vq, vq->num, vq->desc, vq->avail, vq->used);\n }\n",
+    "patch_modified_files": [
+        "drivers/vhost/vhost.c"
+    ]
+}

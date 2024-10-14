@@ -1,0 +1,84 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in skb_gro_receive",
+    "display-title": "KASAN: slab-out-of-bounds Read in skb_gro_receive (2)",
+    "id": "7ebfc4ee2d0f9371ee958d49c83e69ca2c95ae1e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "udp: fix GRO packet of death",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4dd2b82d5adfbe0b1587ccad7a8f76d826120f37",
+            "hash": "4dd2b82d5adfbe0b1587ccad7a8f76d826120f37",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "udp: implement GRO for plain UDP sockets.",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git/commit/?id=e20cf8d3f1f763ad28a9cb3b41305b8a8a42653e",
+        "hash": "e20cf8d3f1f763ad28a9cb3b41305b8a8a42653e",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=157abcff200000",
+            "c-reproducer": "/text?tag=ReproC&x=119bd868a00000",
+            "kernel-config": "/text?tag=KernelConfig&x=ef1b87b455c397cf",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=459e3a21535ae3c7a9a123650e54f5c882b8fcbf",
+            "kernel-source-commit": "459e3a21535ae3c7a9a123650e54f5c882b8fcbf",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/7516d9fa9301d2dfa5beaf49d93563f8048694aa",
+            "syzkaller-commit": "7516d9fa9301d2dfa5beaf49d93563f8048694aa",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=136fb8e0a00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "udp_gro_receive_segment",
+            "net/ipv4/udp_offload.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "udp4_gro_complete",
+            "net/ipv4/udp_offload.c"
+        ],
+        [
+            "udp6_gro_complete",
+            "net/ipv6/udp_offload.c"
+        ],
+        [
+            "udp4_ufo_fragment",
+            "net/ipv4/udp_offload.c"
+        ],
+        [
+            "udp4_gro_receive",
+            "net/ipv4/udp_offload.c"
+        ],
+        [
+            "udp_lib_setsockopt",
+            "net/ipv4/udp.c"
+        ],
+        [
+            "udp_gro_receive",
+            "net/ipv4/udp_offload.c"
+        ],
+        [
+            "udp_gro_complete",
+            "net/ipv4/udp_offload.c"
+        ]
+    ],
+    "patch_commit_date": "2019-05-02T01:56:28+00:00",
+    "cause_commit_date": "2018-11-07T11:38:29+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "886b7a50100a50f1cbd08a6f8ec5884dfbe082dc",
+    "patch": "diff --git a/net/ipv4/udp_offload.c b/net/ipv4/udp_offload.c\nindex d8776b2110c1..065334b41d57 100644\n--- a/net/ipv4/udp_offload.c\n+++ b/net/ipv4/udp_offload.c\n@@ -352,6 +352,7 @@ static struct sk_buff *udp_gro_receive_segment(struct list_head *head,\n \tstruct sk_buff *pp = NULL;\n \tstruct udphdr *uh2;\n \tstruct sk_buff *p;\n+\tunsigned int ulen;\n \n \t/* requires non zero csum, for symmetry with GSO */\n \tif (!uh->check) {\n@@ -359,6 +360,12 @@ static struct sk_buff *udp_gro_receive_segment(struct list_head *head,\n \t\treturn NULL;\n \t}\n \n+\t/* Do not deal with padded or malicious packets, sorry ! */\n+\tulen = ntohs(uh->len);\n+\tif (ulen <= sizeof(*uh) || ulen != skb_gro_len(skb)) {\n+\t\tNAPI_GRO_CB(skb)->flush = 1;\n+\t\treturn NULL;\n+\t}\n \t/* pull encapsulating udp header */\n \tskb_gro_pull(skb, sizeof(struct udphdr));\n \tskb_gro_postpull_rcsum(skb, uh, sizeof(struct udphdr));\n@@ -377,12 +384,12 @@ static struct sk_buff *udp_gro_receive_segment(struct list_head *head,\n \n \t\t/* Terminate the flow on len mismatch or if it grow \"too much\".\n \t\t * Under small packet flood GRO count could elsewhere grow a lot\n-\t\t * leading to execessive truesize values.\n+\t\t * leading to excessive truesize values.\n \t\t * On len mismatch merge the first packet shorter than gso_size,\n \t\t * otherwise complete the GRO packet.\n \t\t */\n-\t\tif (uh->len > uh2->len || skb_gro_receive(p, skb) ||\n-\t\t    uh->len != uh2->len ||\n+\t\tif (ulen > ntohs(uh2->len) || skb_gro_receive(p, skb) ||\n+\t\t    ulen != ntohs(uh2->len) ||\n \t\t    NAPI_GRO_CB(p)->count >= UDP_GRO_CNT_MAX)\n \t\t\tpp = p;\n \n",
+    "patch_modified_files": [
+        "net/ipv4/udp_offload.c"
+    ]
+}

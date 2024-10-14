@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in tcindex_set_parms",
+    "display-title": "UBSAN: shift-out-of-bounds in tcindex_set_parms",
+    "id": "f581d34ea17ca03bef401731e62f1860f46573ae",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net_sched: avoid shift-out-of-bounds in tcindex_set_parms()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bcd0cf19ef8258ac31b9a20248b05c15a1f4b4b0",
+            "hash": "bcd0cf19ef8258ac31b9a20248b05c15a1f4b4b0",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/ebiederm/user-namespace",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1de4f2ef216dade3b5bd5f5247c4c750a953f51c",
+        "hash": "1de4f2ef216dade3b5bd5f5247c4c750a953f51c",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17c6880f500000",
+            "c-reproducer": "/text?tag=ReproC&x=13551937500000",
+            "kernel-config": "/text?tag=KernelConfig&x=db720fe37a6a41d8",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=5e60366d56c630e32befce7ef05c569e04391ca3",
+            "kernel-source-commit": "5e60366d56c630e32befce7ef05c569e04391ca3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/04201c0669446145fd9c347c5538da0ca13ff29b",
+            "syzkaller-commit": "04201c0669446145fd9c347c5538da0ca13ff29b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=171df123500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "tcindex_set_parms",
+            "net/sched/cls_tcindex.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2021-01-14T18:52:29+00:00",
+    "cause_commit_date": "2018-11-10T19:27:58+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "dd5e073381f2ada3630f36be42833c6e9c78b75e",
+    "patch": "diff --git a/net/sched/cls_tcindex.c b/net/sched/cls_tcindex.c\nindex 78bec347b8b6..c4007b9cd16d 100644\n--- a/net/sched/cls_tcindex.c\n+++ b/net/sched/cls_tcindex.c\n@@ -366,9 +366,13 @@ tcindex_set_parms(struct net *net, struct tcf_proto *tp, unsigned long base,\n \tif (tb[TCA_TCINDEX_MASK])\n \t\tcp->mask = nla_get_u16(tb[TCA_TCINDEX_MASK]);\n \n-\tif (tb[TCA_TCINDEX_SHIFT])\n+\tif (tb[TCA_TCINDEX_SHIFT]) {\n \t\tcp->shift = nla_get_u32(tb[TCA_TCINDEX_SHIFT]);\n-\n+\t\tif (cp->shift > 16) {\n+\t\t\terr = -EINVAL;\n+\t\t\tgoto errout;\n+\t\t}\n+\t}\n \tif (!cp->hash) {\n \t\t/* Hash not specified, use perfect hash if the upper limit\n \t\t * of the hashing index is below the threshold.\n",
+    "patch_modified_files": [
+        "net/sched/cls_tcindex.c"
+    ]
+}

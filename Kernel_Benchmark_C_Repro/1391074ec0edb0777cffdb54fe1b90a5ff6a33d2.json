@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "INFO: rcu detected stall in security_file_open",
+    "display-title": "INFO: rcu detected stall in security_file_open (3)",
+    "id": "1391074ec0edb0777cffdb54fe1b90a5ff6a33d2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "afs: Fix cell removal",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1d0e850a49a5b56f8f3cb51e74a11e2fedb96be6",
+            "hash": "1d0e850a49a5b56f8f3cb51e74a11e2fedb96be6",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "fuse: Protect fi->nlookup with fi->lock",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c9d8f5f0692d5960ed50970ffe63756fb8f96cdb",
+        "hash": "c9d8f5f0692d5960ed50970ffe63756fb8f96cdb",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000bd1edd05b087535a@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1249c717900000",
+            "c-reproducer": "/text?tag=ReproC&x=1048d9e3900000",
+            "kernel-config": "/text?tag=KernelConfig&x=41b736b7ce1b3ea4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=fb0155a09b0224a7147cb07a4ce6034c8d29667f",
+            "kernel-source-commit": "fb0155a09b0224a7147cb07a4ce6034c8d29667f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/1b88c6d5c8477f1d4fb3b389443b200acc32e9a8",
+            "syzkaller-commit": "1b88c6d5c8477f1d4fb3b389443b200acc32e9a8",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1124a45b900000"
+        }
+    ],
+    "subsystems": [
+        "afs"
+    ],
+    "parent_of_fix_commit": "286377f6bdf71568a4cf07104fe44006ae0dba6d",
+    "patch": "diff --git a/fs/afs/cell.c b/fs/afs/cell.c\nindex 1944be78e9b0..bc7ed46aaca9 100644\n--- a/fs/afs/cell.c\n+++ b/fs/afs/cell.c\n@@ -291,11 +291,11 @@ struct afs_cell *afs_lookup_cell(struct afs_net *net,\n \twait_var_event(&cell->state,\n \t\t       ({\n \t\t\t       state = smp_load_acquire(&cell->state); /* vs error */\n-\t\t\t       state == AFS_CELL_ACTIVE || state == AFS_CELL_FAILED;\n+\t\t\t       state == AFS_CELL_ACTIVE || state == AFS_CELL_REMOVED;\n \t\t       }));\n \n \t/* Check the state obtained from the wait check. */\n-\tif (state == AFS_CELL_FAILED) {\n+\tif (state == AFS_CELL_REMOVED) {\n \t\tret = cell->error;\n \t\tgoto error;\n \t}\n@@ -700,7 +700,6 @@ static void afs_deactivate_cell(struct afs_net *net, struct afs_cell *cell)\n static void afs_manage_cell(struct afs_cell *cell)\n {\n \tstruct afs_net *net = cell->net;\n-\tbool deleted;\n \tint ret, active;\n \n \t_enter(\"%s\", cell->name);\n@@ -712,13 +711,15 @@ static void afs_manage_cell(struct afs_cell *cell)\n \tcase AFS_CELL_FAILED:\n \t\tdown_write(&net->cells_lock);\n \t\tactive = 1;\n-\t\tdeleted = atomic_try_cmpxchg_relaxed(&cell->active, &active, 0);\n-\t\tif (deleted) {\n+\t\tif (atomic_try_cmpxchg_relaxed(&cell->active, &active, 0)) {\n \t\t\trb_erase(&cell->net_node, &net->cells);\n+\t\t\tsmp_store_release(&cell->state, AFS_CELL_REMOVED);\n \t\t}\n \t\tup_write(&net->cells_lock);\n-\t\tif (deleted)\n+\t\tif (cell->state == AFS_CELL_REMOVED) {\n+\t\t\twake_up_var(&cell->state);\n \t\t\tgoto final_destruction;\n+\t\t}\n \t\tif (cell->state == AFS_CELL_FAILED)\n \t\t\tgoto done;\n \t\tsmp_store_release(&cell->state, AFS_CELL_UNSET);\n@@ -760,6 +761,9 @@ static void afs_manage_cell(struct afs_cell *cell)\n \t\twake_up_var(&cell->state);\n \t\tgoto again;\n \n+\tcase AFS_CELL_REMOVED:\n+\t\tgoto done;\n+\n \tdefault:\n \t\tbreak;\n \t}\ndiff --git a/fs/afs/internal.h b/fs/afs/internal.h\nindex 0363511290c8..06e617ee4cd1 100644\n--- a/fs/afs/internal.h\n+++ b/fs/afs/internal.h\n@@ -326,6 +326,7 @@ enum afs_cell_state {\n \tAFS_CELL_DEACTIVATING,\n \tAFS_CELL_INACTIVE,\n \tAFS_CELL_FAILED,\n+\tAFS_CELL_REMOVED,\n };\n \n /*\n",
+    "patch_modified_files": [
+        "fs/afs/cell.c",
+        "fs/afs/internal.h"
+    ]
+}

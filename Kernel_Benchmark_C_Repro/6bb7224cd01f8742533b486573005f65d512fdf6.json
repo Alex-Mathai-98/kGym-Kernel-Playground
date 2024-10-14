@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "memory leak in sctp_sched_prio_set",
+    "display-title": "memory leak in sctp_sched_prio_set",
+    "id": "6bb7224cd01f8742533b486573005f65d512fdf6",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "sctp: fix memory leak in sctp_stream_outq_migrate()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9ed7bfc79542119ac0a9e1ce8a2a5285e43433e9",
+            "hash": "9ed7bfc79542119ac0a9e1ce8a2a5285e43433e9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e99e2705edb7d6cf@google.com/T/",
+        "https://lore.kernel.org/all/20221118085030.121297-1-shaozhengchao@huawei.com/T/",
+        "https://lore.kernel.org/all/20221125030540.268725-1-shaozhengchao@huawei.com/T/",
+        "https://lore.kernel.org/all/20221126031720.378562-1-shaozhengchao@huawei.com/T/",
+        "https://lore.kernel.org/all/c5ba2194-dbb6-586d-992d-9dfcd27062e7@I-love.SAKURA.ne.jp/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in sctp_sched_prio_set",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17daf0af700000",
+            "c-reproducer": "/text?tag=ReproC&x=10ae4d5cf00000",
+            "kernel-config": "/text?tag=KernelConfig&x=2197cd22d3971cc5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b2d229d4ddb17db541098b83524d901257e93845",
+            "kernel-source-commit": "b2d229d4ddb17db541098b83524d901257e93845",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8bcc32a67bc7180173447e1a78c03dae096b4231",
+            "syzkaller-commit": "8bcc32a67bc7180173447e1a78c03dae096b4231",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1710e898f00000"
+        }
+    ],
+    "subsystems": [
+        "sctp"
+    ],
+    "parent_of_fix_commit": "b85f628aa158a653c006e9c1405a117baef8c868",
+    "patch": "diff --git a/include/net/sctp/stream_sched.h b/include/net/sctp/stream_sched.h\nindex 01a70b27e026..65058faea4db 100644\n--- a/include/net/sctp/stream_sched.h\n+++ b/include/net/sctp/stream_sched.h\n@@ -26,6 +26,8 @@ struct sctp_sched_ops {\n \tint (*init)(struct sctp_stream *stream);\n \t/* Init a stream */\n \tint (*init_sid)(struct sctp_stream *stream, __u16 sid, gfp_t gfp);\n+\t/* free a stream */\n+\tvoid (*free_sid)(struct sctp_stream *stream, __u16 sid);\n \t/* Frees the entire thing */\n \tvoid (*free)(struct sctp_stream *stream);\n \ndiff --git a/net/sctp/stream.c b/net/sctp/stream.c\nindex ef9fceadef8d..ee6514af830f 100644\n--- a/net/sctp/stream.c\n+++ b/net/sctp/stream.c\n@@ -52,6 +52,19 @@ static void sctp_stream_shrink_out(struct sctp_stream *stream, __u16 outcnt)\n \t}\n }\n \n+static void sctp_stream_free_ext(struct sctp_stream *stream, __u16 sid)\n+{\n+\tstruct sctp_sched_ops *sched;\n+\n+\tif (!SCTP_SO(stream, sid)->ext)\n+\t\treturn;\n+\n+\tsched = sctp_sched_ops_from_stream(stream);\n+\tsched->free_sid(stream, sid);\n+\tkfree(SCTP_SO(stream, sid)->ext);\n+\tSCTP_SO(stream, sid)->ext = NULL;\n+}\n+\n /* Migrates chunks from stream queues to new stream queues if needed,\n  * but not across associations. Also, removes those chunks to streams\n  * higher than the new max.\n@@ -70,16 +83,14 @@ static void sctp_stream_outq_migrate(struct sctp_stream *stream,\n \t\t * sctp_stream_update will swap ->out pointers.\n \t\t */\n \t\tfor (i = 0; i < outcnt; i++) {\n-\t\t\tkfree(SCTP_SO(new, i)->ext);\n+\t\t\tsctp_stream_free_ext(new, i);\n \t\t\tSCTP_SO(new, i)->ext = SCTP_SO(stream, i)->ext;\n \t\t\tSCTP_SO(stream, i)->ext = NULL;\n \t\t}\n \t}\n \n-\tfor (i = outcnt; i < stream->outcnt; i++) {\n-\t\tkfree(SCTP_SO(stream, i)->ext);\n-\t\tSCTP_SO(stream, i)->ext = NULL;\n-\t}\n+\tfor (i = outcnt; i < stream->outcnt; i++)\n+\t\tsctp_stream_free_ext(stream, i);\n }\n \n static int sctp_stream_alloc_out(struct sctp_stream *stream, __u16 outcnt,\n@@ -174,9 +185,9 @@ void sctp_stream_free(struct sctp_stream *stream)\n \tstruct sctp_sched_ops *sched = sctp_sched_ops_from_stream(stream);\n \tint i;\n \n-\tsched->free(stream);\n+\tsched->unsched_all(stream);\n \tfor (i = 0; i < stream->outcnt; i++)\n-\t\tkfree(SCTP_SO(stream, i)->ext);\n+\t\tsctp_stream_free_ext(stream, i);\n \tgenradix_free(&stream->out);\n \tgenradix_free(&stream->in);\n }\ndiff --git a/net/sctp/stream_sched.c b/net/sctp/stream_sched.c\nindex 1ad565ed5627..7c8f9d89e16a 100644\n--- a/net/sctp/stream_sched.c\n+++ b/net/sctp/stream_sched.c\n@@ -46,6 +46,10 @@ static int sctp_sched_fcfs_init_sid(struct sctp_stream *stream, __u16 sid,\n \treturn 0;\n }\n \n+static void sctp_sched_fcfs_free_sid(struct sctp_stream *stream, __u16 sid)\n+{\n+}\n+\n static void sctp_sched_fcfs_free(struct sctp_stream *stream)\n {\n }\n@@ -96,6 +100,7 @@ static struct sctp_sched_ops sctp_sched_fcfs = {\n \t.get = sctp_sched_fcfs_get,\n \t.init = sctp_sched_fcfs_init,\n \t.init_sid = sctp_sched_fcfs_init_sid,\n+\t.free_sid = sctp_sched_fcfs_free_sid,\n \t.free = sctp_sched_fcfs_free,\n \t.enqueue = sctp_sched_fcfs_enqueue,\n \t.dequeue = sctp_sched_fcfs_dequeue,\ndiff --git a/net/sctp/stream_sched_prio.c b/net/sctp/stream_sched_prio.c\nindex 80b5a2c4cbc7..4fc9f2923ed1 100644\n--- a/net/sctp/stream_sched_prio.c\n+++ b/net/sctp/stream_sched_prio.c\n@@ -204,6 +204,24 @@ static int sctp_sched_prio_init_sid(struct sctp_stream *stream, __u16 sid,\n \treturn sctp_sched_prio_set(stream, sid, 0, gfp);\n }\n \n+static void sctp_sched_prio_free_sid(struct sctp_stream *stream, __u16 sid)\n+{\n+\tstruct sctp_stream_priorities *prio = SCTP_SO(stream, sid)->ext->prio_head;\n+\tint i;\n+\n+\tif (!prio)\n+\t\treturn;\n+\n+\tSCTP_SO(stream, sid)->ext->prio_head = NULL;\n+\tfor (i = 0; i < stream->outcnt; i++) {\n+\t\tif (SCTP_SO(stream, i)->ext &&\n+\t\t    SCTP_SO(stream, i)->ext->prio_head == prio)\n+\t\t\treturn;\n+\t}\n+\n+\tkfree(prio);\n+}\n+\n static void sctp_sched_prio_free(struct sctp_stream *stream)\n {\n \tstruct sctp_stream_priorities *prio, *n;\n@@ -323,6 +341,7 @@ static struct sctp_sched_ops sctp_sched_prio = {\n \t.get = sctp_sched_prio_get,\n \t.init = sctp_sched_prio_init,\n \t.init_sid = sctp_sched_prio_init_sid,\n+\t.free_sid = sctp_sched_prio_free_sid,\n \t.free = sctp_sched_prio_free,\n \t.enqueue = sctp_sched_prio_enqueue,\n \t.dequeue = sctp_sched_prio_dequeue,\ndiff --git a/net/sctp/stream_sched_rr.c b/net/sctp/stream_sched_rr.c\nindex ff425aed62c7..cc444fe0d67c 100644\n--- a/net/sctp/stream_sched_rr.c\n+++ b/net/sctp/stream_sched_rr.c\n@@ -90,6 +90,10 @@ static int sctp_sched_rr_init_sid(struct sctp_stream *stream, __u16 sid,\n \treturn 0;\n }\n \n+static void sctp_sched_rr_free_sid(struct sctp_stream *stream, __u16 sid)\n+{\n+}\n+\n static void sctp_sched_rr_free(struct sctp_stream *stream)\n {\n \tsctp_sched_rr_unsched_all(stream);\n@@ -177,6 +181,7 @@ static struct sctp_sched_ops sctp_sched_rr = {\n \t.get = sctp_sched_rr_get,\n \t.init = sctp_sched_rr_init,\n \t.init_sid = sctp_sched_rr_init_sid,\n+\t.free_sid = sctp_sched_rr_free_sid,\n \t.free = sctp_sched_rr_free,\n \t.enqueue = sctp_sched_rr_enqueue,\n \t.dequeue = sctp_sched_rr_dequeue,\n",
+    "patch_modified_files": [
+        "include/net/sctp/stream_sched.h",
+        "net/sctp/stream.c",
+        "net/sctp/stream_sched.c",
+        "net/sctp/stream_sched_prio.c",
+        "net/sctp/stream_sched_rr.c"
+    ]
+}

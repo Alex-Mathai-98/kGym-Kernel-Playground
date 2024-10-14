@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "WARNING in mntput_no_expire",
+    "display-title": "WARNING in mntput_no_expire (3)",
+    "id": "d905b9cf668a6fd23e8268008fff061b302d6fb5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "percpu_ref_init(): clean ->percpu_count_ref on failure",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a91714312eb16f9ecd1f7f8b3efe1380075f28d4",
+            "hash": "a91714312eb16f9ecd1f7f8b3efe1380075f28d4",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000042b02105d0db5037@google.com/T/",
+        "https://lore.kernel.org/all/20220524155929.826793-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220524160009.826957-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220524160035.827109-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220603173818.716010877@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220603173820.663747061@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220603173821.749019262@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/YoQohxAFD3EPujRC@zeniv-ca.linux.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in mntput_no_expire",
+            "syz-reproducer": "/text?tag=ReproSyz&x=125039fef00000",
+            "c-reproducer": "/text?tag=ReproC&x=17a27b71f00000",
+            "kernel-config": "/text?tag=KernelConfig&x=79caa0035f59d385",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=feb9c5e19e913b53cb536a7aa7c9f20107bb51ec",
+            "kernel-source-commit": "feb9c5e19e913b53cb536a7aa7c9f20107bb51ec",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8d7b3b6714cdbd8094249db5679c08af0dbee351",
+            "syzkaller-commit": "8d7b3b6714cdbd8094249db5679c08af0dbee351",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12cb3d66f00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "percpu_ref_init",
+            "lib/percpu-refcount.c"
+        ]
+    ],
+    "patch_commit_date": "2022-05-18T06:13:40+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "feb9c5e19e913b53cb536a7aa7c9f20107bb51ec",
+    "patch": "diff --git a/lib/percpu-refcount.c b/lib/percpu-refcount.c\nindex af9302141bcf..e5c5315da274 100644\n--- a/lib/percpu-refcount.c\n+++ b/lib/percpu-refcount.c\n@@ -76,6 +76,7 @@ int percpu_ref_init(struct percpu_ref *ref, percpu_ref_func_t *release,\n \tdata = kzalloc(sizeof(*ref->data), gfp);\n \tif (!data) {\n \t\tfree_percpu((void __percpu *)ref->percpu_count_ptr);\n+\t\tref->percpu_count_ptr = 0;\n \t\treturn -ENOMEM;\n \t}\n \n",
+    "patch_modified_files": [
+        "lib/percpu-refcount.c"
+    ]
+}

@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "WARNING in snd_pcm_plugin_build_mulaw",
+    "display-title": "WARNING in snd_pcm_plugin_build_mulaw",
+    "id": "9b857c714d3e890900acbe48172866a93ab8589a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ALSA: pcm: oss: Remove superfluous WARN_ON() for mulaw sanity check",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=949a1ebe8cea7b342085cb6a4946b498306b9493",
+            "hash": "949a1ebe8cea7b342085cb6a4946b498306b9493",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "dt-bindings: sound: cs42l51: Remove unneeded I2C unit name",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f3ca3f5b0966cfc2737178cca8a7a65b09991898",
+        "hash": "f3ca3f5b0966cfc2737178cca8a7a65b09991898",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000971bc005ae3db23d@google.com/T/",
+        "https://lore.kernel.org/all/20200908152217.022816723@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200908152221.082184905@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200908152229.689878733@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200908152241.646390211@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200911122502.395450276@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200911122504.928931589@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11a95f41900000",
+            "c-reproducer": "/text?tag=ReproC&x=11a452f2900000",
+            "kernel-config": "/text?tag=KernelConfig&x=891ca5711a9f1650",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=15bc20c6af4ceee97a1f90b43c0e386643c071b4",
+            "kernel-source-commit": "15bc20c6af4ceee97a1f90b43c0e386643c071b4",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/816e0689d7d9d8321f8bf360740f0e516aee15ca",
+            "syzkaller-commit": "816e0689d7d9d8321f8bf360740f0e516aee15ca",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10d995d5900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "snd_pcm_plugin_build_mulaw",
+            "sound/core/oss/mulaw.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2020-09-01T13:18:02+00:00",
+    "cause_commit_date": "2020-03-27T15:57:21+00:00",
+    "subsystems": [
+        "sound"
+    ],
+    "parent_of_fix_commit": "15cbff3fbbc631952c346744f862fb294504b5e2",
+    "patch": "diff --git a/sound/core/oss/mulaw.c b/sound/core/oss/mulaw.c\nindex 3788906421a7..fe27034f2846 100644\n--- a/sound/core/oss/mulaw.c\n+++ b/sound/core/oss/mulaw.c\n@@ -329,8 +329,8 @@ int snd_pcm_plugin_build_mulaw(struct snd_pcm_substream *plug,\n \t\tsnd_BUG();\n \t\treturn -EINVAL;\n \t}\n-\tif (snd_BUG_ON(!snd_pcm_format_linear(format->format)))\n-\t\treturn -ENXIO;\n+\tif (!snd_pcm_format_linear(format->format))\n+\t\treturn -EINVAL;\n \n \terr = snd_pcm_plugin_build(plug, \"Mu-Law<->linear conversion\",\n \t\t\t\t   src_format, dst_format,\n",
+    "patch_modified_files": [
+        "sound/core/oss/mulaw.c"
+    ]
+}

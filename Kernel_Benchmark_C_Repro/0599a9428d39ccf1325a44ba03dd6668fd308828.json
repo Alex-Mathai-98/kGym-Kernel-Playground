@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "general protection fault in erofs_bread",
+    "display-title": "general protection fault in erofs_bread",
+    "id": "0599a9428d39ccf1325a44ba03dd6668fd308828",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "erofs: fix general protection fault when reading fragment",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e5126de138caef0eedb3d6431059c0c5581a1a5d",
+            "hash": "e5126de138caef0eedb3d6431059c0c5581a1a5d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000002e7a8905eb841ddd@google.com/T/",
+        "https://lore.kernel.org/all/20221021083116.20048-1-zbestahu@gmail.com/T/",
+        "https://lore.kernel.org/all/20221021085325.25788-1-zbestahu@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in erofs_bread",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17fb206a880000",
+            "c-reproducer": "/text?tag=ReproC&x=13b166ba880000",
+            "kernel-config": "/text?tag=KernelConfig&x=d19f5d16783f901",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=493ffd6605b2d3d4dc7008ab927dba319f36671f",
+            "kernel-source-commit": "493ffd6605b2d3d4dc7008ab927dba319f36671f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a0fd4dab4eac71d7b3237bb1000352206a6a82f5",
+            "syzkaller-commit": "a0fd4dab4eac71d7b3237bb1000352206a6a82f5",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12d1ebc2880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "z_erofs_read_fragment",
+            "fs/erofs/zdata.c"
+        ]
+    ],
+    "patch_commit_date": "2022-10-21T08:53:25+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "erofs"
+    ],
+    "parent_of_fix_commit": "f0c4d9fc9cc9462659728d168387191387e903cc",
+    "patch": "diff --git a/fs/erofs/zdata.c b/fs/erofs/zdata.c\nindex c7f24fc7efd5..d6caf275be77 100644\n--- a/fs/erofs/zdata.c\n+++ b/fs/erofs/zdata.c\n@@ -660,6 +660,9 @@ static int z_erofs_read_fragment(struct inode *inode, erofs_off_t pos,\n \tu8 *src, *dst;\n \tunsigned int i, cnt;\n \n+\tif (!packed_inode)\n+\t\treturn -EFSCORRUPTED;\n+\n \tpos += EROFS_I(inode)->z_fragmentoff;\n \tfor (i = 0; i < len; i += cnt) {\n \t\tcnt = min_t(unsigned int, len - i,\n",
+    "patch_modified_files": [
+        "fs/erofs/zdata.c"
+    ]
+}

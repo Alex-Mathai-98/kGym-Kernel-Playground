@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "general protection fault in smc_getname",
+    "display-title": "general protection fault in smc_getname",
+    "id": "316ecfd071c79a4654861c1cf6a93d4ac0693de0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/smc: keep clcsock reference in smc_tcp_listen_work()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=070204a34884110ac5e19c1e2e036fcfd033f8e3",
+            "hash": "070204a34884110ac5e19c1e2e036fcfd033f8e3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/20180425104858.48953-1-ubraun@linux.ibm.com/T/",
+        "https://lore.kernel.org/all/20180518081457.428920292@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=164d3f87800000",
+            "c-reproducer": "/text?tag=ReproC&x=111066c7800000",
+            "kernel-config": "/text?tag=KernelConfig&x=191a2635dcad1c46",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=83beed7b2b26f232d782127792dd0cd4362fdc41",
+            "kernel-source-commit": "83beed7b2b26f232d782127792dd0cd4362fdc41",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/ca03d6881a7d4c39ef72950dae72dbdbe886f959",
+            "syzkaller-commit": "ca03d6881a7d4c39ef72950dae72dbdbe886f959",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1167476b800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "smc_tcp_listen_work",
+            "net/smc/af_smc.c"
+        ]
+    ],
+    "patch_commit_date": "2018-04-25T10:48:58+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net",
+        "s390"
+    ],
+    "parent_of_fix_commit": "02a6efcab675fe32815d824837784c3f42a7d892",
+    "patch": "diff --git a/net/smc/af_smc.c b/net/smc/af_smc.c\nindex f5d4b69dbabc..4470501374bf 100644\n--- a/net/smc/af_smc.c\n+++ b/net/smc/af_smc.c\n@@ -978,10 +978,6 @@ static void smc_tcp_listen_work(struct work_struct *work)\n \t}\n \n out:\n-\tif (lsmc->clcsock) {\n-\t\tsock_release(lsmc->clcsock);\n-\t\tlsmc->clcsock = NULL;\n-\t}\n \trelease_sock(lsk);\n \tsock_put(&lsmc->sk); /* sock_hold in smc_listen */\n }\n",
+    "patch_modified_files": [
+        "net/smc/af_smc.c"
+    ]
+}

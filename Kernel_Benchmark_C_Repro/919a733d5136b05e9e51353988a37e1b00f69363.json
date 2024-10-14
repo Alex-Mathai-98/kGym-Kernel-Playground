@@ -1,0 +1,71 @@
+{
+    "version": 1,
+    "title": "WARNING: ODEBUG bug in exit_to_user_mode_prepare",
+    "display-title": "WARNING: ODEBUG bug in exit_to_user_mode_prepare",
+    "id": "919a733d5136b05e9e51353988a37e1b00f69363",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fix regression in \"epoll: Keep a reference on files added to the check list\"",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=77f4689de17c0887775bb77896f4cc11a39bf848",
+            "hash": "77f4689de17c0887775bb77896f4cc11a39bf848",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "epoll: Keep a reference on files added to the check list",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a9ed4a6560b8562b7e2e2bed9527e88001f7b682",
+        "hash": "a9ed4a6560b8562b7e2e2bed9527e88001f7b682",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000006226c805adf16cb8@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12f81666900000",
+            "c-reproducer": "/text?tag=ReproC&x=15abb10e900000",
+            "kernel-config": "/text?tag=KernelConfig&x=978db74cb30aa994",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d012a7190fc1fd72ed48911e77ca97ba4521bccd",
+            "kernel-source-commit": "d012a7190fc1fd72ed48911e77ca97ba4521bccd",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/67b599d167ab42fff545ec53e23f2711c184877b",
+            "syzkaller-commit": "67b599d167ab42fff545ec53e23f2711c184877b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=175c8c96900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ep_loop_check_proc",
+            "fs/eventpoll.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "clear_tfile_check_list",
+            "fs/eventpoll.c"
+        ],
+        [
+            "ep_loop_check_proc",
+            "fs/eventpoll.c"
+        ],
+        [
+            "do_epoll_ctl",
+            "fs/eventpoll.c"
+        ]
+    ],
+    "patch_commit_date": "2020-09-02T15:30:48+00:00",
+    "cause_commit_date": "2020-08-19T16:12:17+00:00",
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "52c479697c9b73f628140dcdfcd39ea302d05482",
+    "patch": "diff --git a/fs/eventpoll.c b/fs/eventpoll.c\nindex e0decff22ae2..8107e06d7f6f 100644\n--- a/fs/eventpoll.c\n+++ b/fs/eventpoll.c\n@@ -1995,9 +1995,9 @@ static int ep_loop_check_proc(void *priv, void *cookie, int call_nests)\n \t\t\t * during ep_insert().\n \t\t\t */\n \t\t\tif (list_empty(&epi->ffd.file->f_tfile_llink)) {\n-\t\t\t\tget_file(epi->ffd.file);\n-\t\t\t\tlist_add(&epi->ffd.file->f_tfile_llink,\n-\t\t\t\t\t &tfile_check_list);\n+\t\t\t\tif (get_file_rcu(epi->ffd.file))\n+\t\t\t\t\tlist_add(&epi->ffd.file->f_tfile_llink,\n+\t\t\t\t\t\t &tfile_check_list);\n \t\t\t}\n \t\t}\n \t}\n",
+    "patch_modified_files": [
+        "fs/eventpoll.c"
+    ]
+}

@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "general protection fault in ax25cmp",
+    "display-title": "general protection fault in ax25cmp",
+    "id": "fd0b0b00fc26abb4b35663a0e2f1c91d8e6e5725",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/rose: fix NULL ax25_cb kernel panic",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b0cf029234f9b18e10703ba5147f0389c382bccc",
+            "hash": "b0cf029234f9b18e10703ba5147f0389c382bccc",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000199a53057e1a62ff@google.com/T/",
+        "https://lore.kernel.org/all/19a0a879-8a8d-4c84-5de9-5ce222377fcb@free.fr/T/",
+        "https://lore.kernel.org/all/20190125104640.253862-1-dvyukov@gmail.com/T/",
+        "https://lore.kernel.org/all/20190204103557.903263774@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190204103605.271746870@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190204103608.651205056@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190204103610.583715954@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190204103619.714714157@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190204103620.287366543@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1683ae57400000",
+            "c-reproducer": "/text?tag=ReproC&x=1410f3af400000",
+            "kernel-config": "/text?tag=KernelConfig&x=91a256823ef17263",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d8924c0d76aaa52e4811b5c64115d9a7f36cc73a",
+            "kernel-source-commit": "d8924c0d76aaa52e4811b5c64115d9a7f36cc73a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8a41a0ad8ed91a6c7a65663b1bacaf6d79cde558",
+            "syzkaller-commit": "8a41a0ad8ed91a6c7a65663b1bacaf6d79cde558",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15437a9b400000"
+        }
+    ],
+    "subsystems": [
+        "hams"
+    ],
+    "parent_of_fix_commit": "6571ebce112a21ec9be68ef2f53b96fcd41fd81b",
+    "patch": "diff --git a/net/rose/rose_route.c b/net/rose/rose_route.c\nindex 77e9f85a2c92..f2ff21d7df08 100644\n--- a/net/rose/rose_route.c\n+++ b/net/rose/rose_route.c\n@@ -850,6 +850,7 @@ void rose_link_device_down(struct net_device *dev)\n \n /*\n  *\tRoute a frame to an appropriate AX.25 connection.\n+ *\tA NULL ax25_cb indicates an internally generated frame.\n  */\n int rose_route_frame(struct sk_buff *skb, ax25_cb *ax25)\n {\n@@ -867,6 +868,10 @@ int rose_route_frame(struct sk_buff *skb, ax25_cb *ax25)\n \n \tif (skb->len < ROSE_MIN_LEN)\n \t\treturn res;\n+\n+\tif (!ax25)\n+\t\treturn rose_loopback_queue(skb, NULL);\n+\n \tframetype = skb->data[2];\n \tlci = ((skb->data[0] << 8) & 0xF00) + ((skb->data[1] << 0) & 0x0FF);\n \tif (frametype == ROSE_CALL_REQUEST &&\n",
+    "patch_modified_files": [
+        "net/rose/rose_route.c"
+    ]
+}

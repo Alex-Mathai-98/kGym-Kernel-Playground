@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "memory leak in __team_options_register",
+    "display-title": "memory leak in __team_options_register",
+    "id": "46c3a1b6bd714b64c551567f1fec16c5d2d5d9bb",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: team: fix memory leak in __team_options_register",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9a9e77495958c7382b2438bc19746dd3aaaabb8e",
+            "hash": "9a9e77495958c7382b2438bc19746dd3aaaabb8e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000048db9a05aebfc503@google.com/T/",
+        "https://lore.kernel.org/all/20201004205536.4734-1-anant.thazhemadam@gmail.com/T/",
+        "https://lore.kernel.org/all/20201012132628.130632267@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201012132629.469542486@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201012132629.585664421@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201012132630.201442517@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201012132632.846779148@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201012133146.834528783@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1627617d900000",
+            "c-reproducer": "/text?tag=ReproC&x=122e20dd900000",
+            "kernel-config": "/text?tag=KernelConfig&x=7954285d6e960c0f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f4d51dffc6c01a9e94650d95ce0104964f8ae822",
+            "kernel-source-commit": "f4d51dffc6c01a9e94650d95ce0104964f8ae822",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/abf9ba4fc75d9b29af15625d44dcfc1360fad3b7",
+            "syzkaller-commit": "abf9ba4fc75d9b29af15625d44dcfc1360fad3b7",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10cce7cd900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__team_options_register",
+            "drivers/net/team/team.c"
+        ]
+    ],
+    "patch_commit_date": "2020-10-04T20:55:36+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "790ca79d3e7f76d77291540e1728f400c6ad931f",
+    "patch": "diff --git a/drivers/net/team/team.c b/drivers/net/team/team.c\nindex 69dfb1a49cc8..bcc4a4c011f1 100644\n--- a/drivers/net/team/team.c\n+++ b/drivers/net/team/team.c\n@@ -287,7 +287,7 @@ static int __team_options_register(struct team *team,\n \tfor (i--; i >= 0; i--)\n \t\t__team_option_inst_del_option(team, dst_opts[i]);\n \n-\ti = option_count - 1;\n+\ti = option_count;\n alloc_rollback:\n \tfor (i--; i >= 0; i--)\n \t\tkfree(dst_opts[i]);\n",
+    "patch_modified_files": [
+        "drivers/net/team/team.c"
+    ]
+}

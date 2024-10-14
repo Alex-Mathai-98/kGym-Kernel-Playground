@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "memory leak in nf_tables_addchain",
+    "display-title": "memory leak in nf_tables_addchain",
+    "id": "84f6c335c80d9786d5aaf404bf3d55d79e7e0e27",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: nf_tables: free chain context when BINDING flag is missing",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=59136aa3b2649796a3a1fd90158675f1f640ce0e",
+            "hash": "59136aa3b2649796a3a1fd90158675f1f640ce0e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000044d3c705ac9d1a39@google.com/T/",
+        "https://lore.kernel.org/all/20200811173909.11246-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20200815103201.1768-1-pablo@netfilter.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17fbf6e6900000",
+            "c-reproducer": "/text?tag=ReproC&x=12781652900000",
+            "kernel-config": "/text?tag=KernelConfig&x=4810fa4a53b3aa2c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=449dc8c97089a6e09fb2dac4d92b1b7ac0eb7c1e",
+            "kernel-source-commit": "449dc8c97089a6e09fb2dac4d92b1b7ac0eb7c1e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f721e4a097714a9054b9fe1aadf427afbbd2c157",
+            "syzkaller-commit": "f721e4a097714a9054b9fe1aadf427afbbd2c157",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=107a7ac2900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nf_tables_addchain",
+            "net/netfilter/nf_tables_api.c"
+        ]
+    ],
+    "patch_commit_date": "2020-08-11T17:39:09+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "2404b73c3f1a5f15726c6ecd226b56f6f992767f",
+    "patch": "diff --git a/net/netfilter/nf_tables_api.c b/net/netfilter/nf_tables_api.c\nindex d878e34e3354..fd814e514f94 100644\n--- a/net/netfilter/nf_tables_api.c\n+++ b/net/netfilter/nf_tables_api.c\n@@ -2018,8 +2018,10 @@ static int nf_tables_addchain(struct nft_ctx *ctx, u8 family, u8 genmask,\n \tif (nla[NFTA_CHAIN_NAME]) {\n \t\tchain->name = nla_strdup(nla[NFTA_CHAIN_NAME], GFP_KERNEL);\n \t} else {\n-\t\tif (!(flags & NFT_CHAIN_BINDING))\n-\t\t\treturn -EINVAL;\n+\t\tif (!(flags & NFT_CHAIN_BINDING)) {\n+\t\t\terr = -EINVAL;\n+\t\t\tgoto err1;\n+\t\t}\n \n \t\tsnprintf(name, sizeof(name), \"__chain%llu\", ++chain_id);\n \t\tchain->name = kstrdup(name, GFP_KERNEL);\n",
+    "patch_modified_files": [
+        "net/netfilter/nf_tables_api.c"
+    ]
+}

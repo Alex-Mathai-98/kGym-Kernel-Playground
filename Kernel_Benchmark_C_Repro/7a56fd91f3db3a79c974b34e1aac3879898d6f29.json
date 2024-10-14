@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "WARNING in __nf_unregister_net_hook",
+    "display-title": "WARNING in __nf_unregister_net_hook (2)",
+    "id": "7a56fd91f3db3a79c974b34e1aac3879898d6f29",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: nf_tables: fix nat hook table deletion",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1e9451cbda456a170518b2bfd643e2cb980880bf",
+            "hash": "1e9451cbda456a170518b2bfd643e2cb980880bf",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "netfilter: nf_tables: merge ipv4 and ipv6 nat chain types",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=db8ab38880e06dedbfc879e75f5b0ddc495f4eb6",
+        "hash": "db8ab38880e06dedbfc879e75f5b0ddc495f4eb6",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000048335c05aa5eca10@google.com/T/",
+        "https://lore.kernel.org/all/20200714165139.14385-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20200723223508.17038-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20200727134932.659499757@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20230705165423.50054-2-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20230705165516.50145-2-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20230725104528.688616336@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20230809103703.799831783@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1646988b100000",
+            "c-reproducer": "/text?tag=ReproC&x=132b1263100000",
+            "kernel-config": "/text?tag=KernelConfig&x=b1a5a263f7a540cb",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=0aea6d5c5be33ce94c16f9ab2f64de1f481f424b",
+            "kernel-source-commit": "0aea6d5c5be33ce94c16f9ab2f64de1f481f424b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/115e19300f73966554f176e2440fe79572a37c99",
+            "syzkaller-commit": "115e19300f73966554f176e2440fe79572a37c99",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1636ae4f100000"
+        }
+    ],
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "1d61e21852d3161f234b9656797669fe185c251b",
+    "patch": "diff --git a/net/netfilter/nf_tables_api.c b/net/netfilter/nf_tables_api.c\nindex 7647ecfa0d40..88325b264737 100644\n--- a/net/netfilter/nf_tables_api.c\n+++ b/net/netfilter/nf_tables_api.c\n@@ -188,24 +188,6 @@ static void nft_netdev_unregister_hooks(struct net *net,\n \t\tnf_unregister_net_hook(net, &hook->ops);\n }\n \n-static int nft_register_basechain_hooks(struct net *net, int family,\n-\t\t\t\t\tstruct nft_base_chain *basechain)\n-{\n-\tif (family == NFPROTO_NETDEV)\n-\t\treturn nft_netdev_register_hooks(net, &basechain->hook_list);\n-\n-\treturn nf_register_net_hook(net, &basechain->ops);\n-}\n-\n-static void nft_unregister_basechain_hooks(struct net *net, int family,\n-\t\t\t\t\t   struct nft_base_chain *basechain)\n-{\n-\tif (family == NFPROTO_NETDEV)\n-\t\tnft_netdev_unregister_hooks(net, &basechain->hook_list);\n-\telse\n-\t\tnf_unregister_net_hook(net, &basechain->ops);\n-}\n-\n static int nf_tables_register_hook(struct net *net,\n \t\t\t\t   const struct nft_table *table,\n \t\t\t\t   struct nft_chain *chain)\n@@ -223,7 +205,10 @@ static int nf_tables_register_hook(struct net *net,\n \tif (basechain->type->ops_register)\n \t\treturn basechain->type->ops_register(net, ops);\n \n-\treturn nft_register_basechain_hooks(net, table->family, basechain);\n+\tif (table->family == NFPROTO_NETDEV)\n+\t\treturn nft_netdev_register_hooks(net, &basechain->hook_list);\n+\n+\treturn nf_register_net_hook(net, &basechain->ops);\n }\n \n static void nf_tables_unregister_hook(struct net *net,\n@@ -242,7 +227,10 @@ static void nf_tables_unregister_hook(struct net *net,\n \tif (basechain->type->ops_unregister)\n \t\treturn basechain->type->ops_unregister(net, ops);\n \n-\tnft_unregister_basechain_hooks(net, table->family, basechain);\n+\tif (table->family == NFPROTO_NETDEV)\n+\t\tnft_netdev_unregister_hooks(net, &basechain->hook_list);\n+\telse\n+\t\tnf_unregister_net_hook(net, &basechain->ops);\n }\n \n static int nft_trans_table_add(struct nft_ctx *ctx, int msg_type)\n@@ -832,8 +820,7 @@ static void nft_table_disable(struct net *net, struct nft_table *table, u32 cnt)\n \t\tif (cnt && i++ == cnt)\n \t\t\tbreak;\n \n-\t\tnft_unregister_basechain_hooks(net, table->family,\n-\t\t\t\t\t       nft_base_chain(chain));\n+\t\tnf_tables_unregister_hook(net, table, chain);\n \t}\n }\n \n@@ -848,8 +835,7 @@ static int nf_tables_table_enable(struct net *net, struct nft_table *table)\n \t\tif (!nft_is_base_chain(chain))\n \t\t\tcontinue;\n \n-\t\terr = nft_register_basechain_hooks(net, table->family,\n-\t\t\t\t\t\t   nft_base_chain(chain));\n+\t\terr = nf_tables_register_hook(net, table, chain);\n \t\tif (err < 0)\n \t\t\tgoto err_register_hooks;\n \n@@ -894,11 +880,12 @@ static int nf_tables_updtable(struct nft_ctx *ctx)\n \t\tnft_trans_table_enable(trans) = false;\n \t} else if (!(flags & NFT_TABLE_F_DORMANT) &&\n \t\t   ctx->table->flags & NFT_TABLE_F_DORMANT) {\n+\t\tctx->table->flags &= ~NFT_TABLE_F_DORMANT;\n \t\tret = nf_tables_table_enable(ctx->net, ctx->table);\n-\t\tif (ret >= 0) {\n-\t\t\tctx->table->flags &= ~NFT_TABLE_F_DORMANT;\n+\t\tif (ret >= 0)\n \t\t\tnft_trans_table_enable(trans) = true;\n-\t\t}\n+\t\telse\n+\t\t\tctx->table->flags |= NFT_TABLE_F_DORMANT;\n \t}\n \tif (ret < 0)\n \t\tgoto err;\n",
+    "patch_modified_files": [
+        "net/netfilter/nf_tables_api.c"
+    ]
+}

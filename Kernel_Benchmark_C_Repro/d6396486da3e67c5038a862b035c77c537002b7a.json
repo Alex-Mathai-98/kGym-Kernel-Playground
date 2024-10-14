@@ -1,0 +1,59 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Write in io_queue_worker_create",
+    "display-title": "KASAN: use-after-free Write in io_queue_worker_create",
+    "id": "d6396486da3e67c5038a862b035c77c537002b7a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io-wq: check for wq exit after adding new worker task_work",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=71a85387546e50b1a37b0fa45dadcae3bfb35cf6",
+            "hash": "71a85387546e50b1a37b0fa45dadcae3bfb35cf6",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        },
+        {
+            "title": "io-wq: remove spurious bit clear on task_work addition",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e47498afeca9a0c6d07eeeacc46d563555a3f677",
+            "hash": "e47498afeca9a0c6d07eeeacc46d563555a3f677",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "drm/amd/display: Extend dmub_cmd_psr_copy_settings_data struct",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=360d1b65449356f56287e49d1b3d7579e758ca29",
+        "hash": "360d1b65449356f56287e49d1b3d7579e758ca29",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a9162005d27492b0@google.com/T/",
+        "https://lore.kernel.org/all/20211220143040.058287525@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/6ec527b1-3d50-d484-912d-eff86849241d@kernel.dk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Write in io_queue_worker_create",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1686906db00000",
+            "c-reproducer": "/text?tag=ReproC&x=1539a9b9b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=221ffc09e39ebbd1",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c741e49150dbb0c0aebe234389f4aa8b47958fa8",
+            "kernel-source-commit": "c741e49150dbb0c0aebe234389f4aa8b47958fa8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4d4ce9bc2a12073dcc8b917f9fc2a4ecba26c4c5",
+            "syzkaller-commit": "4d4ce9bc2a12073dcc8b917f9fc2a4ecba26c4c5",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15f9ff75b00000"
+        }
+    ],
+    "subsystems": [
+        "fs",
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "78a780602075d8b00c98070fa26e389b3b3efa72",
+    "patch": "diff --git a/fs/io-wq.c b/fs/io-wq.c\nindex 35da9d90df76..8d2bb818a3bb 100644\n--- a/fs/io-wq.c\n+++ b/fs/io-wq.c\n@@ -142,6 +142,7 @@ static bool io_acct_cancel_pending_work(struct io_wqe *wqe,\n \t\t\t\t\tstruct io_wqe_acct *acct,\n \t\t\t\t\tstruct io_cb_cancel_data *match);\n static void create_worker_cb(struct callback_head *cb);\n+static void io_wq_cancel_tw_create(struct io_wq *wq);\n \n static bool io_worker_get(struct io_worker *worker)\n {\n@@ -357,10 +358,22 @@ static bool io_queue_worker_create(struct io_worker *worker,\n \t    test_and_set_bit_lock(0, &worker->create_state))\n \t\tgoto fail_release;\n \n+\tatomic_inc(&wq->worker_refs);\n \tinit_task_work(&worker->create_work, func);\n \tworker->create_index = acct->index;\n-\tif (!task_work_add(wq->task, &worker->create_work, TWA_SIGNAL))\n+\tif (!task_work_add(wq->task, &worker->create_work, TWA_SIGNAL)) {\n+\t\t/*\n+\t\t * EXIT may have been set after checking it above, check after\n+\t\t * adding the task_work and remove any creation item if it is\n+\t\t * now set. wq exit does that too, but we can have added this\n+\t\t * work item after we canceled in io_wq_exit_workers().\n+\t\t */\n+\t\tif (test_bit(IO_WQ_BIT_EXIT, &wq->state))\n+\t\t\tio_wq_cancel_tw_create(wq);\n+\t\tio_worker_ref_put(wq);\n \t\treturn true;\n+\t}\n+\tio_worker_ref_put(wq);\n \tclear_bit_unlock(0, &worker->create_state);\n fail_release:\n \tio_worker_release(worker);\n@@ -1196,13 +1209,9 @@ void io_wq_exit_start(struct io_wq *wq)\n \tset_bit(IO_WQ_BIT_EXIT, &wq->state);\n }\n \n-static void io_wq_exit_workers(struct io_wq *wq)\n+static void io_wq_cancel_tw_create(struct io_wq *wq)\n {\n \tstruct callback_head *cb;\n-\tint node;\n-\n-\tif (!wq->task)\n-\t\treturn;\n \n \twhile ((cb = task_work_cancel_match(wq->task, io_task_work_match, wq)) != NULL) {\n \t\tstruct io_worker *worker;\n@@ -1210,6 +1219,16 @@ static void io_wq_exit_workers(struct io_wq *wq)\n \t\tworker = container_of(cb, struct io_worker, create_work);\n \t\tio_worker_cancel_cb(worker);\n \t}\n+}\n+\n+static void io_wq_exit_workers(struct io_wq *wq)\n+{\n+\tint node;\n+\n+\tif (!wq->task)\n+\t\treturn;\n+\n+\tio_wq_cancel_tw_create(wq);\n \n \trcu_read_lock();\n \tfor_each_node(node) {\n",
+    "patch_modified_files": [
+        "fs/io-wq.c"
+    ]
+}

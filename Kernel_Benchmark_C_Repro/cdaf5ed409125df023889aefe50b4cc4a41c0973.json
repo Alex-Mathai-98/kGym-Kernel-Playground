@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "WARNING in do_symlinkat",
+    "display-title": "WARNING in do_symlinkat",
+    "id": "cdaf5ed409125df023889aefe50b4cc4a41c0973",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/ntfs3: Remove noacsrules",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=267a36ba30a7425ad59d20e7e7e33bbdcc9cfb0a",
+            "hash": "267a36ba30a7425ad59d20e7e7e33bbdcc9cfb0a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003bfb4a05f7e537a7@google.com/T/",
+        "https://lore.kernel.org/all/000000000000eb49a905f061ada5@google.com/T/",
+        "https://lore.kernel.org/all/000000000000faf54f05fa6186db@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in do_symlinkat",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11621288480000",
+            "c-reproducer": "/text?tag=ReproC&x=148ad5a8480000",
+            "kernel-config": "/text?tag=KernelConfig&x=68e0be42c8ee4bb4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1b929c02afd37871d5afb9d498426f83432e71c2",
+            "kernel-source-commit": "1b929c02afd37871d5afb9d498426f83432e71c2",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/44712fbc6b687170984c3562336a415b56d82607",
+            "syzkaller-commit": "44712fbc6b687170984c3562336a415b56d82607",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13188832480000"
+        }
+    ],
+    "subsystems": [
+        "ntfs3"
+    ],
+    "parent_of_fix_commit": "c20bc9c6d8eb13ab1c3f8e5f8ad91466ae717d7f",
+    "patch": "diff --git a/Documentation/filesystems/ntfs3.rst b/Documentation/filesystems/ntfs3.rst\nindex 5aa102bd72c2..f0cf05cad2ba 100644\n--- a/Documentation/filesystems/ntfs3.rst\n+++ b/Documentation/filesystems/ntfs3.rst\n@@ -61,17 +61,6 @@ this table marked with no it means default is without **no**.\n        directories, fmask applies only to files and dmask only to directories.\n    * - fmask=\n \n-   * - noacsrules\n-     - \"No access rules\" mount option sets access rights for files/folders to\n-       777 and owner/group to root. This mount option absorbs all other\n-       permissions.\n-\n-       - Permissions change for files/folders will be reported as successful,\n-\t but they will remain 777.\n-\n-       - Owner/group change will be reported as successful, butthey will stay\n-\t as root.\n-\n    * - nohidden\n      - Files with the Windows-specific HIDDEN (FILE_ATTRIBUTE_HIDDEN) attribute\n        will not be shown under Linux.\ndiff --git a/fs/ntfs3/file.c b/fs/ntfs3/file.c\nindex b3b72673fa5e..e4b54d6bcda5 100644\n--- a/fs/ntfs3/file.c\n+++ b/fs/ntfs3/file.c\n@@ -654,22 +654,12 @@ static long ntfs_fallocate(struct file *file, int mode, loff_t vbo, loff_t len)\n int ntfs3_setattr(struct mnt_idmap *idmap, struct dentry *dentry,\n \t\t  struct iattr *attr)\n {\n-\tstruct super_block *sb = dentry->d_sb;\n-\tstruct ntfs_sb_info *sbi = sb->s_fs_info;\n \tstruct inode *inode = d_inode(dentry);\n \tstruct ntfs_inode *ni = ntfs_i(inode);\n \tu32 ia_valid = attr->ia_valid;\n \tumode_t mode = inode->i_mode;\n \tint err;\n \n-\tif (sbi->options->noacsrules) {\n-\t\t/* \"No access rules\" - Force any changes of time etc. */\n-\t\tattr->ia_valid |= ATTR_FORCE;\n-\t\t/* and disable for editing some attributes. */\n-\t\tattr->ia_valid &= ~(ATTR_UID | ATTR_GID | ATTR_MODE);\n-\t\tia_valid = attr->ia_valid;\n-\t}\n-\n \terr = setattr_prepare(idmap, dentry, attr);\n \tif (err)\n \t\tgoto out;\n@@ -1153,7 +1143,6 @@ const struct inode_operations ntfs_file_inode_operations = {\n \t.getattr\t= ntfs_getattr,\n \t.setattr\t= ntfs3_setattr,\n \t.listxattr\t= ntfs_listxattr,\n-\t.permission\t= ntfs_permission,\n \t.get_inode_acl\t= ntfs_get_acl,\n \t.set_acl\t= ntfs_set_acl,\n \t.fiemap\t\t= ntfs_fiemap,\ndiff --git a/fs/ntfs3/inode.c b/fs/ntfs3/inode.c\nindex bb004e476563..31f7e97fa43e 100644\n--- a/fs/ntfs3/inode.c\n+++ b/fs/ntfs3/inode.c\n@@ -2070,7 +2070,6 @@ const struct inode_operations ntfs_link_inode_operations = {\n \t.get_link\t= ntfs_get_link,\n \t.setattr\t= ntfs3_setattr,\n \t.listxattr\t= ntfs_listxattr,\n-\t.permission\t= ntfs_permission,\n };\n \n const struct address_space_operations ntfs_aops = {\ndiff --git a/fs/ntfs3/namei.c b/fs/ntfs3/namei.c\nindex 92bbc8ee83ca..fdd11f2a1883 100644\n--- a/fs/ntfs3/namei.c\n+++ b/fs/ntfs3/namei.c\n@@ -607,7 +607,6 @@ const struct inode_operations ntfs_dir_inode_operations = {\n \t.rmdir\t\t= ntfs_rmdir,\n \t.mknod\t\t= ntfs_mknod,\n \t.rename\t\t= ntfs_rename,\n-\t.permission\t= ntfs_permission,\n \t.get_inode_acl\t= ntfs_get_acl,\n \t.set_acl\t= ntfs_set_acl,\n \t.setattr\t= ntfs3_setattr,\ndiff --git a/fs/ntfs3/ntfs_fs.h b/fs/ntfs3/ntfs_fs.h\nindex 15296f5690b5..85efb34d211c 100644\n--- a/fs/ntfs3/ntfs_fs.h\n+++ b/fs/ntfs3/ntfs_fs.h\n@@ -100,7 +100,6 @@ struct ntfs_mount_options {\n \tunsigned hide_dot_files : 1; /* Set hidden flag on dot files. */\n \tunsigned windows_names : 1; /* Disallow names forbidden by Windows. */\n \tunsigned force : 1; /* RW mount dirty volume. */\n-\tunsigned noacsrules : 1; /* Exclude acs rules. */\n \tunsigned prealloc : 1; /* Preallocate space when file is growing. */\n \tunsigned nocase : 1; /* case insensitive. */\n };\n@@ -870,8 +869,6 @@ int ntfs_init_acl(struct mnt_idmap *idmap, struct inode *inode,\n #endif\n \n int ntfs_acl_chmod(struct mnt_idmap *idmap, struct dentry *dentry);\n-int ntfs_permission(struct mnt_idmap *idmap, struct inode *inode,\n-\t\t    int mask);\n ssize_t ntfs_listxattr(struct dentry *dentry, char *buffer, size_t size);\n extern const struct xattr_handler *ntfs_xattr_handlers[];\n \ndiff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c\nindex 19d0889b131f..10c019ef7da3 100644\n--- a/fs/ntfs3/super.c\n+++ b/fs/ntfs3/super.c\n@@ -253,7 +253,6 @@ enum Opt {\n \tOpt_acl,\n \tOpt_iocharset,\n \tOpt_prealloc,\n-\tOpt_noacsrules,\n \tOpt_nocase,\n \tOpt_err,\n };\n@@ -274,7 +273,6 @@ static const struct fs_parameter_spec ntfs_fs_parameters[] = {\n \tfsparam_flag_no(\"acl\",\t\t\tOpt_acl),\n \tfsparam_flag_no(\"showmeta\",\t\tOpt_showmeta),\n \tfsparam_flag_no(\"prealloc\",\t\tOpt_prealloc),\n-\tfsparam_flag_no(\"acsrules\",\t\tOpt_noacsrules),\n \tfsparam_flag_no(\"nocase\",\t\tOpt_nocase),\n \tfsparam_string(\"iocharset\",\t\tOpt_iocharset),\n \t{}\n@@ -387,9 +385,6 @@ static int ntfs_fs_parse_param(struct fs_context *fc,\n \tcase Opt_prealloc:\n \t\topts->prealloc = result.negated ? 0 : 1;\n \t\tbreak;\n-\tcase Opt_noacsrules:\n-\t\topts->noacsrules = result.negated ? 1 : 0;\n-\t\tbreak;\n \tcase Opt_nocase:\n \t\topts->nocase = result.negated ? 1 : 0;\n \t\tbreak;\n@@ -572,8 +567,6 @@ static int ntfs_show_options(struct seq_file *m, struct dentry *root)\n \t\tseq_puts(m, \",hide_dot_files\");\n \tif (opts->force)\n \t\tseq_puts(m, \",force\");\n-\tif (opts->noacsrules)\n-\t\tseq_puts(m, \",noacsrules\");\n \tif (opts->prealloc)\n \t\tseq_puts(m, \",prealloc\");\n \tif (sb->s_flags & SB_POSIXACL)\n@@ -791,7 +784,7 @@ static int ntfs_init_from_boot(struct super_block *sb, u32 sector_size,\n \tif (boot_sector_size != sector_size) {\n \t\tntfs_warn(\n \t\t\tsb,\n-\t\t\t\"Different NTFS' sector size (%u) and media sector size (%u)\",\n+\t\t\t\"Different NTFS sector size (%u) and media sector size (%u)\",\n \t\t\tboot_sector_size, sector_size);\n \t\tdev_size += sector_size - 1;\n \t}\ndiff --git a/fs/ntfs3/xattr.c b/fs/ntfs3/xattr.c\nindex 4746959af964..4cab20d70c79 100644\n--- a/fs/ntfs3/xattr.c\n+++ b/fs/ntfs3/xattr.c\n@@ -711,20 +711,6 @@ int ntfs_acl_chmod(struct mnt_idmap *idmap, struct dentry *dentry)\n \treturn posix_acl_chmod(idmap, dentry, inode->i_mode);\n }\n \n-/*\n- * ntfs_permission - inode_operations::permission\n- */\n-int ntfs_permission(struct mnt_idmap *idmap, struct inode *inode,\n-\t\t    int mask)\n-{\n-\tif (ntfs_sb(inode->i_sb)->options->noacsrules) {\n-\t\t/* \"No access rules\" mode - Allow all changes. */\n-\t\treturn 0;\n-\t}\n-\n-\treturn generic_permission(idmap, inode, mask);\n-}\n-\n /*\n  * ntfs_listxattr - inode_operations::listxattr\n  */\n",
+    "patch_modified_files": [
+        "Documentation/filesystems/ntfs3.rst",
+        "fs/ntfs3/file.c",
+        "fs/ntfs3/inode.c",
+        "fs/ntfs3/namei.c",
+        "fs/ntfs3/ntfs_fs.h",
+        "fs/ntfs3/super.c",
+        "fs/ntfs3/xattr.c"
+    ]
+}

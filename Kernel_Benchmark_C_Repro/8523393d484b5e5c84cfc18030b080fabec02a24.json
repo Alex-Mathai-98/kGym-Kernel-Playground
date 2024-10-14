@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "WARNING: lock held when returning to user space in set_property_atomic",
+    "display-title": "WARNING: lock held when returning to user space in set_property_atomic",
+    "id": "8523393d484b5e5c84cfc18030b080fabec02a24",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "gpu/drm: Fix lock held when returning to user space.",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4089e272ac61603931beb024d4d640de2cb390e0",
+            "hash": "4089e272ac61603931beb024d4d640de2cb390e0",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f56975057e374c46@google.com/T/",
+        "https://lore.kernel.org/all/1547115571-21219-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp/T/",
+        "https://lore.kernel.org/all/20181230122842.21917-1-chris@chris-wilson.co.uk/T/",
+        "https://lore.kernel.org/all/20190121122455.819406896@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190326042649.889479098@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190326042702.565683325@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190327180158.10245-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190327181025.13507-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190327181628.15899-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190404084619.236418459@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=120d906f400000",
+            "c-reproducer": "/text?tag=ReproC&x=1024673b400000",
+            "kernel-config": "/text?tag=KernelConfig&x=53a2f2aa0b1f7606",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=903b77c631673eeec9e9114e9524171cdf9a2646",
+            "kernel-source-commit": "903b77c631673eeec9e9114e9524171cdf9a2646",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a40793d7a5ec79bb550bc8599221880e6aba071b",
+            "syzkaller-commit": "a40793d7a5ec79bb550bc8599221880e6aba071b",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13f476fd400000"
+        }
+    ],
+    "clean_crash_report": [],
+    "crash_kernel_id": null,
+    "subsystems": [
+        "dri"
+    ],
+    "parent_of_fix_commit": "66a8d5bfb518f9f12d47e1d2dce1732279f9451e",
+    "patch": "diff --git a/drivers/gpu/drm/drm_atomic_uapi.c b/drivers/gpu/drm/drm_atomic_uapi.c\nindex c40889888a16..9a1f41adfc67 100644\n--- a/drivers/gpu/drm/drm_atomic_uapi.c\n+++ b/drivers/gpu/drm/drm_atomic_uapi.c\n@@ -1296,12 +1296,11 @@ int drm_mode_atomic_ioctl(struct drm_device *dev,\n \t\t\t(arg->flags & DRM_MODE_PAGE_FLIP_EVENT))\n \t\treturn -EINVAL;\n \n-\tdrm_modeset_acquire_init(&ctx, DRM_MODESET_ACQUIRE_INTERRUPTIBLE);\n-\n \tstate = drm_atomic_state_alloc(dev);\n \tif (!state)\n \t\treturn -ENOMEM;\n \n+\tdrm_modeset_acquire_init(&ctx, DRM_MODESET_ACQUIRE_INTERRUPTIBLE);\n \tstate->acquire_ctx = &ctx;\n \tstate->allow_modeset = !!(arg->flags & DRM_MODE_ATOMIC_ALLOW_MODESET);\n \ndiff --git a/drivers/gpu/drm/drm_mode_object.c b/drivers/gpu/drm/drm_mode_object.c\nindex cd9bc0ce9be0..004191d01772 100644\n--- a/drivers/gpu/drm/drm_mode_object.c\n+++ b/drivers/gpu/drm/drm_mode_object.c\n@@ -459,11 +459,11 @@ static int set_property_atomic(struct drm_mode_object *obj,\n \tstruct drm_modeset_acquire_ctx ctx;\n \tint ret;\n \n-\tdrm_modeset_acquire_init(&ctx, 0);\n-\n \tstate = drm_atomic_state_alloc(dev);\n \tif (!state)\n \t\treturn -ENOMEM;\n+\n+\tdrm_modeset_acquire_init(&ctx, 0);\n \tstate->acquire_ctx = &ctx;\n retry:\n \tif (prop == state->dev->mode_config.dpms_property) {\n",
+    "patch_modified_files": [
+        "drivers/gpu/drm/drm_atomic_uapi.c",
+        "drivers/gpu/drm/drm_mode_object.c"
+    ]
+}

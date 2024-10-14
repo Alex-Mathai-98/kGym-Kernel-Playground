@@ -1,0 +1,87 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in gsm_cleanup_mux",
+    "display-title": "KASAN: use-after-free Read in gsm_cleanup_mux",
+    "id": "5a3acae37e90c2937a595dc2bcb1ce4f74439b1c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "tty: n_gsm: fix the UAF caused by race condition in gsm_cleanup_mux",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3c4f8333b582487a2d1e02171f1465531cde53e3",
+            "hash": "3c4f8333b582487a2d1e02171f1465531cde53e3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "tty: n_gsm: fix tty registration before control channel open",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=01aecd917114577c423f07cec0d186ad007d76fc",
+        "hash": "01aecd917114577c423f07cec0d186ad007d76fc",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000035aab005ec690a00@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in gsm_cleanup_mux",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12b1ca83880000",
+            "c-reproducer": "/text?tag=ReproC&x=1023c5e3880000",
+            "kernel-config": "/text?tag=KernelConfig&x=cc4b2e0a8e8a8366",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a4412fdd49dc011bcc2c0d81ac4cab7457092650",
+            "kernel-source-commit": "a4412fdd49dc011bcc2c0d81ac4cab7457092650",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e080de16713b9dbf308cdd7bcb85b58293e46e33",
+            "syzkaller-commit": "e080de16713b9dbf308cdd7bcb85b58293e46e33",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13fcf8cb880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "gsm_error",
+            "drivers/tty/n_gsm.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "gsm_activate_mux",
+            "drivers/tty/n_gsm.c"
+        ],
+        [
+            "gsm_cleanup_mux",
+            "drivers/tty/n_gsm.c"
+        ],
+        [
+            "gsmld_open",
+            "drivers/tty/n_gsm.c"
+        ],
+        [
+            "gsmld_attach_gsm",
+            "drivers/tty/n_gsm.c"
+        ],
+        [
+            "gsm_hex_dump_bytes",
+            "drivers/tty/n_gsm.c"
+        ],
+        [
+            "gsmld_close",
+            "drivers/tty/n_gsm.c"
+        ],
+        [
+            "gsmld_output",
+            "drivers/tty/n_gsm.c"
+        ]
+    ],
+    "patch_commit_date": "2023-08-11T03:11:21+00:00",
+    "cause_commit_date": "2022-07-01T06:16:45+00:00",
+    "subsystems": [
+        "serial"
+    ],
+    "parent_of_fix_commit": "a4a79e03bab57729bd8046d22bf3666912e586fb",
+    "patch": "diff --git a/drivers/tty/n_gsm.c b/drivers/tty/n_gsm.c\nindex 1cdefac4dd1b..739f522cb893 100644\n--- a/drivers/tty/n_gsm.c\n+++ b/drivers/tty/n_gsm.c\n@@ -3042,12 +3042,13 @@ static void gsm_error(struct gsm_mux *gsm)\n static void gsm_cleanup_mux(struct gsm_mux *gsm, bool disc)\n {\n \tint i;\n-\tstruct gsm_dlci *dlci = gsm->dlci[0];\n+\tstruct gsm_dlci *dlci;\n \tstruct gsm_msg *txq, *ntxq;\n \n \tgsm->dead = true;\n \tmutex_lock(&gsm->mutex);\n \n+\tdlci = gsm->dlci[0];\n \tif (dlci) {\n \t\tif (disc && dlci->state != DLCI_CLOSED) {\n \t\t\tgsm_dlci_begin_close(dlci);\n",
+    "patch_modified_files": [
+        "drivers/tty/n_gsm.c"
+    ]
+}

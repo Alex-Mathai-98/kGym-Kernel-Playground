@@ -1,0 +1,67 @@
+{
+    "version": 1,
+    "title": "WARNING in hsr_addr_subst_dest",
+    "display-title": "WARNING in hsr_addr_subst_dest",
+    "id": "924b5574f42ebeddc94fad06f2fa329b199d58d3",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "hsr: use netdev_err() instead of WARN_ONCE()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4b793acdca0050739b99ace6a8b9e7f717f57c6b",
+            "hash": "4b793acdca0050739b99ace6a8b9e7f717f57c6b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "blk-mq: merge bio into sw queue before plugging",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ab42f35d9cb5ac49b5a2a11f940e74f58f207280",
+        "hash": "ab42f35d9cb5ac49b5a2a11f940e74f58f207280",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001b1a1d057e776c92@google.com/T/",
+        "https://lore.kernel.org/all/20190702062636.GC3054@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20190724023538.GX643@sol.localdomain/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=107db700c00000",
+            "c-reproducer": "/text?tag=ReproC&x=12304827400000",
+            "kernel-config": "/text?tag=KernelConfig&x=5e7dc790609552d7",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=195303136f192d37b89e20a8d1d2670d0d825266",
+            "kernel-source-commit": "195303136f192d37b89e20a8d1d2670d0d825266",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9942de5fb06cec2ff4bee69835f336d1bfd839b8",
+            "syzkaller-commit": "9942de5fb06cec2ff4bee69835f336d1bfd839b8",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=119997fb400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "hsr_addr_subst_dest",
+            "net/hsr/hsr_framereg.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "blk_mq_make_request",
+            "block/blk-mq.c"
+        ],
+        [
+            "hctx_allow_merges",
+            "block/blk-mq.c"
+        ]
+    ],
+    "patch_commit_date": "2020-02-28T18:01:46+00:00",
+    "cause_commit_date": "2017-05-26T11:53:19+00:00",
+    "subsystems": [],
+    "parent_of_fix_commit": "13eeb5fea68e11765020b846ef692809c5fe04aa",
+    "patch": "diff --git a/net/hsr/hsr_framereg.c b/net/hsr/hsr_framereg.c\nindex 3ba7f61be107..d46d22c7105c 100644\n--- a/net/hsr/hsr_framereg.c\n+++ b/net/hsr/hsr_framereg.c\n@@ -318,7 +318,8 @@ void hsr_addr_subst_dest(struct hsr_node *node_src, struct sk_buff *skb,\n \tnode_dst = find_node_by_addr_A(&port->hsr->node_db,\n \t\t\t\t       eth_hdr(skb)->h_dest);\n \tif (!node_dst) {\n-\t\tWARN_ONCE(1, \"%s: Unknown node\\n\", __func__);\n+\t\tif (net_ratelimit())\n+\t\t\tnetdev_err(skb->dev, \"%s: Unknown node\\n\", __func__);\n \t\treturn;\n \t}\n \tif (port->type != node_dst->addr_B_port)\n",
+    "patch_modified_files": [
+        "net/hsr/hsr_framereg.c"
+    ]
+}

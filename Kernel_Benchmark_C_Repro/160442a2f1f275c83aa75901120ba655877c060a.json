@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in hci_inquiry_result_with_rssi_evt",
+    "display-title": "KASAN: slab-out-of-bounds Read in hci_inquiry_result_with_rssi_evt",
+    "id": "160442a2f1f275c83aa75901120ba655877c060a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: Prevent out-of-bounds read in hci_inquiry_result_with_rssi_evt()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=629b49c848ee71244203934347bd7730b0ddee8d",
+            "hash": "629b49c848ee71244203934347bd7730b0ddee8d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000098e7505aa57a3d5@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12badf8f100000",
+            "c-reproducer": "/text?tag=ReproC&x=1000d6db100000",
+            "kernel-config": "/text?tag=KernelConfig&x=66ad203c2bb6d8b",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a581387e415bbb0085e7e67906c8f4a99746590e",
+            "kernel-source-commit": "a581387e415bbb0085e7e67906c8f4a99746590e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/18d18b591b354e07ba76be8f115b7119d49056a9",
+            "syzkaller-commit": "18d18b591b354e07ba76be8f115b7119d49056a9",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=154ec967100000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "hci_inquiry_result_with_rssi_evt",
+            "net/bluetooth/hci_event.c"
+        ]
+    ],
+    "patch_commit_date": "2020-07-10T21:45:26+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "75bbd2ea50ba1c5d9da878a17e92eac02fe0fd3a",
+    "patch": "diff --git a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c\nindex b97d0247983c..61f8c4d12028 100644\n--- a/net/bluetooth/hci_event.c\n+++ b/net/bluetooth/hci_event.c\n@@ -4159,6 +4159,9 @@ static void hci_inquiry_result_with_rssi_evt(struct hci_dev *hdev,\n \t\tstruct inquiry_info_with_rssi_and_pscan_mode *info;\n \t\tinfo = (void *) (skb->data + 1);\n \n+\t\tif (skb->len < num_rsp * sizeof(*info) + 1)\n+\t\t\tgoto unlock;\n+\n \t\tfor (; num_rsp; num_rsp--, info++) {\n \t\t\tu32 flags;\n \n@@ -4180,6 +4183,9 @@ static void hci_inquiry_result_with_rssi_evt(struct hci_dev *hdev,\n \t} else {\n \t\tstruct inquiry_info_with_rssi *info = (void *) (skb->data + 1);\n \n+\t\tif (skb->len < num_rsp * sizeof(*info) + 1)\n+\t\t\tgoto unlock;\n+\n \t\tfor (; num_rsp; num_rsp--, info++) {\n \t\t\tu32 flags;\n \n@@ -4200,6 +4206,7 @@ static void hci_inquiry_result_with_rssi_evt(struct hci_dev *hdev,\n \t\t}\n \t}\n \n+unlock:\n \thci_dev_unlock(hdev);\n }\n \n",
+    "patch_modified_files": [
+        "net/bluetooth/hci_event.c"
+    ]
+}

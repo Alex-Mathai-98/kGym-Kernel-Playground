@@ -1,0 +1,81 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in move_expired_inodes",
+    "display-title": "KASAN: use-after-free Read in move_expired_inodes (2)",
+    "id": "37556d70764e226e660023fad17c9c0316cb6f1d",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs: do not update freeing inode i_io_list",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4e3c51f4e805291b057d12f5dda5aeb50a538dc4",
+            "hash": "4e3c51f4e805291b057d12f5dda5aeb50a538dc4",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "fs: record I_DIRTY_TIME even if inode already has I_DIRTY_INODE",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cbfecb927f429a6fa613d74b998496bd71e4438a",
+        "hash": "cbfecb927f429a6fa613d74b998496bd71e4438a",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000037b96205eabe49b5@google.com/T/",
+        "https://lore.kernel.org/all/20221113152439.2821942-1-feldsherov@google.com/T/",
+        "https://lore.kernel.org/all/20221115202001.324188-1-feldsherov@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in move_expired_inodes",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1724028a880000",
+            "c-reproducer": "/text?tag=ReproC&x=17419234880000",
+            "kernel-config": "/text?tag=KernelConfig&x=d19f5d16783f901",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=493ffd6605b2d3d4dc7008ab927dba319f36671f",
+            "kernel-source-commit": "493ffd6605b2d3d4dc7008ab927dba319f36671f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/5bcf0c31a14edd29532df8af88f246446873fe93",
+            "syzkaller-commit": "5bcf0c31a14edd29532df8af88f246446873fe93",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13a916c6880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "writeback_single_inode",
+            "fs/fs-writeback.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "xfs_fs_dirty_inode",
+            "fs/xfs/xfs_super.c"
+        ],
+        [
+            "writeback_single_inode",
+            "fs/fs-writeback.c"
+        ],
+        [
+            "__mark_inode_dirty",
+            "fs/fs-writeback.c"
+        ],
+        [
+            "kiocb_clone",
+            "include/linux/fs.h"
+        ],
+        [
+            "xfs_fs_destroy_inode",
+            "fs/xfs/xfs_super.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-15T20:20:01+00:00",
+    "cause_commit_date": "2022-08-25T10:06:57+00:00",
+    "subsystems": [
+        "exfat"
+    ],
+    "parent_of_fix_commit": "f6b1a1cf1c3ee430d3f5e47847047ce789a690aa",
+    "patch": "diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c\nindex 443f83382b9b..9958d4020771 100644\n--- a/fs/fs-writeback.c\n+++ b/fs/fs-writeback.c\n@@ -1712,18 +1712,26 @@ static int writeback_single_inode(struct inode *inode,\n \twb = inode_to_wb_and_lock_list(inode);\n \tspin_lock(&inode->i_lock);\n \t/*\n-\t * If the inode is now fully clean, then it can be safely removed from\n-\t * its writeback list (if any).  Otherwise the flusher threads are\n-\t * responsible for the writeback lists.\n+\t * If the inode is freeing, its i_io_list shoudn't be updated\n+\t * as it can be finally deleted at this moment.\n \t */\n-\tif (!(inode->i_state & I_DIRTY_ALL))\n-\t\tinode_cgwb_move_to_attached(inode, wb);\n-\telse if (!(inode->i_state & I_SYNC_QUEUED)) {\n-\t\tif ((inode->i_state & I_DIRTY))\n-\t\t\tredirty_tail_locked(inode, wb);\n-\t\telse if (inode->i_state & I_DIRTY_TIME) {\n-\t\t\tinode->dirtied_when = jiffies;\n-\t\t\tinode_io_list_move_locked(inode, wb, &wb->b_dirty_time);\n+\tif (!(inode->i_state & I_FREEING)) {\n+\t\t/*\n+\t\t * If the inode is now fully clean, then it can be safely\n+\t\t * removed from its writeback list (if any). Otherwise the\n+\t\t * flusher threads are responsible for the writeback lists.\n+\t\t */\n+\t\tif (!(inode->i_state & I_DIRTY_ALL))\n+\t\t\tinode_cgwb_move_to_attached(inode, wb);\n+\t\telse if (!(inode->i_state & I_SYNC_QUEUED)) {\n+\t\t\tif ((inode->i_state & I_DIRTY))\n+\t\t\t\tredirty_tail_locked(inode, wb);\n+\t\t\telse if (inode->i_state & I_DIRTY_TIME) {\n+\t\t\t\tinode->dirtied_when = jiffies;\n+\t\t\t\tinode_io_list_move_locked(inode,\n+\t\t\t\t\t\t\t  wb,\n+\t\t\t\t\t\t\t  &wb->b_dirty_time);\n+\t\t\t}\n \t\t}\n \t}\n \n",
+    "patch_modified_files": [
+        "fs/fs-writeback.c"
+    ]
+}

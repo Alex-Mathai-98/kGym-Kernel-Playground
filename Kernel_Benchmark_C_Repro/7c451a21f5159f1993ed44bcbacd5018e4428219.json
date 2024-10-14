@@ -1,0 +1,70 @@
+{
+    "version": 1,
+    "title": "kernel BUG at lib/string.c:LINE!",
+    "display-title": "kernel BUG at lib/string.c:LINE! (5)",
+    "id": "7c451a21f5159f1993ed44bcbacd5018e4428219",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "btrfs: fix overflow when copying corrupt csums for a message",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=35be8851d172c6e3db836c0f28c19087b10c9e00",
+            "hash": "35be8851d172c6e3db836c0f28c19087b10c9e00",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "btrfs: add xxhash64 to checksumming algorithms",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3951e7f050ac6a38bbc859fc3cd6093890c31d1c",
+        "hash": "3951e7f050ac6a38bbc859fc3cd6093890c31d1c",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a61d6b05af580e62@google.com/T/",
+        "https://lore.kernel.org/all/20200929105929.719230296@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200929110010.467764689@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/SN4PR0401MB3598381B90F2B10586B8005A9B210@SN4PR0401MB3598.namprd04.prod.outlook.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=177582be900000",
+            "c-reproducer": "/text?tag=ReproC&x=13deb2b5900000",
+            "kernel-config": "/text?tag=KernelConfig&x=c61610091f4ca8c4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e4c26faa426c17274884f759f708bc9ee22fd59a",
+            "kernel-source-commit": "e4c26faa426c17274884f759f708bc9ee22fd59a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2d3cdd63ad4aa5bd204a8e79f8e3e166462c2999",
+            "syzkaller-commit": "2d3cdd63ad4aa5bd204a8e79f8e3e166462c2999",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14edf8be900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "btree_readpage_end_io_hook",
+            "fs/btrfs/disk-io.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "btrfs_supported_super_csum",
+            "fs/btrfs/disk-io.c"
+        ],
+        [
+            "module_exit",
+            "fs/btrfs/super.c"
+        ]
+    ],
+    "patch_commit_date": "2020-09-21T07:57:14+00:00",
+    "cause_commit_date": "2019-10-07T09:11:01+00:00",
+    "subsystems": [
+        "btrfs"
+    ],
+    "parent_of_fix_commit": "1c78544eaa4660096aeb6a57ec82b42cdb3bfe5a",
+    "patch": "diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c\nindex 9fe9ec6aab71..93d3bb8989df 100644\n--- a/fs/btrfs/disk-io.c\n+++ b/fs/btrfs/disk-io.c\n@@ -636,16 +636,15 @@ static int btree_readpage_end_io_hook(struct btrfs_io_bio *io_bio,\n \tcsum_tree_block(eb, result);\n \n \tif (memcmp_extent_buffer(eb, result, 0, csum_size)) {\n-\t\tu32 val;\n-\t\tu32 found = 0;\n-\n-\t\tmemcpy(&found, result, csum_size);\n+\t\tu8 val[BTRFS_CSUM_SIZE] = { 0 };\n \n \t\tread_extent_buffer(eb, &val, 0, csum_size);\n \t\tbtrfs_warn_rl(fs_info,\n-\t\t\"%s checksum verify failed on %llu wanted %x found %x level %d\",\n+\t\"%s checksum verify failed on %llu wanted \" CSUM_FMT \" found \" CSUM_FMT \" level %d\",\n \t\t\t      fs_info->sb->s_id, eb->start,\n-\t\t\t      val, found, btrfs_header_level(eb));\n+\t\t\t      CSUM_FMT_VALUE(csum_size, val),\n+\t\t\t      CSUM_FMT_VALUE(csum_size, result),\n+\t\t\t      btrfs_header_level(eb));\n \t\tret = -EUCLEAN;\n \t\tgoto err;\n \t}\n",
+    "patch_modified_files": [
+        "fs/btrfs/disk-io.c"
+    ]
+}

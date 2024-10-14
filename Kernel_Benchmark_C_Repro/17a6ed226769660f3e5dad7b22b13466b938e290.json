@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "title": "memory leak in mrp_request_join",
+    "display-title": "memory leak in mrp_request_join",
+    "id": "17a6ed226769660f3e5dad7b22b13466b938e290",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/802/mrp: fix memleak in mrp_request_join()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=996af62167d0e0ec69b938a3561e96f84ffff1aa",
+            "hash": "996af62167d0e0ec69b938a3561e96f84ffff1aa",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f35c6a059cab64c5@google.com/T/",
+        "https://lore.kernel.org/all/20200122072604.hkspgs6ihyelzxtn@kili.mountain/T/",
+        "https://lore.kernel.org/all/20210718210104.30285-1-paskripkin@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14dbe201e00000",
+            "c-reproducer": "/text?tag=ReproC&x=13e03cf1e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=15478c61c836a72e",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d96d875ef5dd372f533059a44f98e92de9cf0d42",
+            "kernel-source-commit": "d96d875ef5dd372f533059a44f98e92de9cf0d42",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8eda0b957e5b39c0c525e74f51d6b39ab8c5b1ac",
+            "syzkaller-commit": "8eda0b957e5b39c0c525e74f51d6b39ab8c5b1ac",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15e03cf1e00000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "b18114476a1432ad1db5d5605bc8cd131814d264",
+    "patch": "diff --git a/net/802/mrp.c b/net/802/mrp.c\nindex bea6e43d45a0..35e04cc5390c 100644\n--- a/net/802/mrp.c\n+++ b/net/802/mrp.c\n@@ -292,6 +292,19 @@ static void mrp_attr_destroy(struct mrp_applicant *app, struct mrp_attr *attr)\n \tkfree(attr);\n }\n \n+static void mrp_attr_destroy_all(struct mrp_applicant *app)\n+{\n+\tstruct rb_node *node, *next;\n+\tstruct mrp_attr *attr;\n+\n+\tfor (node = rb_first(&app->mad);\n+\t     next = node ? rb_next(node) : NULL, node != NULL;\n+\t     node = next) {\n+\t\tattr = rb_entry(node, struct mrp_attr, node);\n+\t\tmrp_attr_destroy(app, attr);\n+\t}\n+}\n+\n static int mrp_pdu_init(struct mrp_applicant *app)\n {\n \tstruct sk_buff *skb;\n@@ -895,6 +908,7 @@ void mrp_uninit_applicant(struct net_device *dev, struct mrp_application *appl)\n \n \tspin_lock_bh(&app->lock);\n \tmrp_mad_event(app, MRP_EVENT_TX);\n+\tmrp_attr_destroy_all(app);\n \tmrp_pdu_queue(app);\n \tspin_unlock_bh(&app->lock);\n \n",
+    "patch_modified_files": [
+        "net/802/mrp.c"
+    ]
+}

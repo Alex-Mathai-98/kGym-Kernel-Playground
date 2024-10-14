@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "memory leak in napi_get_frags",
+    "display-title": "memory leak in napi_get_frags",
+    "id": "8b7c776e9ce36f9520b0c5d065b2d03dd4286199",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: tun: call napi_schedule_prep() to ensure we own a napi",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=07d120aa33cc9d9115753d159f64d20c94458781",
+            "hash": "07d120aa33cc9d9115753d159f64d20c94458781",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13f04af7500000",
+            "c-reproducer": "/text?tag=ReproC&x=15e4e348d00000",
+            "kernel-config": "/text?tag=KernelConfig&x=850b6de5f8959443",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=146620506274bd24d52fb1c589110a30eed8240b",
+            "kernel-source-commit": "146620506274bd24d52fb1c589110a30eed8240b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/65a7a8540d29e72622fca06522587f7e66539fd3",
+            "syzkaller-commit": "65a7a8540d29e72622fca06522587f7e66539fd3",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=127c1a68d00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "tun_get_user",
+            "drivers/net/tun.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-07T18:00:11+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "519b58bbfa825f042fcf80261cc18e1e35f85ffd",
+    "patch": "diff --git a/drivers/net/tun.c b/drivers/net/tun.c\nindex eb12f3136a54..7a3ab3427369 100644\n--- a/drivers/net/tun.c\n+++ b/drivers/net/tun.c\n@@ -1967,18 +1967,25 @@ static ssize_t tun_get_user(struct tun_struct *tun, struct tun_file *tfile,\n \t\t\t\t\t  skb_headlen(skb));\n \n \t\tif (unlikely(headlen > skb_headlen(skb))) {\n+\t\t\tWARN_ON_ONCE(1);\n+\t\t\terr = -ENOMEM;\n \t\t\tdev_core_stats_rx_dropped_inc(tun->dev);\n+napi_busy:\n \t\t\tnapi_free_frags(&tfile->napi);\n \t\t\trcu_read_unlock();\n \t\t\tmutex_unlock(&tfile->napi_mutex);\n-\t\t\tWARN_ON(1);\n-\t\t\treturn -ENOMEM;\n+\t\t\treturn err;\n \t\t}\n \n-\t\tlocal_bh_disable();\n-\t\tnapi_gro_frags(&tfile->napi);\n-\t\tnapi_complete(&tfile->napi);\n-\t\tlocal_bh_enable();\n+\t\tif (likely(napi_schedule_prep(&tfile->napi))) {\n+\t\t\tlocal_bh_disable();\n+\t\t\tnapi_gro_frags(&tfile->napi);\n+\t\t\tnapi_complete(&tfile->napi);\n+\t\t\tlocal_bh_enable();\n+\t\t} else {\n+\t\t\terr = -EBUSY;\n+\t\t\tgoto napi_busy;\n+\t\t}\n \t\tmutex_unlock(&tfile->napi_mutex);\n \t} else if (tfile->napi_enabled) {\n \t\tstruct sk_buff_head *queue = &tfile->sk.sk_write_queue;\n",
+    "patch_modified_files": [
+        "drivers/net/tun.c"
+    ]
+}

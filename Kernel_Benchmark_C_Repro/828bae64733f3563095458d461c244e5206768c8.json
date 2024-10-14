@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel paging request in build_segment_manager",
+    "display-title": "BUG: unable to handle kernel paging request in build_segment_manager",
+    "id": "828bae64733f3563095458d461c244e5206768c8",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "f2fs: sanity check on sit entry",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b2ca374f33bd33fd822eb871876e4888cf79dc97",
+            "hash": "b2ca374f33bd33fd822eb871876e4888cf79dc97",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000021d960056a4b7c6f@google.com/T/",
+        "https://lore.kernel.org/all/20180425054613.2700-1-jaegeuk@kernel.org/T/",
+        "https://lore.kernel.org/all/20180716073443.294323458@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20181204103726.750894136@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20181206143011.174892052@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190124190154.968308875@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15559517800000",
+            "c-reproducer": "/text?tag=ReproC&x=149fce5b800000",
+            "kernel-config": "/text?tag=KernelConfig&x=191a2635dcad1c46",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=87ef12027b9b1dd0e0b12cf311fbcb19f9d92539",
+            "kernel-source-commit": "87ef12027b9b1dd0e0b12cf311fbcb19f9d92539",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/cc402841ba1e067327a4adaf0a65335e47b5e83c",
+            "syzkaller-commit": "cc402841ba1e067327a4adaf0a65335e47b5e83c",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1233ef87800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "build_sit_entries",
+            "fs/f2fs/segment.c"
+        ]
+    ],
+    "patch_commit_date": "2018-04-24T21:44:16+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "f2fs"
+    ],
+    "parent_of_fix_commit": "5d64600d4f337dc2bb89cd59da99f452f5e4f3c3",
+    "patch": "diff --git a/fs/f2fs/segment.c b/fs/f2fs/segment.c\nindex 1dc7a3d20786..3ba8a4a768c9 100644\n--- a/fs/f2fs/segment.c\n+++ b/fs/f2fs/segment.c\n@@ -3681,6 +3681,15 @@ static int build_sit_entries(struct f2fs_sb_info *sbi)\n \t\tunsigned int old_valid_blocks;\n \n \t\tstart = le32_to_cpu(segno_in_journal(journal, i));\n+\t\tif (start >= MAIN_SEGS(sbi)) {\n+\t\t\tf2fs_msg(sbi->sb, KERN_ERR,\n+\t\t\t\t\t\"Wrong journal entry on segno %u\",\n+\t\t\t\t\tstart);\n+\t\t\tset_sbi_flag(sbi, SBI_NEED_FSCK);\n+\t\t\terr = -EINVAL;\n+\t\t\tbreak;\n+\t\t}\n+\n \t\tse = &sit_i->sentries[start];\n \t\tsit = sit_in_journal(journal, i);\n \n",
+    "patch_modified_files": [
+        "fs/f2fs/segment.c"
+    ]
+}

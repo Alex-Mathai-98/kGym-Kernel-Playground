@@ -1,0 +1,76 @@
+{
+    "version": 1,
+    "title": "WARNING in page_counter_uncharge",
+    "display-title": "WARNING in page_counter_uncharge",
+    "id": "62245b7c97414065b7df9b33e6c584b19dc02b6d",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mptcp: Check reclaim amount before reducing allocation",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=269bda9e7da48eafb599d01c96199caa2f7547e5",
+            "hash": "269bda9e7da48eafb599d01c96199caa2f7547e5",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "devlink: Remove not-executed trap policer notifications",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=22849b5ea5952d853547cc5e0651f34a246b2a4f",
+        "hash": "22849b5ea5952d853547cc5e0651f34a246b2a4f",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "WARNING in page_counter_uncharge",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16a82259b00000",
+            "c-reproducer": "/text?tag=ReproC&x=11eb1453b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=2ebd4b29568807bc",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e7c124bd04631973a3cc0df19ab881b56d8a2d50",
+            "kernel-source-commit": "e7c124bd04631973a3cc0df19ab881b56d8a2d50",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/6cc879d4712dbaf6e97f01250e2f4906c07b24b8",
+            "syzkaller-commit": "6cc879d4712dbaf6e97f01250e2f4906c07b24b8",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=105d5747b00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__mptcp_mem_reclaim_partial",
+            "net/mptcp/protocol.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "devlink_trap_policer_unregister",
+            "net/core/devlink.c"
+        ],
+        [
+            "devlink_trap_policers_unregister",
+            "net/core/devlink.c"
+        ],
+        [
+            "devlink_trap_policer_register",
+            "net/core/devlink.c"
+        ],
+        [
+            "devlink_trap_policer_notify",
+            "net/core/devlink.c"
+        ],
+        [
+            "devlink_trap_policers_register",
+            "net/core/devlink.c"
+        ]
+    ],
+    "patch_commit_date": "2022-01-06T22:06:38+00:00",
+    "cause_commit_date": "2021-10-21T14:16:14+00:00",
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "110b6d1fe98fd7af9893992459b651594d789293",
+    "patch": "diff --git a/net/mptcp/protocol.c b/net/mptcp/protocol.c\nindex 54613f5b7521..0cd55e4c30fa 100644\n--- a/net/mptcp/protocol.c\n+++ b/net/mptcp/protocol.c\n@@ -972,7 +972,9 @@ static void __mptcp_mem_reclaim_partial(struct sock *sk)\n \n \tlockdep_assert_held_once(&sk->sk_lock.slock);\n \n-\t__mptcp_rmem_reclaim(sk, reclaimable - 1);\n+\tif (reclaimable > SK_MEM_QUANTUM)\n+\t\t__mptcp_rmem_reclaim(sk, reclaimable - 1);\n+\n \tsk_mem_reclaim_partial(sk);\n }\n \n",
+    "patch_modified_files": [
+        "net/mptcp/protocol.c"
+    ]
+}

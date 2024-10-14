@@ -1,0 +1,65 @@
+{
+    "version": 1,
+    "title": "memory leak in reiserfs_parse_options",
+    "display-title": "memory leak in reiserfs_parse_options",
+    "id": "ec221f6bac8133f071c99069233b474102e96c62",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "reiserfs: Fix memory leak in reiserfs_parse_options()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e9d4709fcc26353df12070566970f080e651f0c9",
+            "hash": "e9d4709fcc26353df12070566970f080e651f0c9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000d6ce19059fcfdcd4@google.com/T/",
+        "https://lore.kernel.org/all/20200304131859.24219-1-jack@suse.cz/T/",
+        "https://lore.kernel.org/all/20201018191807.4052726-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192026.4053674-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192231.4054535-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192417.4055228-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192530.4055730-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192635.4056198-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192728.4056577-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201027134900.532249571@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027134902.130312227@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027134909.701581493@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135430.632029009@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135450.497324313@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135455.027547757@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135522.655719020@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1308bbede00000",
+            "c-reproducer": "/text?tag=ReproC&x=15cd8e45e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=6951e37c8d613538",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=63623fd44972d1ed2bfb6e0fb631dfcf547fd1e7",
+            "kernel-source-commit": "63623fd44972d1ed2bfb6e0fb631dfcf547fd1e7",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c88c7b75a4e022b758f4b0f1bf3db8ebb2fb25e6",
+            "syzkaller-commit": "c88c7b75a4e022b758f4b0f1bf3db8ebb2fb25e6",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11226d29e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "reiserfs_parse_options",
+            "fs/reiserfs/super.c"
+        ]
+    ],
+    "patch_commit_date": "2020-03-04T13:01:44+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "reiserfs"
+    ],
+    "parent_of_fix_commit": "256ccb9baeaba2b1a4ed5324c02b8d723497ca5a",
+    "patch": "diff --git a/fs/reiserfs/super.c b/fs/reiserfs/super.c\nindex a6bce5b1fb1d..1b9c7a387dc7 100644\n--- a/fs/reiserfs/super.c\n+++ b/fs/reiserfs/super.c\n@@ -1258,6 +1258,10 @@ static int reiserfs_parse_options(struct super_block *s,\n \t\t\t\t\t\t \"turned on.\");\n \t\t\t\treturn 0;\n \t\t\t}\n+\t\t\tif (qf_names[qtype] !=\n+\t\t\t    REISERFS_SB(s)->s_qf_names[qtype])\n+\t\t\t\tkfree(qf_names[qtype]);\n+\t\t\tqf_names[qtype] = NULL;\n \t\t\tif (*arg) {\t/* Some filename specified? */\n \t\t\t\tif (REISERFS_SB(s)->s_qf_names[qtype]\n \t\t\t\t    && strcmp(REISERFS_SB(s)->s_qf_names[qtype],\n@@ -1287,10 +1291,6 @@ static int reiserfs_parse_options(struct super_block *s,\n \t\t\t\telse\n \t\t\t\t\t*mount_options |= 1 << REISERFS_GRPQUOTA;\n \t\t\t} else {\n-\t\t\t\tif (qf_names[qtype] !=\n-\t\t\t\t    REISERFS_SB(s)->s_qf_names[qtype])\n-\t\t\t\t\tkfree(qf_names[qtype]);\n-\t\t\t\tqf_names[qtype] = NULL;\n \t\t\t\tif (qtype == USRQUOTA)\n \t\t\t\t\t*mount_options &= ~(1 << REISERFS_USRQUOTA);\n \t\t\t\telse\n",
+    "patch_modified_files": [
+        "fs/reiserfs/super.c"
+    ]
+}

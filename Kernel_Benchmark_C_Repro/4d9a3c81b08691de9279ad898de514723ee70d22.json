@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "WARNING in perf_pending_event",
+    "display-title": "WARNING in perf_pending_event",
+    "id": "4d9a3c81b08691de9279ad898de514723ee70d22",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "perf: Ignore sigtrap for tracepoints destined for other tasks",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=73743c3b092277febbf69b250ce8ebbca0525aa2",
+            "hash": "73743c3b092277febbf69b250ce8ebbca0525aa2",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000053692705d05a17c1@google.com/T/",
+        "https://lore.kernel.org/all/163765762058.11128.9441697043522251183.tip-bot2@tip-bot2/T/",
+        "https://lore.kernel.org/all/20211129181718.913038547@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/YYpoCOBmC/kJWfmI@elver.google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in perf_pending_event",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12ac8392300000",
+            "c-reproducer": "/text?tag=ReproC&x=1039bce6300000",
+            "kernel-config": "/text?tag=KernelConfig&x=5ba4a97de189f896",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=85a90500f9a1717c4e142ce92e6c1cb1a339ec78",
+            "kernel-source-commit": "85a90500f9a1717c4e142ce92e6c1cb1a339ec78",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/6972b10616d785401dea17cec890cca8916424a7",
+            "syzkaller-commit": "6972b10616d785401dea17cec890cca8916424a7",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16e95ce9300000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "perf_tp_event",
+            "kernel/events/core.c"
+        ]
+    ],
+    "patch_commit_date": "2021-11-09T12:22:32+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "perf"
+    ],
+    "parent_of_fix_commit": "136057256686de39cc3a07c2e39ef6bc43003ff6",
+    "patch": "diff --git a/kernel/events/core.c b/kernel/events/core.c\nindex 523106a506ee..30d94f68c5bd 100644\n--- a/kernel/events/core.c\n+++ b/kernel/events/core.c\n@@ -9759,6 +9759,9 @@ void perf_tp_event(u16 event_type, u64 count, void *record, int entry_size,\n \t\t\t\tcontinue;\n \t\t\tif (event->attr.config != entry->type)\n \t\t\t\tcontinue;\n+\t\t\t/* Cannot deliver synchronous signal to other task. */\n+\t\t\tif (event->attr.sigtrap)\n+\t\t\t\tcontinue;\n \t\t\tif (perf_tp_event_match(event, &data, regs))\n \t\t\t\tperf_swevent_event(event, count, &data, regs);\n \t\t}\n",
+    "patch_modified_files": [
+        "kernel/events/core.c"
+    ]
+}

@@ -1,0 +1,45 @@
+{
+    "version": 1,
+    "title": "memory leak in iovec_from_user",
+    "display-title": "memory leak in iovec_from_user",
+    "id": "a0fa215251281c84b3e1dbb5ceea8087a5fb2eba",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: free iovec if file assignment fails",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=323b190ba2debbcc03c01d2edaf1ec6b43e6ae43",
+            "hash": "323b190ba2debbcc03c01d2edaf1ec6b43e6ae43",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000951a1505dccf8b73@google.com/T/",
+        "https://lore.kernel.org/all/20220426081750.051179617@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/e2f326d2-3533-654e-e040-44a71cdcc896@kernel.dk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in iovec_from_user",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13c45d88f00000",
+            "c-reproducer": "/text?tag=ReproC&x=17b428af700000",
+            "kernel-config": "/text?tag=KernelConfig&x=b8f1a3425e05af27",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=ce522ba9ef7e2d9fb22a39eb3371c0c64e2a433e",
+            "kernel-source-commit": "ce522ba9ef7e2d9fb22a39eb3371c0c64e2a433e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/dacb3f1c44e9c527b8bb595e3b37a43ca7733cc0",
+            "syzkaller-commit": "dacb3f1c44e9c527b8bb595e3b37a43ca7733cc0",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1100db60f00000"
+        }
+    ],
+    "subsystems": [
+        "fs",
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "701521403cfb228536b3947035c8a6eca40d8e58",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex 4479013854d2..24409dd07239 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -3832,8 +3832,10 @@ static int io_read(struct io_kiocb *req, unsigned int issue_flags)\n \t\tiovec = NULL;\n \t}\n \tret = io_rw_init_file(req, FMODE_READ);\n-\tif (unlikely(ret))\n+\tif (unlikely(ret)) {\n+\t\tkfree(iovec);\n \t\treturn ret;\n+\t}\n \treq->result = iov_iter_count(&s->iter);\n \n \tif (force_nonblock) {\n@@ -3958,8 +3960,10 @@ static int io_write(struct io_kiocb *req, unsigned int issue_flags)\n \t\tiovec = NULL;\n \t}\n \tret = io_rw_init_file(req, FMODE_WRITE);\n-\tif (unlikely(ret))\n+\tif (unlikely(ret)) {\n+\t\tkfree(iovec);\n \t\treturn ret;\n+\t}\n \treq->result = iov_iter_count(&s->iter);\n \n \tif (force_nonblock) {\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

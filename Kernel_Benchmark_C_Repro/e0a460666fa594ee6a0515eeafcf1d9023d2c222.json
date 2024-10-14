@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in search_by_entry_key",
+    "display-title": "KASAN: use-after-free Read in search_by_entry_key",
+    "id": "e0a460666fa594ee6a0515eeafcf1d9023d2c222",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "reiserfs: add check for an invalid ih_entry_count",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d24396c5290ba8ab04ba505176874c4e04a2d53c",
+            "hash": "d24396c5290ba8ab04ba505176874c4e04a2d53c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000081256605b12a1311@google.com/T/",
+        "https://lore.kernel.org/all/20201101140958.3650143-1-rkovhaev@gmail.com/T/",
+        "https://lore.kernel.org/all/20201230130314.3636961-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201230130357.3637261-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201230130422.3637448-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201230130436.3637579-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201230130447.3637694-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201230130454.3637785-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210104155703.375788488@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210104155705.740576914@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210104155708.800470590@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210105090818.518271884@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210107140827.584658199@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210107140827.866214702@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210107143052.973437064@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17ef5d4f900000",
+            "c-reproducer": "/text?tag=ReproC&x=11396677900000",
+            "kernel-config": "/text?tag=KernelConfig&x=de7f697da23057c7",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c85fb28b6f999db9928b841f63f1beeb3074eeca",
+            "kernel-source-commit": "c85fb28b6f999db9928b841f63f1beeb3074eeca",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/1880b4a9f394370a7d1fcb5c1cfca0fa1127b463",
+            "syzkaller-commit": "1880b4a9f394370a7d1fcb5c1cfca0fa1127b463",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1024aa1b900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "is_leaf",
+            "fs/reiserfs/stree.c"
+        ]
+    ],
+    "patch_commit_date": "2020-11-01T14:09:58+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "reiserfs"
+    ],
+    "parent_of_fix_commit": "8fca3c8a3451514c6f20dd26d5e66e78220d16e3",
+    "patch": "diff --git a/fs/reiserfs/stree.c b/fs/reiserfs/stree.c\nindex 8bf88d690729..476a7ff49482 100644\n--- a/fs/reiserfs/stree.c\n+++ b/fs/reiserfs/stree.c\n@@ -454,6 +454,12 @@ static int is_leaf(char *buf, int blocksize, struct buffer_head *bh)\n \t\t\t\t\t \"(second one): %h\", ih);\n \t\t\treturn 0;\n \t\t}\n+\t\tif (is_direntry_le_ih(ih) && (ih_item_len(ih) < (ih_entry_count(ih) * IH_SIZE))) {\n+\t\t\treiserfs_warning(NULL, \"reiserfs-5093\",\n+\t\t\t\t\t \"item entry count seems wrong %h\",\n+\t\t\t\t\t ih);\n+\t\t\treturn 0;\n+\t\t}\n \t\tprev_location = ih_location(ih);\n \t}\n \n",
+    "patch_modified_files": [
+        "fs/reiserfs/stree.c"
+    ]
+}

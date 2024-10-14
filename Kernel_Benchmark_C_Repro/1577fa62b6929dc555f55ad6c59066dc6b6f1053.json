@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "KASAN: null-ptr-deref Write in amp_read_loc_assoc_final_data",
+    "display-title": "KASAN: null-ptr-deref Write in amp_read_loc_assoc_final_data",
+    "id": "1577fa62b6929dc555f55ad6c59066dc6b6f1053",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: Fix null pointer dereference in amp_read_loc_assoc_final_data",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e8bd76ede155fd54d8c41d045dda43cd3174d506",
+            "hash": "e8bd76ede155fd54d8c41d045dda43cd3174d506",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "[media] marvell-ccic: don't break long lines",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a4585c31c5018578b4abf699ddfdff719dd1c313",
+        "hash": "a4585c31c5018578b4abf699ddfdff719dd1c313",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c18f1a05abbfc792@google.com/T/",
+        "https://lore.kernel.org/all/20200808040440.255578-1-yepeilin.cs@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13d5ed24900000",
+            "c-reproducer": "/text?tag=ReproC&x=1381a56c900000",
+            "kernel-config": "/text?tag=KernelConfig&x=e59ee776d5aa8d55",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=83bdc7275e6206f560d247be856bceba3e1ed8f2",
+            "kernel-source-commit": "83bdc7275e6206f560d247be856bceba3e1ed8f2",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8df85ed9883abc2a200858f44f22c11c602d218a",
+            "syzkaller-commit": "8df85ed9883abc2a200858f44f22c11c602d218a",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1740af12900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "amp_read_loc_assoc_final_data",
+            "net/bluetooth/amp.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "mccic_register",
+            "drivers/media/platform/marvell-ccic/mcam-core.c"
+        ]
+    ],
+    "patch_commit_date": "2021-02-02T09:42:30+00:00",
+    "cause_commit_date": "2016-10-18T19:44:09+00:00",
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "fc342c4dc408754f50f19dc832152fbb4b73f1e6",
+    "patch": "diff --git a/net/bluetooth/amp.c b/net/bluetooth/amp.c\nindex 9c711f0dfae3..be2d469d6369 100644\n--- a/net/bluetooth/amp.c\n+++ b/net/bluetooth/amp.c\n@@ -297,6 +297,9 @@ void amp_read_loc_assoc_final_data(struct hci_dev *hdev,\n \tstruct hci_request req;\n \tint err;\n \n+\tif (!mgr)\n+\t\treturn;\n+\n \tcp.phy_handle = hcon->handle;\n \tcp.len_so_far = cpu_to_le16(0);\n \tcp.max_len = cpu_to_le16(hdev->amp_assoc_size);\n",
+    "patch_modified_files": [
+        "net/bluetooth/amp.c"
+    ]
+}

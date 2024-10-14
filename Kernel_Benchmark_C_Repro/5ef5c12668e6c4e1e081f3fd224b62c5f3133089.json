@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "WARNING in yurex_write/usb_submit_urb",
+    "display-title": "WARNING in yurex_write/usb_submit_urb",
+    "id": "5ef5c12668e6c4e1e081f3fd224b62c5f3133089",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "USB: yurex: fix control-URB timeout handling",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=372c93131998c0622304bed118322d2a04489e63",
+            "hash": "372c93131998c0622304bed118322d2a04489e63",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000007f73da05b64bfe7c@google.com/T/",
+        "https://lore.kernel.org/all/20201214104444.28386-1-johan@kernel.org/T/",
+        "https://lore.kernel.org/all/20210111130032.469630231@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130033.676306636@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130033.715773309@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130036.414620026@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130039.165470698@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130048.499958175@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1583cf17500000",
+            "c-reproducer": "/text?tag=ReproC&x=11825413500000",
+            "kernel-config": "/text?tag=KernelConfig&x=3416bb960d5c705d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=6bff9bb8a292668e7da3e740394b061e5201f683",
+            "kernel-source-commit": "6bff9bb8a292668e7da3e740394b061e5201f683",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/b22a7ec30951c01f7f54f811b7f636987c86b0ca",
+            "syzkaller-commit": "b22a7ec30951c01f7f54f811b7f636987c86b0ca",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1387af9b500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "yurex_write",
+            "drivers/usb/misc/yurex.c"
+        ]
+    ],
+    "patch_commit_date": "2020-12-14T10:30:53+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "83a43ff80a566de8718dfc6565545a0080ec1fb5",
+    "patch": "diff --git a/drivers/usb/misc/yurex.c b/drivers/usb/misc/yurex.c\nindex 73ebfa6e9715..c640f98d20c5 100644\n--- a/drivers/usb/misc/yurex.c\n+++ b/drivers/usb/misc/yurex.c\n@@ -496,6 +496,9 @@ static ssize_t yurex_write(struct file *file, const char __user *user_buffer,\n \t\ttimeout = schedule_timeout(YUREX_WRITE_TIMEOUT);\n \tfinish_wait(&dev->waitq, &wait);\n \n+\t/* make sure URB is idle after timeout or (spurious) CMD_ACK */\n+\tusb_kill_urb(dev->cntl_urb);\n+\n \tmutex_unlock(&dev->io_mutex);\n \n \tif (retval < 0) {\n",
+    "patch_modified_files": [
+        "drivers/usb/misc/yurex.c"
+    ]
+}

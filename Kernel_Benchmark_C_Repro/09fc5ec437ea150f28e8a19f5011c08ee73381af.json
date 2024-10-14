@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in bdev_del_partition",
+    "display-title": "KASAN: use-after-free Read in bdev_del_partition",
+    "id": "09fc5ec437ea150f28e8a19f5011c08ee73381af",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "block: fix locking in bdev_del_partition",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=08fc1ab6d748ab1a690fd483f41e2938984ce353",
+            "hash": "08fc1ab6d748ab1a690fd483f41e2938984ce353",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "block: pass a hd_struct to delete_partition",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cddae808aeb77e5c29d22a8e0dfbdaed413f9e04",
+        "hash": "cddae808aeb77e5c29d22a8e0dfbdaed413f9e04",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000520ffc05ae2f4fee@google.com/T/",
+        "https://lore.kernel.org/all/20200901095941.2626957-1-hch@lst.de/T/",
+        "https://lore.kernel.org/all/20200903065534.623691-1-yepeilin.cs@gmail.com/T/",
+        "https://lore.kernel.org/all/20200908152241.646390211@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=154e2285900000",
+            "c-reproducer": "/text?tag=ReproC&x=16f6e915900000",
+            "kernel-config": "/text?tag=KernelConfig&x=891ca5711a9f1650",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=dcc5c6f013d841e9ae74d527d312d512dfc2e2f0",
+            "kernel-source-commit": "dcc5c6f013d841e9ae74d527d312d512dfc2e2f0",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d5a3ae1f760e7cb2cd5a721d9645ae22eae114fe",
+            "syzkaller-commit": "d5a3ae1f760e7cb2cd5a721d9645ae22eae114fe",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=156f0279900000"
+        }
+    ],
+    "subsystems": [
+        "block"
+    ],
+    "parent_of_fix_commit": "cafe01ef8fcb248583038e1be071383530fe355a",
+    "patch": "diff --git a/block/partitions/core.c b/block/partitions/core.c\nindex 5a18c8edabbc..5b4869c08fb3 100644\n--- a/block/partitions/core.c\n+++ b/block/partitions/core.c\n@@ -532,19 +532,20 @@ int bdev_add_partition(struct block_device *bdev, int partno,\n int bdev_del_partition(struct block_device *bdev, int partno)\n {\n \tstruct block_device *bdevp;\n-\tstruct hd_struct *part;\n-\tint ret = 0;\n-\n-\tpart = disk_get_part(bdev->bd_disk, partno);\n-\tif (!part)\n-\t\treturn -ENXIO;\n+\tstruct hd_struct *part = NULL;\n+\tint ret;\n \n-\tret = -ENOMEM;\n-\tbdevp = bdget(part_devt(part));\n+\tbdevp = bdget_disk(bdev->bd_disk, partno);\n \tif (!bdevp)\n-\t\tgoto out_put_part;\n+\t\treturn -ENOMEM;\n \n \tmutex_lock(&bdevp->bd_mutex);\n+\tmutex_lock_nested(&bdev->bd_mutex, 1);\n+\n+\tret = -ENXIO;\n+\tpart = disk_get_part(bdev->bd_disk, partno);\n+\tif (!part)\n+\t\tgoto out_unlock;\n \n \tret = -EBUSY;\n \tif (bdevp->bd_openers)\n@@ -553,16 +554,14 @@ int bdev_del_partition(struct block_device *bdev, int partno)\n \tsync_blockdev(bdevp);\n \tinvalidate_bdev(bdevp);\n \n-\tmutex_lock_nested(&bdev->bd_mutex, 1);\n \tdelete_partition(bdev->bd_disk, part);\n-\tmutex_unlock(&bdev->bd_mutex);\n-\n \tret = 0;\n out_unlock:\n+\tmutex_unlock(&bdev->bd_mutex);\n \tmutex_unlock(&bdevp->bd_mutex);\n \tbdput(bdevp);\n-out_put_part:\n-\tdisk_put_part(part);\n+\tif (part)\n+\t\tdisk_put_part(part);\n \treturn ret;\n }\n \n",
+    "patch_modified_files": [
+        "block/partitions/core.c"
+    ]
+}

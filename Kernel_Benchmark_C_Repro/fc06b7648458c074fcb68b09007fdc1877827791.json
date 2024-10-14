@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "title": "WARNING in idr_get_next",
+    "display-title": "WARNING in idr_get_next",
+    "id": "fc06b7648458c074fcb68b09007fdc1877827791",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "qrtr: Convert qrtr_ports from IDR to XArray",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3cbf7530a163d048a6376cd22fecb9cdcb23b192",
+            "hash": "3cbf7530a163d048a6376cd22fecb9cdcb23b192",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c98d7205ae300144@google.com/T/",
+        "https://lore.kernel.org/all/20200914071724.202365-1-anmol.karan123@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17a1352e900000",
+            "c-reproducer": "/text?tag=ReproC&x=11fdaf41900000",
+            "kernel-config": "/text?tag=KernelConfig&x=891ca5711a9f1650",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4d41ead6ead97c3730bbd186a601a64828668f01",
+            "kernel-source-commit": "4d41ead6ead97c3730bbd186a601a64828668f01",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d5a3ae1f760e7cb2cd5a721d9645ae22eae114fe",
+            "syzkaller-commit": "d5a3ae1f760e7cb2cd5a721d9645ae22eae114fe",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=179f19de900000"
+        }
+    ],
+    "subsystems": [
+        "arm-msm",
+        "net"
+    ],
+    "parent_of_fix_commit": "53f7c5e1406110b9b8da4b7e2c66023a16bb8714",
+    "patch": "diff --git a/net/qrtr/qrtr.c b/net/qrtr/qrtr.c\nindex dfc820ee553a..4b46c69e14ab 100644\n--- a/net/qrtr/qrtr.c\n+++ b/net/qrtr/qrtr.c\n@@ -20,6 +20,8 @@\n /* auto-bind range */\n #define QRTR_MIN_EPH_SOCKET 0x4000\n #define QRTR_MAX_EPH_SOCKET 0x7fff\n+#define QRTR_EPH_PORT_RANGE \\\n+\t\tXA_LIMIT(QRTR_MIN_EPH_SOCKET, QRTR_MAX_EPH_SOCKET)\n \n /**\n  * struct qrtr_hdr_v1 - (I|R)PCrouter packet header version 1\n@@ -106,8 +108,7 @@ static LIST_HEAD(qrtr_all_nodes);\n static DEFINE_MUTEX(qrtr_node_lock);\n \n /* local port allocation management */\n-static DEFINE_IDR(qrtr_ports);\n-static DEFINE_MUTEX(qrtr_port_lock);\n+static DEFINE_XARRAY_ALLOC(qrtr_ports);\n \n /**\n  * struct qrtr_node - endpoint node\n@@ -653,7 +654,7 @@ static struct qrtr_sock *qrtr_port_lookup(int port)\n \t\tport = 0;\n \n \trcu_read_lock();\n-\tipc = idr_find(&qrtr_ports, port);\n+\tipc = xa_load(&qrtr_ports, port);\n \tif (ipc)\n \t\tsock_hold(&ipc->sk);\n \trcu_read_unlock();\n@@ -695,9 +696,7 @@ static void qrtr_port_remove(struct qrtr_sock *ipc)\n \n \t__sock_put(&ipc->sk);\n \n-\tmutex_lock(&qrtr_port_lock);\n-\tidr_remove(&qrtr_ports, port);\n-\tmutex_unlock(&qrtr_port_lock);\n+\txa_erase(&qrtr_ports, port);\n \n \t/* Ensure that if qrtr_port_lookup() did enter the RCU read section we\n \t * wait for it to up increment the refcount */\n@@ -716,29 +715,20 @@ static void qrtr_port_remove(struct qrtr_sock *ipc)\n  */\n static int qrtr_port_assign(struct qrtr_sock *ipc, int *port)\n {\n-\tu32 min_port;\n \tint rc;\n \n-\tmutex_lock(&qrtr_port_lock);\n \tif (!*port) {\n-\t\tmin_port = QRTR_MIN_EPH_SOCKET;\n-\t\trc = idr_alloc_u32(&qrtr_ports, ipc, &min_port, QRTR_MAX_EPH_SOCKET, GFP_ATOMIC);\n-\t\tif (!rc)\n-\t\t\t*port = min_port;\n+\t\trc = xa_alloc(&qrtr_ports, port, ipc, QRTR_EPH_PORT_RANGE,\n+\t\t\t\tGFP_KERNEL);\n \t} else if (*port < QRTR_MIN_EPH_SOCKET && !capable(CAP_NET_ADMIN)) {\n \t\trc = -EACCES;\n \t} else if (*port == QRTR_PORT_CTRL) {\n-\t\tmin_port = 0;\n-\t\trc = idr_alloc_u32(&qrtr_ports, ipc, &min_port, 0, GFP_ATOMIC);\n+\t\trc = xa_insert(&qrtr_ports, 0, ipc, GFP_KERNEL);\n \t} else {\n-\t\tmin_port = *port;\n-\t\trc = idr_alloc_u32(&qrtr_ports, ipc, &min_port, *port, GFP_ATOMIC);\n-\t\tif (!rc)\n-\t\t\t*port = min_port;\n+\t\trc = xa_insert(&qrtr_ports, *port, ipc, GFP_KERNEL);\n \t}\n-\tmutex_unlock(&qrtr_port_lock);\n \n-\tif (rc == -ENOSPC)\n+\tif (rc == -EBUSY)\n \t\treturn -EADDRINUSE;\n \telse if (rc < 0)\n \t\treturn rc;\n@@ -752,20 +742,16 @@ static int qrtr_port_assign(struct qrtr_sock *ipc, int *port)\n static void qrtr_reset_ports(void)\n {\n \tstruct qrtr_sock *ipc;\n-\tint id;\n-\n-\tmutex_lock(&qrtr_port_lock);\n-\tidr_for_each_entry(&qrtr_ports, ipc, id) {\n-\t\t/* Don't reset control port */\n-\t\tif (id == 0)\n-\t\t\tcontinue;\n+\tunsigned long index;\n \n+\trcu_read_lock();\n+\txa_for_each_start(&qrtr_ports, index, ipc, 1) {\n \t\tsock_hold(&ipc->sk);\n \t\tipc->sk.sk_err = ENETRESET;\n \t\tipc->sk.sk_error_report(&ipc->sk);\n \t\tsock_put(&ipc->sk);\n \t}\n-\tmutex_unlock(&qrtr_port_lock);\n+\trcu_read_unlock();\n }\n \n /* Bind socket to address.\n",
+    "patch_modified_files": [
+        "net/qrtr/qrtr.c"
+    ]
+}

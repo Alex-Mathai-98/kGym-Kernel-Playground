@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "UBSAN: array-index-out-of-bounds in __gfs2_iomap_get",
+    "display-title": "UBSAN: array-index-out-of-bounds in __gfs2_iomap_get",
+    "id": "42296ea544c870f4dde3b25efa4cc1b89515d38e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "gfs2: Fix inode height consistency check",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cfcdb5bad34f600aed7613c3c1a5e618111f77b7",
+            "hash": "cfcdb5bad34f600aed7613c3c1a5e618111f77b7",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ac5f1705f05ffd3b@google.com/T/",
+        "https://lore.kernel.org/all/000000000000bdc7df05f7f837ff@google.com/T/",
+        "https://lore.kernel.org/all/20230315090620.7294-1-ivan.orlov0322@gmail.com/T/",
+        "https://lore.kernel.org/all/20230504194142.3805425-22-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230504194413.3806354-19-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230504194626.3807438-17-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230504194824.3808028-13-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230504194937.3808414-12-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230504195042.3808716-10-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230504195132.3808946-8-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230504195207.3809116-8-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "UBSAN: array-index-out-of-bounds in __gfs2_iomap_get",
+            "syz-reproducer": "/text?tag=ReproSyz&x=160f494f880000",
+            "c-reproducer": "/text?tag=ReproC&x=123f9577880000",
+            "kernel-config": "/text?tag=KernelConfig&x=f967143badd2fa39",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=77856d911a8c8724ee8e2b09d55979fc1de8f1c0",
+            "kernel-source-commit": "77856d911a8c8724ee8e2b09d55979fc1de8f1c0",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/05494336991504e3c6137b89eeddd492e17af6b6",
+            "syzkaller-commit": "05494336991504e3c6137b89eeddd492e17af6b6",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13e64d9d880000"
+        }
+    ],
+    "subsystems": [
+        "gfs2"
+    ],
+    "parent_of_fix_commit": "14a585177c0f5870c82b32000d79aca1baa94bfc",
+    "patch": "diff --git a/fs/gfs2/glops.c b/fs/gfs2/glops.c\nindex 4d99cc77a29b..b65950e76be5 100644\n--- a/fs/gfs2/glops.c\n+++ b/fs/gfs2/glops.c\n@@ -396,6 +396,7 @@ static int inode_go_demote_ok(const struct gfs2_glock *gl)\n \n static int gfs2_dinode_in(struct gfs2_inode *ip, const void *buf)\n {\n+\tstruct gfs2_sbd *sdp = GFS2_SB(&ip->i_inode);\n \tconst struct gfs2_dinode *str = buf;\n \tstruct timespec64 atime;\n \tu16 height, depth;\n@@ -442,7 +443,7 @@ static int gfs2_dinode_in(struct gfs2_inode *ip, const void *buf)\n \t/* i_diskflags and i_eattr must be set before gfs2_set_inode_flags() */\n \tgfs2_set_inode_flags(inode);\n \theight = be16_to_cpu(str->di_height);\n-\tif (unlikely(height > GFS2_MAX_META_HEIGHT))\n+\tif (unlikely(height > sdp->sd_max_height))\n \t\tgoto corrupt;\n \tip->i_height = (u8)height;\n \n",
+    "patch_modified_files": [
+        "fs/gfs2/glops.c"
+    ]
+}

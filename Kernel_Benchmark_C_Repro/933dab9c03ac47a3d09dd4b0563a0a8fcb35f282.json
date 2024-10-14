@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in ntfs_iget",
+    "display-title": "KASAN: use-after-free Read in ntfs_iget",
+    "id": "933dab9c03ac47a3d09dd4b0563a0a8fcb35f282",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ntfs: check for valid standard information attribute",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4dfe6bd94959222e18d512bdf15f6bf9edb9c27c",
+            "hash": "4dfe6bd94959222e18d512bdf15f6bf9edb9c27c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000dfb7eb05b51ce7d2@google.com/T/",
+        "https://lore.kernel.org/all/20210214221247.621431-1-rkovhaev@gmail.com/T/",
+        "https://lore.kernel.org/all/20210217155930.1506815-1-rkovhaev@gmail.com/T/",
+        "https://lore.kernel.org/all/20210224200030.F8x-RJnAx%akpm@linux-foundation.org/T/",
+        "https://lore.kernel.org/all/20210225092515.001992375@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210225092515.015261674@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210225092516.531932232@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210301161006.881950696@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210301161013.585393984@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210301161020.931630716@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210301161031.684018251@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14f310ed500000",
+            "c-reproducer": "/text?tag=ReproC&x=10dd7eb9500000",
+            "kernel-config": "/text?tag=KernelConfig&x=a31e7421a3bb7a0f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=418baf2c28f3473039f2f7377760bd8f6897ae18",
+            "kernel-source-commit": "418baf2c28f3473039f2f7377760bd8f6897ae18",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/878fb17aeaf5e85e8be85fb4ed20890529dfb354",
+            "syzkaller-commit": "878fb17aeaf5e85e8be85fb4ed20890529dfb354",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10480eb9500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ntfs_read_locked_inode",
+            "fs/ntfs/inode.c"
+        ]
+    ],
+    "patch_commit_date": "2021-02-24T20:00:30+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ntfs3"
+    ],
+    "parent_of_fix_commit": "6bbf29010fa90a7ff22ff14e2875b4e6dea8d576",
+    "patch": "diff --git a/fs/ntfs/inode.c b/fs/ntfs/inode.c\nindex 4435dbbc0b63..f5c058b3192c 100644\n--- a/fs/ntfs/inode.c\n+++ b/fs/ntfs/inode.c\n@@ -629,6 +629,12 @@ static int ntfs_read_locked_inode(struct inode *vi)\n \t}\n \ta = ctx->attr;\n \t/* Get the standard information attribute value. */\n+\tif ((u8 *)a + le16_to_cpu(a->data.resident.value_offset)\n+\t\t\t+ le32_to_cpu(a->data.resident.value_length) >\n+\t\t\t(u8 *)ctx->mrec + vol->mft_record_size) {\n+\t\tntfs_error(vi->i_sb, \"Corrupt standard information attribute in inode.\");\n+\t\tgoto unm_err_out;\n+\t}\n \tsi = (STANDARD_INFORMATION*)((u8*)a +\n \t\t\tle16_to_cpu(a->data.resident.value_offset));\n \n",
+    "patch_modified_files": [
+        "fs/ntfs/inode.c"
+    ]
+}

@@ -1,0 +1,67 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in hci_send_acl",
+    "display-title": "KASAN: use-after-free Read in hci_send_acl",
+    "id": "2e1943a94647f7732dd6fc60368642d6e8dc91b1",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: verify AMP hci_chan before amp_destroy",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5c4c8c9544099bb9043a10a5318130a943e32fc3",
+            "hash": "5c4c8c9544099bb9043a10a5318130a943e32fc3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "bnxt_en: Pad TX packets below 52 bytes.",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4ffcd582301bd020b1f9d00c55473af305ec19b5",
+        "hash": "4ffcd582301bd020b1f9d00c55473af305ec19b5",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003d6e8405abeb1da7@google.com/T/",
+        "https://lore.kernel.org/all/20210322140253.1.I269a2d44fcd122aa97e8533a836d968932430f95@changeid/T/",
+        "https://lore.kernel.org/all/20210505163125.3460440-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210505163413.3461611-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210505163648.3462507-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210505163856.3463279-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210505164004.3463707-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210505164051.3464020-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210505164129.3464277-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210505164203.3464510-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210512144743.039977287@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210512144819.664462530@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210512144827.811958675@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210512144837.204217980@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210520092102.149300807@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210520092108.587553970@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210520092120.115153432@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210520092131.308959589@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=152f1904900000",
+            "c-reproducer": "/text?tag=ReproC&x=1482dfca900000",
+            "kernel-config": "/text?tag=KernelConfig&x=c0cfcf935bcc94d2",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=ac3a0c8472969a03c0496ae774b3a29eb26c8d5a",
+            "kernel-source-commit": "ac3a0c8472969a03c0496ae774b3a29eb26c8d5a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/63a7334112fa63edb0c0a3f317d3d92135a6ead9",
+            "syzkaller-commit": "63a7334112fa63edb0c0a3f317d3d92135a6ead9",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16aeb8fc900000"
+        }
+    ],
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "3a9d54b1947ecea8eea9a902c0b7eb58a98add8a",
+    "patch": "diff --git a/include/net/bluetooth/hci_core.h b/include/net/bluetooth/hci_core.h\nindex ebdd4afe30d2..ca4ac6603b9a 100644\n--- a/include/net/bluetooth/hci_core.h\n+++ b/include/net/bluetooth/hci_core.h\n@@ -704,6 +704,7 @@ struct hci_chan {\n \tstruct sk_buff_head data_q;\n \tunsigned int\tsent;\n \t__u8\t\tstate;\n+\tbool\t\tamp;\n };\n \n struct hci_conn_params {\ndiff --git a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c\nindex cf2f4a0abdbd..341c8ce93648 100644\n--- a/net/bluetooth/hci_event.c\n+++ b/net/bluetooth/hci_event.c\n@@ -5032,6 +5032,7 @@ static void hci_loglink_complete_evt(struct hci_dev *hdev, struct sk_buff *skb)\n \t\treturn;\n \n \thchan->handle = le16_to_cpu(ev->handle);\n+\thchan->amp = true;\n \n \tBT_DBG(\"hcon %p mgr %p hchan %p\", hcon, hcon->amp_mgr, hchan);\n \n@@ -5064,7 +5065,7 @@ static void hci_disconn_loglink_complete_evt(struct hci_dev *hdev,\n \thci_dev_lock(hdev);\n \n \thchan = hci_chan_lookup_handle(hdev, le16_to_cpu(ev->handle));\n-\tif (!hchan)\n+\tif (!hchan || !hchan->amp)\n \t\tgoto unlock;\n \n \tamp_destroy_logical_link(hchan, ev->reason);\n",
+    "patch_modified_files": [
+        "include/net/bluetooth/hci_core.h",
+        "net/bluetooth/hci_event.c"
+    ]
+}

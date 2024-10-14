@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "general protection fault in ieee80211_chanctx_num_assigned",
+    "display-title": "general protection fault in ieee80211_chanctx_num_assigned",
+    "id": "13be0ba91068f7ea7ad429f7134a7520eae908af",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "cfg80211: call cfg80211_stop_ap when switch from P2P_GO type",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=563fbefed46ae4c1f70cffb8eb54c02df480b2c2",
+            "hash": "563fbefed46ae4c1f70cffb8eb54c02df480b2c2",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000086205205b0fff8b2@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=153140a5500000",
+            "c-reproducer": "/text?tag=ReproC&x=179bf835500000",
+            "kernel-config": "/text?tag=KernelConfig&x=330f3436df12fd44",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a349e4c659609fd20e4beea89e5c4a4038e33a95",
+            "kernel-source-commit": "a349e4c659609fd20e4beea89e5c4a4038e33a95",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0d27f508b6b35d3b12b9fafebd40a1f36950c8f3",
+            "syzkaller-commit": "0d27f508b6b35d3b12b9fafebd40a1f36950c8f3",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=134a0b05500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "cfg80211_change_iface",
+            "net/wireless/util.c"
+        ]
+    ],
+    "patch_commit_date": "2021-10-27T17:37:22+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "1aa3b2207e889a948049c9a8016cedb0218c2389",
+    "patch": "diff --git a/net/wireless/util.c b/net/wireless/util.c\nindex 5ff1f8726faf..41ea65deb6e1 100644\n--- a/net/wireless/util.c\n+++ b/net/wireless/util.c\n@@ -1046,6 +1046,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,\n \n \t\tswitch (otype) {\n \t\tcase NL80211_IFTYPE_AP:\n+\t\tcase NL80211_IFTYPE_P2P_GO:\n \t\t\tcfg80211_stop_ap(rdev, dev, true);\n \t\t\tbreak;\n \t\tcase NL80211_IFTYPE_ADHOC:\n",
+    "patch_modified_files": [
+        "net/wireless/util.c"
+    ]
+}

@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "WARNING in do_chunk_alloc",
+    "display-title": "WARNING in do_chunk_alloc",
+    "id": "d8e8c32d387c7b35680b035aab36efdefe253ab7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "btrfs: wait on uncached block groups on every allocation loop",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cd361199ff23776481c37023a55d855d5ad5c0f5",
+            "hash": "cd361199ff23776481c37023a55d855d5ad5c0f5",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000fcf6d705ee1d8947@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in do_chunk_alloc",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10b80ab1880000",
+            "c-reproducer": "/text?tag=ReproC&x=12dd6d45880000",
+            "kernel-config": "/text?tag=KernelConfig&x=8cdf448d3b35234",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=eb7081409f94a9a8608593d0fb63a1aa3d6f95d8",
+            "kernel-source-commit": "eb7081409f94a9a8608593d0fb63a1aa3d6f95d8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9da37ae85383e0dda5fc114ec808909f72fe038d",
+            "syzkaller-commit": "9da37ae85383e0dda5fc114ec808909f72fe038d",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=154b366e880000"
+        }
+    ],
+    "subsystems": [
+        "btrfs"
+    ],
+    "parent_of_fix_commit": "84af994b85b89ae405b8ea930653543bc5b864d3",
+    "patch": "diff --git a/fs/btrfs/extent-tree.c b/fs/btrfs/extent-tree.c\nindex 3c62a7eaf24b..ba22790f95f7 100644\n--- a/fs/btrfs/extent-tree.c\n+++ b/fs/btrfs/extent-tree.c\n@@ -3481,7 +3481,6 @@ btrfs_release_block_group(struct btrfs_block_group *cache,\n  * Helper function for find_free_extent().\n  *\n  * Return -ENOENT to inform caller that we need fallback to unclustered mode.\n- * Return -EAGAIN to inform caller that we need to re-search this block group\n  * Return >0 to inform caller that we find nothing\n  * Return 0 means we have found a location and set ffe_ctl->found_offset.\n  */\n@@ -3562,14 +3561,6 @@ static int find_free_extent_clustered(struct btrfs_block_group *bg,\n \t\t\ttrace_btrfs_reserve_extent_cluster(bg, ffe_ctl);\n \t\t\treturn 0;\n \t\t}\n-\t} else if (!ffe_ctl->cached && ffe_ctl->loop > LOOP_CACHING_NOWAIT &&\n-\t\t   !ffe_ctl->retry_clustered) {\n-\t\tspin_unlock(&last_ptr->refill_lock);\n-\n-\t\tffe_ctl->retry_clustered = true;\n-\t\tbtrfs_wait_block_group_cache_progress(bg, ffe_ctl->num_bytes +\n-\t\t\t\tffe_ctl->empty_cluster + ffe_ctl->empty_size);\n-\t\treturn -EAGAIN;\n \t}\n \t/*\n \t * At this point we either didn't find a cluster or we weren't able to\n@@ -3584,7 +3575,6 @@ static int find_free_extent_clustered(struct btrfs_block_group *bg,\n /*\n  * Return >0 to inform caller that we find nothing\n  * Return 0 when we found an free extent and set ffe_ctrl->found_offset\n- * Return -EAGAIN to inform caller that we need to re-search this block group\n  */\n static int find_free_extent_unclustered(struct btrfs_block_group *bg,\n \t\t\t\t\tstruct find_free_extent_ctl *ffe_ctl)\n@@ -3622,25 +3612,8 @@ static int find_free_extent_unclustered(struct btrfs_block_group *bg,\n \toffset = btrfs_find_space_for_alloc(bg, ffe_ctl->search_start,\n \t\t\tffe_ctl->num_bytes, ffe_ctl->empty_size,\n \t\t\t&ffe_ctl->max_extent_size);\n-\n-\t/*\n-\t * If we didn't find a chunk, and we haven't failed on this block group\n-\t * before, and this block group is in the middle of caching and we are\n-\t * ok with waiting, then go ahead and wait for progress to be made, and\n-\t * set @retry_unclustered to true.\n-\t *\n-\t * If @retry_unclustered is true then we've already waited on this\n-\t * block group once and should move on to the next block group.\n-\t */\n-\tif (!offset && !ffe_ctl->retry_unclustered && !ffe_ctl->cached &&\n-\t    ffe_ctl->loop > LOOP_CACHING_NOWAIT) {\n-\t\tbtrfs_wait_block_group_cache_progress(bg, ffe_ctl->num_bytes +\n-\t\t\t\t\t\t      ffe_ctl->empty_size);\n-\t\tffe_ctl->retry_unclustered = true;\n-\t\treturn -EAGAIN;\n-\t} else if (!offset) {\n+\tif (!offset)\n \t\treturn 1;\n-\t}\n \tffe_ctl->found_offset = offset;\n \treturn 0;\n }\n@@ -3654,7 +3627,7 @@ static int do_allocation_clustered(struct btrfs_block_group *block_group,\n \t/* We want to try and use the cluster allocator, so lets look there */\n \tif (ffe_ctl->last_ptr && ffe_ctl->use_cluster) {\n \t\tret = find_free_extent_clustered(block_group, ffe_ctl, bg_ret);\n-\t\tif (ret >= 0 || ret == -EAGAIN)\n+\t\tif (ret >= 0)\n \t\t\treturn ret;\n \t\t/* ret == -ENOENT case falls through */\n \t}\n@@ -3872,8 +3845,7 @@ static void release_block_group(struct btrfs_block_group *block_group,\n {\n \tswitch (ffe_ctl->policy) {\n \tcase BTRFS_EXTENT_ALLOC_CLUSTERED:\n-\t\tffe_ctl->retry_clustered = false;\n-\t\tffe_ctl->retry_unclustered = false;\n+\t\tffe_ctl->retry_uncached = false;\n \t\tbreak;\n \tcase BTRFS_EXTENT_ALLOC_ZONED:\n \t\t/* Nothing to do */\n@@ -4220,9 +4192,7 @@ static noinline int find_free_extent(struct btrfs_root *root,\n \tffe_ctl->orig_have_caching_bg = false;\n \tffe_ctl->index = btrfs_bg_flags_to_raid_index(ffe_ctl->flags);\n \tffe_ctl->loop = 0;\n-\t/* For clustered allocation */\n-\tffe_ctl->retry_clustered = false;\n-\tffe_ctl->retry_unclustered = false;\n+\tffe_ctl->retry_uncached = false;\n \tffe_ctl->cached = 0;\n \tffe_ctl->max_extent_size = 0;\n \tffe_ctl->total_free_space = 0;\n@@ -4373,16 +4343,12 @@ static noinline int find_free_extent(struct btrfs_root *root,\n \n \t\tbg_ret = NULL;\n \t\tret = do_allocation(block_group, ffe_ctl, &bg_ret);\n-\t\tif (ret == 0) {\n-\t\t\tif (bg_ret && bg_ret != block_group) {\n-\t\t\t\tbtrfs_release_block_group(block_group,\n-\t\t\t\t\t\t\t  ffe_ctl->delalloc);\n-\t\t\t\tblock_group = bg_ret;\n-\t\t\t}\n-\t\t} else if (ret == -EAGAIN) {\n-\t\t\tgoto have_block_group;\n-\t\t} else if (ret > 0) {\n+\t\tif (ret > 0)\n \t\t\tgoto loop;\n+\n+\t\tif (bg_ret && bg_ret != block_group) {\n+\t\t\tbtrfs_release_block_group(block_group, ffe_ctl->delalloc);\n+\t\t\tblock_group = bg_ret;\n \t\t}\n \n \t\t/* Checks */\n@@ -4423,6 +4389,15 @@ static noinline int find_free_extent(struct btrfs_root *root,\n \t\tbtrfs_release_block_group(block_group, ffe_ctl->delalloc);\n \t\tbreak;\n loop:\n+\t\tif (!ffe_ctl->cached && ffe_ctl->loop > LOOP_CACHING_NOWAIT &&\n+\t\t    !ffe_ctl->retry_uncached) {\n+\t\t\tffe_ctl->retry_uncached = true;\n+\t\t\tbtrfs_wait_block_group_cache_progress(block_group,\n+\t\t\t\t\t\tffe_ctl->num_bytes +\n+\t\t\t\t\t\tffe_ctl->empty_cluster +\n+\t\t\t\t\t\tffe_ctl->empty_size);\n+\t\t\tgoto have_block_group;\n+\t\t}\n \t\trelease_block_group(block_group, ffe_ctl, ffe_ctl->delalloc);\n \t\tcond_resched();\n \t}\ndiff --git a/fs/btrfs/extent-tree.h b/fs/btrfs/extent-tree.h\nindex b9e148adcd28..88c249c37516 100644\n--- a/fs/btrfs/extent-tree.h\n+++ b/fs/btrfs/extent-tree.h\n@@ -48,16 +48,11 @@ struct find_free_extent_ctl {\n \tint loop;\n \n \t/*\n-\t * Whether we're refilling a cluster, if true we need to re-search\n-\t * current block group but don't try to refill the cluster again.\n+\t * Set to true if we're retrying the allocation on this block group\n+\t * after waiting for caching progress, this is so that we retry only\n+\t * once before moving on to another block group.\n \t */\n-\tbool retry_clustered;\n-\n-\t/*\n-\t * Whether we're updating free space cache, if true we need to re-search\n-\t * current block group but don't try updating free space cache again.\n-\t */\n-\tbool retry_unclustered;\n+\tbool retry_uncached;\n \n \t/* If current block group is cached */\n \tint cached;\n",
+    "patch_modified_files": [
+        "fs/btrfs/extent-tree.c",
+        "fs/btrfs/extent-tree.h"
+    ]
+}

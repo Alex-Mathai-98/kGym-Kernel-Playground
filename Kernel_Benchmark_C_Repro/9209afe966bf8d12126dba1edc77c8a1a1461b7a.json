@@ -1,0 +1,82 @@
+{
+    "version": 1,
+    "title": "BUG: corrupted list in io_file_get",
+    "display-title": "BUG: corrupted list in io_file_get",
+    "id": "9209afe966bf8d12126dba1edc77c8a1a1461b7a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: fix list corruption for splice file_get",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f609cbb8911e40e15f9055e8f945f926ac906924",
+            "hash": "f609cbb8911e40e15f9055e8f945f926ac906924",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "io_uring: account io_uring internal files as REQ_F_INFLIGHT",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=02a13674fa0e8dd326de8b9f4514b41b03d99003",
+        "hash": "02a13674fa0e8dd326de8b9f4514b41b03d99003",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ab74fb05b9f8cb0a@google.com/T/",
+        "https://lore.kernel.org/all/20210211150152.885701259@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/cover.1611859042.git.asml.silence@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "BUG: corrupted list in io_file_get",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12a3872cd00000",
+            "c-reproducer": "/text?tag=ReproC&x=16ab17a4d00000",
+            "kernel-config": "/text?tag=KernelConfig&x=96b123631a6700e9",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=76c057c84d286140c6c416c3b4ba832cd1d8984e",
+            "kernel-source-commit": "76c057c84d286140c6c416c3b4ba832cd1d8984e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/eefc07f2541beeb1bcd50b1d75f40b5f04af2b06",
+            "syzkaller-commit": "eefc07f2541beeb1bcd50b1d75f40b5f04af2b06",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=104c7d44d00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "io_file_get",
+            "fs/io_uring.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "io_grab_identity",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_uring_cancel_files",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_req_drop_files",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_match_task",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_file_get",
+            "fs/io_uring.c"
+        ]
+    ],
+    "patch_commit_date": "2021-01-28T18:39:24+00:00",
+    "cause_commit_date": "2021-01-23T22:49:31+00:00",
+    "subsystems": [
+        "fs",
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "6195ba09822c87cad09189bbf550d0fbe714687a",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex ae388cc52843..39ae1f821cef 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -6460,7 +6460,8 @@ static struct file *io_file_get(struct io_submit_state *state,\n \t\tfile = __io_file_get(state, fd);\n \t}\n \n-\tif (file && file->f_op == &io_uring_fops) {\n+\tif (file && file->f_op == &io_uring_fops &&\n+\t    !(req->flags & REQ_F_INFLIGHT)) {\n \t\tio_req_init_async(req);\n \t\treq->flags |= REQ_F_INFLIGHT;\n \n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

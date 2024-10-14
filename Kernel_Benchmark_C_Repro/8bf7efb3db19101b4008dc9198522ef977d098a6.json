@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "WARNING in memdup_user_nul",
+    "display-title": "WARNING in memdup_user_nul",
+    "id": "8bf7efb3db19101b4008dc9198522ef977d098a6",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "smackfs: restrict bytes count in smackfs write functions",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7ef4c19d245f3dc233fd4be5acea436edd1d83d8",
+            "hash": "7ef4c19d245f3dc233fd4be5acea436edd1d83d8",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000060e1fe05b8de93e5@google.com/T/",
+        "https://lore.kernel.org/all/20210120041843.5090-1-penguin-kernel@I-love.SAKURA.ne.jp/T/",
+        "https://lore.kernel.org/all/20210124143627.582115-1-snovitoll@gmail.com/T/",
+        "https://lore.kernel.org/all/20210224125026.481804-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210224125212.482485-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210224125340.483162-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210224125435.483539-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210224125514.483935-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210224125540.484221-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210305120851.255002428@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120851.751937389@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120853.659441428@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120857.341630346@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120903.166929741@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210305120903.276489876@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=152fba3f500000",
+            "c-reproducer": "/text?tag=ReproC&x=176728e7500000",
+            "kernel-config": "/text?tag=KernelConfig&x=ee2266946ed36986",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=65f0d2414b7079556fbbcc070b3d1c9f9587606d",
+            "kernel-source-commit": "65f0d2414b7079556fbbcc070b3d1c9f9587606d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/269d24e857a757d09a898086a2fa6fa5d827c3e1",
+            "syzkaller-commit": "269d24e857a757d09a898086a2fa6fa5d827c3e1",
+            "compiler-description": "clang version 11.0.0 (https://github.com/llvm/llvm-project.git ca2dcbd030eadbf0aa9b660efe864ff08af6e18b)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15f680af500000"
+        }
+    ],
+    "subsystems": [
+        "lsm"
+    ],
+    "parent_of_fix_commit": "1048ba83fb1c00cd24172e23e8263972f6b5d9ac",
+    "patch": "diff --git a/security/smack/smackfs.c b/security/smack/smackfs.c\nindex 5d44b7d258ef..22ded2c26089 100644\n--- a/security/smack/smackfs.c\n+++ b/security/smack/smackfs.c\n@@ -1167,7 +1167,7 @@ static ssize_t smk_write_net4addr(struct file *file, const char __user *buf,\n \t\treturn -EPERM;\n \tif (*ppos != 0)\n \t\treturn -EINVAL;\n-\tif (count < SMK_NETLBLADDRMIN)\n+\tif (count < SMK_NETLBLADDRMIN || count > PAGE_SIZE - 1)\n \t\treturn -EINVAL;\n \n \tdata = memdup_user_nul(buf, count);\n@@ -1427,7 +1427,7 @@ static ssize_t smk_write_net6addr(struct file *file, const char __user *buf,\n \t\treturn -EPERM;\n \tif (*ppos != 0)\n \t\treturn -EINVAL;\n-\tif (count < SMK_NETLBLADDRMIN)\n+\tif (count < SMK_NETLBLADDRMIN || count > PAGE_SIZE - 1)\n \t\treturn -EINVAL;\n \n \tdata = memdup_user_nul(buf, count);\n@@ -1834,6 +1834,10 @@ static ssize_t smk_write_ambient(struct file *file, const char __user *buf,\n \tif (!smack_privileged(CAP_MAC_ADMIN))\n \t\treturn -EPERM;\n \n+\t/* Enough data must be present */\n+\tif (count == 0 || count > PAGE_SIZE)\n+\t\treturn -EINVAL;\n+\n \tdata = memdup_user_nul(buf, count);\n \tif (IS_ERR(data))\n \t\treturn PTR_ERR(data);\n@@ -2005,6 +2009,9 @@ static ssize_t smk_write_onlycap(struct file *file, const char __user *buf,\n \tif (!smack_privileged(CAP_MAC_ADMIN))\n \t\treturn -EPERM;\n \n+\tif (count > PAGE_SIZE)\n+\t\treturn -EINVAL;\n+\n \tdata = memdup_user_nul(buf, count);\n \tif (IS_ERR(data))\n \t\treturn PTR_ERR(data);\n@@ -2092,6 +2099,9 @@ static ssize_t smk_write_unconfined(struct file *file, const char __user *buf,\n \tif (!smack_privileged(CAP_MAC_ADMIN))\n \t\treturn -EPERM;\n \n+\tif (count > PAGE_SIZE)\n+\t\treturn -EINVAL;\n+\n \tdata = memdup_user_nul(buf, count);\n \tif (IS_ERR(data))\n \t\treturn PTR_ERR(data);\n@@ -2648,6 +2658,10 @@ static ssize_t smk_write_syslog(struct file *file, const char __user *buf,\n \tif (!smack_privileged(CAP_MAC_ADMIN))\n \t\treturn -EPERM;\n \n+\t/* Enough data must be present */\n+\tif (count == 0 || count > PAGE_SIZE)\n+\t\treturn -EINVAL;\n+\n \tdata = memdup_user_nul(buf, count);\n \tif (IS_ERR(data))\n \t\treturn PTR_ERR(data);\n@@ -2740,10 +2754,13 @@ static ssize_t smk_write_relabel_self(struct file *file, const char __user *buf,\n \t\treturn -EPERM;\n \n \t/*\n+\t * No partial write.\n \t * Enough data must be present.\n \t */\n \tif (*ppos != 0)\n \t\treturn -EINVAL;\n+\tif (count == 0 || count > PAGE_SIZE)\n+\t\treturn -EINVAL;\n \n \tdata = memdup_user_nul(buf, count);\n \tif (IS_ERR(data))\n",
+    "patch_modified_files": [
+        "security/smack/smackfs.c"
+    ]
+}

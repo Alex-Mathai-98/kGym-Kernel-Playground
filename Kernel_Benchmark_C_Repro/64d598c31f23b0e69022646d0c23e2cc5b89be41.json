@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "memory leak in vlan_dev_set_egress_priority",
+    "display-title": "memory leak in vlan_dev_set_egress_priority (2)",
+    "id": "64d598c31f23b0e69022646d0c23e2cc5b89be41",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "vlan: fix memory leak in vlan_newlink()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=72a0b329114b1caa8e69dfa7cdad1dd3c69b8602",
+            "hash": "72a0b329114b1caa8e69dfa7cdad1dd3c69b8602",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in vlan_dev_set_egress_priority",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17042eb7f00000",
+            "c-reproducer": "/text?tag=ReproC&x=1198ebec080000",
+            "kernel-config": "/text?tag=KernelConfig&x=916233b7694a38ff",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e8a4e1c1bb697b1d9fc48f0e56dc0f50bc024bee",
+            "kernel-source-commit": "e8a4e1c1bb697b1d9fc48f0e56dc0f50bc024bee",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/bff65f44b47bd73f56c3d6a5c3899de5f5775136",
+            "syzkaller-commit": "bff65f44b47bd73f56c3d6a5c3899de5f5775136",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12a16f58080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "vlan_newlink",
+            "net/8021q/vlan_netlink.c"
+        ]
+    ],
+    "patch_commit_date": "2022-07-08T15:11:53+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "9c840d5f9aaef87e65db900bae21c70b059aba5f",
+    "patch": "diff --git a/net/8021q/vlan_netlink.c b/net/8021q/vlan_netlink.c\nindex 53b1955b027f..214532173536 100644\n--- a/net/8021q/vlan_netlink.c\n+++ b/net/8021q/vlan_netlink.c\n@@ -182,10 +182,14 @@ static int vlan_newlink(struct net *src_net, struct net_device *dev,\n \telse if (dev->mtu > max_mtu)\n \t\treturn -EINVAL;\n \n+\t/* Note: If this initial vlan_changelink() fails, we need\n+\t * to call vlan_dev_free_egress_priority() to free memory.\n+\t */\n \terr = vlan_changelink(dev, tb, data, extack);\n-\tif (err)\n-\t\treturn err;\n-\terr = register_vlan_dev(dev, extack);\n+\n+\tif (!err)\n+\t\terr = register_vlan_dev(dev, extack);\n+\n \tif (err)\n \t\tvlan_dev_free_egress_priority(dev);\n \treturn err;\n",
+    "patch_modified_files": [
+        "net/8021q/vlan_netlink.c"
+    ]
+}

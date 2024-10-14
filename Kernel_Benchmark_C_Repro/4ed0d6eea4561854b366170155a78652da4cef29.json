@@ -1,0 +1,63 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in vhci_hub_control",
+    "display-title": "UBSAN: shift-out-of-bounds in vhci_hub_control",
+    "id": "4ed0d6eea4561854b366170155a78652da4cef29",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "usb: usbip: vhci_hcd: protect shift size",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=718bf42b119de652ebcc93655a1f33a9c0d04b3c",
+            "hash": "718bf42b119de652ebcc93655a1f33a9c0d04b3c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Linux 5.3",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4d856f72c10ecb060868ed10ff1b1453943fc6c8",
+        "hash": "4d856f72c10ecb060868ed10ff1b1453943fc6c8",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005e950e05b71a7fd9@google.com/T/",
+        "https://lore.kernel.org/all/20201229071309.18418-1-rdunlap@infradead.org/T/",
+        "https://lore.kernel.org/all/20210111130033.715773309@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130036.414620026@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130039.165470698@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130048.499958175@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15f4f137500000",
+            "c-reproducer": "/text?tag=ReproC&x=1115f30f500000",
+            "kernel-config": "/text?tag=KernelConfig&x=f7c39e7211134bc0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a409ed156a90093a03fe6a93721ddf4c591eac87",
+            "kernel-source-commit": "a409ed156a90093a03fe6a93721ddf4c591eac87",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/04201c0669446145fd9c347c5538da0ca13ff29b",
+            "syzkaller-commit": "04201c0669446145fd9c347c5538da0ca13ff29b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16443487500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "vhci_hub_control",
+            "drivers/usb/usbip/vhci_hcd.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2020-12-29T07:13:09+00:00",
+    "cause_commit_date": "2019-09-15T21:19:32+00:00",
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "020a1f453449294926ca548d8d5ca970926e8dfd",
+    "patch": "diff --git a/drivers/usb/usbip/vhci_hcd.c b/drivers/usb/usbip/vhci_hcd.c\nindex 66cde5e5f796..3209b5ddd30c 100644\n--- a/drivers/usb/usbip/vhci_hcd.c\n+++ b/drivers/usb/usbip/vhci_hcd.c\n@@ -396,6 +396,8 @@ static int vhci_hub_control(struct usb_hcd *hcd, u16 typeReq, u16 wValue,\n \t\tdefault:\n \t\t\tusbip_dbg_vhci_rh(\" ClearPortFeature: default %x\\n\",\n \t\t\t\t\t  wValue);\n+\t\t\tif (wValue >= 32)\n+\t\t\t\tgoto error;\n \t\t\tvhci_hcd->port_status[rhport] &= ~(1 << wValue);\n \t\t\tbreak;\n \t\t}\n",
+    "patch_modified_files": [
+        "drivers/usb/usbip/vhci_hcd.c"
+    ]
+}

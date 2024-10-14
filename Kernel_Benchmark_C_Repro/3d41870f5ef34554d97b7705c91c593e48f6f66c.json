@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "WARNING in vkms_plane_duplicate_state",
+    "display-title": "WARNING in vkms_plane_duplicate_state",
+    "id": "3d41870f5ef34554d97b7705c91c593e48f6f66c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "drm/vkms: Fix plane duplicate_state",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7cdf33ab02e01300e7e6289acbac9cd8759f8712",
+            "hash": "7cdf33ab02e01300e7e6289acbac9cd8759f8712",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000000a7c8c057b43f025@google.com/T/",
+        "https://lore.kernel.org/all/20181128101033.4840-1-daniel.vetter@ffwll.ch/T/",
+        "https://lore.kernel.org/all/20190121122455.819406896@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1507d533400000",
+            "c-reproducer": "/text?tag=ReproC&x=113be77b400000",
+            "kernel-config": "/text?tag=KernelConfig&x=73e2bc0cb6463446",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=92b419289ceecdd1eae03114928913f298b84327",
+            "kernel-source-commit": "92b419289ceecdd1eae03114928913f298b84327",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9db828b50673b642da7da89eede4348da3aa4987",
+            "syzkaller-commit": "9db828b50673b642da7da89eede4348da3aa4987",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15c546a3400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "vkms_plane_duplicate_state",
+            "drivers/gpu/drm/vkms/vkms_plane.c"
+        ]
+    ],
+    "patch_commit_date": "2018-11-28T10:10:33+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "dri"
+    ],
+    "parent_of_fix_commit": "45fdfdb6475905704134afba3c0ef5f24c2b5921",
+    "patch": "diff --git a/drivers/gpu/drm/vkms/vkms_plane.c b/drivers/gpu/drm/vkms/vkms_plane.c\nindex 7041007396ae..e3bcea4b4891 100644\n--- a/drivers/gpu/drm/vkms/vkms_plane.c\n+++ b/drivers/gpu/drm/vkms/vkms_plane.c\n@@ -23,8 +23,11 @@ vkms_plane_duplicate_state(struct drm_plane *plane)\n \t\treturn NULL;\n \n \tcrc_data = kzalloc(sizeof(*crc_data), GFP_KERNEL);\n-\tif (WARN_ON(!crc_data))\n-\t\tDRM_INFO(\"Couldn't allocate crc_data\");\n+\tif (!crc_data) {\n+\t\tDRM_DEBUG_KMS(\"Couldn't allocate crc_data\\n\");\n+\t\tkfree(vkms_state);\n+\t\treturn NULL;\n+\t}\n \n \tvkms_state->crc_data = crc_data;\n \n",
+    "patch_modified_files": [
+        "drivers/gpu/drm/vkms/vkms_plane.c"
+    ]
+}

@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "memory leak in fbcon_set_font",
+    "display-title": "memory leak in fbcon_set_font (2)",
+    "id": "7cc8bce62e201c60e36ef0133dab7f6b8afbc626",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fbdev: fbcon: release buffer when fbcon_do_set_font() failed",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3c3bfb8586f848317ceba5d777e11204ba3e5758",
+            "hash": "3c3bfb8586f848317ceba5d777e11204ba3e5758",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e2efc305ef0d341f@google.com/T/",
+        "https://lore.kernel.org/all/20221205084959.147904-1-chenzhongjin@huawei.com/T/",
+        "https://lore.kernel.org/all/d37c0147-3605-a876-9b85-16bcbc05eaa6@I-love.SAKURA.ne.jp/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in fbcon_set_font",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14fff84d880000",
+            "c-reproducer": "/text?tag=ReproC&x=135806a7880000",
+            "kernel-config": "/text?tag=KernelConfig&x=979161df0e247659",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c2bf05db6c78f53ca5cd4b48f3b9b71f78d215f1",
+            "kernel-source-commit": "c2bf05db6c78f53ca5cd4b48f3b9b71f78d215f1",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e080de16713b9dbf308cdd7bcb85b58293e46e33",
+            "syzkaller-commit": "e080de16713b9dbf308cdd7bcb85b58293e46e33",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17adae83880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "fbcon_do_set_font",
+            "drivers/video/fbdev/core/fbcon.c"
+        ]
+    ],
+    "patch_commit_date": "2022-12-05T22:10:31+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fbdev"
+    ],
+    "parent_of_fix_commit": "b20a558d377c73ed1eb1247046a5e16fe41da173",
+    "patch": "diff --git a/drivers/video/fbdev/core/fbcon.c b/drivers/video/fbdev/core/fbcon.c\nindex c0143d38df83..14a7d404062c 100644\n--- a/drivers/video/fbdev/core/fbcon.c\n+++ b/drivers/video/fbdev/core/fbcon.c\n@@ -2450,7 +2450,8 @@ static int fbcon_do_set_font(struct vc_data *vc, int w, int h, int charcount,\n \n \tif (userfont) {\n \t\tp->userfont = old_userfont;\n-\t\tREFCOUNT(data)--;\n+\t\tif (--REFCOUNT(data) == 0)\n+\t\t\tkfree(data - FONT_EXTRA_WORDS * sizeof(int));\n \t}\n \n \tvc->vc_font.width = old_width;\n",
+    "patch_modified_files": [
+        "drivers/video/fbdev/core/fbcon.c"
+    ]
+}

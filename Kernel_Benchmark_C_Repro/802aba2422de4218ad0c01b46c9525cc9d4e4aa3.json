@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "WARNING in nf_tables_exit_net",
+    "display-title": "WARNING in nf_tables_exit_net",
+    "id": "802aba2422de4218ad0c01b46c9525cc9d4e4aa3",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: Cleanup nft_net->module_list from nf_tables_exit_net()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=03c1f1ef1584c981935fab2fa0c45d3e43e2c235",
+            "hash": "03c1f1ef1584c981935fab2fa0c45d3e43e2c235",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000006e342d05ec2fad3d@google.com/T/",
+        "https://lore.kernel.org/all/20221103130849.1624522-1-syoshida@redhat.com/T/",
+        "https://lore.kernel.org/all/20221109112820.206807-1-pablo@netfilter.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in nf_tables_exit_net",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1607b841880000",
+            "c-reproducer": "/text?tag=ReproC&x=153ceafc880000",
+            "kernel-config": "/text?tag=KernelConfig&x=a66c6c673fb555e8",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b229b6ca5abbd63ff40c1396095b1b36b18139c3",
+            "kernel-source-commit": "b229b6ca5abbd63ff40c1396095b1b36b18139c3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/ea12ae9b4b6868a459085a62e894ccd682163822",
+            "syzkaller-commit": "ea12ae9b4b6868a459085a62e894ccd682163822",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12f2c75e880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nf_tables_exit_net",
+            "net/netfilter/nf_tables_api.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-03T13:08:49+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "03832a32bf8ff0a8305d94ddd3979835a807248f",
+    "patch": "diff --git a/net/netfilter/nf_tables_api.c b/net/netfilter/nf_tables_api.c\nindex 76bd4d03dbda..e7152d599d73 100644\n--- a/net/netfilter/nf_tables_api.c\n+++ b/net/netfilter/nf_tables_api.c\n@@ -10090,7 +10090,8 @@ static void __net_exit nf_tables_exit_net(struct net *net)\n \tstruct nftables_pernet *nft_net = nft_pernet(net);\n \n \tmutex_lock(&nft_net->commit_mutex);\n-\tif (!list_empty(&nft_net->commit_list))\n+\tif (!list_empty(&nft_net->commit_list) ||\n+\t    !list_empty(&nft_net->module_list))\n \t\t__nf_tables_abort(net, NFNL_ABORT_NONE);\n \t__nft_release_tables(net);\n \tmutex_unlock(&nft_net->commit_mutex);\n",
+    "patch_modified_files": [
+        "net/netfilter/nf_tables_api.c"
+    ]
+}

@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in blk_mq_free_rqs",
+    "display-title": "KASAN: use-after-free Read in blk_mq_free_rqs",
+    "id": "36fe241584203cf394d44560a42e3430434f1213",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "block: free sched's request pool in blk_cleanup_queue",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c3e2219216c92919a6bd1711f340f5faa98695e6",
+            "hash": "c3e2219216c92919a6bd1711f340f5faa98695e6",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000020e6b9058aac120b@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=149089aaa00000",
+            "c-reproducer": "/text?tag=ReproC&x=11b24edea00000",
+            "kernel-config": "/text?tag=KernelConfig&x=1fa7e451a5cac069",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9221dced3069cc9ae2986ba1191b02dae560df28",
+            "kernel-source-commit": "9221dced3069cc9ae2986ba1191b02dae560df28",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/53c81ea5385ee17c68d0afa4e524b6aead37c903",
+            "syzkaller-commit": "53c81ea5385ee17c68d0afa4e524b6aead37c903",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=178d4f72a00000"
+        }
+    ],
+    "subsystems": [
+        "block"
+    ],
+    "parent_of_fix_commit": "cf1db7fc8c2d31222701bd5c01b9cbaf89d8e7ce",
+    "patch": "diff --git a/block/blk-core.c b/block/blk-core.c\nindex ee1b35fe8572..8340f69670d8 100644\n--- a/block/blk-core.c\n+++ b/block/blk-core.c\n@@ -320,6 +320,19 @@ void blk_cleanup_queue(struct request_queue *q)\n \tif (queue_is_mq(q))\n \t\tblk_mq_exit_queue(q);\n \n+\t/*\n+\t * In theory, request pool of sched_tags belongs to request queue.\n+\t * However, the current implementation requires tag_set for freeing\n+\t * requests, so free the pool now.\n+\t *\n+\t * Queue has become frozen, there can't be any in-queue requests, so\n+\t * it is safe to free requests now.\n+\t */\n+\tmutex_lock(&q->sysfs_lock);\n+\tif (q->elevator)\n+\t\tblk_mq_sched_free_requests(q);\n+\tmutex_unlock(&q->sysfs_lock);\n+\n \tpercpu_ref_exit(&q->q_usage_counter);\n \n \t/* @q is and will stay empty, shutdown and put */\ndiff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c\nindex 74c6bb871f7e..500cb04901cc 100644\n--- a/block/blk-mq-sched.c\n+++ b/block/blk-mq-sched.c\n@@ -475,14 +475,18 @@ static int blk_mq_sched_alloc_tags(struct request_queue *q,\n \treturn ret;\n }\n \n+/* called in queue's release handler, tagset has gone away */\n static void blk_mq_sched_tags_teardown(struct request_queue *q)\n {\n-\tstruct blk_mq_tag_set *set = q->tag_set;\n \tstruct blk_mq_hw_ctx *hctx;\n \tint i;\n \n-\tqueue_for_each_hw_ctx(q, hctx, i)\n-\t\tblk_mq_sched_free_tags(set, hctx, i);\n+\tqueue_for_each_hw_ctx(q, hctx, i) {\n+\t\tif (hctx->sched_tags) {\n+\t\t\tblk_mq_free_rq_map(hctx->sched_tags);\n+\t\t\thctx->sched_tags = NULL;\n+\t\t}\n+\t}\n }\n \n int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)\n@@ -523,6 +527,7 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)\n \t\t\tret = e->ops.init_hctx(hctx, i);\n \t\t\tif (ret) {\n \t\t\t\teq = q->elevator;\n+\t\t\t\tblk_mq_sched_free_requests(q);\n \t\t\t\tblk_mq_exit_sched(q, eq);\n \t\t\t\tkobject_put(&eq->kobj);\n \t\t\t\treturn ret;\n@@ -534,11 +539,30 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)\n \treturn 0;\n \n err:\n+\tblk_mq_sched_free_requests(q);\n \tblk_mq_sched_tags_teardown(q);\n \tq->elevator = NULL;\n \treturn ret;\n }\n \n+/*\n+ * called in either blk_queue_cleanup or elevator_switch, tagset\n+ * is required for freeing requests\n+ */\n+void blk_mq_sched_free_requests(struct request_queue *q)\n+{\n+\tstruct blk_mq_hw_ctx *hctx;\n+\tint i;\n+\n+\tlockdep_assert_held(&q->sysfs_lock);\n+\tWARN_ON(!q->elevator);\n+\n+\tqueue_for_each_hw_ctx(q, hctx, i) {\n+\t\tif (hctx->sched_tags)\n+\t\t\tblk_mq_free_rqs(q->tag_set, hctx->sched_tags, i);\n+\t}\n+}\n+\n void blk_mq_exit_sched(struct request_queue *q, struct elevator_queue *e)\n {\n \tstruct blk_mq_hw_ctx *hctx;\ndiff --git a/block/blk-mq-sched.h b/block/blk-mq-sched.h\nindex c7bdb52367ac..3cf92cbbd8ac 100644\n--- a/block/blk-mq-sched.h\n+++ b/block/blk-mq-sched.h\n@@ -28,6 +28,7 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx);\n \n int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e);\n void blk_mq_exit_sched(struct request_queue *q, struct elevator_queue *e);\n+void blk_mq_sched_free_requests(struct request_queue *q);\n \n static inline bool\n blk_mq_sched_bio_merge(struct request_queue *q, struct bio *bio)\ndiff --git a/block/blk-sysfs.c b/block/blk-sysfs.c\nindex 75b5281cc577..977c659dcd18 100644\n--- a/block/blk-sysfs.c\n+++ b/block/blk-sysfs.c\n@@ -850,7 +850,7 @@ static void blk_exit_queue(struct request_queue *q)\n \t */\n \tif (q->elevator) {\n \t\tioc_clear_queue(q);\n-\t\televator_exit(q, q->elevator);\n+\t\t__elevator_exit(q, q->elevator);\n \t\tq->elevator = NULL;\n \t}\n \ndiff --git a/block/blk.h b/block/blk.h\nindex 91b3581b7c7a..7814aa207153 100644\n--- a/block/blk.h\n+++ b/block/blk.h\n@@ -6,6 +6,7 @@\n #include <linux/blk-mq.h>\n #include <xen/xen.h>\n #include \"blk-mq.h\"\n+#include \"blk-mq-sched.h\"\n \n /* Max future timer expiry for timeouts */\n #define BLK_MAX_TIMEOUT\t\t(5 * HZ)\n@@ -176,10 +177,17 @@ void blk_insert_flush(struct request *rq);\n int elevator_init_mq(struct request_queue *q);\n int elevator_switch_mq(struct request_queue *q,\n \t\t\t      struct elevator_type *new_e);\n-void elevator_exit(struct request_queue *, struct elevator_queue *);\n+void __elevator_exit(struct request_queue *, struct elevator_queue *);\n int elv_register_queue(struct request_queue *q);\n void elv_unregister_queue(struct request_queue *q);\n \n+static inline void elevator_exit(struct request_queue *q,\n+\t\tstruct elevator_queue *e)\n+{\n+\tblk_mq_sched_free_requests(q);\n+\t__elevator_exit(q, e);\n+}\n+\n struct hd_struct *__disk_get_part(struct gendisk *disk, int partno);\n \n #ifdef CONFIG_FAIL_IO_TIMEOUT\ndiff --git a/block/elevator.c b/block/elevator.c\nindex ec55d5fc0b3e..2f17d66d0e61 100644\n--- a/block/elevator.c\n+++ b/block/elevator.c\n@@ -178,7 +178,7 @@ static void elevator_release(struct kobject *kobj)\n \tkfree(e);\n }\n \n-void elevator_exit(struct request_queue *q, struct elevator_queue *e)\n+void __elevator_exit(struct request_queue *q, struct elevator_queue *e)\n {\n \tmutex_lock(&e->sysfs_lock);\n \tif (e->type->ops.exit_sched)\n",
+    "patch_modified_files": [
+        "block/blk-core.c",
+        "block/blk-mq-sched.c",
+        "block/blk-mq-sched.h",
+        "block/blk-sysfs.c",
+        "block/blk.h",
+        "block/elevator.c"
+    ]
+}

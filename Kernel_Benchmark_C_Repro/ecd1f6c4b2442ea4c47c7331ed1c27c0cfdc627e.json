@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "WARNING in ext4_da_release_space",
+    "display-title": "WARNING in ext4_da_release_space",
+    "id": "ecd1f6c4b2442ea4c47c7331ed1c27c0cfdc627e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: fix warning in 'ext4_da_release_space'",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1b8f787ef547230a3249bcf897221ef0cc78481b",
+            "hash": "1b8f787ef547230a3249bcf897221ef0cc78481b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000071e45405ead3f73c@google.com/T/",
+        "https://lore.kernel.org/all/20221018012416.373869-1-yebin10@huawei.com/T/",
+        "https://lore.kernel.org/all/20221018022701.683489-1-yebin10@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in ext4_da_release_space",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16b7bfcc880000",
+            "c-reproducer": "/text?tag=ReproC&x=12c59bdc880000",
+            "kernel-config": "/text?tag=KernelConfig&x=d19f5d16783f901",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=493ffd6605b2d3d4dc7008ab927dba319f36671f",
+            "kernel-source-commit": "493ffd6605b2d3d4dc7008ab927dba319f36671f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/02b6492ea9aa946771baee36254b2dbb4c07c0b6",
+            "syzkaller-commit": "02b6492ea9aa946771baee36254b2dbb4c07c0b6",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1055e02c880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ext4_ext_migrate",
+            "fs/ext4/migrate.c"
+        ]
+    ],
+    "patch_commit_date": "2022-10-18T02:27:01+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "17a0bc9bd697f75cfdf9b378d5eb2d7409c91340",
+    "patch": "diff --git a/fs/ext4/migrate.c b/fs/ext4/migrate.c\nindex 0a220ec9862d..a19a9661646e 100644\n--- a/fs/ext4/migrate.c\n+++ b/fs/ext4/migrate.c\n@@ -424,7 +424,8 @@ int ext4_ext_migrate(struct inode *inode)\n \t * already is extent-based, error out.\n \t */\n \tif (!ext4_has_feature_extents(inode->i_sb) ||\n-\t    (ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS)))\n+\t    ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS) ||\n+\t    ext4_has_inline_data(inode))\n \t\treturn -EINVAL;\n \n \tif (S_ISLNK(inode->i_mode) && inode->i_blocks == 0)\n",
+    "patch_modified_files": [
+        "fs/ext4/migrate.c"
+    ]
+}

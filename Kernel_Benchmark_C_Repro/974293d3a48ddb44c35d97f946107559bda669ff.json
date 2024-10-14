@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in get_block",
+    "display-title": "KASAN: use-after-free Read in get_block",
+    "id": "974293d3a48ddb44c35d97f946107559bda669ff",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/minix: reject too-large maximum file size",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=270ef41094e9fa95273f288d7d785313ceab2ff3",
+            "hash": "270ef41094e9fa95273f288d7d785313ceab2ff3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000034e65105a42dcc5e@google.com/T/",
+        "https://lore.kernel.org/all/20200628060846.682158-1-ebiggers@kernel.org/T/",
+        "https://lore.kernel.org/all/20200812013530.pczEExpRx%akpm@linux-foundation.org/T/",
+        "https://lore.kernel.org/all/20200817143733.692105228@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200817143755.807583758@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200817143819.579311991@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200817143833.737102804@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200820091602.251285210@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200820091607.532711107@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200820092125.688850368@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16cb136fe00000",
+            "c-reproducer": "/text?tag=ReproC&x=12fd5930100000",
+            "kernel-config": "/text?tag=KernelConfig&x=b7a70e992f2f9b68",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=189522da8b3a796d56d802e067d591d2ffff7f40",
+            "kernel-source-commit": "189522da8b3a796d56d802e067d591d2ffff7f40",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2e44d63e401ead7d7928c95a30d243b2de1a243b",
+            "syzkaller-commit": "2e44d63e401ead7d7928c95a30d243b2de1a243b",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16040acfe00000"
+        }
+    ],
+    "subsystems": [],
+    "parent_of_fix_commit": "facb03dddec04e4aac1bb2139accdceb04deb1f3",
+    "patch": "diff --git a/fs/minix/inode.c b/fs/minix/inode.c\nindex 2bca95abe8f4..0dd929346f3f 100644\n--- a/fs/minix/inode.c\n+++ b/fs/minix/inode.c\n@@ -150,6 +150,23 @@ static int minix_remount (struct super_block * sb, int * flags, char * data)\n \treturn 0;\n }\n \n+static bool minix_check_superblock(struct minix_sb_info *sbi)\n+{\n+\tif (sbi->s_imap_blocks == 0 || sbi->s_zmap_blocks == 0)\n+\t\treturn false;\n+\n+\t/*\n+\t * s_max_size must not exceed the block mapping limitation.  This check\n+\t * is only needed for V1 filesystems, since V2/V3 support an extra level\n+\t * of indirect blocks which places the limit well above U32_MAX.\n+\t */\n+\tif (sbi->s_version == MINIX_V1 &&\n+\t    sbi->s_max_size > (7 + 512 + 512*512) * BLOCK_SIZE)\n+\t\treturn false;\n+\n+\treturn true;\n+}\n+\n static int minix_fill_super(struct super_block *s, void *data, int silent)\n {\n \tstruct buffer_head *bh;\n@@ -228,11 +245,12 @@ static int minix_fill_super(struct super_block *s, void *data, int silent)\n \t} else\n \t\tgoto out_no_fs;\n \n+\tif (!minix_check_superblock(sbi))\n+\t\tgoto out_illegal_sb;\n+\n \t/*\n \t * Allocate the buffer map to keep the superblock small.\n \t */\n-\tif (sbi->s_imap_blocks == 0 || sbi->s_zmap_blocks == 0)\n-\t\tgoto out_illegal_sb;\n \ti = (sbi->s_imap_blocks + sbi->s_zmap_blocks) * sizeof(bh);\n \tmap = kzalloc(i, GFP_KERNEL);\n \tif (!map)\n",
+    "patch_modified_files": [
+        "fs/minix/inode.c"
+    ]
+}

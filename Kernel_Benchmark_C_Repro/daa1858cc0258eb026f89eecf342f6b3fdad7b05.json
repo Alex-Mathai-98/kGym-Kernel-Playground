@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "general protection fault in em_cmp_match",
+    "display-title": "general protection fault in em_cmp_match",
+    "id": "daa1858cc0258eb026f89eecf342f6b3fdad7b05",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net_sched: reject TCF_EM_SIMPLE case for complex ematch module",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9cd3fd2054c3b3055163accbf2f31a4426f10317",
+            "hash": "9cd3fd2054c3b3055163accbf2f31a4426f10317",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000aa918f05efd2b677@google.com/T/",
+        "https://lore.kernel.org/all/20221217221707.46010-1-xiyou.wangcong@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in em_cmp_match",
+            "syz-reproducer": "/text?tag=ReproSyz&x=128f80ed880000",
+            "c-reproducer": "/text?tag=ReproC&x=16096513880000",
+            "kernel-config": "/text?tag=KernelConfig&x=4edf421741552bc3",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=296a7b7eb79246912de31ee799cb85220931231a",
+            "kernel-source-commit": "296a7b7eb79246912de31ee799cb85220931231a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/67be1ae742603edad9c97d30b6ed69f9bbe2ffa8",
+            "syzkaller-commit": "67be1ae742603edad9c97d30b6ed69f9bbe2ffa8",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14bc84af880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "tcf_em_validate",
+            "net/sched/ematch.c"
+        ]
+    ],
+    "patch_commit_date": "2022-12-17T22:17:07+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "89529367293c975c3580f49f38568f44848d5683",
+    "patch": "diff --git a/net/sched/ematch.c b/net/sched/ematch.c\nindex 4ce681361851..5c1235e6076a 100644\n--- a/net/sched/ematch.c\n+++ b/net/sched/ematch.c\n@@ -255,6 +255,8 @@ static int tcf_em_validate(struct tcf_proto *tp,\n \t\t\t * the value carried.\n \t\t\t */\n \t\t\tif (em_hdr->flags & TCF_EM_SIMPLE) {\n+\t\t\t\tif (em->ops->datalen > 0)\n+\t\t\t\t\tgoto errout;\n \t\t\t\tif (data_len < sizeof(u32))\n \t\t\t\t\tgoto errout;\n \t\t\t\tem->data = *(u32 *) data;\n",
+    "patch_modified_files": [
+        "net/sched/ematch.c"
+    ]
+}

@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "memory leak in tipc_buf_acquire",
+    "display-title": "memory leak in tipc_buf_acquire",
+    "id": "4f696724cdba0d24f34c447d88d350c9384d04bb",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "tipc: purge deferredq list for each grp member in tipc_group_delete",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5cf02612b33f104fe1015b2dfaf1758ad3675588",
+            "hash": "5cf02612b33f104fe1015b2dfaf1758ad3675588",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000000c060589a8bc66@google.com/T/",
+        "https://lore.kernel.org/all/14ff2b79da7b9098fbff2919f0bc5a1afa33fe32.1560677047.git.lucien.xin@gmail.com/T/",
+        "https://lore.kernel.org/all/1565335017-21302-1-git-send-email-ying.xue@windriver.com/T/",
+        "https://lore.kernel.org/all/1565595162-1383-1-git-send-email-ying.xue@windriver.com/T/",
+        "https://lore.kernel.org/all/20190620174336.357373754@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190620174349.443386789@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=162bd84ca00000",
+            "c-reproducer": "/text?tag=ReproC&x=160c605ca00000",
+            "kernel-config": "/text?tag=KernelConfig&x=61dd9e15a761691d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4dde821e4296e156d133b98ddc4c45861935a4fb",
+            "kernel-source-commit": "4dde821e4296e156d133b98ddc4c45861935a4fb",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0dadcd9d912d7faab1cd5fc0dfad21ff95ff86a8",
+            "syzkaller-commit": "0dadcd9d912d7faab1cd5fc0dfad21ff95ff86a8",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14852d30a00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "tipc_group_delete",
+            "net/tipc/group.c"
+        ]
+    ],
+    "patch_commit_date": "2019-06-16T09:24:07+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "tipc"
+    ],
+    "parent_of_fix_commit": "d4d5d8e83c9616aeef28a2869cea49cc3fb35526",
+    "patch": "diff --git a/net/tipc/group.c b/net/tipc/group.c\nindex 992be6113676..5f98d38bcf08 100644\n--- a/net/tipc/group.c\n+++ b/net/tipc/group.c\n@@ -218,6 +218,7 @@ void tipc_group_delete(struct net *net, struct tipc_group *grp)\n \n \trbtree_postorder_for_each_entry_safe(m, tmp, tree, tree_node) {\n \t\ttipc_group_proto_xmit(grp, m, GRP_LEAVE_MSG, &xmitq);\n+\t\t__skb_queue_purge(&m->deferredq);\n \t\tlist_del(&m->list);\n \t\tkfree(m);\n \t}\n",
+    "patch_modified_files": [
+        "net/tipc/group.c"
+    ]
+}

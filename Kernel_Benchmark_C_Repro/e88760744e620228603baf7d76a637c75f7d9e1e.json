@@ -1,0 +1,66 @@
+{
+    "version": 1,
+    "title": "memory leak in pcan_usb_fd_init",
+    "display-title": "memory leak in pcan_usb_fd_init",
+    "id": "e88760744e620228603baf7d76a637c75f7d9e1e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "drivers: net: fix memory leak in peak_usb_create_dev",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a0b96b4a62745397aee662670cfc2157bac03f55",
+            "hash": "a0b96b4a62745397aee662670cfc2157bac03f55",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003f58a605b633f77d@google.com/T/",
+        "https://lore.kernel.org/all/20210401132752.25358-1-paskripkin@gmail.com/T/",
+        "https://lore.kernel.org/all/20210412083958.129944265@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210412084004.200986670@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210412084013.643370347@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210412084016.009884719@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210412162256.313524-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210412162401.314035-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210412162502.314854-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210412162553.315227-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210412162630.315526-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210412162704.315783-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210412162736.316026-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210415144413.352638802@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210415144413.487943796@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210415144414.464797272@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14e1d00f500000",
+            "c-reproducer": "/text?tag=ReproC&x=153ac2cb500000",
+            "kernel-config": "/text?tag=KernelConfig&x=4305fa9ea70c7a9f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=0477e92881850d44910a7e94fc2c46f96faa131f",
+            "kernel-source-commit": "0477e92881850d44910a7e94fc2c46f96faa131f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/1190297f0bb22bd80fe3edea697e11150d2ada40",
+            "syzkaller-commit": "1190297f0bb22bd80fe3edea697e11150d2ada40",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=119feb4b500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "peak_usb_create_dev",
+            "drivers/net/can/usb/peak_usb/pcan_usb_core.c"
+        ]
+    ],
+    "patch_commit_date": "2021-04-01T13:27:52+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "usb",
+        "can"
+    ],
+    "parent_of_fix_commit": "98184612aca0a9ee42b8eb0262a49900ee9eef0d",
+    "patch": "diff --git a/drivers/net/can/usb/peak_usb/pcan_usb_core.c b/drivers/net/can/usb/peak_usb/pcan_usb_core.c\nindex 573b11559d73..28e916a04047 100644\n--- a/drivers/net/can/usb/peak_usb/pcan_usb_core.c\n+++ b/drivers/net/can/usb/peak_usb/pcan_usb_core.c\n@@ -857,7 +857,7 @@ static int peak_usb_create_dev(const struct peak_usb_adapter *peak_usb_adapter,\n \tif (dev->adapter->dev_set_bus) {\n \t\terr = dev->adapter->dev_set_bus(dev, 0);\n \t\tif (err)\n-\t\t\tgoto lbl_unregister_candev;\n+\t\t\tgoto adap_dev_free;\n \t}\n \n \t/* get device number early */\n@@ -869,6 +869,10 @@ static int peak_usb_create_dev(const struct peak_usb_adapter *peak_usb_adapter,\n \n \treturn 0;\n \n+adap_dev_free:\n+\tif (dev->adapter->dev_free)\n+\t\tdev->adapter->dev_free(dev);\n+\n lbl_unregister_candev:\n \tunregister_candev(netdev);\n \n",
+    "patch_modified_files": [
+        "drivers/net/can/usb/peak_usb/pcan_usb_core.c"
+    ]
+}

@@ -1,0 +1,65 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in LZ4_decompress_safe_partial",
+    "display-title": "KASAN: use-after-free Read in LZ4_decompress_safe_partial",
+    "id": "137d03025175e4ce5baead3c5fd1776e8fd91103",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "lz4: fix LZ4_decompress_safe_partial read out of bound",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=eafc0a02391b7b36617b36c97c4b5d6832cf5e24",
+            "hash": "eafc0a02391b7b36617b36c97c4b5d6832cf5e24",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Revert \"staging: erofs: disable compiling temporarile\"",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f86cf25a609107960cf05263e491463feaae1f99",
+        "hash": "f86cf25a609107960cf05263e491463feaae1f99",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000830d1205cf7f0477@google.com/T/",
+        "https://lore.kernel.org/all/20211111071759.1825086-1-guoxuenan@huawei.com/T/",
+        "https://lore.kernel.org/all/20220408200859.80FFFC385A6@smtp.kernel.org/T/",
+        "https://lore.kernel.org/all/20220412062927.870347203@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220412062942.022903016@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220412062943.670770901@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220412062951.095765152@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220414110855.141582785@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in LZ4_decompress_safe_partial",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17032c4ab00000",
+            "c-reproducer": "/text?tag=ReproC&x=170f8c3cb00000",
+            "kernel-config": "/text?tag=KernelConfig&x=59f3ef2b4077575",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=87066fdd2e30fe9dd531125d95257c118a74617e",
+            "kernel-source-commit": "87066fdd2e30fe9dd531125d95257c118a74617e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4f0000ee28dffdfa5be45c94f77c16ec68994384",
+            "syzkaller-commit": "4f0000ee28dffdfa5be45c94f77c16ec68994384",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17b10464b00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "LZ4_decompress_generic",
+            "lib/lz4/lz4_decompress.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2022-04-08T20:08:58+00:00",
+    "cause_commit_date": "2018-08-28T03:39:48+00:00",
+    "subsystems": [
+        "erofs"
+    ],
+    "parent_of_fix_commit": "66f133ceab7456c789f70a242991ed1b27ba1c3d",
+    "patch": "diff --git a/lib/lz4/lz4_decompress.c b/lib/lz4/lz4_decompress.c\nindex 926f4823d5ea..fd1728d94bab 100644\n--- a/lib/lz4/lz4_decompress.c\n+++ b/lib/lz4/lz4_decompress.c\n@@ -271,8 +271,12 @@ static FORCE_INLINE int LZ4_decompress_generic(\n \t\t\tip += length;\n \t\t\top += length;\n \n-\t\t\t/* Necessarily EOF, due to parsing restrictions */\n-\t\t\tif (!partialDecoding || (cpy == oend))\n+\t\t\t/* Necessarily EOF when !partialDecoding.\n+\t\t\t * When partialDecoding, it is EOF if we've either\n+\t\t\t * filled the output buffer or\n+\t\t\t * can't proceed with reading an offset for following match.\n+\t\t\t */\n+\t\t\tif (!partialDecoding || (cpy == oend) || (ip >= (iend - 2)))\n \t\t\t\tbreak;\n \t\t} else {\n \t\t\t/* may overwrite up to WILDCOPYLENGTH beyond cpy */\n",
+    "patch_modified_files": [
+        "lib/lz4/lz4_decompress.c"
+    ]
+}

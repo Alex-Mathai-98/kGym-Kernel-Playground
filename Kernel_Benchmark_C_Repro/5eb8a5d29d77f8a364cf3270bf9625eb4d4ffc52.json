@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in dbAllocBits",
+    "display-title": "UBSAN: shift-out-of-bounds in dbAllocBits",
+    "id": "5eb8a5d29d77f8a364cf3270bf9625eb4d4ffc52",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/jfs: fix shift exponent db_agl2size negative",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fad376fce0af58deebc5075b8539dc05bf639af3",
+            "hash": "fad376fce0af58deebc5075b8539dc05bf639af3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000000ece5005eaa8f1d1@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "UBSAN: shift-out-of-bounds in dbAllocBits",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1322ae34880000",
+            "c-reproducer": "/text?tag=ReproC&x=10403c94880000",
+            "kernel-config": "/text?tag=KernelConfig&x=d19f5d16783f901",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a6afa4199d3d038fbfdff5511f7523b0e30cb774",
+            "kernel-source-commit": "a6afa4199d3d038fbfdff5511f7523b0e30cb774",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/aea5da898f473385f3b66c94f8aa49ca9a1c9744",
+            "syzkaller-commit": "aea5da898f473385f3b66c94f8aa49ca9a1c9744",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12d88984880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "dbMount",
+            "fs/jfs/jfs_dmap.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-03T03:01:59+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "jfs"
+    ],
+    "parent_of_fix_commit": "69b41ac87e4a664de78a395ff97166f0b2943210",
+    "patch": "diff --git a/fs/jfs/jfs_dmap.c b/fs/jfs/jfs_dmap.c\nindex 765838578a72..a3eb1e826947 100644\n--- a/fs/jfs/jfs_dmap.c\n+++ b/fs/jfs/jfs_dmap.c\n@@ -193,7 +193,8 @@ int dbMount(struct inode *ipbmap)\n \tbmp->db_agwidth = le32_to_cpu(dbmp_le->dn_agwidth);\n \tbmp->db_agstart = le32_to_cpu(dbmp_le->dn_agstart);\n \tbmp->db_agl2size = le32_to_cpu(dbmp_le->dn_agl2size);\n-\tif (bmp->db_agl2size > L2MAXL2SIZE - L2MAXAG) {\n+\tif (bmp->db_agl2size > L2MAXL2SIZE - L2MAXAG ||\n+\t    bmp->db_agl2size < 0) {\n \t\terr = -EINVAL;\n \t\tgoto err_release_metapage;\n \t}\n",
+    "patch_modified_files": [
+        "fs/jfs/jfs_dmap.c"
+    ]
+}

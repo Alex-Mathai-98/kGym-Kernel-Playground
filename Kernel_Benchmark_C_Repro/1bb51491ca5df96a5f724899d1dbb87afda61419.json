@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-use-after-free Read in hci_conn_hash_flush",
+    "display-title": "KASAN: slab-use-after-free Read in hci_conn_hash_flush",
+    "id": "1bb51491ca5df96a5f724899d1dbb87afda61419",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: Fix UAF in hci_conn_hash_flush again",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a2ac591cb4d83e1f2d4b4adb3c14b2c79764650a",
+            "hash": "a2ac591cb4d83e1f2d4b4adb3c14b2c79764650a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        },
+        {
+            "title": "Bluetooth: Fix potential double free caused by hci_conn_unlink",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ca1fd42e7dbfcb34890ffbf1f2f4b356776dab6f",
+            "hash": "ca1fd42e7dbfcb34890ffbf1f2f4b356776dab6f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000004abe4905fa891a51@google.com/T/",
+        "https://lore.kernel.org/all/0000000000008a040605f80717b3@google.com/T/",
+        "https://lore.kernel.org/all/000000000000aa920505f60d25ad@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-use-after-free Read in hci_conn_hash_flush",
+            "syz-reproducer": "/text?tag=ReproSyz&x=121cf70c280000",
+            "c-reproducer": "/text?tag=ReproC&x=12ace9d8280000",
+            "kernel-config": "/text?tag=KernelConfig&x=d56ffc213bf6bf4a",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=58390c8ce1bddb6c623f62e7ed36383e7fa5c02f",
+            "kernel-source-commit": "58390c8ce1bddb6c623f62e7ed36383e7fa5c02f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/62df2017e3b1edd786a4c737bd4ccba2b4581d88",
+            "syzkaller-commit": "62df2017e3b1edd786a4c737bd4ccba2b4581d88",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1770f3c8280000"
+        }
+    ],
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "2910431ab0e500dfc5df12299bb15eef0f30b43e",
+    "patch": "diff --git a/include/net/bluetooth/hci_core.h b/include/net/bluetooth/hci_core.h\nindex a6c8aee2f256..8baf34639939 100644\n--- a/include/net/bluetooth/hci_core.h\n+++ b/include/net/bluetooth/hci_core.h\n@@ -1327,7 +1327,7 @@ int hci_le_create_cis(struct hci_conn *conn);\n \n struct hci_conn *hci_conn_add(struct hci_dev *hdev, int type, bdaddr_t *dst,\n \t\t\t      u8 role);\n-int hci_conn_del(struct hci_conn *conn);\n+void hci_conn_del(struct hci_conn *conn);\n void hci_conn_hash_flush(struct hci_dev *hdev);\n void hci_conn_check_pending(struct hci_dev *hdev);\n \ndiff --git a/net/bluetooth/hci_conn.c b/net/bluetooth/hci_conn.c\nindex 44d0643fc681..ce588359b290 100644\n--- a/net/bluetooth/hci_conn.c\n+++ b/net/bluetooth/hci_conn.c\n@@ -1088,6 +1088,14 @@ static void hci_conn_unlink(struct hci_conn *conn)\n \n \t\t\thci_conn_unlink(child);\n \n+\t\t\t/* If hdev is down it means\n+\t\t\t * hci_dev_close_sync/hci_conn_hash_flush is in progress\n+\t\t\t * and links don't need to be cleanup as all connections\n+\t\t\t * would be cleanup.\n+\t\t\t */\n+\t\t\tif (!test_bit(HCI_UP, &hdev->flags))\n+\t\t\t\tcontinue;\n+\n \t\t\t/* Due to race, SCO connection might be not established\n \t\t\t * yet at this point. Delete it now, otherwise it is\n \t\t\t * possible for it to be stuck and can't be deleted.\n@@ -1112,7 +1120,7 @@ static void hci_conn_unlink(struct hci_conn *conn)\n \tconn->link = NULL;\n }\n \n-int hci_conn_del(struct hci_conn *conn)\n+void hci_conn_del(struct hci_conn *conn)\n {\n \tstruct hci_dev *hdev = conn->hdev;\n \n@@ -1163,8 +1171,6 @@ int hci_conn_del(struct hci_conn *conn)\n \t * rest of hci_conn_del.\n \t */\n \thci_conn_cleanup(conn);\n-\n-\treturn 0;\n }\n \n struct hci_dev *hci_get_route(bdaddr_t *dst, bdaddr_t *src, uint8_t src_type)\n@@ -2465,22 +2471,27 @@ void hci_conn_enter_active_mode(struct hci_conn *conn, __u8 force_active)\n /* Drop all connection on the device */\n void hci_conn_hash_flush(struct hci_dev *hdev)\n {\n-\tstruct hci_conn_hash *h = &hdev->conn_hash;\n-\tstruct hci_conn *c, *n;\n+\tstruct list_head *head = &hdev->conn_hash.list;\n+\tstruct hci_conn *conn;\n \n \tBT_DBG(\"hdev %s\", hdev->name);\n \n-\tlist_for_each_entry_safe(c, n, &h->list, list) {\n-\t\tc->state = BT_CLOSED;\n-\n-\t\thci_disconn_cfm(c, HCI_ERROR_LOCAL_HOST_TERM);\n+\t/* We should not traverse the list here, because hci_conn_del\n+\t * can remove extra links, which may cause the list traversal\n+\t * to hit items that have already been released.\n+\t */\n+\twhile ((conn = list_first_entry_or_null(head,\n+\t\t\t\t\t\tstruct hci_conn,\n+\t\t\t\t\t\tlist)) != NULL) {\n+\t\tconn->state = BT_CLOSED;\n+\t\thci_disconn_cfm(conn, HCI_ERROR_LOCAL_HOST_TERM);\n \n \t\t/* Unlink before deleting otherwise it is possible that\n \t\t * hci_conn_del removes the link which may cause the list to\n \t\t * contain items already freed.\n \t\t */\n-\t\thci_conn_unlink(c);\n-\t\thci_conn_del(c);\n+\t\thci_conn_unlink(conn);\n+\t\thci_conn_del(conn);\n \t}\n }\n \n",
+    "patch_modified_files": [
+        "include/net/bluetooth/hci_core.h",
+        "net/bluetooth/hci_conn.c"
+    ]
+}

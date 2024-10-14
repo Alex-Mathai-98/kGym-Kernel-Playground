@@ -1,0 +1,59 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Write in udf_find_entry",
+    "display-title": "KASAN: slab-out-of-bounds Write in udf_find_entry",
+    "id": "2ebf4e2ffdaf022d2aac190c391ecb56689b6fc4",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "udf: Fix a slab-out-of-bounds write bug in udf_find_entry()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c8af247de385ce49afabc3bf1cf4fd455c94bfe8",
+            "hash": "c8af247de385ce49afabc3bf1cf4fd455c94bfe8",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        },
+        {
+            "title": "udf: Implement searching for directory entry using new iteration code",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1c80afa04db39c98aebea9aabfafa37a208cdfee",
+            "hash": "1c80afa04db39c98aebea9aabfafa37a208cdfee",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000009fcec905eaa8ed63@google.com/T/",
+        "https://lore.kernel.org/all/20221109013542.442790-1-zhangpeng362@huawei.com/T/",
+        "https://lore.kernel.org/all/20221216121344.14025-1-jack@suse.cz/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Write in udf_find_entry",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16f5d358880000",
+            "c-reproducer": "/text?tag=ReproC&x=14ccc11c880000",
+            "kernel-config": "/text?tag=KernelConfig&x=d19f5d16783f901",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a6afa4199d3d038fbfdff5511f7523b0e30cb774",
+            "kernel-source-commit": "a6afa4199d3d038fbfdff5511f7523b0e30cb774",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/aea5da898f473385f3b66c94f8aa49ca9a1c9744",
+            "syzkaller-commit": "aea5da898f473385f3b66c94f8aa49ca9a1c9744",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=135c8b1c880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "udf_find_entry",
+            "fs/udf/namei.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-09T01:35:42+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "udf"
+    ],
+    "parent_of_fix_commit": "59f2f4b8a757412fce372f6d0767bdb55da127a8",
+    "patch": "diff --git a/fs/udf/namei.c b/fs/udf/namei.c\nindex fb4c30e05245..ae7bc13a5298 100644\n--- a/fs/udf/namei.c\n+++ b/fs/udf/namei.c\n@@ -240,7 +240,7 @@ static struct fileIdentDesc *udf_find_entry(struct inode *dir,\n \t\t\t\t\t\t      poffset - lfi);\n \t\t\telse {\n \t\t\t\tif (!copy_name) {\n-\t\t\t\t\tcopy_name = kmalloc(UDF_NAME_LEN,\n+\t\t\t\t\tcopy_name = kmalloc(UDF_NAME_LEN_CS0,\n \t\t\t\t\t\t\t    GFP_NOFS);\n \t\t\t\t\tif (!copy_name) {\n \t\t\t\t\t\tfi = ERR_PTR(-ENOMEM);\n",
+    "patch_modified_files": [
+        "fs/udf/namei.c"
+    ]
+}

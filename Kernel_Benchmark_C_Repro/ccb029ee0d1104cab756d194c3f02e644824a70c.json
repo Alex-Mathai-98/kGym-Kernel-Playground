@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "KASAN: invalid-free in x25_asy_free",
+    "display-title": "KASAN: invalid-free in x25_asy_free",
+    "id": "ccb029ee0d1104cab756d194c3f02e644824a70c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/wan: fix a double free in x25_asy_open_tty()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d5c7c745f254c6cb98b3b3f15fe789b8bd770c72",
+            "hash": "d5c7c745f254c6cb98b3b3f15fe789b8bd770c72",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b08bc4057e1e273a@google.com/T/",
+        "https://lore.kernel.org/all/20181229215638.10590-1-xiyou.wangcong@gmail.com/T/",
+        "https://lore.kernel.org/all/20190107104437.308206189@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190107104452.953560660@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190107105330.280153213@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190107105330.372621917@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1574eeaf400000",
+            "c-reproducer": "/text?tag=ReproC&x=1417cd8b400000",
+            "kernel-config": "/text?tag=KernelConfig&x=7d581260bae0899a",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=8fe28cb58bcb235034b64cbbb7550a8a43fd88be",
+            "kernel-source-commit": "8fe28cb58bcb235034b64cbbb7550a8a43fd88be",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8a41a0ad8ed91a6c7a65663b1bacaf6d79cde558",
+            "syzkaller-commit": "8a41a0ad8ed91a6c7a65663b1bacaf6d79cde558",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=143952dd400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "x25_asy_open",
+            "drivers/net/wan/x25_asy.c"
+        ]
+    ],
+    "patch_commit_date": "2018-12-29T21:56:37+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "c433570458e49bccea5c551df628d058b3526289",
+    "patch": "diff --git a/drivers/net/wan/x25_asy.c b/drivers/net/wan/x25_asy.c\nindex 1098263ab862..46c3d983b7b7 100644\n--- a/drivers/net/wan/x25_asy.c\n+++ b/drivers/net/wan/x25_asy.c\n@@ -485,8 +485,10 @@ static int x25_asy_open(struct net_device *dev)\n \n \t/* Cleanup */\n \tkfree(sl->xbuff);\n+\tsl->xbuff = NULL;\n noxbuff:\n \tkfree(sl->rbuff);\n+\tsl->rbuff = NULL;\n norbuff:\n \treturn -ENOMEM;\n }\n",
+    "patch_modified_files": [
+        "drivers/net/wan/x25_asy.c"
+    ]
+}

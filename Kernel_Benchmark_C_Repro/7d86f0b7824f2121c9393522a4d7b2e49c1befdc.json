@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in kfree_skb",
+    "display-title": "KASAN: use-after-free Read in kfree_skb (2)",
+    "id": "7d86f0b7824f2121c9393522a4d7b2e49c1befdc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "tipc: fix a double kfree_skb()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=acb4a33e9856d5fa3384b87d3d8369229be06d31",
+            "hash": "acb4a33e9856d5fa3384b87d3d8369229be06d31",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e3e546057cafb90b@google.com/T/",
+        "https://lore.kernel.org/all/20181210204545.11448-1-xiyou.wangcong@gmail.com/T/",
+        "https://lore.kernel.org/all/20190107104452.953560660@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190107105330.280153213@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190107105330.372621917@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17473c15400000",
+            "c-reproducer": "/text?tag=ReproC&x=169af3f5400000",
+            "kernel-config": "/text?tag=KernelConfig&x=c8970c89a0efbb23",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=40e020c129cfc991e8ab4736d2665351ffd1468d",
+            "kernel-source-commit": "40e020c129cfc991e8ab4736d2665351ffd1468d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/6565f24da9f4eb36702339ba290213995fcc902f",
+            "syzkaller-commit": "6565f24da9f4eb36702339ba290213995fcc902f",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15f69a43400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "tipc_udp_send_msg",
+            "net/tipc/udp_media.c"
+        ]
+    ],
+    "patch_commit_date": "2018-12-10T20:45:45+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "tipc"
+    ],
+    "parent_of_fix_commit": "15ef70e286176165d28b0b8a969b422561a68dfc",
+    "patch": "diff --git a/net/tipc/udp_media.c b/net/tipc/udp_media.c\nindex 10dc59ce9c82..1b1ba1310ea7 100644\n--- a/net/tipc/udp_media.c\n+++ b/net/tipc/udp_media.c\n@@ -245,10 +245,8 @@ static int tipc_udp_send_msg(struct net *net, struct sk_buff *skb,\n \t\t}\n \n \t\terr = tipc_udp_xmit(net, _skb, ub, src, &rcast->addr);\n-\t\tif (err) {\n-\t\t\tkfree_skb(_skb);\n+\t\tif (err)\n \t\t\tgoto out;\n-\t\t}\n \t}\n \terr = 0;\n out:\n",
+    "patch_modified_files": [
+        "net/tipc/udp_media.c"
+    ]
+}

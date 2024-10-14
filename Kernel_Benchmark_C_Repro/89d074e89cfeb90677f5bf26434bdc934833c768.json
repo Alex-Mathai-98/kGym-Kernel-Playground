@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "memory leak in nfs_get_client",
+    "display-title": "memory leak in nfs_get_client",
+    "id": "89d074e89cfeb90677f5bf26434bdc934833c768",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "NFS: Cleanup if nfs_match_client is interrupted",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9f7761cf0409465075dadb875d5d4b8ef2f890c8",
+            "hash": "9f7761cf0409465075dadb875d5d4b8ef2f890c8",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f8a345058b046657@google.com/T/",
+        "https://lore.kernel.org/all/20190802092055.131876977@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190802092058.428079740@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190802092101.913646560@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15a46001a00000",
+            "c-reproducer": "/text?tag=ReproC&x=174b24d1a00000",
+            "kernel-config": "/text?tag=KernelConfig&x=cb38d33cd06d8d48",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d1fdb6d8f6a4109a4263176c84b899076a5f8008",
+            "kernel-source-commit": "d1fdb6d8f6a4109a4263176c84b899076a5f8008",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0159583c3bcfe4ece6b839712327cd955aabee66",
+            "syzkaller-commit": "0159583c3bcfe4ece6b839712327cd955aabee66",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=120decb6a00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nfs_get_client",
+            "fs/nfs/client.c"
+        ]
+    ],
+    "patch_commit_date": "2019-06-11T16:57:52+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "nfs"
+    ],
+    "parent_of_fix_commit": "9026b3a973b0b0b73c15ba40aff87cd0959fd0f3",
+    "patch": "diff --git a/fs/nfs/client.c b/fs/nfs/client.c\nindex e4fa0a5fd183..30838304a0bf 100644\n--- a/fs/nfs/client.c\n+++ b/fs/nfs/client.c\n@@ -408,10 +408,10 @@ struct nfs_client *nfs_get_client(const struct nfs_client_initdata *cl_init)\n \t\tclp = nfs_match_client(cl_init);\n \t\tif (clp) {\n \t\t\tspin_unlock(&nn->nfs_client_lock);\n-\t\t\tif (IS_ERR(clp))\n-\t\t\t\treturn clp;\n \t\t\tif (new)\n \t\t\t\tnew->rpc_ops->free_client(new);\n+\t\t\tif (IS_ERR(clp))\n+\t\t\t\treturn clp;\n \t\t\treturn nfs_found_client(cl_init, clp);\n \t\t}\n \t\tif (new) {\n",
+    "patch_modified_files": [
+        "fs/nfs/client.c"
+    ]
+}

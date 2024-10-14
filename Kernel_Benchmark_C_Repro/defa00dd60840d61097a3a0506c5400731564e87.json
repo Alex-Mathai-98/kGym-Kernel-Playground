@@ -1,0 +1,76 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Write in ext4_write_inline_data_end",
+    "display-title": "KASAN: slab-out-of-bounds Write in ext4_write_inline_data_end",
+    "id": "defa00dd60840d61097a3a0506c5400731564e87",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: fix race writing to an inline_data file while its xattrs are changing",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a54c4613dac1500b40e4ab55199f7c51f028e848",
+            "hash": "a54c4613dac1500b40e4ab55199f7c51f028e848",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "net: ignore sysctl_devconf_inherit_init_net without SYSCTL",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a154d5d83d21af6b9ee32adc5dbcea5ac1fb534c",
+        "hash": "a154d5d83d21af6b9ee32adc5dbcea5ac1fb534c",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e5080305c9e51453@google.com/T/",
+        "https://lore.kernel.org/all/20210821035427.1471851-1-tytso@mit.edu/T/",
+        "https://lore.kernel.org/all/20210906125448.160263393@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210906125449.112564040@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210906125449.756437409@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210910122917.149278545@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210920163912.603434365@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210920163918.068823680@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210920163924.591371269@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210920163933.258815435@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Write in ext4_write_inline_data_end",
+            "syz-reproducer": "/text?tag=ReproSyz&x=104d7cc5300000",
+            "c-reproducer": "/text?tag=ReproC&x=1333ce0e300000",
+            "kernel-config": "/text?tag=KernelConfig&x=f61012d0b1cd846f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=614cb2751d3150850d459bee596c397f344a7936",
+            "kernel-source-commit": "614cb2751d3150850d459bee596c397f344a7936",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a2fe1cb58994e43fb14f141ecd6e6dcce9bb697a",
+            "syzkaller-commit": "a2fe1cb58994e43fb14f141ecd6e6dcce9bb697a",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=140aa311300000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ext4_write_inline_data_end",
+            "fs/ext4/inline.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "devinet_init_net",
+            "net/ipv4/devinet.c"
+        ],
+        [
+            "addrconf_init_net",
+            "net/ipv6/addrconf.c"
+        ]
+    ],
+    "patch_commit_date": "2021-08-21T03:44:17+00:00",
+    "cause_commit_date": "2019-03-04T20:38:03+00:00",
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "b33d9f5909c8d30f1429fb9aefbb32760901a023",
+    "patch": "diff --git a/fs/ext4/inline.c b/fs/ext4/inline.c\nindex 70cb64db33f7..24e994e75f5c 100644\n--- a/fs/ext4/inline.c\n+++ b/fs/ext4/inline.c\n@@ -750,6 +750,12 @@ int ext4_write_inline_data_end(struct inode *inode, loff_t pos, unsigned len,\n \text4_write_lock_xattr(inode, &no_expand);\n \tBUG_ON(!ext4_has_inline_data(inode));\n \n+\t/*\n+\t * ei->i_inline_off may have changed since ext4_write_begin()\n+\t * called ext4_try_to_write_inline_data()\n+\t */\n+\t(void) ext4_find_inline_data_nolock(inode);\n+\n \tkaddr = kmap_atomic(page);\n \text4_write_inline_data(inode, &iloc, kaddr, pos, len);\n \tkunmap_atomic(kaddr);\n",
+    "patch_modified_files": [
+        "fs/ext4/inline.c"
+    ]
+}

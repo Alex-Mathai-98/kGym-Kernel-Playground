@@ -1,0 +1,42 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Write in copy_verifier_state",
+    "display-title": "KASAN: slab-out-of-bounds Write in copy_verifier_state",
+    "id": "7988319f1caa70d683b9cb540b8b656f534caef7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "bpf: Always use maximal size for copy_array()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=45435d8da71f9f3e6860e6e6ea9667b6ec17ec64",
+            "hash": "45435d8da71f9f3e6860e6e6ea9667b6ec17ec64",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000269f9a05f02be9d8@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Write in copy_verifier_state",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1650d477880000",
+            "c-reproducer": "/text?tag=ReproC&x=1305f993880000",
+            "kernel-config": "/text?tag=KernelConfig&x=e2f3d9d232a3cac5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=041fae9c105ae342a4245cf1e0dc56a23fbb9d3c",
+            "kernel-source-commit": "041fae9c105ae342a4245cf1e0dc56a23fbb9d3c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/6f9c033e1ad3dcf5e6f25916177ec7174359ad0f",
+            "syzkaller-commit": "6f9c033e1ad3dcf5e6f25916177ec7174359ad0f",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12878810480000"
+        }
+    ],
+    "subsystems": [
+        "bpf"
+    ],
+    "parent_of_fix_commit": "f90dd663c492124b53bb28db6ff85b50c80ccc32",
+    "patch": "diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c\nindex 243d06ce6842..85f96c1e9f62 100644\n--- a/kernel/bpf/verifier.c\n+++ b/kernel/bpf/verifier.c\n@@ -1054,6 +1054,8 @@ static void print_insn_state(struct bpf_verifier_env *env,\n  */\n static void *copy_array(void *dst, const void *src, size_t n, size_t size, gfp_t flags)\n {\n+\tsize_t alloc_bytes;\n+\tvoid *orig = dst;\n \tsize_t bytes;\n \n \tif (ZERO_OR_NULL_PTR(src))\n@@ -1062,11 +1064,11 @@ static void *copy_array(void *dst, const void *src, size_t n, size_t size, gfp_t\n \tif (unlikely(check_mul_overflow(n, size, &bytes)))\n \t\treturn NULL;\n \n-\tif (ksize(dst) < ksize(src)) {\n-\t\tkfree(dst);\n-\t\tdst = kmalloc_track_caller(kmalloc_size_roundup(bytes), flags);\n-\t\tif (!dst)\n-\t\t\treturn NULL;\n+\talloc_bytes = max(ksize(orig), kmalloc_size_roundup(bytes));\n+\tdst = krealloc(orig, alloc_bytes, flags);\n+\tif (!dst) {\n+\t\tkfree(orig);\n+\t\treturn NULL;\n \t}\n \n \tmemcpy(dst, src, bytes);\n",
+    "patch_modified_files": [
+        "kernel/bpf/verifier.c"
+    ]
+}

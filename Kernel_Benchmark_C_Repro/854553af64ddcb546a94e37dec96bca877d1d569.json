@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "WARNING in lockdep_unregister_key",
+    "display-title": "WARNING in lockdep_unregister_key",
+    "id": "854553af64ddcb546a94e37dec96bca877d1d569",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "workqueue: Only unregister a registered lockdep key",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=82efcab3b9f3ef59e9713237c6e3c05c3a95c1ae",
+            "hash": "82efcab3b9f3ef59e9713237c6e3c05c3a95c1ae",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "workqueue, lockdep: Fix an alloc_workqueue() error path",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=009bb421b6ceb7916ce627023d0eb7ced04c8910",
+        "hash": "009bb421b6ceb7916ce627023d0eb7ced04c8910",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000004aed310583d22822@google.com/T/",
+        "https://lore.kernel.org/all/20190311230255.176081-1-bvanassche@acm.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1006dc83200000",
+            "c-reproducer": "/text?tag=ReproC&x=137d0027200000",
+            "kernel-config": "/text?tag=KernelConfig&x=e9d91b7192a5e96e",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=12ad143e1b803e541e48b8ba40f550250259ecdd",
+            "kernel-source-commit": "12ad143e1b803e541e48b8ba40f550250259ecdd",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/12365b99ce83b8a58433eaedbe412dff563ef8fb",
+            "syzkaller-commit": "12365b99ce83b8a58433eaedbe412dff563ef8fb",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10daa577200000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "alloc_workqueue",
+            "kernel/workqueue.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "alloc_workqueue",
+            "kernel/workqueue.c"
+        ]
+    ],
+    "patch_commit_date": "2019-03-11T23:02:55+00:00",
+    "cause_commit_date": "2019-03-03T22:00:46+00:00",
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "9e98c678c2d6ae3a17cb2de55d17f69dddaa231b",
+    "patch": "diff --git a/kernel/workqueue.c b/kernel/workqueue.c\nindex 4026d1871407..ddee541ea97a 100644\n--- a/kernel/workqueue.c\n+++ b/kernel/workqueue.c\n@@ -4266,7 +4266,7 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,\n \tINIT_LIST_HEAD(&wq->list);\n \n \tif (alloc_and_link_pwqs(wq) < 0)\n-\t\tgoto err_free_wq;\n+\t\tgoto err_unreg_lockdep;\n \n \tif (wq_online && init_rescuer(wq) < 0)\n \t\tgoto err_destroy;\n@@ -4292,9 +4292,10 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,\n \n \treturn wq;\n \n-err_free_wq:\n+err_unreg_lockdep:\n \twq_unregister_lockdep(wq);\n \twq_free_lockdep(wq);\n+err_free_wq:\n \tfree_workqueue_attrs(wq->unbound_attrs);\n \tkfree(wq);\n \treturn NULL;\n",
+    "patch_modified_files": [
+        "kernel/workqueue.c"
+    ]
+}

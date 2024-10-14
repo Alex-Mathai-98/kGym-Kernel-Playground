@@ -1,0 +1,45 @@
+{
+    "version": 1,
+    "title": "memory leak in do_seccomp",
+    "display-title": "memory leak in do_seccomp",
+    "id": "b5c381ffe72bbead5fc6a7f46a0d2550972816ee",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "seccomp: don't leak memory when filter install races",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a566a9012acd7c9a4be7e30dc7acb7a811ec2260",
+            "hash": "a566a9012acd7c9a4be7e30dc7acb7a811ec2260",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e5ea9e05ac9d16c1@google.com/T/",
+        "https://lore.kernel.org/all/20200902014017.934315-1-tycho@tycho.pizza/T/",
+        "https://lore.kernel.org/all/202009111718.B94EAD7@keescook/T/",
+        "https://lore.kernel.org/all/20200915140653.610388773@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14649561900000",
+            "c-reproducer": "/text?tag=ReproC&x=118aacc1900000",
+            "kernel-config": "/text?tag=KernelConfig&x=903b9fecc3c6d231",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=dcc5c6f013d841e9ae74d527d312d512dfc2e2f0",
+            "kernel-source-commit": "dcc5c6f013d841e9ae74d527d312d512dfc2e2f0",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d5a3ae1f760e7cb2cd5a721d9645ae22eae114fe",
+            "syzkaller-commit": "d5a3ae1f760e7cb2cd5a721d9645ae22eae114fe",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1028eeb6900000"
+        }
+    ],
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "d012a7190fc1fd72ed48911e77ca97ba4521bccd",
+    "patch": "diff --git a/kernel/seccomp.c b/kernel/seccomp.c\nindex 3ee59ce0a323..bb0dd9ae699a 100644\n--- a/kernel/seccomp.c\n+++ b/kernel/seccomp.c\n@@ -1109,13 +1109,12 @@ static long seccomp_set_mode_strict(void)\n }\n \n #ifdef CONFIG_SECCOMP_FILTER\n-static int seccomp_notify_release(struct inode *inode, struct file *file)\n+static void seccomp_notify_detach(struct seccomp_filter *filter)\n {\n-\tstruct seccomp_filter *filter = file->private_data;\n \tstruct seccomp_knotif *knotif;\n \n \tif (!filter)\n-\t\treturn 0;\n+\t\treturn;\n \n \tmutex_lock(&filter->notify_lock);\n \n@@ -1142,6 +1141,13 @@ static int seccomp_notify_release(struct inode *inode, struct file *file)\n \tkfree(filter->notif);\n \tfilter->notif = NULL;\n \tmutex_unlock(&filter->notify_lock);\n+}\n+\n+static int seccomp_notify_release(struct inode *inode, struct file *file)\n+{\n+\tstruct seccomp_filter *filter = file->private_data;\n+\n+\tseccomp_notify_detach(filter);\n \t__put_seccomp_filter(filter);\n \treturn 0;\n }\n@@ -1581,6 +1587,7 @@ static long seccomp_set_mode_filter(unsigned int flags,\n \t\t\tlistener_f->private_data = NULL;\n \t\t\tfput(listener_f);\n \t\t\tput_unused_fd(listener);\n+\t\t\tseccomp_notify_detach(prepared);\n \t\t} else {\n \t\t\tfd_install(listener, listener_f);\n \t\t\tret = listener;\n",
+    "patch_modified_files": [
+        "kernel/seccomp.c"
+    ]
+}

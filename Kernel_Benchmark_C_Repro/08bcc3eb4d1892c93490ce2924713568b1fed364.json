@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "possible deadlock in f2fs_getxattr",
+    "display-title": "possible deadlock in f2fs_getxattr",
+    "id": "08bcc3eb4d1892c93490ce2924713568b1fed364",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "f2fs: avoid false alarm of circular locking",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5c13e2388bf3426fd69a89eb46e50469e9624e56",
+            "hash": "5c13e2388bf3426fd69a89eb46e50469e9624e56",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "f2fs: fix deadlock in i_xattr_sem and inode page lock",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5eda1ad1aaffdfebdecf7a164e586060a210f74f",
+        "hash": "5eda1ad1aaffdfebdecf7a164e586060a210f74f",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005921ef05ffddc3b7@google.com/T/",
+        "https://lore.kernel.org/all/0000000000007673490602502e68@google.com/T/",
+        "https://lore.kernel.org/all/20230710061021.2303432-1-chao@kernel.org/T/",
+        "https://lore.kernel.org/all/20230819003012.3473675-1-jaegeuk@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "possible deadlock in f2fs_getxattr",
+            "syz-reproducer": "/text?tag=ReproSyz&x=136809b4a80000",
+            "c-reproducer": "/text?tag=ReproC&x=1484e74ca80000",
+            "kernel-config": "/text?tag=KernelConfig&x=9831e2c2660aae77",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c192ac7357683f78c2e6d6e75adfcc29deb8c4ae",
+            "kernel-source-commit": "c192ac7357683f78c2e6d6e75adfcc29deb8c4ae",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/668cb1fa42960ece96b7da8d9204e486ba6dcdf6",
+            "syzkaller-commit": "668cb1fa42960ece96b7da8d9204e486ba6dcdf6",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14cb33e8a80000"
+        }
+    ],
+    "subsystems": [
+        "f2fs"
+    ],
+    "parent_of_fix_commit": "005abf9e5e0d4dcfce318ae5dbcac32b7bf6b647",
+    "patch": "diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h\nindex c602ff2403b6..c0b7417f1d87 100644\n--- a/fs/f2fs/f2fs.h\n+++ b/fs/f2fs/f2fs.h\n@@ -2122,15 +2122,6 @@ static inline int f2fs_down_read_trylock(struct f2fs_rwsem *sem)\n \treturn down_read_trylock(&sem->internal_rwsem);\n }\n \n-#ifdef CONFIG_DEBUG_LOCK_ALLOC\n-static inline void f2fs_down_read_nested(struct f2fs_rwsem *sem, int subclass)\n-{\n-\tdown_read_nested(&sem->internal_rwsem, subclass);\n-}\n-#else\n-#define f2fs_down_read_nested(sem, subclass) f2fs_down_read(sem)\n-#endif\n-\n static inline void f2fs_up_read(struct f2fs_rwsem *sem)\n {\n \tup_read(&sem->internal_rwsem);\n@@ -2141,6 +2132,21 @@ static inline void f2fs_down_write(struct f2fs_rwsem *sem)\n \tdown_write(&sem->internal_rwsem);\n }\n \n+#ifdef CONFIG_DEBUG_LOCK_ALLOC\n+static inline void f2fs_down_read_nested(struct f2fs_rwsem *sem, int subclass)\n+{\n+\tdown_read_nested(&sem->internal_rwsem, subclass);\n+}\n+\n+static inline void f2fs_down_write_nested(struct f2fs_rwsem *sem, int subclass)\n+{\n+\tdown_write_nested(&sem->internal_rwsem, subclass);\n+}\n+#else\n+#define f2fs_down_read_nested(sem, subclass) f2fs_down_read(sem)\n+#define f2fs_down_write_nested(sem, subclass) f2fs_down_write(sem)\n+#endif\n+\n static inline int f2fs_down_write_trylock(struct f2fs_rwsem *sem)\n {\n \treturn down_write_trylock(&sem->internal_rwsem);\ndiff --git a/fs/f2fs/inline.c b/fs/f2fs/inline.c\nindex 4638fee16a91..0d185ad5e469 100644\n--- a/fs/f2fs/inline.c\n+++ b/fs/f2fs/inline.c\n@@ -641,7 +641,8 @@ int f2fs_add_inline_entry(struct inode *dir, const struct f2fs_filename *fname,\n \t}\n \n \tif (inode) {\n-\t\tf2fs_down_write(&F2FS_I(inode)->i_sem);\n+\t\tf2fs_down_write_nested(&F2FS_I(inode)->i_sem,\n+\t\t\t\t\t\tSINGLE_DEPTH_NESTING);\n \t\tpage = f2fs_init_inode_metadata(inode, dir, fname, ipage);\n \t\tif (IS_ERR(page)) {\n \t\t\terr = PTR_ERR(page);\n",
+    "patch_modified_files": [
+        "fs/f2fs/f2fs.h",
+        "fs/f2fs/inline.c"
+    ]
+}

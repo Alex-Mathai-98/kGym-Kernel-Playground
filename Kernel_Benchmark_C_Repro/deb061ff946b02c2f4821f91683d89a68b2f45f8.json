@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "WARNING in hfsplus_cat_write_inode",
+    "display-title": "WARNING in hfsplus_cat_write_inode",
+    "id": "deb061ff946b02c2f4821f91683d89a68b2f45f8",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs: hfsplus: remove WARN_ON() from hfsplus_cat_{read,write}_inode()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=81b21c0f0138ff5a499eafc3eb0578ad2a99622c",
+            "hash": "81b21c0f0138ff5a499eafc3eb0578ad2a99622c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a89dcd05ee5b1e2c@google.com/T/",
+        "https://lore.kernel.org/all/15308173-5252-d6a3-ae3b-e96d46cb6f41@I-love.SAKURA.ne.jp/T/",
+        "https://lore.kernel.org/all/20230430121301.3197608-2-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230430121309.3197648-2-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230430121318.3197736-2-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230430121327.3197791-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230430121332.3197824-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230430121338.3197865-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230430121343.3197893-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230430121348.3197920-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in hfsplus_cat_write_inode",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10708b9b880000",
+            "c-reproducer": "/text?tag=ReproC&x=10127353880000",
+            "kernel-config": "/text?tag=KernelConfig&x=8d01b6e3197974dd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=08ad43d554bacb9769c6a69d5f771f02f5ba411c",
+            "kernel-source-commit": "08ad43d554bacb9769c6a69d5f771f02f5ba411c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f4470a7b5efeb021c66c8fb38656bcb2b1597974",
+            "syzkaller-commit": "f4470a7b5efeb021c66c8fb38656bcb2b1597974",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13107603880000"
+        }
+    ],
+    "subsystems": [
+        "hfs"
+    ],
+    "parent_of_fix_commit": "4ea2a8d84c75e20b4d9b5d9010879cdb89f2e384",
+    "patch": "diff --git a/fs/hfsplus/inode.c b/fs/hfsplus/inode.c\nindex abb91f5fae92..b21660475ac1 100644\n--- a/fs/hfsplus/inode.c\n+++ b/fs/hfsplus/inode.c\n@@ -511,7 +511,11 @@ int hfsplus_cat_read_inode(struct inode *inode, struct hfs_find_data *fd)\n \tif (type == HFSPLUS_FOLDER) {\n \t\tstruct hfsplus_cat_folder *folder = &entry.folder;\n \n-\t\tWARN_ON(fd->entrylength < sizeof(struct hfsplus_cat_folder));\n+\t\tif (fd->entrylength < sizeof(struct hfsplus_cat_folder)) {\n+\t\t\tpr_err(\"bad catalog folder entry\\n\");\n+\t\t\tres = -EIO;\n+\t\t\tgoto out;\n+\t\t}\n \t\thfs_bnode_read(fd->bnode, &entry, fd->entryoffset,\n \t\t\t\t\tsizeof(struct hfsplus_cat_folder));\n \t\thfsplus_get_perms(inode, &folder->permissions, 1);\n@@ -531,7 +535,11 @@ int hfsplus_cat_read_inode(struct inode *inode, struct hfs_find_data *fd)\n \t} else if (type == HFSPLUS_FILE) {\n \t\tstruct hfsplus_cat_file *file = &entry.file;\n \n-\t\tWARN_ON(fd->entrylength < sizeof(struct hfsplus_cat_file));\n+\t\tif (fd->entrylength < sizeof(struct hfsplus_cat_file)) {\n+\t\t\tpr_err(\"bad catalog file entry\\n\");\n+\t\t\tres = -EIO;\n+\t\t\tgoto out;\n+\t\t}\n \t\thfs_bnode_read(fd->bnode, &entry, fd->entryoffset,\n \t\t\t\t\tsizeof(struct hfsplus_cat_file));\n \n@@ -562,6 +570,7 @@ int hfsplus_cat_read_inode(struct inode *inode, struct hfs_find_data *fd)\n \t\tpr_err(\"bad catalog entry used to create inode\\n\");\n \t\tres = -EIO;\n \t}\n+out:\n \treturn res;\n }\n \n@@ -570,6 +579,7 @@ int hfsplus_cat_write_inode(struct inode *inode)\n \tstruct inode *main_inode = inode;\n \tstruct hfs_find_data fd;\n \thfsplus_cat_entry entry;\n+\tint res = 0;\n \n \tif (HFSPLUS_IS_RSRC(inode))\n \t\tmain_inode = HFSPLUS_I(inode)->rsrc_inode;\n@@ -588,7 +598,11 @@ int hfsplus_cat_write_inode(struct inode *inode)\n \tif (S_ISDIR(main_inode->i_mode)) {\n \t\tstruct hfsplus_cat_folder *folder = &entry.folder;\n \n-\t\tWARN_ON(fd.entrylength < sizeof(struct hfsplus_cat_folder));\n+\t\tif (fd.entrylength < sizeof(struct hfsplus_cat_folder)) {\n+\t\t\tpr_err(\"bad catalog folder entry\\n\");\n+\t\t\tres = -EIO;\n+\t\t\tgoto out;\n+\t\t}\n \t\thfs_bnode_read(fd.bnode, &entry, fd.entryoffset,\n \t\t\t\t\tsizeof(struct hfsplus_cat_folder));\n \t\t/* simple node checks? */\n@@ -613,7 +627,11 @@ int hfsplus_cat_write_inode(struct inode *inode)\n \t} else {\n \t\tstruct hfsplus_cat_file *file = &entry.file;\n \n-\t\tWARN_ON(fd.entrylength < sizeof(struct hfsplus_cat_file));\n+\t\tif (fd.entrylength < sizeof(struct hfsplus_cat_file)) {\n+\t\t\tpr_err(\"bad catalog file entry\\n\");\n+\t\t\tres = -EIO;\n+\t\t\tgoto out;\n+\t\t}\n \t\thfs_bnode_read(fd.bnode, &entry, fd.entryoffset,\n \t\t\t\t\tsizeof(struct hfsplus_cat_file));\n \t\thfsplus_inode_write_fork(inode, &file->data_fork);\n@@ -634,7 +652,7 @@ int hfsplus_cat_write_inode(struct inode *inode)\n \tset_bit(HFSPLUS_I_CAT_DIRTY, &HFSPLUS_I(inode)->flags);\n out:\n \thfs_find_exit(&fd);\n-\treturn 0;\n+\treturn res;\n }\n \n int hfsplus_fileattr_get(struct dentry *dentry, struct fileattr *fa)\n",
+    "patch_modified_files": [
+        "fs/hfsplus/inode.c"
+    ]
+}

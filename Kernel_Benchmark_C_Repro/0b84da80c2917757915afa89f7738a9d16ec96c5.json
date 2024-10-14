@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "general protection fault in fq_codel_enqueue",
+    "display-title": "general protection fault in fq_codel_enqueue (3)",
+    "id": "0b84da80c2917757915afa89f7738a9d16ec96c5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "bpf: Don't redirect packets with invalid pkt_len",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fd1894224407c484f652ad456e1ce423e89bb3eb",
+            "hash": "fd1894224407c484f652ad456e1ce423e89bb3eb",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c3a2af05cf7fda31@google.com/T/",
+        "https://lore.kernel.org/all/20220610070529.1623-1-zhudi2@huawei.com/T/",
+        "https://lore.kernel.org/all/20220617071855.2482-1-zhudi2@huawei.com/T/",
+        "https://lore.kernel.org/all/20220712120158.56325-1-shaozhengchao@huawei.com/T/",
+        "https://lore.kernel.org/all/20220714060959.25232-1-shaozhengchao@huawei.com/T/",
+        "https://lore.kernel.org/all/20220715032233.230507-1-shaozhengchao@huawei.com/T/",
+        "https://lore.kernel.org/all/20220715115559.139691-1-shaozhengchao@huawei.com/T/",
+        "https://lore.kernel.org/all/20220811152851.1520029-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220811154237.1531313-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220811155632.1536867-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220811160421.1539956-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220811160826.1541971-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220902121359.177846782@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220902121403.569927325@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220902121404.435662285@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220902121404.772492078@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/a7c3605fa1ee4b899175fbdc36fe2799@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in fq_codel_enqueue",
+            "syz-reproducer": "/text?tag=ReproSyz&x=154a0b64b00000",
+            "c-reproducer": "/text?tag=ReproC&x=177eec86b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=b160d0631c7a8f26",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1fc596a56b334f4d593a2b49e5ff55af6aaa0816",
+            "kernel-source-commit": "1fc596a56b334f4d593a2b49e5ff55af6aaa0816",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/be531bb42381b245eed805e49fd889d1c2118c76",
+            "syzkaller-commit": "be531bb42381b245eed805e49fd889d1c2118c76",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1334ede2b00000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "92f619735b7c4269fc6349a7ec13f09ffb558f77",
+    "patch": "diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h\nindex f6a27ab19202..82e8368ba6e6 100644\n--- a/include/linux/skbuff.h\n+++ b/include/linux/skbuff.h\n@@ -2459,6 +2459,14 @@ static inline void skb_set_tail_pointer(struct sk_buff *skb, const int offset)\n \n #endif /* NET_SKBUFF_DATA_USES_OFFSET */\n \n+static inline void skb_assert_len(struct sk_buff *skb)\n+{\n+#ifdef CONFIG_DEBUG_NET\n+\tif (WARN_ONCE(!skb->len, \"%s\\n\", __func__))\n+\t\tDO_ONCE_LITE(skb_dump, KERN_ERR, skb, false);\n+#endif /* CONFIG_DEBUG_NET */\n+}\n+\n /*\n  *\tAdd data to an sk_buff\n  */\ndiff --git a/net/bpf/test_run.c b/net/bpf/test_run.c\nindex 2ca96acbc50a..dc9dc0bedca0 100644\n--- a/net/bpf/test_run.c\n+++ b/net/bpf/test_run.c\n@@ -955,6 +955,9 @@ static int convert___skb_to_skb(struct sk_buff *skb, struct __sk_buff *__skb)\n {\n \tstruct qdisc_skb_cb *cb = (struct qdisc_skb_cb *)skb->cb;\n \n+\tif (!skb->len)\n+\t\treturn -EINVAL;\n+\n \tif (!__skb)\n \t\treturn 0;\n \ndiff --git a/net/core/dev.c b/net/core/dev.c\nindex 978ed0622d8f..e241a475036f 100644\n--- a/net/core/dev.c\n+++ b/net/core/dev.c\n@@ -4168,6 +4168,7 @@ int __dev_queue_xmit(struct sk_buff *skb, struct net_device *sb_dev)\n \tbool again = false;\n \n \tskb_reset_mac_header(skb);\n+\tskb_assert_len(skb);\n \n \tif (unlikely(skb_shinfo(skb)->tx_flags & SKBTX_SCHED_TSTAMP))\n \t\t__skb_tstamp_tx(skb, NULL, NULL, skb->sk, SCM_TSTAMP_SCHED);\n",
+    "patch_modified_files": [
+        "include/linux/skbuff.h",
+        "net/bpf/test_run.c",
+        "net/core/dev.c"
+    ]
+}

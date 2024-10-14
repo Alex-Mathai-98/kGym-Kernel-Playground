@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in dbFree",
+    "display-title": "UBSAN: shift-out-of-bounds in dbFree",
+    "id": "2a70a453331db32ed491f5cbb07e81bf2d225715",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "jfs: jfs_dmap: Validate db_l2nbperpage while mounting",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=11509910c599cbd04585ec35a6d5e1a0053d84c1",
+            "hash": "11509910c599cbd04585ec35a6d5e1a0053d84c1",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000aec88d05f759ef57@google.com/T/",
+        "https://lore.kernel.org/all/20230605140151.635604-1-code@siddh.me/T/",
+        "https://lore.kernel.org/all/20230619131644.118332-1-code@siddh.me/T/",
+        "https://lore.kernel.org/all/20230620164700.11083-1-code@siddh.me/T/",
+        "https://lore.kernel.org/all/ZDAhrYVHTVEYIGUM@yoga/T/",
+        "https://lore.kernel.org/all/ZDla2Nuyq2QLdo96@yoga/T/"
+    ],
+    "crashes": [
+        {
+            "title": "UBSAN: shift-out-of-bounds in dbFree",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1211504ac80000",
+            "c-reproducer": "/text?tag=ReproC&x=1447df1ac80000",
+            "kernel-config": "/text?tag=KernelConfig&x=dbab9019ad6fc418",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=0ddc84d2dd43e2c2c3f634baa05ea10abd31197e",
+            "kernel-source-commit": "0ddc84d2dd43e2c2c3f634baa05ea10abd31197e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/18b586030b9a7e7f4c7208f44be8994740608841",
+            "syzkaller-commit": "18b586030b9a7e7f4c7208f44be8994740608841",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17e00b1ac80000"
+        }
+    ],
+    "subsystems": [
+        "jfs"
+    ],
+    "parent_of_fix_commit": "692b7dc87ca6d55ab254f8259e6f970171dc9d01",
+    "patch": "diff --git a/fs/jfs/jfs_dmap.c b/fs/jfs/jfs_dmap.c\nindex a3eb1e826947..da6a2bc6bf02 100644\n--- a/fs/jfs/jfs_dmap.c\n+++ b/fs/jfs/jfs_dmap.c\n@@ -178,7 +178,13 @@ int dbMount(struct inode *ipbmap)\n \tdbmp_le = (struct dbmap_disk *) mp->data;\n \tbmp->db_mapsize = le64_to_cpu(dbmp_le->dn_mapsize);\n \tbmp->db_nfree = le64_to_cpu(dbmp_le->dn_nfree);\n+\n \tbmp->db_l2nbperpage = le32_to_cpu(dbmp_le->dn_l2nbperpage);\n+\tif (bmp->db_l2nbperpage > L2PSIZE - L2MINBLOCKSIZE) {\n+\t\terr = -EINVAL;\n+\t\tgoto err_release_metapage;\n+\t}\n+\n \tbmp->db_numag = le32_to_cpu(dbmp_le->dn_numag);\n \tif (!bmp->db_numag) {\n \t\terr = -EINVAL;\ndiff --git a/fs/jfs/jfs_filsys.h b/fs/jfs/jfs_filsys.h\nindex b5d702df7111..33ef13a0b110 100644\n--- a/fs/jfs/jfs_filsys.h\n+++ b/fs/jfs/jfs_filsys.h\n@@ -122,7 +122,9 @@\n #define NUM_INODE_PER_IAG\tINOSPERIAG\n \n #define MINBLOCKSIZE\t\t512\n+#define L2MINBLOCKSIZE\t\t9\n #define MAXBLOCKSIZE\t\t4096\n+#define L2MAXBLOCKSIZE\t\t12\n #define\tMAXFILESIZE\t\t((s64)1 << 52)\n \n #define JFS_LINK_MAX\t\t0xffffffff\n",
+    "patch_modified_files": [
+        "fs/jfs/jfs_dmap.c",
+        "fs/jfs/jfs_filsys.h"
+    ]
+}

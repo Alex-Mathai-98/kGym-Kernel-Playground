@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "KASAN: unknown-crash Read in do_exit",
+    "display-title": "KASAN: unknown-crash Read in do_exit",
+    "id": "bc745fd8a33b24b2efd17dfad9dc35d7abb5f8c6",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fbmem: add margin check to fb_check_caps()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a49145acfb975d921464b84fe00279f99827d816",
+            "hash": "a49145acfb975d921464b84fe00279f99827d816",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000005f0b605af42ab4e@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10642545900000",
+            "c-reproducer": "/text?tag=ReproC&x=141f2bed900000",
+            "kernel-config": "/text?tag=KernelConfig&x=c61610091f4ca8c4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=729e3d091984487f7aa1ebfabfe594e5b317ed0f",
+            "kernel-source-commit": "729e3d091984487f7aa1ebfabfe594e5b317ed0f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/ce441f065b6eebb166bb006dfd28ea0c6b730384",
+            "syzkaller-commit": "ce441f065b6eebb166bb006dfd28ea0c6b730384",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=114e9c11900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "fb_set_var",
+            "drivers/video/fbdev/core/fbmem.c"
+        ]
+    ],
+    "patch_commit_date": "2020-07-07T19:26:03+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "54d04ea8cdbd143496e4f5cc9c0a9f86c0e55a2e",
+    "patch": "diff --git a/drivers/video/fbdev/core/fbmem.c b/drivers/video/fbdev/core/fbmem.c\nindex cc69649dce95..8268bbee8cae 100644\n--- a/drivers/video/fbdev/core/fbmem.c\n+++ b/drivers/video/fbdev/core/fbmem.c\n@@ -1006,6 +1006,10 @@ fb_set_var(struct fb_info *info, struct fb_var_screeninfo *var)\n \t\treturn 0;\n \t}\n \n+\t/* bitfill_aligned() assumes that it's at least 8x8 */\n+\tif (var->xres < 8 || var->yres < 8)\n+\t\treturn -EINVAL;\n+\n \tret = info->fbops->fb_check_var(var, info);\n \n \tif (ret)\n",
+    "patch_modified_files": [
+        "drivers/video/fbdev/core/fbmem.c"
+    ]
+}

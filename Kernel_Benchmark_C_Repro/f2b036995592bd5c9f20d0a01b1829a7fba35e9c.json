@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Write in gadgetfs_kill_sb",
+    "display-title": "KASAN: use-after-free Write in gadgetfs_kill_sb",
+    "id": "f2b036995592bd5c9f20d0a01b1829a7fba35e9c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "USB: gadgetfs: Fix race between mounting and unmounting",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d18dcfe9860e842f394e37ba01ca9440ab2178f4",
+            "hash": "d18dcfe9860e842f394e37ba01ca9440ab2178f4",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000009f6b9c05efb5b59c@google.com/T/",
+        "https://lore.kernel.org/all/Y6XCPXBpn3tmjdCC@rowland.harvard.edu/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Write in gadgetfs_kill_sb",
+            "syz-reproducer": "/text?tag=ReproSyz&x=176d36b7880000",
+            "c-reproducer": "/text?tag=ReproC&x=109371b7880000",
+            "kernel-config": "/text?tag=KernelConfig&x=5a194ed4fc682723",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=830b3c68c1fb1e9176028d02ef86f3cf76aa2476",
+            "kernel-source-commit": "830b3c68c1fb1e9176028d02ef86f3cf76aa2476",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/67be1ae742603edad9c97d30b6ed69f9bbe2ffa8",
+            "syzkaller-commit": "67be1ae742603edad9c97d30b6ed69f9bbe2ffa8",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14d27b57880000"
+        }
+    ],
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "1301c7b9f7efad2f11ef924e317c18ebd714fc9a",
+    "patch": "diff --git a/drivers/usb/gadget/legacy/inode.c b/drivers/usb/gadget/legacy/inode.c\nindex 01c3ead7d1b4..d605bc2e7e8f 100644\n--- a/drivers/usb/gadget/legacy/inode.c\n+++ b/drivers/usb/gadget/legacy/inode.c\n@@ -229,6 +229,7 @@ static void put_ep (struct ep_data *data)\n  */\n \n static const char *CHIP;\n+static DEFINE_MUTEX(sb_mutex);\t\t/* Serialize superblock operations */\n \n /*----------------------------------------------------------------------*/\n \n@@ -2010,13 +2011,20 @@ gadgetfs_fill_super (struct super_block *sb, struct fs_context *fc)\n {\n \tstruct inode\t*inode;\n \tstruct dev_data\t*dev;\n+\tint\t\trc;\n \n-\tif (the_device)\n-\t\treturn -ESRCH;\n+\tmutex_lock(&sb_mutex);\n+\n+\tif (the_device) {\n+\t\trc = -ESRCH;\n+\t\tgoto Done;\n+\t}\n \n \tCHIP = usb_get_gadget_udc_name();\n-\tif (!CHIP)\n-\t\treturn -ENODEV;\n+\tif (!CHIP) {\n+\t\trc = -ENODEV;\n+\t\tgoto Done;\n+\t}\n \n \t/* superblock */\n \tsb->s_blocksize = PAGE_SIZE;\n@@ -2053,13 +2061,17 @@ gadgetfs_fill_super (struct super_block *sb, struct fs_context *fc)\n \t * from binding to a controller.\n \t */\n \tthe_device = dev;\n-\treturn 0;\n+\trc = 0;\n+\tgoto Done;\n \n-Enomem:\n+ Enomem:\n \tkfree(CHIP);\n \tCHIP = NULL;\n+\trc = -ENOMEM;\n \n-\treturn -ENOMEM;\n+ Done:\n+\tmutex_unlock(&sb_mutex);\n+\treturn rc;\n }\n \n /* \"mount -t gadgetfs path /dev/gadget\" ends up here */\n@@ -2081,6 +2093,7 @@ static int gadgetfs_init_fs_context(struct fs_context *fc)\n static void\n gadgetfs_kill_sb (struct super_block *sb)\n {\n+\tmutex_lock(&sb_mutex);\n \tkill_litter_super (sb);\n \tif (the_device) {\n \t\tput_dev (the_device);\n@@ -2088,6 +2101,7 @@ gadgetfs_kill_sb (struct super_block *sb)\n \t}\n \tkfree(CHIP);\n \tCHIP = NULL;\n+\tmutex_unlock(&sb_mutex);\n }\n \n /*----------------------------------------------------------------------*/\n",
+    "patch_modified_files": [
+        "drivers/usb/gadget/legacy/inode.c"
+    ]
+}

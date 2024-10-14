@@ -1,0 +1,68 @@
+{
+    "version": 1,
+    "title": "general protection fault in fq_codel_enqueue",
+    "display-title": "general protection fault in fq_codel_enqueue",
+    "id": "a8e52aea23a08661ca01bb5346bb78d35df76b50",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: stricter validation of untrusted gso packets",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9274124f023b5c56dc4326637d4f787968b03607",
+            "hash": "9274124f023b5c56dc4326637d4f787968b03607",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "strparser: Add __strp_unpause and use it in ktls.",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7170e6045a6a8b33f4fa5753589dc77b16198e2d",
+        "hash": "7170e6045a6a8b33f4fa5753589dc77b16198e2d",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17427d78100000",
+            "c-reproducer": "/text?tag=ReproC&x=15ce2980100000",
+            "kernel-config": "/text?tag=KernelConfig&x=b7a70e992f2f9b68",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c578ddb39e565139897124e74e5a43e56538cb33",
+            "kernel-source-commit": "c578ddb39e565139897124e74e5a43e56538cb33",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2e44d63e401ead7d7928c95a30d243b2de1a243b",
+            "syzkaller-commit": "2e44d63e401ead7d7928c95a30d243b2de1a243b",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=106839e8100000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "virtio_net_hdr_to_skb",
+            "include/linux/virtio_net.h"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "strp_pause",
+            "include/net/strparser.h"
+        ],
+        [
+            "strp_init",
+            "net/strparser/strparser.c"
+        ],
+        [
+            "tls_sw_advance_skb",
+            "net/tls/tls_sw.c"
+        ]
+    ],
+    "patch_commit_date": "2020-05-04T16:48:54+00:00",
+    "cause_commit_date": "2018-06-06T16:33:28+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "0cb7498f234e4e7d75187a8cae6c7c2053f2488a",
+    "patch": "diff --git a/include/linux/virtio_net.h b/include/linux/virtio_net.h\nindex 0d1fe9297ac6..6f6ade63b04c 100644\n--- a/include/linux/virtio_net.h\n+++ b/include/linux/virtio_net.h\n@@ -3,6 +3,8 @@\n #define _LINUX_VIRTIO_NET_H\n \n #include <linux/if_vlan.h>\n+#include <uapi/linux/tcp.h>\n+#include <uapi/linux/udp.h>\n #include <uapi/linux/virtio_net.h>\n \n static inline int virtio_net_hdr_set_proto(struct sk_buff *skb,\n@@ -28,17 +30,25 @@ static inline int virtio_net_hdr_to_skb(struct sk_buff *skb,\n \t\t\t\t\tbool little_endian)\n {\n \tunsigned int gso_type = 0;\n+\tunsigned int thlen = 0;\n+\tunsigned int ip_proto;\n \n \tif (hdr->gso_type != VIRTIO_NET_HDR_GSO_NONE) {\n \t\tswitch (hdr->gso_type & ~VIRTIO_NET_HDR_GSO_ECN) {\n \t\tcase VIRTIO_NET_HDR_GSO_TCPV4:\n \t\t\tgso_type = SKB_GSO_TCPV4;\n+\t\t\tip_proto = IPPROTO_TCP;\n+\t\t\tthlen = sizeof(struct tcphdr);\n \t\t\tbreak;\n \t\tcase VIRTIO_NET_HDR_GSO_TCPV6:\n \t\t\tgso_type = SKB_GSO_TCPV6;\n+\t\t\tip_proto = IPPROTO_TCP;\n+\t\t\tthlen = sizeof(struct tcphdr);\n \t\t\tbreak;\n \t\tcase VIRTIO_NET_HDR_GSO_UDP:\n \t\t\tgso_type = SKB_GSO_UDP;\n+\t\t\tip_proto = IPPROTO_UDP;\n+\t\t\tthlen = sizeof(struct udphdr);\n \t\t\tbreak;\n \t\tdefault:\n \t\t\treturn -EINVAL;\n@@ -57,16 +67,22 @@ static inline int virtio_net_hdr_to_skb(struct sk_buff *skb,\n \n \t\tif (!skb_partial_csum_set(skb, start, off))\n \t\t\treturn -EINVAL;\n+\n+\t\tif (skb_transport_offset(skb) + thlen > skb_headlen(skb))\n+\t\t\treturn -EINVAL;\n \t} else {\n \t\t/* gso packets without NEEDS_CSUM do not set transport_offset.\n \t\t * probe and drop if does not match one of the above types.\n \t\t */\n \t\tif (gso_type && skb->network_header) {\n+\t\t\tstruct flow_keys_basic keys;\n+\n \t\t\tif (!skb->protocol)\n \t\t\t\tvirtio_net_hdr_set_proto(skb, hdr);\n retry:\n-\t\t\tskb_probe_transport_header(skb);\n-\t\t\tif (!skb_transport_header_was_set(skb)) {\n+\t\t\tif (!skb_flow_dissect_flow_keys_basic(NULL, skb, &keys,\n+\t\t\t\t\t\t\t      NULL, 0, 0, 0,\n+\t\t\t\t\t\t\t      0)) {\n \t\t\t\t/* UFO does not specify ipv4 or 6: try both */\n \t\t\t\tif (gso_type & SKB_GSO_UDP &&\n \t\t\t\t    skb->protocol == htons(ETH_P_IP)) {\n@@ -75,6 +91,12 @@ static inline int virtio_net_hdr_to_skb(struct sk_buff *skb,\n \t\t\t\t}\n \t\t\t\treturn -EINVAL;\n \t\t\t}\n+\n+\t\t\tif (keys.control.thoff + thlen > skb_headlen(skb) ||\n+\t\t\t    keys.basic.ip_proto != ip_proto)\n+\t\t\t\treturn -EINVAL;\n+\n+\t\t\tskb_set_transport_header(skb, keys.control.thoff);\n \t\t}\n \t}\n \n",
+    "patch_modified_files": [
+        "include/linux/virtio_net.h"
+    ]
+}

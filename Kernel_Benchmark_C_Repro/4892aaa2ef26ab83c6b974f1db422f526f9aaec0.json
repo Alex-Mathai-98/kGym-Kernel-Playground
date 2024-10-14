@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "title": "KASAN: out-of-bounds Read in pebs_update_state",
+    "display-title": "KASAN: out-of-bounds Read in pebs_update_state",
+    "id": "4892aaa2ef26ab83c6b974f1db422f526f9aaec0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fbdev: Detect integer underflow at \"struct fbcon_ops\"->clear_margins.",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=033724d6864245a11f8e04c066002e6ad22b3fd0",
+            "hash": "033724d6864245a11f8e04c066002e6ad22b3fd0",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000077346605a5a70a32@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17bb1714100000",
+            "kernel-config": "/text?tag=KernelConfig&x=8a96cf498e199d8b",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e99332e7b4cda6e60f5b5916cf9943a79dbef902",
+            "kernel-source-commit": "e99332e7b4cda6e60f5b5916cf9943a79dbef902",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8742a2b9dba1ce2869b29fff6c5359cc9116c719",
+            "syzkaller-commit": "8742a2b9dba1ce2869b29fff6c5359cc9116c719",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16f35d32100000"
+        }
+    ],
+    "subsystems": [
+        "perf"
+    ],
+    "parent_of_fix_commit": "551e553f0d4ab623e2a6f424ab5834f9c7b5229c",
+    "patch": "diff --git a/drivers/video/fbdev/core/bitblit.c b/drivers/video/fbdev/core/bitblit.c\nindex ca935c09a261..35ebeeccde4d 100644\n--- a/drivers/video/fbdev/core/bitblit.c\n+++ b/drivers/video/fbdev/core/bitblit.c\n@@ -216,7 +216,7 @@ static void bit_clear_margins(struct vc_data *vc, struct fb_info *info,\n \tregion.color = color;\n \tregion.rop = ROP_COPY;\n \n-\tif (rw && !bottom_only) {\n+\tif ((int) rw > 0 && !bottom_only) {\n \t\tregion.dx = info->var.xoffset + rs;\n \t\tregion.dy = 0;\n \t\tregion.width = rw;\n@@ -224,7 +224,7 @@ static void bit_clear_margins(struct vc_data *vc, struct fb_info *info,\n \t\tinfo->fbops->fb_fillrect(info, &region);\n \t}\n \n-\tif (bh) {\n+\tif ((int) bh > 0) {\n \t\tregion.dx = info->var.xoffset;\n \t\tregion.dy = info->var.yoffset + bs;\n \t\tregion.width = rs;\ndiff --git a/drivers/video/fbdev/core/fbcon_ccw.c b/drivers/video/fbdev/core/fbcon_ccw.c\nindex dfa9a8aa4509..78f3a5621478 100644\n--- a/drivers/video/fbdev/core/fbcon_ccw.c\n+++ b/drivers/video/fbdev/core/fbcon_ccw.c\n@@ -201,7 +201,7 @@ static void ccw_clear_margins(struct vc_data *vc, struct fb_info *info,\n \tregion.color = color;\n \tregion.rop = ROP_COPY;\n \n-\tif (rw && !bottom_only) {\n+\tif ((int) rw > 0 && !bottom_only) {\n \t\tregion.dx = 0;\n \t\tregion.dy = info->var.yoffset;\n \t\tregion.height = rw;\n@@ -209,7 +209,7 @@ static void ccw_clear_margins(struct vc_data *vc, struct fb_info *info,\n \t\tinfo->fbops->fb_fillrect(info, &region);\n \t}\n \n-\tif (bh) {\n+\tif ((int) bh > 0) {\n \t\tregion.dx = info->var.xoffset + bs;\n \t\tregion.dy = 0;\n                 region.height = info->var.yres_virtual;\ndiff --git a/drivers/video/fbdev/core/fbcon_cw.c b/drivers/video/fbdev/core/fbcon_cw.c\nindex ce08251bfd38..fd098ff17574 100644\n--- a/drivers/video/fbdev/core/fbcon_cw.c\n+++ b/drivers/video/fbdev/core/fbcon_cw.c\n@@ -184,7 +184,7 @@ static void cw_clear_margins(struct vc_data *vc, struct fb_info *info,\n \tregion.color = color;\n \tregion.rop = ROP_COPY;\n \n-\tif (rw && !bottom_only) {\n+\tif ((int) rw > 0 && !bottom_only) {\n \t\tregion.dx = 0;\n \t\tregion.dy = info->var.yoffset + rs;\n \t\tregion.height = rw;\n@@ -192,7 +192,7 @@ static void cw_clear_margins(struct vc_data *vc, struct fb_info *info,\n \t\tinfo->fbops->fb_fillrect(info, &region);\n \t}\n \n-\tif (bh) {\n+\tif ((int) bh > 0) {\n \t\tregion.dx = info->var.xoffset;\n \t\tregion.dy = info->var.yoffset;\n                 region.height = info->var.yres;\ndiff --git a/drivers/video/fbdev/core/fbcon_ud.c b/drivers/video/fbdev/core/fbcon_ud.c\nindex 1936afc78fec..e165a3fad29a 100644\n--- a/drivers/video/fbdev/core/fbcon_ud.c\n+++ b/drivers/video/fbdev/core/fbcon_ud.c\n@@ -231,7 +231,7 @@ static void ud_clear_margins(struct vc_data *vc, struct fb_info *info,\n \tregion.color = color;\n \tregion.rop = ROP_COPY;\n \n-\tif (rw && !bottom_only) {\n+\tif ((int) rw > 0 && !bottom_only) {\n \t\tregion.dy = 0;\n \t\tregion.dx = info->var.xoffset;\n \t\tregion.width  = rw;\n@@ -239,7 +239,7 @@ static void ud_clear_margins(struct vc_data *vc, struct fb_info *info,\n \t\tinfo->fbops->fb_fillrect(info, &region);\n \t}\n \n-\tif (bh) {\n+\tif ((int) bh > 0) {\n \t\tregion.dy = info->var.yoffset;\n \t\tregion.dx = info->var.xoffset;\n                 region.height  = bh;\n",
+    "patch_modified_files": [
+        "drivers/video/fbdev/core/bitblit.c",
+        "drivers/video/fbdev/core/fbcon_ccw.c",
+        "drivers/video/fbdev/core/fbcon_cw.c",
+        "drivers/video/fbdev/core/fbcon_ud.c"
+    ]
+}

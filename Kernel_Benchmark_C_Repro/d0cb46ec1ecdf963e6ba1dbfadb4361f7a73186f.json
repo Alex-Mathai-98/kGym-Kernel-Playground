@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel NULL pointer dereference in loop_rw_iter",
+    "display-title": "BUG: unable to handle kernel NULL pointer dereference in loop_rw_iter",
+    "id": "d0cb46ec1ecdf963e6ba1dbfadb4361f7a73186f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: Fix NULL pointer dereference in loop_rw_iter()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2dd2111d0d383df104b144e0d1f6b5a00cb7cd88",
+            "hash": "2dd2111d0d383df104b144e0d1f6b5a00cb7cd88",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Merge tag 'scsi-misc' of git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=33c84e89abe4a92ab699c33029bd54269d574782",
+        "hash": "33c84e89abe4a92ab699c33029bd54269d574782",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000066583105ac87dbf4@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15929006900000",
+            "c-reproducer": "/text?tag=ReproC&x=15e196aa900000",
+            "kernel-config": "/text?tag=KernelConfig&x=72cf85e4237850c8",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9420f1ce01869409d78901c3e036b2c437cbc6b8",
+            "kernel-source-commit": "9420f1ce01869409d78901c3e036b2c437cbc6b8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/70301872e129e968c3027d181efb25fce3de8707",
+            "syzkaller-commit": "70301872e129e968c3027d181efb25fce3de8707",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1616a62c900000"
+        }
+    ],
+    "subsystems": [
+        "io-uring",
+        "fs"
+    ],
+    "parent_of_fix_commit": "c1dd91d16246b168b80af9b64c5cc35a66410455",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex 5e1c08e22990..8f96566603f3 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -3066,7 +3066,10 @@ static int io_iter_do_read(struct io_kiocb *req, struct iov_iter *iter)\n {\n \tif (req->file->f_op->read_iter)\n \t\treturn call_read_iter(req->file, &req->rw.kiocb, iter);\n-\treturn loop_rw_iter(READ, req->file, &req->rw.kiocb, iter);\n+\telse if (req->file->f_op->read)\n+\t\treturn loop_rw_iter(READ, req->file, &req->rw.kiocb, iter);\n+\telse\n+\t\treturn -EINVAL;\n }\n \n static int io_read(struct io_kiocb *req, bool force_nonblock,\n@@ -3203,8 +3206,10 @@ static int io_write(struct io_kiocb *req, bool force_nonblock,\n \n \tif (req->file->f_op->write_iter)\n \t\tret2 = call_write_iter(req->file, kiocb, &iter);\n-\telse\n+\telse if (req->file->f_op->write)\n \t\tret2 = loop_rw_iter(WRITE, req->file, kiocb, &iter);\n+\telse\n+\t\tret2 = -EINVAL;\n \n \t/*\n \t * Raw bdev writes will return -EOPNOTSUPP for IOCB_NOWAIT. Just\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

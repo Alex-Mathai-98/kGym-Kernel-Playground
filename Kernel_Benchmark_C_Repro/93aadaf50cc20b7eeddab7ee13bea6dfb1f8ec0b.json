@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "memory leak in fasync_helper",
+    "display-title": "memory leak in fasync_helper",
+    "id": "93aadaf50cc20b7eeddab7ee13bea6dfb1f8ec0b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/smc: transfer fasync_list in case of fallback",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=67f562e3e147750a02b2a91d21a163fc44a1d13e",
+            "hash": "67f562e3e147750a02b2a91d21a163fc44a1d13e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000023dba505992ac8aa@google.com/T/",
+        "https://lore.kernel.org/all/20200214075900.31624-1-kgraul@linux.ibm.com/T/",
+        "https://lore.kernel.org/all/20200303174302.523080016@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200303174304.593872177@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=120faee2e00000",
+            "c-reproducer": "/text?tag=ReproC&x=178a0ef6e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=874c75a332209d41",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=bf929479893052b1c7bfe23a4e7a903643076350",
+            "kernel-source-commit": "bf929479893052b1c7bfe23a4e7a903643076350",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/048f2d494ee4a016e2386c28bf8cccdd87896cbd",
+            "syzkaller-commit": "048f2d494ee4a016e2386c28bf8cccdd87896cbd",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=161c4416e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "smc_switch_to_fallback",
+            "net/smc/af_smc.c"
+        ]
+    ],
+    "patch_commit_date": "2020-02-14T07:58:59+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "dc221a28d0944f1a28755caa66bf58bfa47e26d1",
+    "patch": "diff --git a/net/smc/af_smc.c b/net/smc/af_smc.c\nindex cee5bf4a9bb9..90988a511cd5 100644\n--- a/net/smc/af_smc.c\n+++ b/net/smc/af_smc.c\n@@ -470,6 +470,8 @@ static void smc_switch_to_fallback(struct smc_sock *smc)\n \tif (smc->sk.sk_socket && smc->sk.sk_socket->file) {\n \t\tsmc->clcsock->file = smc->sk.sk_socket->file;\n \t\tsmc->clcsock->file->private_data = smc->clcsock;\n+\t\tsmc->clcsock->wq.fasync_list =\n+\t\t\tsmc->sk.sk_socket->wq.fasync_list;\n \t}\n }\n \n",
+    "patch_modified_files": [
+        "net/smc/af_smc.c"
+    ]
+}

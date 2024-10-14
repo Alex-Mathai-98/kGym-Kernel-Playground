@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "WARNING in notify_change",
+    "display-title": "WARNING in notify_change",
+    "id": "e925f35f91b20fb565507134085b4d65824e5eb0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Abort file_remove_privs() for non-reg. files",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f69e749a49353d96af1a293f56b5b56de59c668a",
+            "hash": "f69e749a49353d96af1a293f56b5b56de59c668a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/94eb2c0ce3aa7551d30569658325@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16b75a8b800000",
+            "c-reproducer": "/text?tag=ReproC&x=121084cb800000",
+            "kernel-config": "/text?tag=KernelConfig&x=af525d2902766246",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3fd14cdcc05a682b03743683ce3a726898b20555",
+            "kernel-source-commit": "3fd14cdcc05a682b03743683ce3a726898b20555",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/77bd5117c32d12f3be432e07f327b4989efe2515",
+            "syzkaller-commit": "77bd5117c32d12f3be432e07f327b4989efe2515",
+            "compiler-description": "gcc (GCC) 8.0.1 20180301 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11d9bcfb800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "file_remove_privs",
+            "fs/inode.c"
+        ]
+    ],
+    "patch_commit_date": "2018-12-14T10:55:52+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "ee948837d7fa89127373c139766aacf6b02a9225",
+    "patch": "diff --git a/fs/inode.c b/fs/inode.c\nindex e9d97add2b36..9a453f3637f8 100644\n--- a/fs/inode.c\n+++ b/fs/inode.c\n@@ -1817,8 +1817,13 @@ int file_remove_privs(struct file *file)\n \tint kill;\n \tint error = 0;\n \n-\t/* Fast path for nothing security related */\n-\tif (IS_NOSEC(inode))\n+\t/*\n+\t * Fast path for nothing security related.\n+\t * As well for non-regular files, e.g. blkdev inodes.\n+\t * For example, blkdev_write_iter() might get here\n+\t * trying to remove privs which it is not allowed to.\n+\t */\n+\tif (IS_NOSEC(inode) || !S_ISREG(inode->i_mode))\n \t\treturn 0;\n \n \tkill = dentry_needs_remove_privs(dentry);\n",
+    "patch_modified_files": [
+        "fs/inode.c"
+    ]
+}

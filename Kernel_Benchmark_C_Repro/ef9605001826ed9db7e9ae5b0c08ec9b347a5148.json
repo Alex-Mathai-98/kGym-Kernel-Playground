@@ -1,0 +1,84 @@
+{
+    "version": 1,
+    "title": "general protection fault in io_uring_show_fdinfo",
+    "display-title": "general protection fault in io_uring_show_fdinfo",
+    "id": "ef9605001826ed9db7e9ae5b0c08ec9b347a5148",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring/fdinfo: only print ->sq_array[] if it's there",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=32f5dea040ee6e3cc30ac52d23f1674fd5110d03",
+            "hash": "32f5dea040ee6e3cc30ac52d23f1674fd5110d03",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "io_uring: add option to remove SQ indirection",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2af89abda7d9c2aeb573677e2c498ddb09f8058a",
+        "hash": "2af89abda7d9c2aeb573677e2c498ddb09f8058a",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000466a6106044f6986@google.com/T/",
+        "https://lore.kernel.org/all/6a715702-69e6-48a0-b278-5624d0c5c58d@kernel.dk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in io_uring_show_fdinfo",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1749fa10680000",
+            "c-reproducer": "/text?tag=ReproC&x=10211c10680000",
+            "kernel-config": "/text?tag=KernelConfig&x=cce54b04d9a3d05b",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=99d99825fc075fd24b60cc9cf0fb1e20b9c16b0f",
+            "kernel-source-commit": "99d99825fc075fd24b60cc9cf0fb1e20b9c16b0f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/696ea0d2f4fdaa17db929e152edba19bf7666d84",
+            "syzkaller-commit": "696ea0d2f4fdaa17db929e152edba19bf7666d84",
+            "compiler-description": "Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12f0bd88680000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "io_uring_show_fdinfo",
+            "io_uring/fdinfo.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "io_uring_create",
+            "io_uring/io_uring.c"
+        ],
+        [
+            "rings_size",
+            "io_uring/io_uring.c"
+        ],
+        [
+            "io_get_sqe",
+            "io_uring/io_uring.c"
+        ],
+        [
+            "io_commit_sqring",
+            "io_uring/io_uring.c"
+        ],
+        [
+            "io_uring_setup",
+            "io_uring/io_uring.c"
+        ],
+        [
+            "io_allocate_scq_urings",
+            "io_uring/io_uring.c"
+        ]
+    ],
+    "patch_commit_date": "2023-09-01T19:59:19+00:00",
+    "cause_commit_date": "2023-08-24T22:53:32+00:00",
+    "subsystems": [
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "b484a40dc1f16edb58e5430105a021e1916e6f27",
+    "patch": "diff --git a/io_uring/fdinfo.c b/io_uring/fdinfo.c\nindex 300455b4bc12..c53678875416 100644\n--- a/io_uring/fdinfo.c\n+++ b/io_uring/fdinfo.c\n@@ -93,6 +93,8 @@ __cold void io_uring_show_fdinfo(struct seq_file *m, struct file *f)\n \t\tstruct io_uring_sqe *sqe;\n \t\tunsigned int sq_idx;\n \n+\t\tif (ctx->flags & IORING_SETUP_NO_SQARRAY)\n+\t\t\tbreak;\n \t\tsq_idx = READ_ONCE(ctx->sq_array[entry & sq_mask]);\n \t\tif (sq_idx > sq_mask)\n \t\t\tcontinue;\n",
+    "patch_modified_files": [
+        "io_uring/fdinfo.c"
+    ]
+}

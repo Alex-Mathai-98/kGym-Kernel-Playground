@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "KASAN: invalid-free in init_file",
+    "display-title": "KASAN: invalid-free in init_file",
+    "id": "4894a6d412735394296e80976329c1a6848acc14",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs: move cleanup from init_file() into its callers",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=dff745c1221a402b4921d54f292288373cff500c",
+            "hash": "dff745c1221a402b4921d54f292288373cff500c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "fs: use backing_file container for internal files with \"fake\" f_path",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=62d53c4a1dfe347bd87ede46ffad38c9a3870338",
+        "hash": "62d53c4a1dfe347bd87ede46ffad38c9a3870338",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b7a0c305ff6da727@google.com/T/",
+        "https://lore.kernel.org/all/20230701171134.239409-1-amir73il@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: invalid-free in init_file",
+            "syz-reproducer": "/text?tag=ReproSyz&x=130a5670a80000",
+            "c-reproducer": "/text?tag=ReproC&x=11aac680a80000",
+            "kernel-config": "/text?tag=KernelConfig&x=33c8c2baba1cfc7e",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1ef6663a587ba3e57dc5065a477db1c64481eedd",
+            "kernel-source-commit": "1ef6663a587ba3e57dc5065a477db1c64481eedd",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4cd5bb25a2752a9a5b25597d1da34656681f07a6",
+            "syzkaller-commit": "4cd5bb25a2752a9a5b25597d1da34656681f07a6",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12a091bf280000"
+        }
+    ],
+    "subsystems": [
+        "overlayfs"
+    ],
+    "parent_of_fix_commit": "995b406c7e972fab181a4bb57f3b95e59b8e5bf3",
+    "patch": "diff --git a/fs/file_table.c b/fs/file_table.c\nindex e06c68e2d757..fc7d677ff5ad 100644\n--- a/fs/file_table.c\n+++ b/fs/file_table.c\n@@ -160,7 +160,7 @@ static int init_file(struct file *f, int flags, const struct cred *cred)\n \tf->f_cred = get_cred(cred);\n \terror = security_file_alloc(f);\n \tif (unlikely(error)) {\n-\t\tfile_free_rcu(&f->f_rcuhead);\n+\t\tput_cred(f->f_cred);\n \t\treturn error;\n \t}\n \n@@ -208,8 +208,10 @@ struct file *alloc_empty_file(int flags, const struct cred *cred)\n \t\treturn ERR_PTR(-ENOMEM);\n \n \terror = init_file(f, flags, cred);\n-\tif (unlikely(error))\n+\tif (unlikely(error)) {\n+\t\tkmem_cache_free(filp_cachep, f);\n \t\treturn ERR_PTR(error);\n+\t}\n \n \tpercpu_counter_inc(&nr_files);\n \n@@ -240,8 +242,10 @@ struct file *alloc_empty_file_noaccount(int flags, const struct cred *cred)\n \t\treturn ERR_PTR(-ENOMEM);\n \n \terror = init_file(f, flags, cred);\n-\tif (unlikely(error))\n+\tif (unlikely(error)) {\n+\t\tkmem_cache_free(filp_cachep, f);\n \t\treturn ERR_PTR(error);\n+\t}\n \n \tf->f_mode |= FMODE_NOACCOUNT;\n \n@@ -265,8 +269,10 @@ struct file *alloc_empty_backing_file(int flags, const struct cred *cred)\n \t\treturn ERR_PTR(-ENOMEM);\n \n \terror = init_file(&ff->file, flags, cred);\n-\tif (unlikely(error))\n+\tif (unlikely(error)) {\n+\t\tkfree(ff);\n \t\treturn ERR_PTR(error);\n+\t}\n \n \tff->file.f_mode |= FMODE_BACKING | FMODE_NOACCOUNT;\n \treturn &ff->file;\n",
+    "patch_modified_files": [
+        "fs/file_table.c"
+    ]
+}

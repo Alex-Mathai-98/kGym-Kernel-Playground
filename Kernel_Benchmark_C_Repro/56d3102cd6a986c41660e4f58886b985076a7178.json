@@ -1,0 +1,66 @@
+{
+    "version": 1,
+    "title": "INFO: rcu detected stall in newstat",
+    "display-title": "INFO: rcu detected stall in newstat",
+    "id": "56d3102cd6a986c41660e4f58886b985076a7178",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: mceusb: return without resubmitting URB in case of -EPROTO error.",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=476db72e521983ecb847e4013b263072bb1110fc",
+            "hash": "476db72e521983ecb847e4013b263072bb1110fc",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "usb: gadget: add raw-gadget interface",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f2c2e717642c66f7fe7e5dd69b2e8ff5849f4d10",
+        "hash": "f2c2e717642c66f7fe7e5dd69b2e8ff5849f4d10",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003544c405c8a3026a@google.com/T/",
+        "https://lore.kernel.org/all/CACT4Y+YXg=rRmCsM3i0ES_dXhFGdnS7LLwtX3YmRLjjr0haCOA@mail.gmail.com/T/",
+        "https://lore.kernel.org/all/CACT4Y+ZxJUu+UrUpOwvcFOy2LubhP1HuCQybxaq-rrDsdO9bRg@mail.gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "INFO: rcu detected stall in newstat",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12f2aac9d00000",
+            "c-reproducer": "/text?tag=ReproC&x=15470c66300000",
+            "kernel-config": "/text?tag=KernelConfig&x=1dee114394f7d2c2",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7e96bf476270aecea66740a083e51b38c1371cd2",
+            "kernel-source-commit": "7e96bf476270aecea66740a083e51b38c1371cd2",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c585c7b0ea16dc4326bf5e8f2f00cc6638e2feb1",
+            "syzkaller-commit": "c585c7b0ea16dc4326bf5e8f2f00cc6638e2feb1",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13477a42300000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "mceusb_dev_recv",
+            "drivers/media/rc/mceusb.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "obj",
+            "drivers/usb/gadget/legacy/Makefile"
+        ]
+    ],
+    "patch_commit_date": "2021-08-18T20:31:10+00:00",
+    "cause_commit_date": "2020-02-24T16:13:03+00:00",
+    "subsystems": [
+        "fs",
+        "usb"
+    ],
+    "parent_of_fix_commit": "44870a9e7a3c24acbb3f888b2a7cc22c9bdf7e7f",
+    "patch": "diff --git a/drivers/media/rc/mceusb.c b/drivers/media/rc/mceusb.c\nindex 28bf78ff246a..d09bee82c04c 100644\n--- a/drivers/media/rc/mceusb.c\n+++ b/drivers/media/rc/mceusb.c\n@@ -1386,6 +1386,7 @@ static void mceusb_dev_recv(struct urb *urb)\n \tcase -ECONNRESET:\n \tcase -ENOENT:\n \tcase -EILSEQ:\n+\tcase -EPROTO:\n \tcase -ESHUTDOWN:\n \t\tusb_unlink_urb(urb);\n \t\treturn;\n",
+    "patch_modified_files": [
+        "drivers/media/rc/mceusb.c"
+    ]
+}

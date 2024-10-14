@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in f2fs_build_segment_manager",
+    "display-title": "KASAN: slab-out-of-bounds Read in f2fs_build_segment_manager",
+    "id": "3f6daa8df2d01d0560d3944fe06728c8c9ba5eff",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "f2fs: fix to do sanity check on segment/section count",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3a22e9ac71585bcb7667e44641f1bbb25295f0ce",
+            "hash": "3a22e9ac71585bcb7667e44641f1bbb25295f0ce",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c5b63505b0207e25@google.com/T/",
+        "https://lore.kernel.org/all/20200929012334.109708-1-yuchao0@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=134bf08d900000",
+            "c-reproducer": "/text?tag=ReproC&x=102fbac5900000",
+            "kernel-config": "/text?tag=KernelConfig&x=5f4c828c9e3cef97",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=171d4ff79f965c1f164705ef0aaea102a6ad238b",
+            "kernel-source-commit": "171d4ff79f965c1f164705ef0aaea102a6ad238b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/54289b0835634ca07a8117613c48b73e9e647d13",
+            "syzkaller-commit": "54289b0835634ca07a8117613c48b73e9e647d13",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10533ad3900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "sanity_check_raw_super",
+            "fs/f2fs/super.c"
+        ]
+    ],
+    "patch_commit_date": "2020-09-29T01:23:34+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "f2fs"
+    ],
+    "parent_of_fix_commit": "6a257471fa42c8c9c04a875cd3a2a22db148e0f0",
+    "patch": "diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c\nindex 484601717786..adc98c12ed53 100644\n--- a/fs/f2fs/super.c\n+++ b/fs/f2fs/super.c\n@@ -2833,6 +2833,12 @@ static int sanity_check_raw_super(struct f2fs_sb_info *sbi,\n \t\treturn -EFSCORRUPTED;\n \t}\n \n+\tif (segment_count_main != total_sections * segs_per_sec) {\n+\t\tf2fs_info(sbi, \"Invalid segment/section count (%u != %u * %u)\",\n+\t\t\t  segment_count_main, total_sections, segs_per_sec);\n+\t\treturn -EFSCORRUPTED;\n+\t}\n+\n \tif ((segment_count / segs_per_sec) < total_sections) {\n \t\tf2fs_info(sbi, \"Small segment_count (%u < %u * %u)\",\n \t\t\t  segment_count, segs_per_sec, total_sections);\n",
+    "patch_modified_files": [
+        "fs/f2fs/super.c"
+    ]
+}

@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "possible deadlock in io_timeout_fn",
+    "display-title": "possible deadlock in io_timeout_fn",
+    "id": "311451665f2270ea182259834ecda179d41eadbe",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: defer file table grabbing request cleanup for locked requests",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=51a4cc112c7a42b62a91bcccdfac42e7c4561729",
+            "hash": "51a4cc112c7a42b62a91bcccdfac42e7c4561729",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "io_uring: call statx directly",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e62753e4e2926f249d088cc0517be5ed4efec6d6",
+        "hash": "e62753e4e2926f249d088cc0517be5ed4efec6d6",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000cb5dff05ac87ba2e@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=126b0f1a900000",
+            "c-reproducer": "/text?tag=ReproC&x=13e32994900000",
+            "kernel-config": "/text?tag=KernelConfig&x=9d25235bf0162fbc",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=449dc8c97089a6e09fb2dac4d92b1b7ac0eb7c1e",
+            "kernel-source-commit": "449dc8c97089a6e09fb2dac4d92b1b7ac0eb7c1e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f721e4a097714a9054b9fe1aadf427afbbd2c157",
+            "syzkaller-commit": "f721e4a097714a9054b9fe1aadf427afbbd2c157",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=106c562c900000"
+        }
+    ],
+    "subsystems": [
+        "io-uring",
+        "fs"
+    ],
+    "parent_of_fix_commit": "9b7adba9eaec28e0e4343c96d0dbeb9578802f5f",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex 56115cb4b9fa..5488698189da 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -1108,10 +1108,16 @@ static void __io_commit_cqring(struct io_ring_ctx *ctx)\n \t}\n }\n \n-static void io_req_clean_work(struct io_kiocb *req)\n+/*\n+ * Returns true if we need to defer file table putting. This can only happen\n+ * from the error path with REQ_F_COMP_LOCKED set.\n+ */\n+static bool io_req_clean_work(struct io_kiocb *req)\n {\n \tif (!(req->flags & REQ_F_WORK_INITIALIZED))\n-\t\treturn;\n+\t\treturn false;\n+\n+\treq->flags &= ~REQ_F_WORK_INITIALIZED;\n \n \tif (req->work.mm) {\n \t\tmmdrop(req->work.mm);\n@@ -1124,6 +1130,9 @@ static void io_req_clean_work(struct io_kiocb *req)\n \tif (req->work.fs) {\n \t\tstruct fs_struct *fs = req->work.fs;\n \n+\t\tif (req->flags & REQ_F_COMP_LOCKED)\n+\t\t\treturn true;\n+\n \t\tspin_lock(&req->work.fs->lock);\n \t\tif (--fs->users)\n \t\t\tfs = NULL;\n@@ -1132,7 +1141,8 @@ static void io_req_clean_work(struct io_kiocb *req)\n \t\t\tfree_fs_struct(fs);\n \t\treq->work.fs = NULL;\n \t}\n-\treq->flags &= ~REQ_F_WORK_INITIALIZED;\n+\n+\treturn false;\n }\n \n static void io_prep_async_work(struct io_kiocb *req)\n@@ -1544,7 +1554,7 @@ static inline void io_put_file(struct io_kiocb *req, struct file *file,\n \t\tfput(file);\n }\n \n-static void io_dismantle_req(struct io_kiocb *req)\n+static bool io_dismantle_req(struct io_kiocb *req)\n {\n \tio_clean_op(req);\n \n@@ -1552,7 +1562,6 @@ static void io_dismantle_req(struct io_kiocb *req)\n \t\tkfree(req->io);\n \tif (req->file)\n \t\tio_put_file(req, req->file, (req->flags & REQ_F_FIXED_FILE));\n-\tio_req_clean_work(req);\n \n \tif (req->flags & REQ_F_INFLIGHT) {\n \t\tstruct io_ring_ctx *ctx = req->ctx;\n@@ -1564,15 +1573,15 @@ static void io_dismantle_req(struct io_kiocb *req)\n \t\t\twake_up(&ctx->inflight_wait);\n \t\tspin_unlock_irqrestore(&ctx->inflight_lock, flags);\n \t}\n+\n+\treturn io_req_clean_work(req);\n }\n \n-static void __io_free_req(struct io_kiocb *req)\n+static void __io_free_req_finish(struct io_kiocb *req)\n {\n-\tstruct io_ring_ctx *ctx;\n+\tstruct io_ring_ctx *ctx = req->ctx;\n \n-\tio_dismantle_req(req);\n \t__io_put_req_task(req);\n-\tctx = req->ctx;\n \tif (likely(!io_is_fallback_req(req)))\n \t\tkmem_cache_free(req_cachep, req);\n \telse\n@@ -1580,6 +1589,39 @@ static void __io_free_req(struct io_kiocb *req)\n \tpercpu_ref_put(&ctx->refs);\n }\n \n+static void io_req_task_file_table_put(struct callback_head *cb)\n+{\n+\tstruct io_kiocb *req = container_of(cb, struct io_kiocb, task_work);\n+\tstruct fs_struct *fs = req->work.fs;\n+\n+\tspin_lock(&req->work.fs->lock);\n+\tif (--fs->users)\n+\t\tfs = NULL;\n+\tspin_unlock(&req->work.fs->lock);\n+\tif (fs)\n+\t\tfree_fs_struct(fs);\n+\treq->work.fs = NULL;\n+\t__io_free_req_finish(req);\n+}\n+\n+static void __io_free_req(struct io_kiocb *req)\n+{\n+\tif (!io_dismantle_req(req)) {\n+\t\t__io_free_req_finish(req);\n+\t} else {\n+\t\tint ret;\n+\n+\t\tinit_task_work(&req->task_work, io_req_task_file_table_put);\n+\t\tret = task_work_add(req->task, &req->task_work, TWA_RESUME);\n+\t\tif (unlikely(ret)) {\n+\t\t\tstruct task_struct *tsk;\n+\n+\t\t\ttsk = io_wq_get_task(req->ctx->io_wq);\n+\t\t\ttask_work_add(tsk, &req->task_work, 0);\n+\t\t}\n+\t}\n+}\n+\n static bool io_link_cancel_timeout(struct io_kiocb *req)\n {\n \tstruct io_ring_ctx *ctx = req->ctx;\n@@ -1868,7 +1910,7 @@ static void io_req_free_batch(struct req_batch *rb, struct io_kiocb *req)\n \t\treq->flags &= ~REQ_F_TASK_PINNED;\n \t}\n \n-\tio_dismantle_req(req);\n+\tWARN_ON_ONCE(io_dismantle_req(req));\n \trb->reqs[rb->to_free++] = req;\n \tif (unlikely(rb->to_free == ARRAY_SIZE(rb->reqs)))\n \t\t__io_req_free_batch_flush(req->ctx, rb);\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

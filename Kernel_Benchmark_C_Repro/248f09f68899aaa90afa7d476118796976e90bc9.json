@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel paging request in h4_recv_buf",
+    "display-title": "BUG: unable to handle kernel paging request in h4_recv_buf",
+    "id": "248f09f68899aaa90afa7d476118796976e90bc9",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: hci_uart: Check if socket buffer is ERR_PTR in h4_recv_buf()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1dc2d785156cbdc80806c32e8d2c7c735d0b4721",
+            "hash": "1dc2d785156cbdc80806c32e8d2c7c735d0b4721",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ce1573057e75e2bf@google.com/T/",
+        "https://lore.kernel.org/all/20190111065514.GA26542@myunghoj-Precision-5530/T/",
+        "https://lore.kernel.org/all/20190122083323.GA22508@myunghoj-Precision-5530/T/",
+        "https://lore.kernel.org/all/20190326042649.889479098@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190326042700.963224437@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190326042702.565683325@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190327180158.10245-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190327181025.13507-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13d654d7400000",
+            "c-reproducer": "/text?tag=ReproC&x=174483fd400000",
+            "kernel-config": "/text?tag=KernelConfig&x=c2ab9708c613a224",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=28e8c4bc8eb483c22d977e147a0b98fc63efadf7",
+            "kernel-source-commit": "28e8c4bc8eb483c22d977e147a0b98fc63efadf7",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3d85f48c1449a8fe6db5cef827592f56ee6dcf26",
+            "syzkaller-commit": "3d85f48c1449a8fe6db5cef827592f56ee6dcf26",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1774b480c00000"
+        }
+    ],
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "37c589ec289bbf5c3a506c9da259986bd63c40e9",
+    "patch": "diff --git a/drivers/bluetooth/h4_recv.h b/drivers/bluetooth/h4_recv.h\nindex b432651f8236..307d82166f48 100644\n--- a/drivers/bluetooth/h4_recv.h\n+++ b/drivers/bluetooth/h4_recv.h\n@@ -60,6 +60,10 @@ static inline struct sk_buff *h4_recv_buf(struct hci_dev *hdev,\n \t\t\t\t\t  const struct h4_recv_pkt *pkts,\n \t\t\t\t\t  int pkts_count)\n {\n+\t/* Check for error from previous call */\n+\tif (IS_ERR(skb))\n+\t\tskb = NULL;\n+\n \twhile (count) {\n \t\tint i, len;\n \ndiff --git a/drivers/bluetooth/hci_h4.c b/drivers/bluetooth/hci_h4.c\nindex fb97a3bf069b..5d97d77627c1 100644\n--- a/drivers/bluetooth/hci_h4.c\n+++ b/drivers/bluetooth/hci_h4.c\n@@ -174,6 +174,10 @@ struct sk_buff *h4_recv_buf(struct hci_dev *hdev, struct sk_buff *skb,\n \tstruct hci_uart *hu = hci_get_drvdata(hdev);\n \tu8 alignment = hu->alignment ? hu->alignment : 1;\n \n+\t/* Check for error from previous call */\n+\tif (IS_ERR(skb))\n+\t\tskb = NULL;\n+\n \twhile (count) {\n \t\tint i, len;\n \n",
+    "patch_modified_files": [
+        "drivers/bluetooth/h4_recv.h",
+        "drivers/bluetooth/hci_h4.c"
+    ]
+}

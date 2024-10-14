@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "title": "WARNING in mb_find_extent",
+    "display-title": "WARNING in mb_find_extent",
+    "id": "0015a4401698588174c5a857d36ce44b92d465bd",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: fix WARNING in mb_find_extent",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fa08a7b61dff8a4df11ff1e84abfc214b487caf7",
+            "hash": "fa08a7b61dff8a4df11ff1e84abfc214b487caf7",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e981e105f106f7b5@google.com/T/",
+        "https://lore.kernel.org/all/20230113100205.2987532-1-yebin@huaweicloud.com/T/",
+        "https://lore.kernel.org/all/20230116020015.1506120-1-yebin@huaweicloud.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in mb_find_extent",
+            "syz-reproducer": "/text?tag=ReproSyz&x=144dc560480000",
+            "c-reproducer": "/text?tag=ReproC&x=149409ff880000",
+            "kernel-config": "/text?tag=KernelConfig&x=68e0be42c8ee4bb4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1b929c02afd37871d5afb9d498426f83432e71c2",
+            "kernel-source-commit": "1b929c02afd37871d5afb9d498426f83432e71c2",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9da18ae8fa827d046ef8da48cc23c97418553c23",
+            "syzkaller-commit": "9da18ae8fa827d046ef8da48cc23c97418553c23",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12f9fd08480000"
+        }
+    ],
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "ac9a78681b921877518763ba0e89202254349d1b",
+    "patch": "diff --git a/fs/ext4/balloc.c b/fs/ext4/balloc.c\nindex 094269488183..c49e612e3975 100644\n--- a/fs/ext4/balloc.c\n+++ b/fs/ext4/balloc.c\n@@ -305,6 +305,22 @@ struct ext4_group_desc * ext4_get_group_desc(struct super_block *sb,\n \treturn desc;\n }\n \n+static ext4_fsblk_t ext4_valid_block_bitmap_padding(struct super_block *sb,\n+\t\t\t\t\t\t    ext4_group_t block_group,\n+\t\t\t\t\t\t    struct buffer_head *bh)\n+{\n+\text4_grpblk_t next_zero_bit;\n+\tunsigned long bitmap_size = sb->s_blocksize * 8;\n+\tunsigned int offset = num_clusters_in_group(sb, block_group);\n+\n+\tif (bitmap_size <= offset)\n+\t\treturn 0;\n+\n+\tnext_zero_bit = ext4_find_next_zero_bit(bh->b_data, bitmap_size, offset);\n+\n+\treturn (next_zero_bit < bitmap_size ? next_zero_bit : 0);\n+}\n+\n /*\n  * Return the block number which was discovered to be invalid, or 0 if\n  * the block bitmap is valid.\n@@ -402,6 +418,15 @@ static int ext4_validate_block_bitmap(struct super_block *sb,\n \t\t\t\t\tEXT4_GROUP_INFO_BBITMAP_CORRUPT);\n \t\treturn -EFSCORRUPTED;\n \t}\n+\tblk = ext4_valid_block_bitmap_padding(sb, block_group, bh);\n+\tif (unlikely(blk != 0)) {\n+\t\text4_unlock_group(sb, block_group);\n+\t\text4_error(sb, \"bg %u: block %llu: padding at end of block bitmap is not set\",\n+\t\t\t   block_group, blk);\n+\t\text4_mark_group_bitmap_corrupted(sb, block_group,\n+\t\t\t\t\t\t EXT4_GROUP_INFO_BBITMAP_CORRUPT);\n+\t\treturn -EFSCORRUPTED;\n+\t}\n \tset_buffer_verified(bh);\n verified:\n \text4_unlock_group(sb, block_group);\n",
+    "patch_modified_files": [
+        "fs/ext4/balloc.c"
+    ]
+}

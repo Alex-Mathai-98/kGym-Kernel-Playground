@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in xfs_inobt_init_key_from_rec",
+    "display-title": "KASAN: use-after-free Read in xfs_inobt_init_key_from_rec",
+    "id": "5e12ac175774b3ff672dbc5fb39b7bb9d94092b6",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "xfs: fix inobt magic number check",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2e050e648ad6c74a2f0a28f645155128be0626ca",
+            "hash": "2e050e648ad6c74a2f0a28f645155128be0626ca",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b320810568f4a6f1@google.com/T/",
+        "https://lore.kernel.org/all/20180716073443.294323458@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=133f27ab800000",
+            "c-reproducer": "/text?tag=ReproC&x=1524b94b800000",
+            "kernel-config": "/text?tag=KernelConfig&x=a098e496b4437944",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=642e7fd23353e22290e3d51719fcb658dc252342",
+            "kernel-source-commit": "642e7fd23353e22290e3d51719fcb658dc252342",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/676bd07e7e80f8a270af7f0276443c68f4a99e25",
+            "syzkaller-commit": "676bd07e7e80f8a270af7f0276443c68f4a99e25",
+            "compiler-description": "gcc (GCC) 7.1.1 20170620",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13678eb3800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "xfs_inobt_verify",
+            "fs/xfs/libxfs/xfs_ialloc_btree.c"
+        ]
+    ],
+    "patch_commit_date": "2018-05-24T15:54:59+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "xfs"
+    ],
+    "parent_of_fix_commit": "aee9a4a555b3f1440cc3943d7b9ab5fa072ec62e",
+    "patch": "diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c\nindex ba053a4c124f..b04c55512159 100644\n--- a/fs/xfs/libxfs/xfs_ialloc_btree.c\n+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c\n@@ -296,7 +296,7 @@ xfs_inobt_verify(\n \tcase cpu_to_be32(XFS_FIBT_MAGIC):\n \t\tbreak;\n \tdefault:\n-\t\treturn NULL;\n+\t\treturn __this_address;\n \t}\n \n \t/* level verification */\n",
+    "patch_modified_files": [
+        "fs/xfs/libxfs/xfs_ialloc_btree.c"
+    ]
+}

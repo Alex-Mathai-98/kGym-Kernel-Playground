@@ -1,0 +1,40 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel paging request in do_csum",
+    "display-title": "BUG: unable to handle kernel paging request in do_csum",
+    "id": "7f5cf6b92432a3c447a436ed9c550d45bf17d3c8",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net-backports: net: validate untrusted gso packets without csum offload",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d5be7f632bad0f489879eed0ff4b99bd7fe0b74c",
+            "hash": "d5be7f632bad0f489879eed0ff4b99bd7fe0b74c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=168d848b400000",
+            "c-reproducer": "/text?tag=ReproC&x=10141c25400000",
+            "kernel-config": "/text?tag=KernelConfig&x=4602730af4f872ef",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4b78317679c4f3782a3cff0ddb269c1fcfde7621",
+            "kernel-source-commit": "4b78317679c4f3782a3cff0ddb269c1fcfde7621",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e0d8c853f6c076c991406ce107a8242529eb3b3a",
+            "syzkaller-commit": "e0d8c853f6c076c991406ce107a8242529eb3b3a",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10b3c443400000"
+        }
+    ],
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "3b89ea9c5902acccdbbdec307c85edd1bf52515e",
+    "patch": "diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h\nindex 95d25b010a25..4c1c82a5678c 100644\n--- a/include/linux/skbuff.h\n+++ b/include/linux/skbuff.h\n@@ -2434,7 +2434,7 @@ static inline void skb_probe_transport_header(struct sk_buff *skb,\n \n \tif (skb_flow_dissect_flow_keys_basic(skb, &keys, NULL, 0, 0, 0, 0))\n \t\tskb_set_transport_header(skb, keys.control.thoff);\n-\telse\n+\telse if (offset_hint >= 0)\n \t\tskb_set_transport_header(skb, offset_hint);\n }\n \ndiff --git a/include/linux/virtio_net.h b/include/linux/virtio_net.h\nindex cb462f9ab7dd..71f2394abbf7 100644\n--- a/include/linux/virtio_net.h\n+++ b/include/linux/virtio_net.h\n@@ -57,6 +57,15 @@ static inline int virtio_net_hdr_to_skb(struct sk_buff *skb,\n \n \t\tif (!skb_partial_csum_set(skb, start, off))\n \t\t\treturn -EINVAL;\n+\t} else {\n+\t\t/* gso packets without NEEDS_CSUM do not set transport_offset.\n+\t\t * probe and drop if does not match one of the above types.\n+\t\t */\n+\t\tif (gso_type) {\n+\t\t\tskb_probe_transport_header(skb, -1);\n+\t\t\tif (!skb_transport_header_was_set(skb))\n+\t\t\t\treturn -EINVAL;\n+\t\t}\n \t}\n \n \tif (hdr->gso_type != VIRTIO_NET_HDR_GSO_NONE) {\n",
+    "patch_modified_files": [
+        "include/linux/skbuff.h",
+        "include/linux/virtio_net.h"
+    ]
+}

@@ -1,0 +1,76 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Write in default_read_copy_kernel",
+    "display-title": "KASAN: slab-out-of-bounds Write in default_read_copy_kernel",
+    "id": "04933ddeeb1b542edf54b88ceccdac34de747a40",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ALSA: pcm: Fix possible OOB access in PCM oss plugins",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ca0214ee2802dd47239a4e39fb21c5b00ef61b22",
+            "hash": "ca0214ee2802dd47239a4e39fb21c5b00ef61b22",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "ALSA: oss: Use kvzalloc() for local buffer allocations",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=65766ee0bf7fe8b3be80e2e1c3ef54ad59b29476",
+        "hash": "65766ee0bf7fe8b3be80e2e1c3ef54ad59b29476",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000004a6256057ca3b6bd@google.com/T/",
+        "https://lore.kernel.org/all/20190624050728.GB30702@sol.localdomain/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16c27125400000",
+            "c-reproducer": "/text?tag=ReproC&x=152a2a43400000",
+            "kernel-config": "/text?tag=KernelConfig&x=b9cc5a440391cbfd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=abb8d6ecbd8f7801c048f6543f79d22d24cead7b",
+            "kernel-source-commit": "abb8d6ecbd8f7801c048f6543f79d22d24cead7b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/dcf836b12d34be9fd7766104dfea168b76b4212e",
+            "syzkaller-commit": "dcf836b12d34be9fd7766104dfea168b76b4212e",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1332227d400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "snd_pcm_oss_change_params_locked",
+            "sound/core/oss/pcm_oss.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "snd_pcm_oss_change_params_locked",
+            "sound/core/oss/pcm_oss.c"
+        ],
+        [
+            "snd_pcm_oss_release_substream",
+            "sound/core/oss/pcm_oss.c"
+        ],
+        [
+            "snd_pcm_plugin_free",
+            "sound/core/oss/pcm_plugin.c"
+        ],
+        [
+            "snd_pcm_plugin_alloc",
+            "sound/core/oss/pcm_plugin.c"
+        ]
+    ],
+    "patch_commit_date": "2019-03-22T15:00:54+00:00",
+    "cause_commit_date": "2018-11-09T10:59:45+00:00",
+    "subsystems": [
+        "sound"
+    ],
+    "parent_of_fix_commit": "6ac371aa1a74240fb910c98aa3484d5ece8473d3",
+    "patch": "diff --git a/sound/core/oss/pcm_oss.c b/sound/core/oss/pcm_oss.c\nindex d5b0d7ba83c4..f6ae68017608 100644\n--- a/sound/core/oss/pcm_oss.c\n+++ b/sound/core/oss/pcm_oss.c\n@@ -940,6 +940,28 @@ static int snd_pcm_oss_change_params_locked(struct snd_pcm_substream *substream)\n \toss_frame_size = snd_pcm_format_physical_width(params_format(params)) *\n \t\t\t params_channels(params) / 8;\n \n+\terr = snd_pcm_oss_period_size(substream, params, sparams);\n+\tif (err < 0)\n+\t\tgoto failure;\n+\n+\tn = snd_pcm_plug_slave_size(substream, runtime->oss.period_bytes / oss_frame_size);\n+\terr = snd_pcm_hw_param_near(substream, sparams, SNDRV_PCM_HW_PARAM_PERIOD_SIZE, n, NULL);\n+\tif (err < 0)\n+\t\tgoto failure;\n+\n+\terr = snd_pcm_hw_param_near(substream, sparams, SNDRV_PCM_HW_PARAM_PERIODS,\n+\t\t\t\t     runtime->oss.periods, NULL);\n+\tif (err < 0)\n+\t\tgoto failure;\n+\n+\tsnd_pcm_kernel_ioctl(substream, SNDRV_PCM_IOCTL_DROP, NULL);\n+\n+\terr = snd_pcm_kernel_ioctl(substream, SNDRV_PCM_IOCTL_HW_PARAMS, sparams);\n+\tif (err < 0) {\n+\t\tpcm_dbg(substream->pcm, \"HW_PARAMS failed: %i\\n\", err);\n+\t\tgoto failure;\n+\t}\n+\n #ifdef CONFIG_SND_PCM_OSS_PLUGINS\n \tsnd_pcm_oss_plugin_clear(substream);\n \tif (!direct) {\n@@ -974,27 +996,6 @@ static int snd_pcm_oss_change_params_locked(struct snd_pcm_substream *substream)\n \t}\n #endif\n \n-\terr = snd_pcm_oss_period_size(substream, params, sparams);\n-\tif (err < 0)\n-\t\tgoto failure;\n-\n-\tn = snd_pcm_plug_slave_size(substream, runtime->oss.period_bytes / oss_frame_size);\n-\terr = snd_pcm_hw_param_near(substream, sparams, SNDRV_PCM_HW_PARAM_PERIOD_SIZE, n, NULL);\n-\tif (err < 0)\n-\t\tgoto failure;\n-\n-\terr = snd_pcm_hw_param_near(substream, sparams, SNDRV_PCM_HW_PARAM_PERIODS,\n-\t\t\t\t     runtime->oss.periods, NULL);\n-\tif (err < 0)\n-\t\tgoto failure;\n-\n-\tsnd_pcm_kernel_ioctl(substream, SNDRV_PCM_IOCTL_DROP, NULL);\n-\n-\tif ((err = snd_pcm_kernel_ioctl(substream, SNDRV_PCM_IOCTL_HW_PARAMS, sparams)) < 0) {\n-\t\tpcm_dbg(substream->pcm, \"HW_PARAMS failed: %i\\n\", err);\n-\t\tgoto failure;\n-\t}\n-\n \tif (runtime->oss.trigger) {\n \t\tsw_params->start_threshold = 1;\n \t} else {\n",
+    "patch_modified_files": [
+        "sound/core/oss/pcm_oss.c"
+    ]
+}

@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "general protection fault in release_udmabuf",
+    "display-title": "general protection fault in release_udmabuf",
+    "id": "e58343393efd3e0657ca37cf4466fc38d1f4d4df",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "udmabuf: Set ubuf->sg = NULL if the creation of sg table fails",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d9c04a1b7a15b5e74b2977461d9511e497f05d8f",
+            "hash": "d9c04a1b7a15b5e74b2977461d9511e497f05d8f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001b37dc05e68ce911@google.com/T/",
+        "https://lore.kernel.org/all/20220825063522.801264-1-vivek.kasireddy@intel.com/T/",
+        "https://lore.kernel.org/all/20221009234932.1230196-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221009235222.1230786-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221009235426.1231313-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221009235540.1231640-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221019083249.951566199@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221022072415.034382448@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221024113022.510008560@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20221024113044.976326639@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in release_udmabuf",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1601336b080000",
+            "c-reproducer": "/text?tag=ReproC&x=16d3292d080000",
+            "kernel-config": "/text?tag=KernelConfig&x=924833c12349a8c0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7ebfc85e2cd7b08f518b526173e9a33b56b3913b",
+            "kernel-source-commit": "7ebfc85e2cd7b08f518b526173e9a33b56b3913b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8dfcaa3d2828a113ae780da01f5f73ad64710e31",
+            "syzkaller-commit": "8dfcaa3d2828a113ae780da01f5f73ad64710e31",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10a642d3080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "begin_cpu_udmabuf",
+            "drivers/dma-buf/udmabuf.c"
+        ]
+    ],
+    "patch_commit_date": "2022-08-25T06:35:22+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "dri",
+        "media"
+    ],
+    "parent_of_fix_commit": "b3be4520d81e7dc820de5fdab0d7d697231cf517",
+    "patch": "diff --git a/drivers/dma-buf/udmabuf.c b/drivers/dma-buf/udmabuf.c\nindex 38e8767ec371..bf11d32205f3 100644\n--- a/drivers/dma-buf/udmabuf.c\n+++ b/drivers/dma-buf/udmabuf.c\n@@ -124,17 +124,20 @@ static int begin_cpu_udmabuf(struct dma_buf *buf,\n {\n \tstruct udmabuf *ubuf = buf->priv;\n \tstruct device *dev = ubuf->device->this_device;\n+\tint ret = 0;\n \n \tif (!ubuf->sg) {\n \t\tubuf->sg = get_sg_table(dev, buf, direction);\n-\t\tif (IS_ERR(ubuf->sg))\n-\t\t\treturn PTR_ERR(ubuf->sg);\n+\t\tif (IS_ERR(ubuf->sg)) {\n+\t\t\tret = PTR_ERR(ubuf->sg);\n+\t\t\tubuf->sg = NULL;\n+\t\t}\n \t} else {\n \t\tdma_sync_sg_for_cpu(dev, ubuf->sg->sgl, ubuf->sg->nents,\n \t\t\t\t    direction);\n \t}\n \n-\treturn 0;\n+\treturn ret;\n }\n \n static int end_cpu_udmabuf(struct dma_buf *buf,\n",
+    "patch_modified_files": [
+        "drivers/dma-buf/udmabuf.c"
+    ]
+}

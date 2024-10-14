@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "WARNING in add_uevent_var",
+    "display-title": "WARNING in add_uevent_var",
+    "id": "c1e1ab1d042b637ee9e25c64b107d51630b9d9ec",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "cfg80211: limit wiphy names to 128 bytes",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a7cfebcb7594a24609268f91299ab85ba064bf82",
+            "hash": "a7cfebcb7594a24609268f91299ab85ba064bf82",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a010b80568d75018@google.com/T/",
+        "https://lore.kernel.org/all/000000000000a010b80568d75018@google.com> (sfid-20180402_080139_221496_EEEB068D)/T/",
+        "https://lore.kernel.org/all/20180403123349.21482-1-johannes@sipsolutions.net> (sfid-20180403_143401_863537_0B5C9DE0)/T/",
+        "https://lore.kernel.org/all/20180524093018.331893860@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180524093120.599252450@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180524093159.286472249@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180524093605.602125311@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180524093621.979359379@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1737fed3800000",
+            "c-reproducer": "/text?tag=ReproC&x=177fbdab800000",
+            "kernel-config": "/text?tag=KernelConfig&x=d9b0d91297e224bc",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=10b84daddbec72c6b440216a69de9a9605127f7a",
+            "kernel-source-commit": "10b84daddbec72c6b440216a69de9a9605127f7a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/dc88925771c47ef787f6f3a7b6756b8f0ce40af5",
+            "syzkaller-commit": "dc88925771c47ef787f6f3a7b6756b8f0ce40af5",
+            "compiler-description": "gcc (GCC) 7.1.1 20170620",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=113845d3800000"
+        }
+    ],
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "911a26484c33e10de6237228ca1d7293548e9f49",
+    "patch": "diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h\nindex 15daf5e2638d..9c3630146cec 100644\n--- a/include/uapi/linux/nl80211.h\n+++ b/include/uapi/linux/nl80211.h\n@@ -2698,6 +2698,8 @@ enum nl80211_attrs {\n #define NL80211_ATTR_KEYS NL80211_ATTR_KEYS\n #define NL80211_ATTR_FEATURE_FLAGS NL80211_ATTR_FEATURE_FLAGS\n \n+#define NL80211_WIPHY_NAME_MAXLEN\t\t128\n+\n #define NL80211_MAX_SUPP_RATES\t\t\t32\n #define NL80211_MAX_SUPP_HT_RATES\t\t77\n #define NL80211_MAX_SUPP_REG_RULES\t\t64\ndiff --git a/net/wireless/core.c b/net/wireless/core.c\nindex a6f3cac8c640..c0fd8a85e7f7 100644\n--- a/net/wireless/core.c\n+++ b/net/wireless/core.c\n@@ -95,6 +95,9 @@ static int cfg80211_dev_check_name(struct cfg80211_registered_device *rdev,\n \n \tASSERT_RTNL();\n \n+\tif (strlen(newname) > NL80211_WIPHY_NAME_MAXLEN)\n+\t\treturn -EINVAL;\n+\n \t/* prohibit calling the thing phy%d when %d is not its number */\n \tsscanf(newname, PHY_NAME \"%d%n\", &wiphy_idx, &taken);\n \tif (taken == strlen(newname) && wiphy_idx != rdev->wiphy_idx) {\n",
+    "patch_modified_files": [
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/core.c"
+    ]
+}

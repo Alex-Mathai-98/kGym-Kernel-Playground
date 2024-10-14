@@ -1,0 +1,67 @@
+{
+    "version": 1,
+    "title": "KASAN: vmalloc-out-of-bounds Read in bpf_prog_put",
+    "display-title": "KASAN: vmalloc-out-of-bounds Read in bpf_prog_put",
+    "id": "00c573f2cdb88dadbf65549e1b8ca32344b18a96",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "bpf, sockmap: Fix double bpf_prog_put on error case in map_link",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=218d747a4142f281a256687bb513a135c905867b",
+            "hash": "218d747a4142f281a256687bb513a135c905867b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "bpf, sockmap: Attach map progs to psock early for feature probes",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=38207a5e81230d6ffbdd51e5fa5681be5116dcae",
+        "hash": "38207a5e81230d6ffbdd51e5fa5681be5116dcae",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000006fee605d38f0418@google.com/T/",
+        "https://lore.kernel.org/all/000000000000367c2205d2549cb9@google.com/T/",
+        "https://lore.kernel.org/all/20220104214645.290900-1-john.fastabend@gmail.com/T/",
+        "https://lore.kernel.org/all/20220124184100.867127425@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124184125.121143506@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: vmalloc-out-of-bounds Read in bpf_prog_put",
+            "syz-reproducer": "/text?tag=ReproSyz&x=112d6ca5b00000",
+            "c-reproducer": "/text?tag=ReproC&x=17393549b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=10f3f669b8093e95",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9eaa88c7036eda3f6c215f87ca693594cf90559b",
+            "kernel-source-commit": "9eaa88c7036eda3f6c215f87ca693594cf90559b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/44068e196185e2f5a7c94629b6245cdde008b140",
+            "syzkaller-commit": "44068e196185e2f5a7c94629b6245cdde008b140",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16d7a895b00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "sock_map_link",
+            "net/core/sock_map.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "sock_map_link",
+            "net/core/sock_map.c"
+        ]
+    ],
+    "patch_commit_date": "2022-01-04T21:46:45+00:00",
+    "cause_commit_date": "2021-11-19T18:14:17+00:00",
+    "subsystems": [
+        "bpf"
+    ],
+    "parent_of_fix_commit": "5b2c5540b8110eea0d67a78fb0ddb9654c58daeb",
+    "patch": "diff --git a/net/core/sock_map.c b/net/core/sock_map.c\nindex 9618ab6d7cc9..1827669eedd6 100644\n--- a/net/core/sock_map.c\n+++ b/net/core/sock_map.c\n@@ -292,15 +292,23 @@ static int sock_map_link(struct bpf_map *map, struct sock *sk)\n \tif (skb_verdict)\n \t\tpsock_set_prog(&psock->progs.skb_verdict, skb_verdict);\n \n+\t/* msg_* and stream_* programs references tracked in psock after this\n+\t * point. Reference dec and cleanup will occur through psock destructor\n+\t */\n \tret = sock_map_init_proto(sk, psock);\n-\tif (ret < 0)\n-\t\tgoto out_drop;\n+\tif (ret < 0) {\n+\t\tsk_psock_put(sk, psock);\n+\t\tgoto out;\n+\t}\n \n \twrite_lock_bh(&sk->sk_callback_lock);\n \tif (stream_parser && stream_verdict && !psock->saved_data_ready) {\n \t\tret = sk_psock_init_strp(sk, psock);\n-\t\tif (ret)\n-\t\t\tgoto out_unlock_drop;\n+\t\tif (ret) {\n+\t\t\twrite_unlock_bh(&sk->sk_callback_lock);\n+\t\t\tsk_psock_put(sk, psock);\n+\t\t\tgoto out;\n+\t\t}\n \t\tsk_psock_start_strp(sk, psock);\n \t} else if (!stream_parser && stream_verdict && !psock->saved_data_ready) {\n \t\tsk_psock_start_verdict(sk,psock);\n@@ -309,10 +317,6 @@ static int sock_map_link(struct bpf_map *map, struct sock *sk)\n \t}\n \twrite_unlock_bh(&sk->sk_callback_lock);\n \treturn 0;\n-out_unlock_drop:\n-\twrite_unlock_bh(&sk->sk_callback_lock);\n-out_drop:\n-\tsk_psock_put(sk, psock);\n out_progs:\n \tif (skb_verdict)\n \t\tbpf_prog_put(skb_verdict);\n@@ -325,6 +329,7 @@ static int sock_map_link(struct bpf_map *map, struct sock *sk)\n out_put_stream_verdict:\n \tif (stream_verdict)\n \t\tbpf_prog_put(stream_verdict);\n+out:\n \treturn ret;\n }\n \n",
+    "patch_modified_files": [
+        "net/core/sock_map.c"
+    ]
+}

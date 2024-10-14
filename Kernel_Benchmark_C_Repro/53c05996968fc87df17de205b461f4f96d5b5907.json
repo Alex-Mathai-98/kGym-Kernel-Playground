@@ -1,0 +1,61 @@
+{
+    "version": 1,
+    "title": "general protection fault in legacy_parse_param",
+    "display-title": "general protection fault in legacy_parse_param",
+    "id": "53c05996968fc87df17de205b461f4f96d5b5907",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "LSM: general protection fault in legacy_parse_param",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ecff30575b5ad0eda149aadad247b7f75411fd47",
+            "hash": "ecff30575b5ad0eda149aadad247b7f75411fd47",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "security: Fix the default value of fs_context_parse_param hook",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=54261af473be4c5481f6196064445d2945f2bdab",
+        "hash": "54261af473be4c5481f6196064445d2945f2bdab",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000004e5ec705c6318557@google.com/T/",
+        "https://lore.kernel.org/all/018a9bb4-accb-c19a-5b0a-fde22f4bc822@schaufler-ca.com/T/",
+        "https://lore.kernel.org/all/20220328111828.1554086-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220328112011.1555169-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220328112132.1555683-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220328112254.1556286-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220328112345.1556601-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220405070258.802373272@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220405070339.801210740@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220405070354.155796697@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220405070407.513532867@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220414110855.141582785@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in legacy_parse_param",
+            "syz-reproducer": "/text?tag=ReproSyz&x=126d084d300000",
+            "c-reproducer": "/text?tag=ReproC&x=16216eb1300000",
+            "kernel-config": "/text?tag=KernelConfig&x=2fd902af77ff1e56",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=77dd11439b86e3f7990e4c0c9e0b67dca82750ba",
+            "kernel-source-commit": "77dd11439b86e3f7990e4c0c9e0b67dca82750ba",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/b318694d0fc0781d0bc1e3aebfb916aa36731024",
+            "syzkaller-commit": "b318694d0fc0781d0bc1e3aebfb916aa36731024",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15522c96300000"
+        }
+    ],
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "cdeea45422f579b9302e377d1ede29133d3fde8e",
+    "patch": "diff --git a/security/security.c b/security/security.c\nindex 3d4eb474f35b..e649c8691be2 100644\n--- a/security/security.c\n+++ b/security/security.c\n@@ -884,9 +884,22 @@ int security_fs_context_dup(struct fs_context *fc, struct fs_context *src_fc)\n \treturn call_int_hook(fs_context_dup, 0, fc, src_fc);\n }\n \n-int security_fs_context_parse_param(struct fs_context *fc, struct fs_parameter *param)\n+int security_fs_context_parse_param(struct fs_context *fc,\n+\t\t\t\t    struct fs_parameter *param)\n {\n-\treturn call_int_hook(fs_context_parse_param, -ENOPARAM, fc, param);\n+\tstruct security_hook_list *hp;\n+\tint trc;\n+\tint rc = -ENOPARAM;\n+\n+\thlist_for_each_entry(hp, &security_hook_heads.fs_context_parse_param,\n+\t\t\t     list) {\n+\t\ttrc = hp->hook.fs_context_parse_param(fc, param);\n+\t\tif (trc == 0)\n+\t\t\trc = 0;\n+\t\telse if (trc != -ENOPARAM)\n+\t\t\treturn trc;\n+\t}\n+\treturn rc;\n }\n \n int security_sb_alloc(struct super_block *sb)\ndiff --git a/security/selinux/hooks.c b/security/selinux/hooks.c\nindex 221e642025f5..9e3658e9e7ca 100644\n--- a/security/selinux/hooks.c\n+++ b/security/selinux/hooks.c\n@@ -2859,10 +2859,9 @@ static int selinux_fs_context_parse_param(struct fs_context *fc,\n \t\treturn opt;\n \n \trc = selinux_add_opt(opt, param->string, &fc->security);\n-\tif (!rc) {\n+\tif (!rc)\n \t\tparam->string = NULL;\n-\t\trc = 1;\n-\t}\n+\n \treturn rc;\n }\n \n",
+    "patch_modified_files": [
+        "security/security.c",
+        "security/selinux/hooks.c"
+    ]
+}

@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "memory leak in tcf_pedit_init",
+    "display-title": "memory leak in tcf_pedit_init",
+    "id": "fe36c362e30b849dad0ab99e2d1f09b82fc72883",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/sched: act_pedit: free pedit keys on bail from offset check",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1b483d9f5805c7e3d628d4995e97f4311fcb82eb",
+            "hash": "1b483d9f5805c7e3d628d4995e97f4311fcb82eb",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in tcf_pedit_init",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17f1b964280000",
+            "c-reproducer": "/text?tag=ReproC&x=12154054280000",
+            "kernel-config": "/text?tag=KernelConfig&x=5046ebeca744dd40",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=22b8cc3e78f5448b4c5df00303817a9137cd663f",
+            "kernel-source-commit": "22b8cc3e78f5448b4c5df00303817a9137cd663f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/62df2017e3b1edd786a4c737bd4ccba2b4581d88",
+            "syzkaller-commit": "62df2017e3b1edd786a4c737bd4ccba2b4581d88",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17f859d7c80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "tcf_pedit_init",
+            "net/sched/act_pedit.c"
+        ]
+    ],
+    "patch_commit_date": "2023-04-25T14:47:25+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "32eff6bacec2cb574677c15378169a9fa30043ef",
+    "patch": "diff --git a/net/sched/act_pedit.c b/net/sched/act_pedit.c\nindex fb93d4c1faca..fc945c7e4123 100644\n--- a/net/sched/act_pedit.c\n+++ b/net/sched/act_pedit.c\n@@ -258,7 +258,7 @@ static int tcf_pedit_init(struct net *net, struct nlattr *nla,\n \t\tif (!offmask && cur % 4) {\n \t\t\tNL_SET_ERR_MSG_MOD(extack, \"Offsets must be on 32bit boundaries\");\n \t\t\tret = -EINVAL;\n-\t\t\tgoto put_chain;\n+\t\t\tgoto out_free_keys;\n \t\t}\n \n \t\t/* sanitize the shift value for any later use */\n@@ -291,6 +291,8 @@ static int tcf_pedit_init(struct net *net, struct nlattr *nla,\n \n \treturn ret;\n \n+out_free_keys:\n+\tkfree(nparms->tcfp_keys);\n put_chain:\n \tif (goto_ch)\n \t\ttcf_chain_put_by_act(goto_ch);\n",
+    "patch_modified_files": [
+        "net/sched/act_pedit.c"
+    ]
+}

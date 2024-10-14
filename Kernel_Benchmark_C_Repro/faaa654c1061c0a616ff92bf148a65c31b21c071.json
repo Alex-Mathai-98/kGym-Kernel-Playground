@@ -1,0 +1,77 @@
+{
+    "version": 1,
+    "title": "WARNING in ptrace_stop",
+    "display-title": "WARNING in ptrace_stop",
+    "id": "faaa654c1061c0a616ff92bf148a65c31b21c071",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "sched: Fix race against ptrace_freeze_trace()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d136122f58458479fd8926020ba2937de61d7f65",
+            "hash": "d136122f58458479fd8926020ba2937de61d7f65",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "sched: Fix loadavg accounting race",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=dbfb089d360b1cc623c51a2c7cf9b99eff78e0e7",
+        "hash": "dbfb089d360b1cc623c51a2c7cf9b99eff78e0e7",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000069316005ab2306cc@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=178d6017100000",
+            "c-reproducer": "/text?tag=ReproC&x=1688add7100000",
+            "kernel-config": "/text?tag=KernelConfig&x=a160d1053fc89af5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=92188b41f1394d5e4399fcb28c13a2933f255255",
+            "kernel-source-commit": "92188b41f1394d5e4399fcb28c13a2933f255255",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9c8124727c791c492f98fceaebf7b74d9ab78878",
+            "syzkaller-commit": "9c8124727c791c492f98fceaebf7b74d9ab78878",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15ddcb6f100000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__schedule",
+            "kernel/sched/core.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "dequeue_task",
+            "kernel/sched/core.c"
+        ],
+        [
+            "__schedule",
+            "kernel/sched/core.c"
+        ],
+        [
+            "deactivate_task",
+            "kernel/sched/core.c"
+        ],
+        [
+            "ttwu_do_activate",
+            "kernel/sched/core.c"
+        ],
+        [
+            "try_to_wake_up",
+            "kernel/sched/core.c"
+        ]
+    ],
+    "patch_commit_date": "2020-07-20T15:20:21+00:00",
+    "cause_commit_date": "2020-07-03T10:40:33+00:00",
+    "subsystems": [],
+    "parent_of_fix_commit": "ba47d845d715a010f7b51f6f89bae32845e6acb7",
+    "patch": "diff --git a/kernel/sched/core.c b/kernel/sched/core.c\nindex e15543cb8481..5dece9b34e25 100644\n--- a/kernel/sched/core.c\n+++ b/kernel/sched/core.c\n@@ -4119,9 +4119,6 @@ static void __sched notrace __schedule(bool preempt)\n \tlocal_irq_disable();\n \trcu_note_context_switch(preempt);\n \n-\t/* See deactivate_task() below. */\n-\tprev_state = prev->state;\n-\n \t/*\n \t * Make sure that signal_pending_state()->signal_pending() below\n \t * can't be reordered with __set_current_state(TASK_INTERRUPTIBLE)\n@@ -4145,11 +4142,16 @@ static void __sched notrace __schedule(bool preempt)\n \tupdate_rq_clock(rq);\n \n \tswitch_count = &prev->nivcsw;\n+\n \t/*\n-\t * We must re-load prev->state in case ttwu_remote() changed it\n-\t * before we acquired rq->lock.\n+\t * We must load prev->state once (task_struct::state is volatile), such\n+\t * that:\n+\t *\n+\t *  - we form a control dependency vs deactivate_task() below.\n+\t *  - ptrace_{,un}freeze_traced() can change ->state underneath us.\n \t */\n-\tif (!preempt && prev_state && prev_state == prev->state) {\n+\tprev_state = prev->state;\n+\tif (!preempt && prev_state) {\n \t\tif (signal_pending_state(prev_state, prev)) {\n \t\t\tprev->state = TASK_RUNNING;\n \t\t} else {\n@@ -4163,10 +4165,12 @@ static void __sched notrace __schedule(bool preempt)\n \n \t\t\t/*\n \t\t\t * __schedule()\t\t\tttwu()\n-\t\t\t *   prev_state = prev->state;\t  if (READ_ONCE(p->on_rq) && ...)\n-\t\t\t *   LOCK rq->lock\t\t    goto out;\n-\t\t\t *   smp_mb__after_spinlock();\t  smp_acquire__after_ctrl_dep();\n-\t\t\t *   p->on_rq = 0;\t\t  p->state = TASK_WAKING;\n+\t\t\t *   prev_state = prev->state;    if (p->on_rq && ...)\n+\t\t\t *   if (prev_state)\t\t    goto out;\n+\t\t\t *     p->on_rq = 0;\t\t  smp_acquire__after_ctrl_dep();\n+\t\t\t *\t\t\t\t  p->state = TASK_WAKING\n+\t\t\t *\n+\t\t\t * Where __schedule() and ttwu() have matching control dependencies.\n \t\t\t *\n \t\t\t * After this, schedule() must not care about p->state any more.\n \t\t\t */\n",
+    "patch_modified_files": [
+        "kernel/sched/core.c"
+    ]
+}

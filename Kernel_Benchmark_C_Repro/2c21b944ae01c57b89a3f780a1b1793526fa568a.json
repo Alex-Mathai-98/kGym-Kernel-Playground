@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "kernel BUG in btrfs_ioctl_add_dev",
+    "display-title": "kernel BUG in btrfs_ioctl_add_dev",
+    "id": "2c21b944ae01c57b89a3f780a1b1793526fa568a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "btrfs: fix assertion of exclop condition when starting balance",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ac868bc9d136cde6e3eb5de77019a63d57a540ff",
+            "hash": "ac868bc9d136cde6e3eb5de77019a63d57a540ff",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000002eb8105f51cfa96@google.com/T/",
+        "https://lore.kernel.org/all/000000000000725cab05f55f1bb0@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "kernel BUG in btrfs_ioctl_add_dev",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14c9a378c80000",
+            "c-reproducer": "/text?tag=ReproC&x=14e5c044c80000",
+            "kernel-config": "/text?tag=KernelConfig&x=f4a1b2323673cc82",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c9c3395d5e3dcc6daee66c6908354d47bf98cb0c",
+            "kernel-source-commit": "c9c3395d5e3dcc6daee66c6908354d47bf98cb0c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/bcdf85f8bd3fccff5bc9507a589c4847d9b35405",
+            "syzkaller-commit": "bcdf85f8bd3fccff5bc9507a589c4847d9b35405",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=134834b4c80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "btrfs_exclop_balance",
+            "fs/btrfs/ioctl.c"
+        ]
+    ],
+    "patch_commit_date": "2023-04-13T09:55:07+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "btrfs"
+    ],
+    "parent_of_fix_commit": "6f932d4ef007d6a4ae03badcb749fbb8f49196f6",
+    "patch": "diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c\nindex 25833b4eeaf5..2fa36f694daa 100644\n--- a/fs/btrfs/ioctl.c\n+++ b/fs/btrfs/ioctl.c\n@@ -454,7 +454,9 @@ void btrfs_exclop_balance(struct btrfs_fs_info *fs_info,\n \tcase BTRFS_EXCLOP_BALANCE_PAUSED:\n \t\tspin_lock(&fs_info->super_lock);\n \t\tASSERT(fs_info->exclusive_operation == BTRFS_EXCLOP_BALANCE ||\n-\t\t       fs_info->exclusive_operation == BTRFS_EXCLOP_DEV_ADD);\n+\t\t       fs_info->exclusive_operation == BTRFS_EXCLOP_DEV_ADD ||\n+\t\t       fs_info->exclusive_operation == BTRFS_EXCLOP_NONE ||\n+\t\t       fs_info->exclusive_operation == BTRFS_EXCLOP_BALANCE_PAUSED);\n \t\tfs_info->exclusive_operation = BTRFS_EXCLOP_BALANCE_PAUSED;\n \t\tspin_unlock(&fs_info->super_lock);\n \t\tbreak;\n",
+    "patch_modified_files": [
+        "fs/btrfs/ioctl.c"
+    ]
+}

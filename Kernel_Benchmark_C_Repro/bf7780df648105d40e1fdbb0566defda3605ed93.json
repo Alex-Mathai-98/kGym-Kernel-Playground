@@ -1,0 +1,67 @@
+{
+    "version": 1,
+    "title": "kernel BUG in __skb_gso_segment",
+    "display-title": "kernel BUG in __skb_gso_segment",
+    "id": "bf7780df648105d40e1fdbb0566defda3605ed93",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/af_packet: make sure to pull mac header",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e9d3f80935b6607dcdc5682b00b1d4b28e0a0c5d",
+            "hash": "e9d3f80935b6607dcdc5682b00b1d4b28e0a0c5d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "net/af_packet: add VLAN support for AF_PACKET SOCK_RAW GSO",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=dfed913e8b55a0c2c4906f1242fd38fd9a116e49",
+        "hash": "dfed913e8b55a0c2c4906f1242fd38fd9a116e49",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000009667e705e094ca3c@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "kernel BUG in __skb_gso_segment",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1724add5f00000",
+            "c-reproducer": "/text?tag=ReproC&x=1324cbf9f00000",
+            "kernel-config": "/text?tag=KernelConfig&x=9b19cdd2d45cc221",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=2c5ca23f7414eb2c782f945aa417cfab7b5c88dd",
+            "kernel-source-commit": "2c5ca23f7414eb2c782f945aa417cfab7b5c88dd",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/af70c3a9d26d6637e932facd13b1e55dd96270b5",
+            "syzkaller-commit": "af70c3a9d26d6637e932facd13b1e55dd96270b5",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17147541f00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "packet_parse_headers",
+            "net/packet/af_packet.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "packet_rcv_spkt",
+            "net/packet/af_packet.c"
+        ],
+        [
+            "packet_snd",
+            "net/packet/af_packet.c"
+        ]
+    ],
+    "patch_commit_date": "2022-06-02T16:18:59+00:00",
+    "cause_commit_date": "2022-04-25T01:45:02+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "22296a5c0cd35aaf62e1af3266f82cdf6b0b9b78",
+    "patch": "diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c\nindex 677f9cfa9660..ca6e92a22923 100644\n--- a/net/packet/af_packet.c\n+++ b/net/packet/af_packet.c\n@@ -1935,8 +1935,10 @@ static void packet_parse_headers(struct sk_buff *skb, struct socket *sock)\n \t/* Move network header to the right position for VLAN tagged packets */\n \tif (likely(skb->dev->type == ARPHRD_ETHER) &&\n \t    eth_type_vlan(skb->protocol) &&\n-\t    __vlan_get_protocol(skb, skb->protocol, &depth) != 0)\n-\t\tskb_set_network_header(skb, depth);\n+\t    __vlan_get_protocol(skb, skb->protocol, &depth) != 0) {\n+\t\tif (pskb_may_pull(skb, depth))\n+\t\t\tskb_set_network_header(skb, depth);\n+\t}\n \n \tskb_probe_transport_header(skb);\n }\n",
+    "patch_modified_files": [
+        "net/packet/af_packet.c"
+    ]
+}

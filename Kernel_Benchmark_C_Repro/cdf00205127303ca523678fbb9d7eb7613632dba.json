@@ -1,0 +1,105 @@
+{
+    "version": 1,
+    "title": "WARNING in io_ring_ctx_wait_and_kill",
+    "display-title": "WARNING in io_ring_ctx_wait_and_kill",
+    "id": "cdf00205127303ca523678fbb9d7eb7613632dba",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: do sqo disable on install_fd error",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=06585c497b55045ec21aa8128e340f6a6587351c",
+            "hash": "06585c497b55045ec21aa8128e340f6a6587351c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "io_uring: stop SQPOLL submit on creator's death",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d9d05217cb6990b9a56e13b56e7a1b71e2551f6c",
+        "hash": "d9d05217cb6990b9a56e13b56e7a1b71e2551f6c",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000003aab005b8c5b9ac@google.com/T/",
+        "https://lore.kernel.org/all/a32cf443-3261-53ce-aeba-b49e93e6f9d8@gmail.com/T/",
+        "https://lore.kernel.org/all/cover.1610540878.git.asml.silence@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16286007500000",
+            "c-reproducer": "/text?tag=ReproC&x=107fc7fb500000",
+            "kernel-config": "/text?tag=KernelConfig&x=c60c9ff9cc916cbc",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7c53f6b671f4aba70ff15e1b05148b10d58c2837",
+            "kernel-source-commit": "7c53f6b671f4aba70ff15e1b05148b10d58c2837",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2c1f2513486f21d26b1942ce77ffc782677fbf4e",
+            "syzkaller-commit": "2c1f2513486f21d26b1942ce77ffc782677fbf4e",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17895648d00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "io_uring_create",
+            "fs/io_uring.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "SYSCALL_DEFINE6",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_sqpoll_wait_sq",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_uring_nommu_get_unmapped_area",
+            "fs/io_uring.c"
+        ],
+        [
+            "__io_sq_thread",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_req_task_cancel",
+            "fs/io_uring.c"
+        ],
+        [
+            "__io_uring_cancel_task_requests",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_uring_create",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_uring_flush",
+            "fs/io_uring.c"
+        ],
+        [
+            "__io_uring_task_cancel",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_uring_cancel_task_requests",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_ring_ctx_wait_and_kill",
+            "fs/io_uring.c"
+        ]
+    ],
+    "patch_commit_date": "2021-01-13T12:42:25+00:00",
+    "cause_commit_date": "2021-01-08T20:57:25+00:00",
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "b4411616c26f26c4017b8fa4d3538b1a02028733",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex 66db2c46ab82..372be9caf340 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -9708,6 +9708,7 @@ static int io_uring_create(unsigned entries, struct io_uring_params *p,\n \t */\n \tret = io_uring_install_fd(ctx, file);\n \tif (ret < 0) {\n+\t\tio_disable_sqo_submit(ctx);\n \t\t/* fput will clean it up */\n \t\tfput(file);\n \t\treturn ret;\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

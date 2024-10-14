@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in selinux_xfrm_alloc_user",
+    "display-title": "KASAN: slab-out-of-bounds Read in selinux_xfrm_alloc_user",
+    "id": "b72d20070b541e44e5b91326de68930e51654c81",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "xfrm: add the missing verify_sec_ctx_len check in xfrm_add_acquire",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a1a7e3a36e01ca6e67014f8cf673cb8e47be5550",
+            "hash": "a1a7e3a36e01ca6e67014f8cf673cb8e47be5550",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000008a567905a2151e07@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1160f46de00000",
+            "c-reproducer": "/text?tag=ReproC&x=107c7c97e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=27392dd2975fd692",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=906c40438bb669b253d0daeaf5f37a9f78a81b41",
+            "kernel-source-commit": "906c40438bb669b253d0daeaf5f37a9f78a81b41",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/05736b290dd5af17adbb0fb5ea67405a0167a7c8",
+            "syzkaller-commit": "05736b290dd5af17adbb0fb5ea67405a0167a7c8",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=118a0825e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "xfrm_add_acquire",
+            "net/xfrm/xfrm_user.c"
+        ]
+    ],
+    "patch_commit_date": "2020-02-09T13:16:38+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "selinux"
+    ],
+    "parent_of_fix_commit": "171d449a028573b2f0acdc7f31ecbb045391b320",
+    "patch": "diff --git a/net/xfrm/xfrm_user.c b/net/xfrm/xfrm_user.c\nindex 38ff02d31402..e6cfaa680ef3 100644\n--- a/net/xfrm/xfrm_user.c\n+++ b/net/xfrm/xfrm_user.c\n@@ -2274,6 +2274,9 @@ static int xfrm_add_acquire(struct sk_buff *skb, struct nlmsghdr *nlh,\n \txfrm_mark_get(attrs, &mark);\n \n \terr = verify_newpolicy_info(&ua->policy);\n+\tif (err)\n+\t\tgoto free_state;\n+\terr = verify_sec_ctx_len(attrs);\n \tif (err)\n \t\tgoto free_state;\n \n",
+    "patch_modified_files": [
+        "net/xfrm/xfrm_user.c"
+    ]
+}

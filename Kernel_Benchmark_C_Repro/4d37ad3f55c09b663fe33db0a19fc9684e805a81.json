@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "WARNING in nilfs_dat_commit_end",
+    "display-title": "WARNING in nilfs_dat_commit_end",
+    "id": "4d37ad3f55c09b663fe33db0a19fc9684e805a81",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: prevent WARNING in nilfs_dat_commit_end()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=602ce7b8e1343b19c0cf93a3dd1926838ac5a1cc",
+            "hash": "602ce7b8e1343b19c0cf93a3dd1926838ac5a1cc",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000154d2c05e9ec7df6@google.com/T/",
+        "https://lore.kernel.org/all/20230127132202.6083-1-konishi.ryusuke@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in nilfs_dat_commit_end",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15d224b8880000",
+            "c-reproducer": "/text?tag=ReproC&x=13d3e4d0880000",
+            "kernel-config": "/text?tag=KernelConfig&x=ba0d23aa7e1ffaf5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c3e0e1e23c70455916ff3472072437b3605c6cfe",
+            "kernel-source-commit": "c3e0e1e23c70455916ff3472072437b3605c6cfe",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/45fd7169d5def6b5bc3fb4ff028ba831d1ffa063",
+            "syzkaller-commit": "45fd7169d5def6b5bc3fb4ff028ba831d1ffa063",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=159133c4880000"
+        }
+    ],
+    "subsystems": [
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "e89bd9e7d8eb63a183040eaf0c9640fdb34ec47a",
+    "patch": "diff --git a/fs/nilfs2/dat.c b/fs/nilfs2/dat.c\nindex 1e7f653c1df7..9cf6ba58f585 100644\n--- a/fs/nilfs2/dat.c\n+++ b/fs/nilfs2/dat.c\n@@ -158,6 +158,7 @@ void nilfs_dat_commit_start(struct inode *dat, struct nilfs_palloc_req *req,\n int nilfs_dat_prepare_end(struct inode *dat, struct nilfs_palloc_req *req)\n {\n \tstruct nilfs_dat_entry *entry;\n+\t__u64 start;\n \tsector_t blocknr;\n \tvoid *kaddr;\n \tint ret;\n@@ -169,6 +170,7 @@ int nilfs_dat_prepare_end(struct inode *dat, struct nilfs_palloc_req *req)\n \tkaddr = kmap_atomic(req->pr_entry_bh->b_page);\n \tentry = nilfs_palloc_block_get_entry(dat, req->pr_entry_nr,\n \t\t\t\t\t     req->pr_entry_bh, kaddr);\n+\tstart = le64_to_cpu(entry->de_start);\n \tblocknr = le64_to_cpu(entry->de_blocknr);\n \tkunmap_atomic(kaddr);\n \n@@ -179,6 +181,15 @@ int nilfs_dat_prepare_end(struct inode *dat, struct nilfs_palloc_req *req)\n \t\t\treturn ret;\n \t\t}\n \t}\n+\tif (unlikely(start > nilfs_mdt_cno(dat))) {\n+\t\tnilfs_err(dat->i_sb,\n+\t\t\t  \"vblocknr = %llu has abnormal lifetime: start cno (= %llu) > current cno (= %llu)\",\n+\t\t\t  (unsigned long long)req->pr_entry_nr,\n+\t\t\t  (unsigned long long)start,\n+\t\t\t  (unsigned long long)nilfs_mdt_cno(dat));\n+\t\tnilfs_dat_abort_entry(dat, req);\n+\t\treturn -EINVAL;\n+\t}\n \n \treturn 0;\n }\n",
+    "patch_modified_files": [
+        "fs/nilfs2/dat.c"
+    ]
+}

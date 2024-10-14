@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "memory leak in v2_read_file_info",
+    "display-title": "memory leak in v2_read_file_info",
+    "id": "c6361eff67aa5603086d1e3e13aa67c1e14359d4",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "quota: Fix memory leak when handling corrupted quota file",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a4db1072e1a3bd7a8d9c356e1902b13ac5deb8ef",
+            "hash": "a4db1072e1a3bd7a8d9c356e1902b13ac5deb8ef",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000002c029c05b70afacd@google.com/T/",
+        "https://lore.kernel.org/all/20210301161020.931630716@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210301161031.684018251@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210301161048.294656001@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210301161141.760350206@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210301161201.679371205@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11c44960d00000",
+            "c-reproducer": "/text?tag=ReproC&x=13bc8c0b500000",
+            "kernel-config": "/text?tag=KernelConfig&x=faf2996955887e91",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=8653b778e454a7708847aeafe689bce07aeeb94e",
+            "kernel-source-commit": "8653b778e454a7708847aeafe689bce07aeeb94e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/04201c0669446145fd9c347c5538da0ca13ff29b",
+            "syzkaller-commit": "04201c0669446145fd9c347c5538da0ca13ff29b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17e0221f500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "v2_read_file_info",
+            "fs/quota/quota_v2.c"
+        ]
+    ],
+    "patch_commit_date": "2020-12-22T11:09:53+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "36bbbd0e234d817938bdc52121a0f5473b3e58f5",
+    "patch": "diff --git a/fs/quota/quota_v2.c b/fs/quota/quota_v2.c\nindex c21106557a37..b1467f3921c2 100644\n--- a/fs/quota/quota_v2.c\n+++ b/fs/quota/quota_v2.c\n@@ -164,19 +164,24 @@ static int v2_read_file_info(struct super_block *sb, int type)\n \t\tquota_error(sb, \"Number of blocks too big for quota file size (%llu > %llu).\",\n \t\t    (loff_t)qinfo->dqi_blocks << qinfo->dqi_blocksize_bits,\n \t\t    i_size_read(sb_dqopt(sb)->files[type]));\n-\t\tgoto out;\n+\t\tgoto out_free;\n \t}\n \tif (qinfo->dqi_free_blk >= qinfo->dqi_blocks) {\n \t\tquota_error(sb, \"Free block number too big (%u >= %u).\",\n \t\t\t    qinfo->dqi_free_blk, qinfo->dqi_blocks);\n-\t\tgoto out;\n+\t\tgoto out_free;\n \t}\n \tif (qinfo->dqi_free_entry >= qinfo->dqi_blocks) {\n \t\tquota_error(sb, \"Block with free entry too big (%u >= %u).\",\n \t\t\t    qinfo->dqi_free_entry, qinfo->dqi_blocks);\n-\t\tgoto out;\n+\t\tgoto out_free;\n \t}\n \tret = 0;\n+out_free:\n+\tif (ret) {\n+\t\tkfree(info->dqi_priv);\n+\t\tinfo->dqi_priv = NULL;\n+\t}\n out:\n \tup_read(&dqopt->dqio_sem);\n \treturn ret;\n",
+    "patch_modified_files": [
+        "fs/quota/quota_v2.c"
+    ]
+}

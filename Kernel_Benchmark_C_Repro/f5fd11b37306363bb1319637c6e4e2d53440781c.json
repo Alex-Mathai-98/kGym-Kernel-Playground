@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "INFO: rcu detected stall in sys_close",
+    "display-title": "INFO: rcu detected stall in sys_close (5)",
+    "id": "f5fd11b37306363bb1319637c6e4e2d53440781c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/sched: fq_pie: avoid stalls in fq_pie_timer()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8c21ab1bae945686c602c5bfa4e3f3352c2452c5",
+            "hash": "8c21ab1bae945686c602c5bfa4e3f3352c2452c5",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "net: sched: add Flow Queue PIE packet scheduler",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ec97ecf1ebe485a17cd8395a5f35e6b80b57665a",
+        "hash": "ec97ecf1ebe485a17cd8395a5f35e6b80b57665a",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000017ad3f06040bf394@google.com/T/",
+        "https://lore.kernel.org/all/20230829123541.3745013-1-edumazet@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "INFO: rcu detected stall in sys_close",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14780797a80000",
+            "c-reproducer": "/text?tag=ReproC&x=17c1fc9fa80000",
+            "kernel-config": "/text?tag=KernelConfig&x=45047a5b8c295201",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=727dbda16b83600379061c4ca8270ef3e2f51922",
+            "kernel-source-commit": "727dbda16b83600379061c4ca8270ef3e2f51922",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/7ba13a158b1ad89a23920bb64208ba34fed27b08",
+            "syzkaller-commit": "7ba13a158b1ad89a23920bb64208ba34fed27b08",
+            "compiler-description": "gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=126f4c8fa80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "fq_pie_change",
+            "net/sched/sch_fq_pie.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "obj",
+            "net/sched/Makefile"
+        ]
+    ],
+    "patch_commit_date": "2023-08-29T12:35:41+00:00",
+    "cause_commit_date": "2020-01-22T18:22:33+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "4e60de1e4769066aa9956c83545c8fa21847f326",
+    "patch": "diff --git a/net/sched/sch_fq_pie.c b/net/sched/sch_fq_pie.c\nindex 591d87d5e5c0..68e6acd0f130 100644\n--- a/net/sched/sch_fq_pie.c\n+++ b/net/sched/sch_fq_pie.c\n@@ -61,6 +61,7 @@ struct fq_pie_sched_data {\n \tstruct pie_params p_params;\n \tu32 ecn_prob;\n \tu32 flows_cnt;\n+\tu32 flows_cursor;\n \tu32 quantum;\n \tu32 memory_limit;\n \tu32 new_flow_count;\n@@ -375,22 +376,32 @@ static int fq_pie_change(struct Qdisc *sch, struct nlattr *opt,\n static void fq_pie_timer(struct timer_list *t)\n {\n \tstruct fq_pie_sched_data *q = from_timer(q, t, adapt_timer);\n+\tunsigned long next, tupdate;\n \tstruct Qdisc *sch = q->sch;\n \tspinlock_t *root_lock; /* to lock qdisc for probability calculations */\n-\tu32 idx;\n+\tint max_cnt, i;\n \n \trcu_read_lock();\n \troot_lock = qdisc_lock(qdisc_root_sleeping(sch));\n \tspin_lock(root_lock);\n \n-\tfor (idx = 0; idx < q->flows_cnt; idx++)\n-\t\tpie_calculate_probability(&q->p_params, &q->flows[idx].vars,\n-\t\t\t\t\t  q->flows[idx].backlog);\n-\n-\t/* reset the timer to fire after 'tupdate' jiffies. */\n-\tif (q->p_params.tupdate)\n-\t\tmod_timer(&q->adapt_timer, jiffies + q->p_params.tupdate);\n+\t/* Limit this expensive loop to 2048 flows per round. */\n+\tmax_cnt = min_t(int, q->flows_cnt - q->flows_cursor, 2048);\n+\tfor (i = 0; i < max_cnt; i++) {\n+\t\tpie_calculate_probability(&q->p_params,\n+\t\t\t\t\t  &q->flows[q->flows_cursor].vars,\n+\t\t\t\t\t  q->flows[q->flows_cursor].backlog);\n+\t\tq->flows_cursor++;\n+\t}\n \n+\ttupdate = q->p_params.tupdate;\n+\tnext = 0;\n+\tif (q->flows_cursor >= q->flows_cnt) {\n+\t\tq->flows_cursor = 0;\n+\t\tnext = tupdate;\n+\t}\n+\tif (tupdate)\n+\t\tmod_timer(&q->adapt_timer, jiffies + next);\n \tspin_unlock(root_lock);\n \trcu_read_unlock();\n }\n",
+    "patch_modified_files": [
+        "net/sched/sch_fq_pie.c"
+    ]
+}

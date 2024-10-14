@@ -1,0 +1,135 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel NULL pointer dereference in call_rcu",
+    "display-title": "BUG: unable to handle kernel NULL pointer dereference in call_rcu",
+    "id": "71f39cec3c870f687b26c5595d7a8608849f37ba",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "kasan: fix null pointer dereference in kasan_record_aux_stack",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=13384f6125ad7ebdcc8914fe1e03ded48ce76581",
+            "hash": "13384f6125ad7ebdcc8914fe1e03ded48ce76581",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "kasan: sanitize objects when metadata doesn't fit",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=97593cad003c668e2532cb2939a24a031f8de52d",
+        "hash": "97593cad003c668e2532cb2939a24a031f8de52d",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005ccf1b05b7665adc@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11830e93500000",
+            "c-reproducer": "/text?tag=ReproC&x=13d92057500000",
+            "kernel-config": "/text?tag=KernelConfig&x=bf519e1e96191576",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=614cb5894306cfa2c7d9b6168182876ff5948735",
+            "kernel-source-commit": "614cb5894306cfa2c7d9b6168182876ff5948735",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/04201c0669446145fd9c347c5538da0ca13ff29b",
+            "syzkaller-commit": "04201c0669446145fd9c347c5538da0ca13ff29b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16a1e40b500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "kasan_record_aux_stack",
+            "mm/kasan/generic.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "optimal_redzone",
+            "mm/kasan/common.c"
+        ],
+        [
+            "__kasan_free_pages",
+            "mm/kasan/common.c"
+        ],
+        [
+            "get_bug_type",
+            "mm/kasan/report_sw_tags.c"
+        ],
+        [
+            "__kasan_init_slab_obj",
+            "mm/kasan/common.c"
+        ],
+        [
+            "__kasan_slab_free_mempool",
+            "mm/kasan/common.c"
+        ],
+        [
+            "____kasan_slab_free",
+            "mm/kasan/common.c"
+        ],
+        [
+            "qlist_free_all",
+            "mm/kasan/quarantine.c"
+        ],
+        [
+            "kasan_set_free_info",
+            "mm/kasan/sw_tags.c"
+        ],
+        [
+            "kasan_get_free_track",
+            "mm/kasan/sw_tags.c"
+        ],
+        [
+            "kasan_get_free_track",
+            "mm/kasan/kasan.h"
+        ],
+        [
+            "____kasan_kmalloc",
+            "mm/kasan/common.c"
+        ],
+        [
+            "describe_object_addr",
+            "mm/kasan/report.c"
+        ],
+        [
+            "__kasan_metadata_size",
+            "mm/kasan/common.c"
+        ],
+        [
+            "quarantine_put",
+            "mm/kasan/quarantine.c"
+        ],
+        [
+            "qlink_free",
+            "mm/kasan/quarantine.c"
+        ],
+        [
+            "kasan_set_free_info",
+            "mm/kasan/hw_tags.c"
+        ],
+        [
+            "kasan_set_free_info",
+            "mm/kasan/generic.c"
+        ],
+        [
+            "kasan_get_free_track",
+            "mm/kasan/hw_tags.c"
+        ],
+        [
+            "kasan_get_free_track",
+            "mm/kasan/generic.c"
+        ]
+    ],
+    "patch_commit_date": "2020-12-29T23:14:46+00:00",
+    "cause_commit_date": "2020-12-22T20:03:28+00:00",
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "111fe7186b29d172729db5e294875b9fc7a0ec1d",
+    "patch": "diff --git a/mm/kasan/generic.c b/mm/kasan/generic.c\nindex 1dd5a0f99372..5106b84b07d4 100644\n--- a/mm/kasan/generic.c\n+++ b/mm/kasan/generic.c\n@@ -337,6 +337,8 @@ void kasan_record_aux_stack(void *addr)\n \tcache = page->slab_cache;\n \tobject = nearest_obj(cache, page, addr);\n \talloc_meta = kasan_get_alloc_meta(cache, object);\n+\tif (!alloc_meta)\n+\t\treturn;\n \n \talloc_meta->aux_stack[1] = alloc_meta->aux_stack[0];\n \talloc_meta->aux_stack[0] = kasan_save_stack(GFP_NOWAIT);\n",
+    "patch_modified_files": [
+        "mm/kasan/generic.c"
+    ]
+}

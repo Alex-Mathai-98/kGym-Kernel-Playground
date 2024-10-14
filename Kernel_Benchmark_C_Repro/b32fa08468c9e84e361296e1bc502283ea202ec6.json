@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "KASAN: invalid-free in packet_set_ring",
+    "display-title": "KASAN: invalid-free in packet_set_ring",
+    "id": "b32fa08468c9e84e361296e1bc502283ea202ec6",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/packet: rx_owner_map depends on pg_vec",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ec6af094ea28f0f2dda1a6a33b14cd57e36a9755",
+            "hash": "ec6af094ea28f0f2dda1a6a33b14cd57e36a9755",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/20211215143937.106178-1-willemdebruijn.kernel@gmail.com/T/",
+        "https://lore.kernel.org/all/20211220143022.266532675@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211220143023.451982183@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211220143025.683747691@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211220143029.352940568@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211220143040.058287525@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: invalid-free in packet_set_ring",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1065ce4db00000",
+            "c-reproducer": "/text?tag=ReproC&x=13760cf5b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=5247c9e141823545",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a763d5a5abd65797aec3dd1bf01fe2ccbec32967",
+            "kernel-source-commit": "a763d5a5abd65797aec3dd1bf01fe2ccbec32967",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/49ca1f59e37fcf63dc38a6bd2b60fcc47a0a708e",
+            "syzkaller-commit": "49ca1f59e37fcf63dc38a6bd2b60fcc47a0a708e",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10dac069b00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "packet_set_ring",
+            "net/packet/af_packet.c"
+        ]
+    ],
+    "patch_commit_date": "2021-12-15T14:39:37+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "481221775d53d6215a6e5e9ce1cce6d2b4ab9a46",
+    "patch": "diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c\nindex 46943a18a10d..76c2dca7f0a5 100644\n--- a/net/packet/af_packet.c\n+++ b/net/packet/af_packet.c\n@@ -4492,9 +4492,10 @@ static int packet_set_ring(struct sock *sk, union tpacket_req_u *req_u,\n \t}\n \n out_free_pg_vec:\n-\tbitmap_free(rx_owner_map);\n-\tif (pg_vec)\n+\tif (pg_vec) {\n+\t\tbitmap_free(rx_owner_map);\n \t\tfree_pg_vec(pg_vec, order, req->tp_block_nr);\n+\t}\n out:\n \treturn err;\n }\n",
+    "patch_modified_files": [
+        "net/packet/af_packet.c"
+    ]
+}

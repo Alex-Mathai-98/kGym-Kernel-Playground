@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "kernel BUG in hpage_collapse_scan_file",
+    "display-title": "kernel BUG in hpage_collapse_scan_file",
+    "id": "7d6bb3760e026ece7524500fe44fb024a0e959fc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm: khugepaged: fix kernel BUG in hpage_collapse_scan_file()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2ce0bdfebc74f6cbd4e97a4e767d505a81c38cf2",
+            "hash": "2ce0bdfebc74f6cbd4e97a4e767d505a81c38cf2",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Linux 5.19",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3d7cb6b04c3f3115719235cc6866b10326de34cd",
+        "hash": "3d7cb6b04c3f3115719235cc6866b10326de34cd",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000226a6105f6954b47@google.com/T/",
+        "https://lore.kernel.org/all/20230329145330.23191-1-ivan.orlov0322@gmail.com/T/",
+        "https://lore.kernel.org/all/20230330155305.423051-1-ivan.orlov0322@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "kernel BUG in hpage_collapse_scan_file",
+            "syz-reproducer": "/text?tag=ReproSyz&x=179e4e12c80000",
+            "c-reproducer": "/text?tag=ReproC&x=119cce98c80000",
+            "kernel-config": "/text?tag=KernelConfig&x=f763d89e26d3d4c4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=857f1268a591147f7be7509f249dbb3aba6fc65c",
+            "kernel-source-commit": "857f1268a591147f7be7509f249dbb3aba6fc65c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f8902b5747fbe3d5b860bd782eec63fc9c7da6e7",
+            "syzkaller-commit": "f8902b5747fbe3d5b860bd782eec63fc9c7da6e7",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14c74fb0c80000"
+        }
+    ],
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "90fd833609c82487a0eca1581becde7ab54d9429",
+    "patch": "diff --git a/include/trace/events/huge_memory.h b/include/trace/events/huge_memory.h\nindex 3e6fb05852f9..c84c7af70158 100644\n--- a/include/trace/events/huge_memory.h\n+++ b/include/trace/events/huge_memory.h\n@@ -36,7 +36,8 @@\n \tEM( SCAN_ALLOC_HUGE_PAGE_FAIL,\t\"alloc_huge_page_failed\")\t\\\n \tEM( SCAN_CGROUP_CHARGE_FAIL,\t\"ccgroup_charge_failed\")\t\\\n \tEM( SCAN_TRUNCATED,\t\t\"truncated\")\t\t\t\\\n-\tEMe(SCAN_PAGE_HAS_PRIVATE,\t\"page_has_private\")\t\t\\\n+\tEM( SCAN_PAGE_HAS_PRIVATE,\t\"page_has_private\")\t\t\\\n+\tEMe(SCAN_STORE_FAILED,\t\t\"store_failed\")\n \n #undef EM\n #undef EMe\ndiff --git a/mm/khugepaged.c b/mm/khugepaged.c\nindex 2c6548cd18a9..3b61cd188f7b 100644\n--- a/mm/khugepaged.c\n+++ b/mm/khugepaged.c\n@@ -55,6 +55,7 @@ enum scan_result {\n \tSCAN_CGROUP_CHARGE_FAIL,\n \tSCAN_TRUNCATED,\n \tSCAN_PAGE_HAS_PRIVATE,\n+\tSCAN_STORE_FAILED,\n };\n \n #define CREATE_TRACE_POINTS\n@@ -1857,6 +1858,15 @@ static int collapse_file(struct mm_struct *mm, unsigned long addr,\n \t\t\t\t\tgoto xa_locked;\n \t\t\t\t}\n \t\t\t\txas_store(&xas, hpage);\n+\t\t\t\tif (xas_error(&xas)) {\n+\t\t\t\t\t/* revert shmem_charge performed\n+\t\t\t\t\t * in the previous condition\n+\t\t\t\t\t */\n+\t\t\t\t\tmapping->nrpages--;\n+\t\t\t\t\tshmem_uncharge(mapping->host, 1);\n+\t\t\t\t\tresult = SCAN_STORE_FAILED;\n+\t\t\t\t\tgoto xa_locked;\n+\t\t\t\t}\n \t\t\t\tnr_none++;\n \t\t\t\tcontinue;\n \t\t\t}\n@@ -2009,6 +2019,11 @@ static int collapse_file(struct mm_struct *mm, unsigned long addr,\n \n \t\t/* Finally, replace with the new page. */\n \t\txas_store(&xas, hpage);\n+\t\t/* We can't get an ENOMEM here (because the allocation happened before)\n+\t\t * but let's check for errors (XArray implementation can be\n+\t\t * changed in the future)\n+\t\t */\n+\t\tWARN_ON_ONCE(xas_error(&xas));\n \t\tcontinue;\n out_unlock:\n \t\tunlock_page(page);\n@@ -2046,6 +2061,11 @@ static int collapse_file(struct mm_struct *mm, unsigned long addr,\n \t/* Join all the small entries into a single multi-index entry */\n \txas_set_order(&xas, start, HPAGE_PMD_ORDER);\n \txas_store(&xas, hpage);\n+\t/* Here we can't get an ENOMEM (because entries were\n+\t * previously allocated) But let's check for errors\n+\t * (XArray implementation can be changed in the future)\n+\t */\n+\tWARN_ON_ONCE(xas_error(&xas));\n xa_locked:\n \txas_unlock_irq(&xas);\n xa_unlocked:\n",
+    "patch_modified_files": [
+        "include/trace/events/huge_memory.h",
+        "mm/khugepaged.c"
+    ]
+}

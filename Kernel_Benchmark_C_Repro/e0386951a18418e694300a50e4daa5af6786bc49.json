@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "memory leak in ip_mc_add_src",
+    "display-title": "memory leak in ip_mc_add_src (2)",
+    "id": "e0386951a18418e694300a50e4daa5af6786bc49",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "igmp: fix memory leak in igmpv3_del_delrec()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e5b1c6c6277d5a283290a8c033c72544746f9b5b",
+            "hash": "e5b1c6c6277d5a283290a8c033c72544746f9b5b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000008f288c058c49c986@google.com/T/",
+        "https://lore.kernel.org/all/20190627082701.226711-1-edumazet@google.com/T/",
+        "https://lore.kernel.org/all/20190726152300.760439618@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190726152301.720139286@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190726152301.936055394@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190729190820.321094988@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190802092238.692035242@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/lsq.1572026581.992411028@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15dc46eea00000",
+            "c-reproducer": "/text?tag=ReproC&x=17ee5aada00000",
+            "kernel-config": "/text?tag=KernelConfig&x=1db8bd6825f9661c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=249155c20f9b0754bc1b932a33344cfb4e0c2101",
+            "kernel-source-commit": "249155c20f9b0754bc1b932a33344cfb4e0c2101",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/7509bf360eba1461ac6059e4cacfbc29c9d2d4c7",
+            "syzkaller-commit": "7509bf360eba1461ac6059e4cacfbc29c9d2d4c7",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12653671a00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "igmpv3_del_delrec",
+            "net/ipv4/igmp.c"
+        ]
+    ],
+    "patch_commit_date": "2019-06-27T08:27:01+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "c09fedd6ad3f55fd298d1acfae6fb14d77a3a4d8",
+    "patch": "diff --git a/net/ipv4/igmp.c b/net/ipv4/igmp.c\nindex a57f0d69eadb..85107bf812f2 100644\n--- a/net/ipv4/igmp.c\n+++ b/net/ipv4/igmp.c\n@@ -1228,12 +1228,8 @@ static void igmpv3_del_delrec(struct in_device *in_dev, struct ip_mc_list *im)\n \tif (pmc) {\n \t\tim->interface = pmc->interface;\n \t\tif (im->sfmode == MCAST_INCLUDE) {\n-\t\t\tim->tomb = pmc->tomb;\n-\t\t\tpmc->tomb = NULL;\n-\n-\t\t\tim->sources = pmc->sources;\n-\t\t\tpmc->sources = NULL;\n-\n+\t\t\tswap(im->tomb, pmc->tomb);\n+\t\t\tswap(im->sources, pmc->sources);\n \t\t\tfor (psf = im->sources; psf; psf = psf->sf_next)\n \t\t\t\tpsf->sf_crcount = in_dev->mr_qrv ?: net->ipv4.sysctl_igmp_qrv;\n \t\t} else {\n",
+    "patch_modified_files": [
+        "net/ipv4/igmp.c"
+    ]
+}

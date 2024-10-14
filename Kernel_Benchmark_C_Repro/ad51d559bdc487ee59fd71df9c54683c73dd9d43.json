@@ -1,0 +1,41 @@
+{
+    "version": 1,
+    "title": "memory leak in vlan_dev_set_egress_priority",
+    "display-title": "memory leak in vlan_dev_set_egress_priority",
+    "id": "ad51d559bdc487ee59fd71df9c54683c73dd9d43",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "vlan: fix memory leak in vlan_dev_set_egress_priority",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9bbd917e0bec9aebdbd0c8dbc966caec15eb33e9",
+            "hash": "9bbd917e0bec9aebdbd0c8dbc966caec15eb33e9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13539459e00000",
+            "c-reproducer": "/text?tag=ReproC&x=10b6d115e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=5871f28328648bc5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c79f46a282390e0f5b306007bf7b11a46d529538",
+            "kernel-source-commit": "c79f46a282390e0f5b306007bf7b11a46d529538",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/53430d97195bc8dc0221eaa2ea913237d82e199d",
+            "syzkaller-commit": "53430d97195bc8dc0221eaa2ea913237d82e199d",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11f46f51e00000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "96b11e9358080e8b705babd078cefa753109204b",
+    "patch": "diff --git a/net/8021q/vlan.h b/net/8021q/vlan.h\nindex c46daf09a501..bb7ec1a3915d 100644\n--- a/net/8021q/vlan.h\n+++ b/net/8021q/vlan.h\n@@ -126,6 +126,7 @@ int vlan_check_real_dev(struct net_device *real_dev,\n void vlan_setup(struct net_device *dev);\n int register_vlan_dev(struct net_device *dev, struct netlink_ext_ack *extack);\n void unregister_vlan_dev(struct net_device *dev, struct list_head *head);\n+void vlan_dev_uninit(struct net_device *dev);\n bool vlan_dev_inherit_address(struct net_device *dev,\n \t\t\t      struct net_device *real_dev);\n \ndiff --git a/net/8021q/vlan_dev.c b/net/8021q/vlan_dev.c\nindex e5bff5cc6f97..2a78da4072de 100644\n--- a/net/8021q/vlan_dev.c\n+++ b/net/8021q/vlan_dev.c\n@@ -586,7 +586,8 @@ static int vlan_dev_init(struct net_device *dev)\n \treturn 0;\n }\n \n-static void vlan_dev_uninit(struct net_device *dev)\n+/* Note: this function might be called multiple times for the same device. */\n+void vlan_dev_uninit(struct net_device *dev)\n {\n \tstruct vlan_priority_tci_mapping *pm;\n \tstruct vlan_dev_priv *vlan = vlan_dev_priv(dev);\ndiff --git a/net/8021q/vlan_netlink.c b/net/8021q/vlan_netlink.c\nindex c482a6fe9393..b2a4b8b5a0cd 100644\n--- a/net/8021q/vlan_netlink.c\n+++ b/net/8021q/vlan_netlink.c\n@@ -179,10 +179,11 @@ static int vlan_newlink(struct net *src_net, struct net_device *dev,\n \t\treturn -EINVAL;\n \n \terr = vlan_changelink(dev, tb, data, extack);\n-\tif (err < 0)\n-\t\treturn err;\n-\n-\treturn register_vlan_dev(dev, extack);\n+\tif (!err)\n+\t\terr = register_vlan_dev(dev, extack);\n+\tif (err)\n+\t\tvlan_dev_uninit(dev);\n+\treturn err;\n }\n \n static inline size_t vlan_qos_map_size(unsigned int n)\n",
+    "patch_modified_files": [
+        "net/8021q/vlan.h",
+        "net/8021q/vlan_dev.c",
+        "net/8021q/vlan_netlink.c"
+    ]
+}

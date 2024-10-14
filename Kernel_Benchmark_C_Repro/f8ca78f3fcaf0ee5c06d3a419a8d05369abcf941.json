@@ -1,0 +1,63 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Write in tcindex_set_parms",
+    "display-title": "KASAN: use-after-free Write in tcindex_set_parms",
+    "id": "f8ca78f3fcaf0ee5c06d3a419a8d05369abcf941",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net_sched: keep alloc_hash updated after hash allocation",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0d1c3530e1bd38382edef72591b78e877e0edcd3",
+            "hash": "0d1c3530e1bd38382edef72591b78e877e0edcd3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "net_sched: fix an OOB access in cls_tcindex",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=599be01ee567b61f4471ee8078870847d0a11e8e",
+        "hash": "599be01ee567b61f4471ee8078870847d0a11e8e",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005d435905a0877414@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11fe8219e00000",
+            "c-reproducer": "/text?tag=ReproC&x=129e5439e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=c2e311dba9a02ba9",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=30bb5572ce7a8710fa9ea720b6ecb382791c9800",
+            "kernel-source-commit": "30bb5572ce7a8710fa9ea720b6ecb382791c9800",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/35f53e457420e79fa28e3260cdbbf9f37b9f97e4",
+            "syzkaller-commit": "35f53e457420e79fa28e3260cdbbf9f37b9f97e4",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12f563fde00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "tcindex_set_parms",
+            "net/sched/cls_tcindex.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "tcindex_set_parms",
+            "net/sched/cls_tcindex.c"
+        ]
+    ],
+    "patch_commit_date": "2020-03-12T05:42:28+00:00",
+    "cause_commit_date": "2020-02-03T05:14:35+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "b1be2e8cd290f620777bfdb8aa00890cd2fa02b5",
+    "patch": "diff --git a/net/sched/cls_tcindex.c b/net/sched/cls_tcindex.c\nindex f2cb24b6f0cf..9904299424a1 100644\n--- a/net/sched/cls_tcindex.c\n+++ b/net/sched/cls_tcindex.c\n@@ -359,6 +359,7 @@ tcindex_set_parms(struct net *net, struct tcf_proto *tp, unsigned long base,\n \n \t\tif (tcindex_alloc_perfect_hash(net, cp) < 0)\n \t\t\tgoto errout;\n+\t\tcp->alloc_hash = cp->hash;\n \t\tfor (i = 0; i < min(cp->hash, p->hash); i++)\n \t\t\tcp->perfect[i].res = p->perfect[i].res;\n \t\tballoc = 1;\n",
+    "patch_modified_files": [
+        "net/sched/cls_tcindex.c"
+    ]
+}

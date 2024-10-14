@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in exfat_fill_super",
+    "display-title": "UBSAN: shift-out-of-bounds in exfat_fill_super",
+    "id": "9f219f81d71d8d39ddfc377f4d9ae292844e1312",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "exfat: fix shift-out-of-bounds in exfat_fill_super()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=78c276f5495aa53a8beebb627e5bf6a54f0af34f",
+            "hash": "78c276f5495aa53a8beebb627e5bf6a54f0af34f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c2865c05b9bcee02@google.com/T/",
+        "https://lore.kernel.org/all/052101d6f3a1$3997c420$acc74c60$@samsung.com/T/",
+        "https://lore.kernel.org/all/20210129071222.7582-1-namjae.jeon@samsung.com/T/",
+        "https://lore.kernel.org/all/20210201024620.2178-1-namjae.jeon@samsung.com/T/",
+        "https://lore.kernel.org/all/20210301161141.760350206@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210301161201.679371205@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "UBSAN: shift-out-of-bounds in exfat_fill_super",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11ad6f00d00000",
+            "c-reproducer": "/text?tag=ReproC&x=13ffb69f500000",
+            "kernel-config": "/text?tag=KernelConfig&x=c5f3af3f625fb042",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9791581c049c10929e97098374dd1716a81fefcc",
+            "kernel-source-commit": "9791581c049c10929e97098374dd1716a81fefcc",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d4f4eca56fbea6f58a4d5adfd19cb5e0dc32fe46",
+            "syzkaller-commit": "d4f4eca56fbea6f58a4d5adfd19cb5e0dc32fe46",
+            "compiler-description": "clang version 11.0.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=155835af500000"
+        }
+    ],
+    "subsystems": [
+        "exfat"
+    ],
+    "parent_of_fix_commit": "f40ddce88593482919761f74910f42f4b84c004b",
+    "patch": "diff --git a/fs/exfat/exfat_raw.h b/fs/exfat/exfat_raw.h\nindex 6aec6288e1f2..7f39b1c6469c 100644\n--- a/fs/exfat/exfat_raw.h\n+++ b/fs/exfat/exfat_raw.h\n@@ -77,6 +77,10 @@\n \n #define EXFAT_FILE_NAME_LEN\t\t15\n \n+#define EXFAT_MIN_SECT_SIZE_BITS\t\t9\n+#define EXFAT_MAX_SECT_SIZE_BITS\t\t12\n+#define EXFAT_MAX_SECT_PER_CLUS_BITS(x)\t\t(25 - (x)->sect_size_bits)\n+\n /* EXFAT: Main and Backup Boot Sector (512 bytes) */\n struct boot_sector {\n \t__u8\tjmp_boot[BOOTSEC_JUMP_BOOT_LEN];\ndiff --git a/fs/exfat/super.c b/fs/exfat/super.c\nindex 87be5bfc31eb..c6d8d2e53486 100644\n--- a/fs/exfat/super.c\n+++ b/fs/exfat/super.c\n@@ -381,8 +381,7 @@ static int exfat_calibrate_blocksize(struct super_block *sb, int logical_sect)\n {\n \tstruct exfat_sb_info *sbi = EXFAT_SB(sb);\n \n-\tif (!is_power_of_2(logical_sect) ||\n-\t    logical_sect < 512 || logical_sect > 4096) {\n+\tif (!is_power_of_2(logical_sect)) {\n \t\texfat_err(sb, \"bogus logical sector size %u\", logical_sect);\n \t\treturn -EIO;\n \t}\n@@ -451,6 +450,25 @@ static int exfat_read_boot_sector(struct super_block *sb)\n \t\treturn -EINVAL;\n \t}\n \n+\t/*\n+\t * sect_size_bits could be at least 9 and at most 12.\n+\t */\n+\tif (p_boot->sect_size_bits < EXFAT_MIN_SECT_SIZE_BITS ||\n+\t    p_boot->sect_size_bits > EXFAT_MAX_SECT_SIZE_BITS) {\n+\t\texfat_err(sb, \"bogus sector size bits : %u\\n\",\n+\t\t\t\tp_boot->sect_size_bits);\n+\t\treturn -EINVAL;\n+\t}\n+\n+\t/*\n+\t * sect_per_clus_bits could be at least 0 and at most 25 - sect_size_bits.\n+\t */\n+\tif (p_boot->sect_per_clus_bits > EXFAT_MAX_SECT_PER_CLUS_BITS(p_boot)) {\n+\t\texfat_err(sb, \"bogus sectors bits per cluster : %u\\n\",\n+\t\t\t\tp_boot->sect_per_clus_bits);\n+\t\treturn -EINVAL;\n+\t}\n+\n \tsbi->sect_per_clus = 1 << p_boot->sect_per_clus_bits;\n \tsbi->sect_per_clus_bits = p_boot->sect_per_clus_bits;\n \tsbi->cluster_size_bits = p_boot->sect_per_clus_bits +\n@@ -477,16 +495,19 @@ static int exfat_read_boot_sector(struct super_block *sb)\n \tsbi->used_clusters = EXFAT_CLUSTERS_UNTRACKED;\n \n \t/* check consistencies */\n-\tif (sbi->num_FAT_sectors << p_boot->sect_size_bits <\n-\t    sbi->num_clusters * 4) {\n+\tif ((u64)sbi->num_FAT_sectors << p_boot->sect_size_bits <\n+\t    (u64)sbi->num_clusters * 4) {\n \t\texfat_err(sb, \"bogus fat length\");\n \t\treturn -EINVAL;\n \t}\n+\n \tif (sbi->data_start_sector <\n-\t    sbi->FAT1_start_sector + sbi->num_FAT_sectors * p_boot->num_fats) {\n+\t    (u64)sbi->FAT1_start_sector +\n+\t    (u64)sbi->num_FAT_sectors * p_boot->num_fats) {\n \t\texfat_err(sb, \"bogus data start sector\");\n \t\treturn -EINVAL;\n \t}\n+\n \tif (sbi->vol_flags & VOLUME_DIRTY)\n \t\texfat_warn(sb, \"Volume was not properly unmounted. Some data may be corrupt. Please run fsck.\");\n \tif (sbi->vol_flags & MEDIA_FAILURE)\n",
+    "patch_modified_files": [
+        "fs/exfat/exfat_raw.h",
+        "fs/exfat/super.c"
+    ]
+}

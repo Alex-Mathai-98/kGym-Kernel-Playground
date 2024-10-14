@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Write in gfs2_fill_super",
+    "display-title": "KASAN: slab-out-of-bounds Write in gfs2_fill_super",
+    "id": "7b48918ce79e9c1265ed5a7c80b27241a1d48eee",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "gfs2: add validation checks for size of superblock",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0ddc5154b24c96f20e94d653b0a814438de6032b",
+            "hash": "0ddc5154b24c96f20e94d653b0a814438de6032b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000006903b205b0873061@google.com/T/",
+        "https://lore.kernel.org/all/20201014163109.98739-1-anant.thazhemadam@gmail.com/T/",
+        "https://lore.kernel.org/all/20201026234905.1022767-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201026235205.1023962-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201026235516.1025100-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201027000415.1026364-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201027000946.1026923-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201027001044.1027349-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201027001123.1027642-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201103203156.372184213@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201103203232.656475008@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201103203249.448706377@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201103203348.153465465@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201109125020.852643676@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201109125025.630721781@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15c307d3900000",
+            "c-reproducer": "/text?tag=ReproC&x=1353d58d900000",
+            "kernel-config": "/text?tag=KernelConfig&x=adebb40048274f92",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=fb0155a09b0224a7147cb07a4ce6034c8d29667f",
+            "kernel-source-commit": "fb0155a09b0224a7147cb07a4ce6034c8d29667f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/1b88c6d5c8477f1d4fb3b389443b200acc32e9a8",
+            "syzkaller-commit": "1b88c6d5c8477f1d4fb3b389443b200acc32e9a8",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=166aea37900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "gfs2_check_sb",
+            "fs/gfs2/ops_fstype.c"
+        ]
+    ],
+    "patch_commit_date": "2020-10-14T16:31:09+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "gfs2"
+    ],
+    "parent_of_fix_commit": "c2a04b02c060c4858762edce4674d5cba3e5a96f",
+    "patch": "diff --git a/fs/gfs2/ops_fstype.c b/fs/gfs2/ops_fstype.c\nindex 5bd602a290f7..03c33fc03c05 100644\n--- a/fs/gfs2/ops_fstype.c\n+++ b/fs/gfs2/ops_fstype.c\n@@ -169,15 +169,19 @@ static int gfs2_check_sb(struct gfs2_sbd *sdp, int silent)\n \t\treturn -EINVAL;\n \t}\n \n-\t/*  If format numbers match exactly, we're done.  */\n-\n-\tif (sb->sb_fs_format == GFS2_FORMAT_FS &&\n-\t    sb->sb_multihost_format == GFS2_FORMAT_MULTI)\n-\t\treturn 0;\n+\tif (sb->sb_fs_format != GFS2_FORMAT_FS ||\n+\t    sb->sb_multihost_format != GFS2_FORMAT_MULTI) {\n+\t\tfs_warn(sdp, \"Unknown on-disk format, unable to mount\\n\");\n+\t\treturn -EINVAL;\n+\t}\n \n-\tfs_warn(sdp, \"Unknown on-disk format, unable to mount\\n\");\n+\tif (sb->sb_bsize < 512 || sb->sb_bsize > PAGE_SIZE ||\n+\t    (sb->sb_bsize & (sb->sb_bsize - 1))) {\n+\t\tpr_warn(\"Invalid superblock size\\n\");\n+\t\treturn -EINVAL;\n+\t}\n \n-\treturn -EINVAL;\n+\treturn 0;\n }\n \n static void end_bio_io_page(struct bio *bio)\n",
+    "patch_modified_files": [
+        "fs/gfs2/ops_fstype.c"
+    ]
+}

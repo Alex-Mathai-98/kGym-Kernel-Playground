@@ -1,0 +1,46 @@
+{
+    "version": 1,
+    "title": "memory leak in xas_nomem",
+    "display-title": "memory leak in xas_nomem",
+    "id": "8bf41a98ebf3773a940952df3a94943f57a00e8b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm/huge_memory: Fix xarray node memory leak",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=69a37a8ba1b408a1c7616494aa7018e4b3844cbe",
+            "hash": "69a37a8ba1b408a1c7616494aa7018e4b3844cbe",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000036af2005e009e7e6@google.com/T/",
+        "https://lore.kernel.org/all/20220613094924.913340374@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220613094926.497929857@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in xas_nomem",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16bc056ef00000",
+            "c-reproducer": "/text?tag=ReproC&x=116b7d9df00000",
+            "kernel-config": "/text?tag=KernelConfig&x=5757003cb23a31a7",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1e57930e9f4083ad5854ab6eadffe790a8167fb4",
+            "kernel-source-commit": "1e57930e9f4083ad5854ab6eadffe790a8167fb4",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e7f9308d43198223b192f94a7030f9ebdf92e551",
+            "syzkaller-commit": "e7f9308d43198223b192f94a7030f9ebdf92e551",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1619aa39f00000"
+        }
+    ],
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "dcfa24ba68991ab69a48254a18377b45180ae664",
+    "patch": "diff --git a/include/linux/xarray.h b/include/linux/xarray.h\nindex 72feab5ea8d4..c29e11b2c073 100644\n--- a/include/linux/xarray.h\n+++ b/include/linux/xarray.h\n@@ -1508,6 +1508,7 @@ void *xas_find_marked(struct xa_state *, unsigned long max, xa_mark_t);\n void xas_init_marks(const struct xa_state *);\n \n bool xas_nomem(struct xa_state *, gfp_t);\n+void xas_destroy(struct xa_state *);\n void xas_pause(struct xa_state *);\n \n void xas_create_range(struct xa_state *);\ndiff --git a/lib/xarray.c b/lib/xarray.c\nindex 54e646e8e6ee..ea9ce1f0b386 100644\n--- a/lib/xarray.c\n+++ b/lib/xarray.c\n@@ -264,9 +264,10 @@ static void xa_node_free(struct xa_node *node)\n  * xas_destroy() - Free any resources allocated during the XArray operation.\n  * @xas: XArray operation state.\n  *\n- * This function is now internal-only.\n+ * Most users will not need to call this function; it is called for you\n+ * by xas_nomem().\n  */\n-static void xas_destroy(struct xa_state *xas)\n+void xas_destroy(struct xa_state *xas)\n {\n \tstruct xa_node *next, *node = xas->xa_alloc;\n \ndiff --git a/mm/huge_memory.c b/mm/huge_memory.c\nindex a77c78a2b6b5..f7248002dad9 100644\n--- a/mm/huge_memory.c\n+++ b/mm/huge_memory.c\n@@ -2672,8 +2672,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)\n \tif (mapping)\n \t\ti_mmap_unlock_read(mapping);\n out:\n-\t/* Free any memory we didn't use */\n-\txas_nomem(&xas, 0);\n+\txas_destroy(&xas);\n \tcount_vm_event(!ret ? THP_SPLIT_PAGE : THP_SPLIT_PAGE_FAILED);\n \treturn ret;\n }\n",
+    "patch_modified_files": [
+        "include/linux/xarray.h",
+        "lib/xarray.c",
+        "mm/huge_memory.c"
+    ]
+}

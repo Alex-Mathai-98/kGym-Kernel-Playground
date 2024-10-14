@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "KASAN: null-ptr-deref Write in get_block",
+    "display-title": "KASAN: null-ptr-deref Write in get_block (2)",
+    "id": "5ab6a9c7ac29cb58befc4b203d11d0ccab124736",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/sysv: Null check to prevent null-ptr-deref bug",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ea2b62f305893992156a798f665847e0663c9f41",
+            "hash": "ea2b62f305893992156a798f665847e0663c9f41",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000cafb9305fc4fe588@google.com/T/",
+        "https://lore.kernel.org/all/20230528173546.593511-1-princekumarmaurya06@gmail.com/T/",
+        "https://lore.kernel.org/all/20230528184422.596947-1-princekumarmaurya06@gmail.com/T/",
+        "https://lore.kernel.org/all/20230702193815.1775684-5-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: null-ptr-deref Write in get_block",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1615fbe9280000",
+            "c-reproducer": "/text?tag=ReproC&x=1282842e280000",
+            "kernel-config": "/text?tag=KernelConfig&x=94af80bb8ddd23c4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4d6d4c7f541d7027beed4fb86eb2c451bd8d6fff",
+            "kernel-source-commit": "4d6d4c7f541d7027beed4fb86eb2c451bd8d6fff",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3bb7af1def6b7b99e4c1c9573162eb41b5893cd3",
+            "syzkaller-commit": "3bb7af1def6b7b99e4c1c9573162eb41b5893cd3",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11801ba6280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "alloc_branch",
+            "fs/sysv/itree.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-31T01:31:41+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "b7a9a503c38d665c05a789132b632d81ec0b2703",
+    "patch": "diff --git a/fs/sysv/itree.c b/fs/sysv/itree.c\nindex b22764fe669c..58d7f43a1371 100644\n--- a/fs/sysv/itree.c\n+++ b/fs/sysv/itree.c\n@@ -145,6 +145,10 @@ static int alloc_branch(struct inode *inode,\n \t\t */\n \t\tparent = block_to_cpu(SYSV_SB(inode->i_sb), branch[n-1].key);\n \t\tbh = sb_getblk(inode->i_sb, parent);\n+\t\tif (!bh) {\n+\t\t\tsysv_free_block(inode->i_sb, branch[n].key);\n+\t\t\tbreak;\n+\t\t}\n \t\tlock_buffer(bh);\n \t\tmemset(bh->b_data, 0, blocksize);\n \t\tbranch[n].bh = bh;\n",
+    "patch_modified_files": [
+        "fs/sysv/itree.c"
+    ]
+}

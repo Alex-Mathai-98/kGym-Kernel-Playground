@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "KASAN: null-ptr-deref Read in ida_free",
+    "display-title": "KASAN: null-ptr-deref Read in ida_free (3)",
+    "id": "e675fbaf856bd1465eed8b8f51ae182b58b8d656",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs: drop peer group ids under namespace lock",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cb2239c198ad9fbd5aced22cf93e45562da781eb",
+            "hash": "cb2239c198ad9fbd5aced22cf93e45562da781eb",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000088694505f8132d77@google.com/T/",
+        "https://lore.kernel.org/all/20230330-vfs-mount_setattr-propagation-fix-v1-1-37548d91533b@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: null-ptr-deref Read in ida_free",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11639815c80000",
+            "c-reproducer": "/text?tag=ReproC&x=12128b1ec80000",
+            "kernel-config": "/text?tag=KernelConfig&x=acdb62bf488a8fe5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=da8e7da11e4ba758caf4c149cc8d8cd555aefe5f",
+            "kernel-source-commit": "da8e7da11e4ba758caf4c149cc8d8cd555aefe5f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/fbf0499acc828df26995835e51d83c3a0117e716",
+            "syzkaller-commit": "fbf0499acc828df26995835e51d83c3a0117e716",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1621e31ec80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "do_mount_setattr",
+            "fs/namespace.c"
+        ]
+    ],
+    "patch_commit_date": "2023-03-30T07:13:16+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "197b6b60ae7bc51dd0814953c562833143b292aa",
+    "patch": "diff --git a/fs/namespace.c b/fs/namespace.c\nindex bc0f15257b49..6836e937ee61 100644\n--- a/fs/namespace.c\n+++ b/fs/namespace.c\n@@ -4183,9 +4183,9 @@ static int do_mount_setattr(struct path *path, struct mount_kattr *kattr)\n \tunlock_mount_hash();\n \n \tif (kattr->propagation) {\n-\t\tnamespace_unlock();\n \t\tif (err)\n \t\t\tcleanup_group_ids(mnt, NULL);\n+\t\tnamespace_unlock();\n \t}\n \n \treturn err;\n",
+    "patch_modified_files": [
+        "fs/namespace.c"
+    ]
+}

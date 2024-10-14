@@ -1,0 +1,71 @@
+{
+    "version": 1,
+    "title": "kernel BUG at lib/string.c:LINE!",
+    "display-title": "kernel BUG at lib/string.c:LINE! (6)",
+    "id": "b6efb9d3ff2b6a7754d69711d985a6da68ebd708",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: xt_RATEEST: reject non-null terminated string from userspace",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6cb56218ad9e580e519dcd23bfb3db08d8692e5a",
+            "hash": "6cb56218ad9e580e519dcd23bfb3db08d8692e5a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "ilog2: improve ilog2 for constant arguments",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2f78788b55baa3410b1ec91a576286abe1ad4d6a",
+        "hash": "2f78788b55baa3410b1ec91a576286abe1ad4d6a",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000fcbe0705b70e9bd9@google.com/T/",
+        "https://lore.kernel.org/all/20201222222356.22645-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20210103192920.18639-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20210111130032.469630231@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130033.676306636@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130033.715773309@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130036.414620026@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130039.165470698@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210111130048.499958175@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=169378a7500000",
+            "c-reproducer": "/text?tag=ReproC&x=144692cb500000",
+            "kernel-config": "/text?tag=KernelConfig&x=aca0dc5c721fe9e5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d64c6f96ba86bd8b97ed8d6762a8c8cc1770d214",
+            "kernel-source-commit": "d64c6f96ba86bd8b97ed8d6762a8c8cc1770d214",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/04201c0669446145fd9c347c5538da0ca13ff29b",
+            "syzkaller-commit": "04201c0669446145fd9c347c5538da0ca13ff29b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10fa680f500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "xt_rateest_tg_checkentry",
+            "net/netfilter/xt_RATEEST.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "__rounddown_pow_of_two",
+            "include/linux/log2.h"
+        ]
+    ],
+    "patch_commit_date": "2020-12-22T22:23:56+00:00",
+    "cause_commit_date": "2020-12-16T04:43:37+00:00",
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "1f45dc22066797479072978feeada0852502e180",
+    "patch": "diff --git a/net/netfilter/xt_RATEEST.c b/net/netfilter/xt_RATEEST.c\nindex 37253d399c6b..0d5c422f8745 100644\n--- a/net/netfilter/xt_RATEEST.c\n+++ b/net/netfilter/xt_RATEEST.c\n@@ -115,6 +115,9 @@ static int xt_rateest_tg_checkentry(const struct xt_tgchk_param *par)\n \t} cfg;\n \tint ret;\n \n+\tif (strnlen(info->name, sizeof(est->name)) >= sizeof(est->name))\n+\t\treturn -ENAMETOOLONG;\n+\n \tnet_get_random_once(&jhash_rnd, sizeof(jhash_rnd));\n \n \tmutex_lock(&xn->hash_lock);\n",
+    "patch_modified_files": [
+        "net/netfilter/xt_RATEEST.c"
+    ]
+}

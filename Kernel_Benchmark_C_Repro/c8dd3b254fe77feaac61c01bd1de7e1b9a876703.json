@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "KASAN: stack-out-of-bounds Write in __nla_validate_parse",
+    "display-title": "KASAN: stack-out-of-bounds Write in __nla_validate_parse",
+    "id": "c8dd3b254fe77feaac61c01bd1de7e1b9a876703",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: flower: fix stack-out-of-bounds in fl_set_key_cfm()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4d50e50045aa46d9f3e578ed2edea9bd0a123d24",
+            "hash": "4d50e50045aa46d9f3e578ed2edea9bd0a123d24",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "kasan: fix type cast in memory_is_poisoned_n",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=05c56e7b4319d7f6352f27da876a1acdc8fa5cc4",
+        "hash": "05c56e7b4319d7f6352f27da876a1acdc8fa5cc4",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "KASAN: stack-out-of-bounds Write in __nla_validate_parse",
+            "syz-reproducer": "/text?tag=ReproSyz&x=145807e1a80000",
+            "c-reproducer": "/text?tag=ReproC&x=16aace9aa80000",
+            "kernel-config": "/text?tag=KernelConfig&x=a4507c291b5ab5d4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d192f5382581d972c4ae1b4d72e0b59b34cadeb9",
+            "kernel-source-commit": "d192f5382581d972c4ae1b4d72e0b59b34cadeb9",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/27cbe77f4f2a8de98c3d540ef77796263555fe6b",
+            "syzkaller-commit": "27cbe77f4f2a8de98c3d540ef77796263555fe6b",
+            "compiler-description": "Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12a18b01a80000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "fa467226669c09520bfb3e67fca5aeff947cdf17",
+    "patch": "diff --git a/include/uapi/linux/pkt_cls.h b/include/uapi/linux/pkt_cls.h\nindex 7865f5a9885b..4f3932bb712d 100644\n--- a/include/uapi/linux/pkt_cls.h\n+++ b/include/uapi/linux/pkt_cls.h\n@@ -710,9 +710,11 @@ enum {\n \tTCA_FLOWER_KEY_CFM_OPT_UNSPEC,\n \tTCA_FLOWER_KEY_CFM_MD_LEVEL,\n \tTCA_FLOWER_KEY_CFM_OPCODE,\n-\tTCA_FLOWER_KEY_CFM_OPT_MAX,\n+\t__TCA_FLOWER_KEY_CFM_OPT_MAX,\n };\n \n+#define TCA_FLOWER_KEY_CFM_OPT_MAX (__TCA_FLOWER_KEY_CFM_OPT_MAX - 1)\n+\n #define TCA_FLOWER_MASK_FLAGS_RANGE\t(1 << 0) /* Range-based match */\n \n /* Match-all classifier */\ndiff --git a/net/sched/cls_flower.c b/net/sched/cls_flower.c\nindex 8da9d039d964..9f0711da9c95 100644\n--- a/net/sched/cls_flower.c\n+++ b/net/sched/cls_flower.c\n@@ -776,7 +776,8 @@ mpls_stack_entry_policy[TCA_FLOWER_KEY_MPLS_OPT_LSE_MAX + 1] = {\n \t[TCA_FLOWER_KEY_MPLS_OPT_LSE_LABEL]    = { .type = NLA_U32 },\n };\n \n-static const struct nla_policy cfm_opt_policy[TCA_FLOWER_KEY_CFM_OPT_MAX] = {\n+static const struct nla_policy\n+cfm_opt_policy[TCA_FLOWER_KEY_CFM_OPT_MAX + 1] = {\n \t[TCA_FLOWER_KEY_CFM_MD_LEVEL]\t= NLA_POLICY_MAX(NLA_U8,\n \t\t\t\t\t\tFLOW_DIS_CFM_MDL_MAX),\n \t[TCA_FLOWER_KEY_CFM_OPCODE]\t= { .type = NLA_U8 },\n@@ -1709,7 +1710,7 @@ static int fl_set_key_cfm(struct nlattr **tb,\n \t\t\t  struct fl_flow_key *mask,\n \t\t\t  struct netlink_ext_ack *extack)\n {\n-\tstruct nlattr *nla_cfm_opt[TCA_FLOWER_KEY_CFM_OPT_MAX];\n+\tstruct nlattr *nla_cfm_opt[TCA_FLOWER_KEY_CFM_OPT_MAX + 1];\n \tint err;\n \n \tif (!tb[TCA_FLOWER_KEY_CFM])\n",
+    "patch_modified_files": [
+        "include/uapi/linux/pkt_cls.h",
+        "net/sched/cls_flower.c"
+    ]
+}

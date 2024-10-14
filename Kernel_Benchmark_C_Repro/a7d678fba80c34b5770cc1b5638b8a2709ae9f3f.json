@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "WARNING: locking bug in inet_autobind",
+    "display-title": "WARNING: locking bug in inet_autobind",
+    "id": "a7d678fba80c34b5770cc1b5638b8a2709ae9f3f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "l2tp: close all race conditions in l2tp_tunnel_register()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0b2c59720e65885a394a017d0cf9cab118914682",
+            "hash": "0b2c59720e65885a394a017d0cf9cab118914682",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "drm/amdgpu: Delete user queue doorbell variables",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git/commit/?id=c0d9271ecbd891cdeb0fad1edcdd99ee717a655f",
+        "hash": "c0d9271ecbd891cdeb0fad1edcdd99ee717a655f",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000033a0120588fac894@google.com/T/",
+        "https://lore.kernel.org/all/20190724024532.GH643@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20221119130317.39158-1-jakub@cloudflare.com/T/",
+        "https://lore.kernel.org/all/20230105191339.506839-1-xiyou.wangcong@gmail.com/T/",
+        "https://lore.kernel.org/all/20230110210030.593083-1-xiyou.wangcong@gmail.com/T/",
+        "https://lore.kernel.org/all/20230114030137.672706-1-xiyou.wangcong@gmail.com/T/",
+        "https://lore.kernel.org/all/55111c45-0f8f-c6f9-640c-6919939b77dd@I-love.SAKURA.ne.jp/T/",
+        "https://lore.kernel.org/all/DM6PR12MB27788B3B39A41027C62CEF5EF0000@DM6PR12MB2778.namprd12.prod.outlook.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING: locking bug in inet_autobind",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13e13e32480000",
+            "c-reproducer": "/text?tag=ReproC&x=13790f08480000",
+            "kernel-config": "/text?tag=KernelConfig&x=2651619a26b4d687",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1b929c02afd37871d5afb9d498426f83432e71c2",
+            "kernel-source-commit": "1b929c02afd37871d5afb9d498426f83432e71c2",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/44712fbc6b687170984c3562336a415b56d82607",
+            "syzkaller-commit": "44712fbc6b687170984c3562336a415b56d82607",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=128dd4bc480000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "c4d48a58f32c5972174a1d01c33b296fe378cce0",
+    "patch": "diff --git a/net/l2tp/l2tp_core.c b/net/l2tp/l2tp_core.c\nindex e9c0ce0b7972..b6554e32bb12 100644\n--- a/net/l2tp/l2tp_core.c\n+++ b/net/l2tp/l2tp_core.c\n@@ -1041,7 +1041,7 @@ static int l2tp_xmit_core(struct l2tp_session *session, struct sk_buff *skb, uns\n \tIPCB(skb)->flags &= ~(IPSKB_XFRM_TUNNEL_SIZE | IPSKB_XFRM_TRANSFORMED | IPSKB_REROUTED);\n \tnf_reset_ct(skb);\n \n-\tbh_lock_sock(sk);\n+\tbh_lock_sock_nested(sk);\n \tif (sock_owned_by_user(sk)) {\n \t\tkfree_skb(skb);\n \t\tret = NET_XMIT_DROP;\n@@ -1385,8 +1385,6 @@ static int l2tp_tunnel_sock_create(struct net *net,\n \treturn err;\n }\n \n-static struct lock_class_key l2tp_socket_class;\n-\n int l2tp_tunnel_create(int fd, int version, u32 tunnel_id, u32 peer_tunnel_id,\n \t\t       struct l2tp_tunnel_cfg *cfg, struct l2tp_tunnel **tunnelp)\n {\n@@ -1482,21 +1480,16 @@ int l2tp_tunnel_register(struct l2tp_tunnel *tunnel, struct net *net,\n \t}\n \n \tsk = sock->sk;\n+\tlock_sock(sk);\n \twrite_lock_bh(&sk->sk_callback_lock);\n \tret = l2tp_validate_socket(sk, net, tunnel->encap);\n-\tif (ret < 0)\n+\tif (ret < 0) {\n+\t\trelease_sock(sk);\n \t\tgoto err_inval_sock;\n+\t}\n \trcu_assign_sk_user_data(sk, tunnel);\n \twrite_unlock_bh(&sk->sk_callback_lock);\n \n-\tsock_hold(sk);\n-\ttunnel->sock = sk;\n-\ttunnel->l2tp_net = net;\n-\n-\tspin_lock_bh(&pn->l2tp_tunnel_idr_lock);\n-\tidr_replace(&pn->l2tp_tunnel_idr, tunnel, tunnel->tunnel_id);\n-\tspin_unlock_bh(&pn->l2tp_tunnel_idr_lock);\n-\n \tif (tunnel->encap == L2TP_ENCAPTYPE_UDP) {\n \t\tstruct udp_tunnel_sock_cfg udp_cfg = {\n \t\t\t.sk_user_data = tunnel,\n@@ -1510,9 +1503,16 @@ int l2tp_tunnel_register(struct l2tp_tunnel *tunnel, struct net *net,\n \n \ttunnel->old_sk_destruct = sk->sk_destruct;\n \tsk->sk_destruct = &l2tp_tunnel_destruct;\n-\tlockdep_set_class_and_name(&sk->sk_lock.slock, &l2tp_socket_class,\n-\t\t\t\t   \"l2tp_sock\");\n \tsk->sk_allocation = GFP_ATOMIC;\n+\trelease_sock(sk);\n+\n+\tsock_hold(sk);\n+\ttunnel->sock = sk;\n+\ttunnel->l2tp_net = net;\n+\n+\tspin_lock_bh(&pn->l2tp_tunnel_idr_lock);\n+\tidr_replace(&pn->l2tp_tunnel_idr, tunnel, tunnel->tunnel_id);\n+\tspin_unlock_bh(&pn->l2tp_tunnel_idr_lock);\n \n \ttrace_register_tunnel(tunnel);\n \n",
+    "patch_modified_files": [
+        "net/l2tp/l2tp_core.c"
+    ]
+}

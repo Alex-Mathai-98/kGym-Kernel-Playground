@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "KASAN: null-ptr-deref Write in get_block",
+    "display-title": "KASAN: null-ptr-deref Write in get_block",
+    "id": "84dd3acfb935e98dbf6250c6292687dc742acb5f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/minix: check return value of sb_getblk()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=da27e0a0e5f655f0d58d4e153c3182bb2b290f64",
+            "hash": "da27e0a0e5f655f0d58d4e153c3182bb2b290f64",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000cbeaf705a15a9b30@google.com/T/",
+        "https://lore.kernel.org/all/20200323125700.7512-1-hqjagain@gmail.com/T/",
+        "https://lore.kernel.org/all/20200628060846.682158-1-ebiggers@kernel.org/T/",
+        "https://lore.kernel.org/all/20200812013524.C4dEigLKz%akpm@linux-foundation.org/T/",
+        "https://lore.kernel.org/all/20200817143733.692105228@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200817143755.807583758@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200817143819.579311991@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200817143833.737102804@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200820091602.251285210@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200820091607.532711107@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200820092125.688850368@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=127acd55e00000",
+            "c-reproducer": "/text?tag=ReproC&x=15f82345e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=9f894bd92023de02",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=fb33c6510d5595144d585aa194d377cf74d31911",
+            "kernel-source-commit": "fb33c6510d5595144d585aa194d377cf74d31911",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/749688d22abef3f3cb9a0480e15c19a3f2ed8e13",
+            "syzkaller-commit": "749688d22abef3f3cb9a0480e15c19a3f2ed8e13",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16ee8fdde00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "alloc_branch",
+            "fs/minix/itree_common.c"
+        ]
+    ],
+    "patch_commit_date": "2020-08-12T01:35:24+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "2fb3244f0a58ceb3d866ac63f644dfa31cae430f",
+    "patch": "diff --git a/fs/minix/itree_common.c b/fs/minix/itree_common.c\nindex 043c3fdbc8e7..446148792f41 100644\n--- a/fs/minix/itree_common.c\n+++ b/fs/minix/itree_common.c\n@@ -75,6 +75,7 @@ static int alloc_branch(struct inode *inode,\n \tint n = 0;\n \tint i;\n \tint parent = minix_new_block(inode);\n+\tint err = -ENOSPC;\n \n \tbranch[0].key = cpu_to_block(parent);\n \tif (parent) for (n = 1; n < num; n++) {\n@@ -85,6 +86,11 @@ static int alloc_branch(struct inode *inode,\n \t\t\tbreak;\n \t\tbranch[n].key = cpu_to_block(nr);\n \t\tbh = sb_getblk(inode->i_sb, parent);\n+\t\tif (!bh) {\n+\t\t\tminix_free_block(inode, nr);\n+\t\t\terr = -ENOMEM;\n+\t\t\tbreak;\n+\t\t}\n \t\tlock_buffer(bh);\n \t\tmemset(bh->b_data, 0, bh->b_size);\n \t\tbranch[n].bh = bh;\n@@ -103,7 +109,7 @@ static int alloc_branch(struct inode *inode,\n \t\tbforget(branch[i].bh);\n \tfor (i = 0; i < n; i++)\n \t\tminix_free_block(inode, block_to_cpu(branch[i].key));\n-\treturn -ENOSPC;\n+\treturn err;\n }\n \n static inline int splice_branch(struct inode *inode,\n",
+    "patch_modified_files": [
+        "fs/minix/itree_common.c"
+    ]
+}

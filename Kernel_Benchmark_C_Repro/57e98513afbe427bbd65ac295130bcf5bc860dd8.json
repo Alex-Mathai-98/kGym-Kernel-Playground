@@ -1,0 +1,63 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Write in __sco_sock_close",
+    "display-title": "KASAN: use-after-free Write in __sco_sock_close",
+    "id": "57e98513afbe427bbd65ac295130bcf5bc860dd8",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: Fix null pointer dereference in hci_event_packet()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6dfccd13db2ff2b709ef60a50163925d477549aa",
+            "hash": "6dfccd13db2ff2b709ef60a50163925d477549aa",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "[media] radio-bcm2048: don't ignore errors",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=43ea43b9d8b27b7acd443ec59319faa3cdb8a616",
+        "hash": "43ea43b9d8b27b7acd443ec59319faa3cdb8a616",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ab11c505abeb19f5@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12cf1904900000",
+            "c-reproducer": "/text?tag=ReproC&x=10d52e14900000",
+            "kernel-config": "/text?tag=KernelConfig&x=e59ee776d5aa8d55",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=ac3a0c8472969a03c0496ae774b3a29eb26c8d5a",
+            "kernel-source-commit": "ac3a0c8472969a03c0496ae774b3a29eb26c8d5a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/63a7334112fa63edb0c0a3f317d3d92135a6ead9",
+            "syzkaller-commit": "63a7334112fa63edb0c0a3f317d3d92135a6ead9",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=148af3a2900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "hci_phy_link_complete_evt",
+            "net/bluetooth/hci_event.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "bcm2048_set_rds_no_lock",
+            "drivers/staging/media/bcm2048/radio-bcm2048.c"
+        ]
+    ],
+    "patch_commit_date": "2020-09-30T14:18:13+00:00",
+    "cause_commit_date": "2016-10-12T11:21:43+00:00",
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "547801380ec7e6104ea679f599d03c342b4b39a0",
+    "patch": "diff --git a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c\nindex f04963914366..e72982b69f6b 100644\n--- a/net/bluetooth/hci_event.c\n+++ b/net/bluetooth/hci_event.c\n@@ -4941,6 +4941,11 @@ static void hci_phy_link_complete_evt(struct hci_dev *hdev,\n \t\treturn;\n \t}\n \n+\tif (!hcon->amp_mgr) {\n+\t\thci_dev_unlock(hdev);\n+\t\treturn;\n+\t}\n+\n \tif (ev->status) {\n \t\thci_conn_del(hcon);\n \t\thci_dev_unlock(hdev);\n",
+    "patch_modified_files": [
+        "net/bluetooth/hci_event.c"
+    ]
+}

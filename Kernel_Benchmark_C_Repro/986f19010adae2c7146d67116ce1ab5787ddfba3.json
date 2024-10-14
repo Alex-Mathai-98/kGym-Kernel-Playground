@@ -1,0 +1,68 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in snd_rawmidi_transmit",
+    "display-title": "KASAN: use-after-free Read in snd_rawmidi_transmit",
+    "id": "986f19010adae2c7146d67116ce1ab5787ddfba3",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ALSA: usb-audio: Cancel pending work at closing a MIDI substream",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0125de38122f0f66bf61336158d12a1aabfe6425",
+            "hash": "0125de38122f0f66bf61336158d12a1aabfe6425",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "igc: Remove igc_set_spd_dplx method",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d098538ed4e8a6c09f86cf243f406c1451066040",
+        "hash": "d098538ed4e8a6c09f86cf243f406c1451066040",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000915bd505ddaff576@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in snd_rawmidi_transmit",
+            "syz-reproducer": "/text?tag=ReproSyz&x=119d1fcbf00000",
+            "c-reproducer": "/text?tag=ReproC&x=17716bedf00000",
+            "kernel-config": "/text?tag=KernelConfig&x=f915857c44e13980",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=2a5699b0de4ee623d77f183c8e8e62691bd60a70",
+            "kernel-source-commit": "2a5699b0de4ee623d77f183c8e8e62691bd60a70",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3666edfeb55080ebe138d77417fa96fe2555d6bb",
+            "syzkaller-commit": "3666edfeb55080ebe138d77417fa96fe2555d6bb",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=162d7947f00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "snd_usbmidi_output_open",
+            "sound/usb/midi.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "igc_reinit_queues",
+            "drivers/net/ethernet/intel/igc/igc.h"
+        ],
+        [
+            "igc_rd32",
+            "drivers/net/ethernet/intel/igc/igc_main.c"
+        ]
+    ],
+    "patch_commit_date": "2022-05-25T13:12:03+00:00",
+    "cause_commit_date": "2022-03-21T06:05:10+00:00",
+    "subsystems": [
+        "usb",
+        "sound"
+    ],
+    "parent_of_fix_commit": "4c691a287d4ee0c308708c1d6f9e0cc7513463f8",
+    "patch": "diff --git a/sound/usb/midi.c b/sound/usb/midi.c\nindex 7c6ca2b433a5..344fbeadf161 100644\n--- a/sound/usb/midi.c\n+++ b/sound/usb/midi.c\n@@ -1145,6 +1145,9 @@ static int snd_usbmidi_output_open(struct snd_rawmidi_substream *substream)\n \n static int snd_usbmidi_output_close(struct snd_rawmidi_substream *substream)\n {\n+\tstruct usbmidi_out_port *port = substream->runtime->private_data;\n+\n+\tcancel_work_sync(&port->ep->work);\n \treturn substream_open(substream, 0, 0);\n }\n \n",
+    "patch_modified_files": [
+        "sound/usb/midi.c"
+    ]
+}

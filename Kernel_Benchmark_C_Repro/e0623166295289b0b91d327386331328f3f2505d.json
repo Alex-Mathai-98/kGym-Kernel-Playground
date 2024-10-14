@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "WARNING in hsr_dev_finalize",
+    "display-title": "WARNING in hsr_dev_finalize",
+    "id": "e0623166295289b0b91d327386331328f3f2505d",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "hsr: fix interface leak in error path of hsr_dev_finalize()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ccfc9df1352be5b2f391091e18c4b2395d30ce78",
+            "hash": "ccfc9df1352be5b2f391091e18c4b2395d30ce78",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a5de6405a8ffe8f2@google.com/T/",
+        "https://lore.kernel.org/all/20200702170619.10378-1-ap420073@gmail.com/T/",
+        "https://lore.kernel.org/all/20200720152825.863040590@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17bbeb75100000",
+            "c-reproducer": "/text?tag=ReproC&x=1587d955100000",
+            "kernel-config": "/text?tag=KernelConfig&x=bf3aec367b9ab569",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4a21185cda0fbb860580eeeb4f1a70a9cda332a4",
+            "kernel-source-commit": "4a21185cda0fbb860580eeeb4f1a70a9cda332a4",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/aea82c003a1826ebd9bf53194bb40fe911f9c23e",
+            "syzkaller-commit": "aea82c003a1826ebd9bf53194bb40fe911f9c23e",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10ddf423100000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "hsr_dev_finalize",
+            "net/hsr/hsr_device.c"
+        ]
+    ],
+    "patch_commit_date": "2020-07-02T17:06:19+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "6dbb89014dc303facc54d33ae64419d2f9c8ff32",
+    "patch": "diff --git a/net/hsr/hsr_device.c b/net/hsr/hsr_device.c\nindex 478852ef98ef..a6f4e9f65b14 100644\n--- a/net/hsr/hsr_device.c\n+++ b/net/hsr/hsr_device.c\n@@ -415,6 +415,7 @@ int hsr_dev_finalize(struct net_device *hsr_dev, struct net_device *slave[2],\n \t\t     unsigned char multicast_spec, u8 protocol_version,\n \t\t     struct netlink_ext_ack *extack)\n {\n+\tbool unregister = false;\n \tstruct hsr_priv *hsr;\n \tint res;\n \n@@ -466,25 +467,27 @@ int hsr_dev_finalize(struct net_device *hsr_dev, struct net_device *slave[2],\n \tif (res)\n \t\tgoto err_unregister;\n \n+\tunregister = true;\n+\n \tres = hsr_add_port(hsr, slave[0], HSR_PT_SLAVE_A, extack);\n \tif (res)\n-\t\tgoto err_add_slaves;\n+\t\tgoto err_unregister;\n \n \tres = hsr_add_port(hsr, slave[1], HSR_PT_SLAVE_B, extack);\n \tif (res)\n-\t\tgoto err_add_slaves;\n+\t\tgoto err_unregister;\n \n \thsr_debugfs_init(hsr, hsr_dev);\n \tmod_timer(&hsr->prune_timer, jiffies + msecs_to_jiffies(PRUNE_PERIOD));\n \n \treturn 0;\n \n-err_add_slaves:\n-\tunregister_netdevice(hsr_dev);\n err_unregister:\n \thsr_del_ports(hsr);\n err_add_master:\n \thsr_del_self_node(hsr);\n \n+\tif (unregister)\n+\t\tunregister_netdevice(hsr_dev);\n \treturn res;\n }\n",
+    "patch_modified_files": [
+        "net/hsr/hsr_device.c"
+    ]
+}

@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "INFO: task hung in flush_workqueue",
+    "display-title": "INFO: task hung in flush_workqueue",
+    "id": "a8afc55e6cd0cac79fd97a5c0d2272751dc558fc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: vim2m: use cancel_delayed_work_sync instead of flush_schedule_work",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=52117be68b82ee05c96da0a7beec319906ccf6cc",
+            "hash": "52117be68b82ee05c96da0a7beec319906ccf6cc",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000003dc7805799d3dd8@google.com/T/",
+        "https://lore.kernel.org/all/20190107104437.308206189@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190903162519.7136-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190913130559.669563815@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/b9c05ebb-6cb3-d6b3-f2e4-48720f3a05bd@xs4all.nl/T/",
+        "https://lore.kernel.org/all/ff77abc3-7c15-8319-f500-a48db4f4bd5d@xs4all.nl/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12c67583400000",
+            "c-reproducer": "/text?tag=ReproC&x=15ce682b400000",
+            "kernel-config": "/text?tag=KernelConfig&x=9384ecb1c973baed",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d2ff0ff2c23f1bacd35073bf50e6c18298a8d530",
+            "kernel-source-commit": "d2ff0ff2c23f1bacd35073bf50e6c18298a8d530",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8bd6bd63656d411729c450d452e1355b42adf900",
+            "syzkaller-commit": "8bd6bd63656d411729c450d452e1355b42adf900",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10e4485d400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "vim2m_start_streaming",
+            "drivers/media/platform/vim2m.c"
+        ]
+    ],
+    "patch_commit_date": "2018-11-07T14:04:54+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "media"
+    ],
+    "parent_of_fix_commit": "e10b40f3304360d3a2d07d690ff12197f828f2c8",
+    "patch": "diff --git a/drivers/media/platform/vim2m.c b/drivers/media/platform/vim2m.c\nindex 035c7b7c8d87..d01821a6906a 100644\n--- a/drivers/media/platform/vim2m.c\n+++ b/drivers/media/platform/vim2m.c\n@@ -803,10 +803,11 @@ static int vim2m_start_streaming(struct vb2_queue *q, unsigned count)\n static void vim2m_stop_streaming(struct vb2_queue *q)\n {\n \tstruct vim2m_ctx *ctx = vb2_get_drv_priv(q);\n+\tstruct vim2m_dev *dev = ctx->dev;\n \tstruct vb2_v4l2_buffer *vbuf;\n \tunsigned long flags;\n \n-\tflush_scheduled_work();\n+\tcancel_delayed_work_sync(&dev->work_run);\n \tfor (;;) {\n \t\tif (V4L2_TYPE_IS_OUTPUT(q->type))\n \t\t\tvbuf = v4l2_m2m_src_buf_remove(ctx->fh.m2m_ctx);\n",
+    "patch_modified_files": [
+        "drivers/media/platform/vim2m.c"
+    ]
+}

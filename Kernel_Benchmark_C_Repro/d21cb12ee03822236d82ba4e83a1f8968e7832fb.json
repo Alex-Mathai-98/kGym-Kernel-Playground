@@ -1,0 +1,207 @@
+{
+    "version": 1,
+    "title": "KASAN: null-ptr-deref Read in filemap_fault",
+    "display-title": "KASAN: null-ptr-deref Read in filemap_fault",
+    "id": "d21cb12ee03822236d82ba4e83a1f8968e7832fb",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "filemap: Handle error return from __filemap_get_folio()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=38a55db9877cae9aa9cc53bb0464b7434fb03e75",
+            "hash": "38a55db9877cae9aa9cc53bb0464b7434fb03e75",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "mm: return an ERR_PTR from __filemap_get_folio",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=66dabbb65d673aef40dd17bf62c042be8f6d4a4b",
+        "hash": "66dabbb65d673aef40dd17bf62c042be8f6d4a4b",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000000a842e05fac4fa77@google.com/T/",
+        "https://lore.kernel.org/all/00000000000090900c05fa656913@google.com/T/",
+        "https://lore.kernel.org/all/20230503154526.1223095-1-hch@lst.de/T/",
+        "https://lore.kernel.org/all/20230506160415.2992089-1-willy@infradead.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: null-ptr-deref Read in filemap_fault",
+            "syz-reproducer": "/text?tag=ReproSyz&x=137594c4280000",
+            "c-reproducer": "/text?tag=ReproC&x=10cfd602280000",
+            "kernel-config": "/text?tag=KernelConfig&x=d1c8518c09009bad",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=865fdb08197e657c59e74a35fa32362b12397f58",
+            "kernel-source-commit": "865fdb08197e657c59e74a35fa32362b12397f58",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/52d40fd252bb12a2d5ec5573ce4d03b63682dfdc",
+            "syzkaller-commit": "52d40fd252bb12a2d5ec5573ce4d03b63682dfdc",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15452b1c280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "filemap_fault",
+            "mm/filemap.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "mc_handle_file_pte",
+            "mm/memcontrol.c"
+        ],
+        [
+            "__try_to_reclaim_swap",
+            "mm/swapfile.c"
+        ],
+        [
+            "hugetlb_fault",
+            "mm/hugetlb.c"
+        ],
+        [
+            "filemap_get_entry",
+            "mm/filemap.c"
+        ],
+        [
+            "afs_redirty_pages",
+            "fs/afs/write.c"
+        ],
+        [
+            "pagecache_get_page",
+            "include/linux/pagemap.h"
+        ],
+        [
+            "truncate_inode_pages_range",
+            "mm/truncate.c"
+        ],
+        [
+            "nfs_write_begin",
+            "fs/nfs/file.c"
+        ],
+        [
+            "swap_cache_get_folio",
+            "mm/swap_state.c"
+        ],
+        [
+            "shmem_get_link",
+            "mm/shmem.c"
+        ],
+        [
+            "try_to_unuse",
+            "mm/swapfile.c"
+        ],
+        [
+            "filemap_fault",
+            "mm/filemap.c"
+        ],
+        [
+            "filemap_lock_folio",
+            "include/linux/pagemap.h"
+        ],
+        [
+            "filemap_get_incore_folio",
+            "mm/swap_state.c"
+        ],
+        [
+            "mext_folio_double_lock",
+            "fs/ext4/move_extent.c"
+        ],
+        [
+            "afs_kill_pages",
+            "fs/afs/write.c"
+        ],
+        [
+            "shmem_unused_huge_shrink",
+            "mm/shmem.c"
+        ],
+        [
+            "iomap_write_delalloc_scan",
+            "fs/iomap/buffered-io.c"
+        ],
+        [
+            "netfs_write_begin",
+            "fs/netfs/buffered_read.c"
+        ],
+        [
+            "split_huge_pages_in_file",
+            "mm/huge_memory.c"
+        ],
+        [
+            "nilfs_copy_back_pages",
+            "fs/nilfs2/page.c"
+        ],
+        [
+            "pagecache_get_page",
+            "mm/folio-compat.c"
+        ],
+        [
+            "filemap_get_folio",
+            "include/linux/pagemap.h"
+        ],
+        [
+            "afs_dir_get_folio",
+            "fs/afs/dir_edit.c"
+        ],
+        [
+            "afs_read_dir",
+            "fs/afs/dir.c"
+        ],
+        [
+            "hugetlb_mcopy_atomic_pte",
+            "mm/hugetlb.c"
+        ],
+        [
+            "EXPORT_SYMBOL_GPL",
+            "fs/iomap/buffered-io.c"
+        ],
+        [
+            "__read_swap_cache_async",
+            "mm/swap_state.c"
+        ],
+        [
+            "mincore_page",
+            "mm/mincore.c"
+        ],
+        [
+            "hugetlbfs_zero_partial_page",
+            "fs/hugetlbfs/inode.c"
+        ],
+        [
+            "ext4_wait_for_tail_page_commit",
+            "fs/ext4/inode.c"
+        ],
+        [
+            "hugetlb_no_page",
+            "mm/hugetlb.c"
+        ],
+        [
+            "afs_dir_iterate",
+            "fs/afs/dir.c"
+        ],
+        [
+            "nilfs_copy_dirty_pages",
+            "fs/nilfs2/page.c"
+        ],
+        [
+            "__filemap_get_folio",
+            "mm/filemap.c"
+        ],
+        [
+            "do_read_cache_folio",
+            "mm/filemap.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-06T16:04:14+00:00",
+    "cause_commit_date": "2023-03-07T14:34:10+00:00",
+    "subsystems": [
+        "mm",
+        "udf"
+    ],
+    "parent_of_fix_commit": "dd9e11d6477a52ede9ebe575c83285e79e823889",
+    "patch": "diff --git a/mm/filemap.c b/mm/filemap.c\nindex a34abfe8c654..b4c9bd368b7e 100644\n--- a/mm/filemap.c\n+++ b/mm/filemap.c\n@@ -3378,7 +3378,7 @@ vm_fault_t filemap_fault(struct vm_fault *vmf)\n \t * re-find the vma and come back and find our hopefully still populated\n \t * page.\n \t */\n-\tif (folio)\n+\tif (!IS_ERR(folio))\n \t\tfolio_put(folio);\n \tif (mapping_locked)\n \t\tfilemap_invalidate_unlock_shared(mapping);\n",
+    "patch_modified_files": [
+        "mm/filemap.c"
+    ]
+}

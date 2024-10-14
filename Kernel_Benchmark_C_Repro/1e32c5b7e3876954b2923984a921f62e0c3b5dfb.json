@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "WARNING in io_disable_sqo_submit",
+    "display-title": "WARNING in io_disable_sqo_submit",
+    "id": "1e32c5b7e3876954b2923984a921f62e0c3b5dfb",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: fix false positive sqo warning on flush",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6b393a1ff1746a1c91bd95cbb2d79b104d8f15ac",
+            "hash": "6b393a1ff1746a1c91bd95cbb2d79b104d8f15ac",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "mac80211: always wind down STA state",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=dcd479e10a0510522a5d88b29b8f79ea3467d501",
+        "hash": "dcd479e10a0510522a5d88b29b8f79ea3467d501",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f054d005b8f87274@google.com/T/",
+        "https://lore.kernel.org/all/cover.1610774936.git.asml.silence@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in io_disable_sqo_submit",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1156bd20d00000",
+            "c-reproducer": "/text?tag=ReproC&x=15ce819f500000",
+            "kernel-config": "/text?tag=KernelConfig&x=39701af622f054a9",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9f29bd8b2e7132b409178d1367dae1813017bd0e",
+            "kernel-source-commit": "9f29bd8b2e7132b409178d1367dae1813017bd0e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d4f4eca56fbea6f58a4d5adfd19cb5e0dc32fe46",
+            "syzkaller-commit": "d4f4eca56fbea6f58a4d5adfd19cb5e0dc32fe46",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=149cbea4d00000"
+        }
+    ],
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "c93cc9e16d88e0f5ea95d2d65d58a8a4dab258bc",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex 5cda878b69cf..616c5f732a26 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -8918,8 +8918,6 @@ static void __io_uring_cancel_task_requests(struct io_ring_ctx *ctx,\n \n static void io_disable_sqo_submit(struct io_ring_ctx *ctx)\n {\n-\tWARN_ON_ONCE(ctx->sqo_task != current);\n-\n \tmutex_lock(&ctx->uring_lock);\n \tctx->sqo_dead = 1;\n \tmutex_unlock(&ctx->uring_lock);\n@@ -8941,6 +8939,7 @@ static void io_uring_cancel_task_requests(struct io_ring_ctx *ctx,\n \n \tif ((ctx->flags & IORING_SETUP_SQPOLL) && ctx->sq_data) {\n \t\t/* for SQPOLL only sqo_task has task notes */\n+\t\tWARN_ON_ONCE(ctx->sqo_task != current);\n \t\tio_disable_sqo_submit(ctx);\n \t\ttask = ctx->sq_data->thread;\n \t\tatomic_inc(&task->io_uring->in_idle);\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

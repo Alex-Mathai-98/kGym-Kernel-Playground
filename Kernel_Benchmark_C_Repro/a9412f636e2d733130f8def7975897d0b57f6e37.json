@@ -1,0 +1,67 @@
+{
+    "version": 1,
+    "title": "memory leak in autofs_wait",
+    "display-title": "memory leak in autofs_wait",
+    "id": "a9412f636e2d733130f8def7975897d0b57f6e37",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "autofs: fix memory leak of waitqueues in autofs_catatonic_mode",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ccbe77f7e45dfb4420f7f531b650c00c6e9c7507",
+            "hash": "ccbe77f7e45dfb4420f7f531b650c00c6e9c7507",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c5f92d05dfd68500@google.com/T/",
+        "https://lore.kernel.org/all/169112719161.7590.6700123246297365841.stgit@donald.themaw.net/T/",
+        "https://lore.kernel.org/all/20230211195950.452364-1-pchelkin@ispras.ru/T/",
+        "https://lore.kernel.org/all/20230907154338.3421582-2-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230907154349.3421707-2-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230907154400.3421858-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230907154408.3421918-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230907154416.3421966-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230907154423.3422014-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230907154430.3422062-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230907154438.3422099-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230920112826.700554884@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20230920112830.432240248@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20230920112835.606672517@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20230920112842.349000704@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20230920112845.931609612@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20230920112853.679254815@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20230920112906.580988977@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in autofs_wait",
+            "syz-reproducer": "/text?tag=ReproSyz&x=152799c5f00000",
+            "c-reproducer": "/text?tag=ReproC&x=128ba38df00000",
+            "kernel-config": "/text?tag=KernelConfig&x=50f4d49cdcacc43c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3b5e1590a26713a8c76896f0f1b99f52ec24e72f",
+            "kernel-source-commit": "3b5e1590a26713a8c76896f0f1b99f52ec24e72f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/7268fa62257981feeebc89e55b5ce45294beff8c",
+            "syzkaller-commit": "7268fa62257981feeebc89e55b5ce45294beff8c",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=120c9181f00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "autofs_catatonic_mode",
+            "fs/autofs/waitq.c"
+        ]
+    ],
+    "patch_commit_date": "2023-08-04T05:33:12+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "autofs"
+    ],
+    "parent_of_fix_commit": "06c2afb862f9da8dc5efa4b6076a0e48c3fbaaa5",
+    "patch": "diff --git a/fs/autofs/waitq.c b/fs/autofs/waitq.c\nindex 54c1f8b8b075..efdc76732fae 100644\n--- a/fs/autofs/waitq.c\n+++ b/fs/autofs/waitq.c\n@@ -32,8 +32,9 @@ void autofs_catatonic_mode(struct autofs_sb_info *sbi)\n \t\twq->status = -ENOENT; /* Magic is gone - report failure */\n \t\tkfree(wq->name.name - wq->offset);\n \t\twq->name.name = NULL;\n-\t\twq->wait_ctr--;\n \t\twake_up_interruptible(&wq->queue);\n+\t\tif (!--wq->wait_ctr)\n+\t\t\tkfree(wq);\n \t\twq = nwq;\n \t}\n \tfput(sbi->pipe);\t/* Close the pipe */\n",
+    "patch_modified_files": [
+        "fs/autofs/waitq.c"
+    ]
+}

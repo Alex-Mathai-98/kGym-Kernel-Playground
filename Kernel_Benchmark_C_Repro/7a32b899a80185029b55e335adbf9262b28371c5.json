@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "general protection fault in open_xa_dir",
+    "display-title": "general protection fault in open_xa_dir",
+    "id": "7a32b899a80185029b55e335adbf9262b28371c5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "reiserfs: Fix oops during mount",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c2bb80b8bdd04dfe32364b78b61b6a47f717af52",
+            "hash": "c2bb80b8bdd04dfe32364b78b61b6a47f717af52",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000006c550e05b08730e2@google.com/T/",
+        "https://lore.kernel.org/all/160312696166.7002.16055147787497008532.tip-bot2@tip-bot2/T/",
+        "https://lore.kernel.org/all/20200930151616.13466-1-jack@suse.cz/T/",
+        "https://lore.kernel.org/all/20201001090547.431840-1-anmol.karan123@gmail.com/T/",
+        "https://lore.kernel.org/all/20201016090435.423923738@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201016090437.153175229@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201016090437.170032996@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201016090437.205626543@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201016090437.265805669@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201016090437.301376476@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201016090437.308349327@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=107b026b900000",
+            "c-reproducer": "/text?tag=ReproC&x=107f17e3900000",
+            "kernel-config": "/text?tag=KernelConfig&x=adebb40048274f92",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=ccc1d052eff9f3cfe59d201263903fe1d46c79a5",
+            "kernel-source-commit": "ccc1d052eff9f3cfe59d201263903fe1d46c79a5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/5abc3f1ab298244473b613c289f1536e366fcf04",
+            "syzkaller-commit": "5abc3f1ab298244473b613c289f1536e366fcf04",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=168a460f900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "reiserfs_xattr_get",
+            "fs/reiserfs/xattr.c"
+        ]
+    ],
+    "patch_commit_date": "2020-09-30T15:08:20+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "reiserfs"
+    ],
+    "parent_of_fix_commit": "44ac6b829c4e173fdf6df18e6dd86aecf9a3dc99",
+    "patch": "diff --git a/fs/reiserfs/xattr.c b/fs/reiserfs/xattr.c\nindex 28b241cd6987..fe63a7c3e0da 100644\n--- a/fs/reiserfs/xattr.c\n+++ b/fs/reiserfs/xattr.c\n@@ -674,6 +674,13 @@ reiserfs_xattr_get(struct inode *inode, const char *name, void *buffer,\n \tif (get_inode_sd_version(inode) == STAT_DATA_V1)\n \t\treturn -EOPNOTSUPP;\n \n+\t/*\n+\t * priv_root needn't be initialized during mount so allow initial\n+\t * lookups to succeed.\n+\t */\n+\tif (!REISERFS_SB(inode->i_sb)->priv_root)\n+\t\treturn 0;\n+\n \tdentry = xattr_lookup(inode, name, XATTR_REPLACE);\n \tif (IS_ERR(dentry)) {\n \t\terr = PTR_ERR(dentry);\n",
+    "patch_modified_files": [
+        "fs/reiserfs/xattr.c"
+    ]
+}

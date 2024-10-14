@@ -1,0 +1,82 @@
+{
+    "version": 1,
+    "title": "general protection fault in erofs_bread",
+    "display-title": "general protection fault in erofs_bread (2)",
+    "id": "2b9454f4b6b7a416dcd8de9eef769b14115c2c86",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "erofs: fix null-ptr-deref caused by erofs_xattr_prefixes_init",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0a17567b4a85243ac1620886b75b3813acde41fc",
+            "hash": "0a17567b4a85243ac1620886b75b3813acde41fc",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        },
+        {
+            "title": "erofs: fix null-ptr-deref caused by erofs_xattr_prefixes_init",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "erofs: enable long extended attribute name prefixes",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6a318ccd7e083729cbcdbd174d7070f6b7d24130",
+        "hash": "6a318ccd7e083729cbcdbd174d7070f6b7d24130",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000d03b0805fbe71d55@google.com/T/",
+        "https://lore.kernel.org/all/20230515092148.1485-1-jefflexu@linux.alibaba.com/T/",
+        "https://lore.kernel.org/all/20230515103941.129784-1-jefflexu@linux.alibaba.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in erofs_bread",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13dd834e280000",
+            "c-reproducer": "/text?tag=ReproC&x=167ef106280000",
+            "kernel-config": "/text?tag=KernelConfig&x=6beb6ffe4f59ef2a",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f1fcbaa18b28dec10281551dfe6ed3a3ed80e3d6",
+            "kernel-source-commit": "f1fcbaa18b28dec10281551dfe6ed3a3ed80e3d6",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/eaac4681d47d67269ffba8e824990026bda5eb46",
+            "syzkaller-commit": "eaac4681d47d67269ffba8e824990026bda5eb46",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13821ca1280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "erofs_xattr_prefixes_init",
+            "fs/erofs/xattr.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "erofs_read_superblock",
+            "fs/erofs/super.c"
+        ],
+        [
+            "erofs_fc_fill_super",
+            "fs/erofs/super.c"
+        ],
+        [
+            "erofs_put_super",
+            "fs/erofs/super.c"
+        ],
+        [
+            "EROFS_FEATURE_FUNCS",
+            "fs/erofs/internal.h"
+        ]
+    ],
+    "patch_commit_date": "2023-05-15T10:39:41+00:00",
+    "cause_commit_date": "2023-04-07T22:28:08+00:00",
+    "subsystems": [
+        "erofs"
+    ],
+    "parent_of_fix_commit": "f1fcbaa18b28dec10281551dfe6ed3a3ed80e3d6",
+    "patch": "diff --git a/fs/erofs/xattr.c b/fs/erofs/xattr.c\nindex cd80499351e0..bbfe7ce170d2 100644\n--- a/fs/erofs/xattr.c\n+++ b/fs/erofs/xattr.c\n@@ -675,7 +675,7 @@ int erofs_xattr_prefixes_init(struct super_block *sb)\n \tif (!pfs)\n \t\treturn -ENOMEM;\n \n-\tif (erofs_sb_has_fragments(sbi))\n+\tif (sbi->packed_inode)\n \t\tbuf.inode = sbi->packed_inode;\n \telse\n \t\terofs_init_metabuf(&buf, sb);\n",
+    "patch_modified_files": [
+        "fs/erofs/xattr.c"
+    ]
+}

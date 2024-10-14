@@ -1,0 +1,45 @@
+{
+    "version": 1,
+    "title": "kernel BUG at net/l2tp/l2tp_core.c:LINE!",
+    "display-title": "kernel BUG at net/l2tp/l2tp_core.c:LINE!",
+    "id": "d2c64e2d7c308cce1b51fd51addd4284cd825792",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "bpf: net: Avoid incorrect bpf_sk_reuseport_detach call",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c9a368f1c0fbe2e3a21ebf231caeae58b18b2681",
+            "hash": "c9a368f1c0fbe2e3a21ebf231caeae58b18b2681",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ddeefc05a9434198@google.com/T/",
+        "https://lore.kernel.org/all/20200707093730.GC21324@katalix.com/T/",
+        "https://lore.kernel.org/all/20200709061057.4018499-1-kafai@fb.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=143f0f95100000",
+            "c-reproducer": "/text?tag=ReproC&x=171ffe75100000",
+            "kernel-config": "/text?tag=KernelConfig&x=be4578b3f1083656",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7ae77150d94d3b535c7b85e6b3647113095e79bf",
+            "kernel-source-commit": "7ae77150d94d3b535c7b85e6b3647113095e79bf",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/54566aff1679fc74487d3efb9f7bbfbc21beed4b",
+            "syzkaller-commit": "54566aff1679fc74487d3efb9f7bbfbc21beed4b",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16d53d65100000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "f3dda7a679df183e798b86e7b6ec05ab35476de3",
+    "patch": "diff --git a/include/net/sock.h b/include/net/sock.h\nindex 3428619faae4..1183507df95b 100644\n--- a/include/net/sock.h\n+++ b/include/net/sock.h\n@@ -533,7 +533,8 @@ enum sk_pacing {\n  * be copied.\n  */\n #define SK_USER_DATA_NOCOPY\t1UL\n-#define SK_USER_DATA_PTRMASK\t~(SK_USER_DATA_NOCOPY)\n+#define SK_USER_DATA_BPF\t2UL\t/* Managed by BPF */\n+#define SK_USER_DATA_PTRMASK\t~(SK_USER_DATA_NOCOPY | SK_USER_DATA_BPF)\n \n /**\n  * sk_user_data_is_nocopy - Test if sk_user_data pointer must not be copied\ndiff --git a/kernel/bpf/reuseport_array.c b/kernel/bpf/reuseport_array.c\nindex a95bc8d7e812..cae9d505e04a 100644\n--- a/kernel/bpf/reuseport_array.c\n+++ b/kernel/bpf/reuseport_array.c\n@@ -24,7 +24,7 @@ void bpf_sk_reuseport_detach(struct sock *sk)\n \n \twrite_lock_bh(&sk->sk_callback_lock);\n \tsk_user_data = (uintptr_t)sk->sk_user_data;\n-\tif (sk_user_data) {\n+\tif (sk_user_data & SK_USER_DATA_BPF) {\n \t\tstruct sock __rcu **socks;\n \n \t\tsocks = (void *)(sk_user_data & SK_USER_DATA_PTRMASK);\n@@ -309,7 +309,8 @@ int bpf_fd_reuseport_array_update_elem(struct bpf_map *map, void *key,\n \tif (err)\n \t\tgoto put_file_unlock;\n \n-\tsk_user_data = (uintptr_t)&array->ptrs[index] | SK_USER_DATA_NOCOPY;\n+\tsk_user_data = (uintptr_t)&array->ptrs[index] | SK_USER_DATA_NOCOPY |\n+\t\tSK_USER_DATA_BPF;\n \tWRITE_ONCE(nsk->sk_user_data, (void *)sk_user_data);\n \trcu_assign_pointer(array->ptrs[index], nsk);\n \tfree_osk = osk;\n",
+    "patch_modified_files": [
+        "include/net/sock.h",
+        "kernel/bpf/reuseport_array.c"
+    ]
+}

@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "memory leak in hwsim_new_radio_nl",
+    "display-title": "memory leak in hwsim_new_radio_nl",
+    "id": "0d0ea881c98701d8dcee7f48b634a84962689fa1",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mac80211_hwsim: fix memory leak in hwsim_new_radio_nl",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=098abbd48ec1accf111dde50a2a5392f2a15f59c",
+            "hash": "098abbd48ec1accf111dde50a2a5392f2a15f59c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000383da505fb8509b7@google.com/T/",
+        "https://lore.kernel.org/all/20230515034712.2425489-1-shaozhengchao@huawei.com/T/",
+        "https://lore.kernel.org/all/20230515092227.2691437-1-shaozhengchao@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in hwsim_new_radio_nl",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10b4577c280000",
+            "c-reproducer": "/text?tag=ReproC&x=14a9e29e280000",
+            "kernel-config": "/text?tag=KernelConfig&x=fa9562c0bfb72fa2",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=105131df9c3b27673392a6b7ff356360188dc869",
+            "kernel-source-commit": "105131df9c3b27673392a6b7ff356360188dc869",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/adb9a3cd3732374cec4a7914bb6db944c1b16ef2",
+            "syzkaller-commit": "adb9a3cd3732374cec4a7914bb6db944c1b16ef2",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17223b4c280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "hwsim_new_radio_nl",
+            "drivers/net/wireless/virtual/mac80211_hwsim.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-15T09:22:27+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "a8938bc881d2a03f9b77f19fae924fe798a01285",
+    "patch": "diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c\nindex 9a8faaf4c6b6..89c7a1420381 100644\n--- a/drivers/net/wireless/virtual/mac80211_hwsim.c\n+++ b/drivers/net/wireless/virtual/mac80211_hwsim.c\n@@ -5964,10 +5964,11 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)\n \t\t\tret = -ENOMEM;\n \t\t\tgoto out_free;\n \t\t}\n+\t\tparam.pmsr_capa = pmsr_capa;\n+\n \t\tret = parse_pmsr_capa(info->attrs[HWSIM_ATTR_PMSR_SUPPORT], pmsr_capa, info);\n \t\tif (ret)\n \t\t\tgoto out_free;\n-\t\tparam.pmsr_capa = pmsr_capa;\n \t}\n \n \tret = mac80211_hwsim_new_radio(info, &param);\n",
+    "patch_modified_files": [
+        "drivers/net/wireless/virtual/mac80211_hwsim.c"
+    ]
+}

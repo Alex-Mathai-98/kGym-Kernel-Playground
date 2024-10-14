@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "possible deadlock in freeze_super",
+    "display-title": "possible deadlock in freeze_super (2)",
+    "id": "49d3cefebc16427115b758d41b398be173a6face",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "gfs2: Improve gfs2_make_fs_rw error handling",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b66f723bb552ad59c2acb5d45ea45c890f84498b",
+            "hash": "b66f723bb552ad59c2acb5d45ea45c890f84498b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b9753505eaa93b18@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "possible deadlock in freeze_super",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14b638c0480000",
+            "c-reproducer": "/text?tag=ReproC&x=11b17270480000",
+            "kernel-config": "/text?tag=KernelConfig&x=68e0be42c8ee4bb4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1b929c02afd37871d5afb9d498426f83432e71c2",
+            "kernel-source-commit": "1b929c02afd37871d5afb9d498426f83432e71c2",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/44712fbc6b687170984c3562336a415b56d82607",
+            "syzkaller-commit": "44712fbc6b687170984c3562336a415b56d82607",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14cc2632480000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "gfs2_make_fs_rw",
+            "fs/gfs2/super.c"
+        ]
+    ],
+    "patch_commit_date": "2023-01-31T14:06:53+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "gfs2"
+    ],
+    "parent_of_fix_commit": "445cb1277e10d7e19b631ef8a64aa3f055df377d",
+    "patch": "diff --git a/fs/gfs2/super.c b/fs/gfs2/super.c\nindex 52c3502de58c..a83fa62106f0 100644\n--- a/fs/gfs2/super.c\n+++ b/fs/gfs2/super.c\n@@ -138,8 +138,10 @@ int gfs2_make_fs_rw(struct gfs2_sbd *sdp)\n \t\treturn -EIO;\n \n \terror = gfs2_find_jhead(sdp->sd_jdesc, &head, false);\n-\tif (error || gfs2_withdrawn(sdp))\n+\tif (error) {\n+\t\tgfs2_consist(sdp);\n \t\treturn error;\n+\t}\n \n \tif (!(head.lh_flags & GFS2_LOG_HEAD_UNMOUNT)) {\n \t\tgfs2_consist(sdp);\n@@ -151,7 +153,9 @@ int gfs2_make_fs_rw(struct gfs2_sbd *sdp)\n \tgfs2_log_pointers_init(sdp, head.lh_blkno);\n \n \terror = gfs2_quota_init(sdp);\n-\tif (!error && !gfs2_withdrawn(sdp))\n+\tif (!error && gfs2_withdrawn(sdp))\n+\t\terror = -EIO;\n+\tif (!error)\n \t\tset_bit(SDF_JOURNAL_LIVE, &sdp->sd_flags);\n \treturn error;\n }\n",
+    "patch_modified_files": [
+        "fs/gfs2/super.c"
+    ]
+}

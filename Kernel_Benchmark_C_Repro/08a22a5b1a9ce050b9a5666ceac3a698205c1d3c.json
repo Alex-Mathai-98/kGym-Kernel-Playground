@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "WARNING in isotp_tx_timer_handler",
+    "display-title": "WARNING in isotp_tx_timer_handler",
+    "id": "08a22a5b1a9ce050b9a5666ceac3a698205c1d3c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "can: isotp: isotp_sendmsg(): add result check for wait_event_interruptible()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9acf636215a6ce9362fe618e7da4913b8bfe84c8",
+            "hash": "9acf636215a6ce9362fe618e7da4913b8bfe84c8",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005fe14605b6ea4958@google.com/T/",
+        "https://lore.kernel.org/all/0f27c47f-b16e-b80e-2fbc-df7894266671@hartkopp.net/T/",
+        "https://lore.kernel.org/all/20210918092819.156291-1-william.xuanziyang@huawei.com/T/",
+        "https://lore.kernel.org/all/20211017210142.2108610-6-mkl@pengutronix.de/T/",
+        "https://lore.kernel.org/all/20211025190956.374447057@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211025191017.756020307@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/cover.1632653477.git.william.xuanziyang@huawei.com/T/",
+        "https://lore.kernel.org/all/cover.1633764159.git.william.xuanziyang@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1196822b500000",
+            "c-reproducer": "/text?tag=ReproC&x=12c75f97500000",
+            "kernel-config": "/text?tag=KernelConfig&x=3e7e34a83d606100",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=614cb5894306cfa2c7d9b6168182876ff5948735",
+            "kernel-source-commit": "614cb5894306cfa2c7d9b6168182876ff5948735",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c2c1d1dd603b7d66d283253ffbd61b8692712bd2",
+            "syzkaller-commit": "c2c1d1dd603b7d66d283253ffbd61b8692712bd2",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=134cffbd500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "isotp_sendmsg",
+            "net/can/isotp.c"
+        ]
+    ],
+    "patch_commit_date": "2021-10-09T07:40:18+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "can"
+    ],
+    "parent_of_fix_commit": "a4fbe70c5cb746441d56b28cf88161d9e0e25378",
+    "patch": "diff --git a/net/can/isotp.c b/net/can/isotp.c\nindex caaa532ece94..2ac29c2b2ca6 100644\n--- a/net/can/isotp.c\n+++ b/net/can/isotp.c\n@@ -865,7 +865,9 @@ static int isotp_sendmsg(struct socket *sock, struct msghdr *msg, size_t size)\n \t\t\treturn -EAGAIN;\n \n \t\t/* wait for complete transmission of current pdu */\n-\t\twait_event_interruptible(so->wait, so->tx.state == ISOTP_IDLE);\n+\t\terr = wait_event_interruptible(so->wait, so->tx.state == ISOTP_IDLE);\n+\t\tif (err)\n+\t\t\treturn err;\n \t}\n \n \tif (!size || size > MAX_MSG_LENGTH)\n",
+    "patch_modified_files": [
+        "net/can/isotp.c"
+    ]
+}

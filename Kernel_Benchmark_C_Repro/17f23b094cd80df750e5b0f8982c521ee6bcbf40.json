@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "title": "INFO: rcu detected stall in __process_echoes",
+    "display-title": "INFO: rcu detected stall in __process_echoes",
+    "id": "17f23b094cd80df750e5b0f8982c521ee6bcbf40",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "n_tty: Access echo_* variables carefully.",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ebec3f8f5271139df618ebdf8427e24ba102ba94",
+            "hash": "ebec3f8f5271139df618ebdf8427e24ba102ba94",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/001a1140e920eb829905687391d6@google.com/T/",
+        "https://lore.kernel.org/all/1527295994-3440-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp/T/",
+        "https://lore.kernel.org/all/20180706054524.595521988@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180706054712.332416244@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180710182337.047502999@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180710182449.285532226@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/lsq.1541965744.387173642@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12e1602b800000",
+            "c-reproducer": "/text?tag=ReproC&x=118e55ab800000",
+            "kernel-config": "/text?tag=KernelConfig&x=8addcf4530d93e53",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3eb2ce825ea1ad89d20f7a3b5780df850e4be274",
+            "kernel-source-commit": "3eb2ce825ea1ad89d20f7a3b5780df850e4be274",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/bf5e585c5e1b12fe80ee486fdd48eeb71a13fa21",
+            "syzkaller-commit": "bf5e585c5e1b12fe80ee486fdd48eeb71a13fa21",
+            "compiler-description": "gcc (GCC) 7.1.1 20170620",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16dee64b800000"
+        }
+    ],
+    "subsystems": [
+        "serial"
+    ],
+    "parent_of_fix_commit": "3d63b7e4ae0dc5e02d28ddd2fa1f945defc68d81",
+    "patch": "diff --git a/drivers/tty/n_tty.c b/drivers/tty/n_tty.c\nindex b279f8730e04..431742201709 100644\n--- a/drivers/tty/n_tty.c\n+++ b/drivers/tty/n_tty.c\n@@ -143,6 +143,7 @@ static inline unsigned char *read_buf_addr(struct n_tty_data *ldata, size_t i)\n \n static inline unsigned char echo_buf(struct n_tty_data *ldata, size_t i)\n {\n+\tsmp_rmb(); /* Matches smp_wmb() in add_echo_byte(). */\n \treturn ldata->echo_buf[i & (N_TTY_BUF_SIZE - 1)];\n }\n \n@@ -318,9 +319,7 @@ static inline void put_tty_queue(unsigned char c, struct n_tty_data *ldata)\n static void reset_buffer_flags(struct n_tty_data *ldata)\n {\n \tldata->read_head = ldata->canon_head = ldata->read_tail = 0;\n-\tldata->echo_head = ldata->echo_tail = ldata->echo_commit = 0;\n \tldata->commit_head = 0;\n-\tldata->echo_mark = 0;\n \tldata->line_start = 0;\n \n \tldata->erasing = 0;\n@@ -619,12 +618,19 @@ static size_t __process_echoes(struct tty_struct *tty)\n \told_space = space = tty_write_room(tty);\n \n \ttail = ldata->echo_tail;\n-\twhile (ldata->echo_commit != tail) {\n+\twhile (MASK(ldata->echo_commit) != MASK(tail)) {\n \t\tc = echo_buf(ldata, tail);\n \t\tif (c == ECHO_OP_START) {\n \t\t\tunsigned char op;\n \t\t\tint no_space_left = 0;\n \n+\t\t\t/*\n+\t\t\t * Since add_echo_byte() is called without holding\n+\t\t\t * output_lock, we might see only portion of multi-byte\n+\t\t\t * operation.\n+\t\t\t */\n+\t\t\tif (MASK(ldata->echo_commit) == MASK(tail + 1))\n+\t\t\t\tgoto not_yet_stored;\n \t\t\t/*\n \t\t\t * If the buffer byte is the start of a multi-byte\n \t\t\t * operation, get the next byte, which is either the\n@@ -636,6 +642,8 @@ static size_t __process_echoes(struct tty_struct *tty)\n \t\t\t\tunsigned int num_chars, num_bs;\n \n \t\t\tcase ECHO_OP_ERASE_TAB:\n+\t\t\t\tif (MASK(ldata->echo_commit) == MASK(tail + 2))\n+\t\t\t\t\tgoto not_yet_stored;\n \t\t\t\tnum_chars = echo_buf(ldata, tail + 2);\n \n \t\t\t\t/*\n@@ -730,7 +738,8 @@ static size_t __process_echoes(struct tty_struct *tty)\n \t/* If the echo buffer is nearly full (so that the possibility exists\n \t * of echo overrun before the next commit), then discard enough\n \t * data at the tail to prevent a subsequent overrun */\n-\twhile (ldata->echo_commit - tail >= ECHO_DISCARD_WATERMARK) {\n+\twhile (ldata->echo_commit > tail &&\n+\t       ldata->echo_commit - tail >= ECHO_DISCARD_WATERMARK) {\n \t\tif (echo_buf(ldata, tail) == ECHO_OP_START) {\n \t\t\tif (echo_buf(ldata, tail + 1) == ECHO_OP_ERASE_TAB)\n \t\t\t\ttail += 3;\n@@ -740,6 +749,7 @@ static size_t __process_echoes(struct tty_struct *tty)\n \t\t\ttail++;\n \t}\n \n+ not_yet_stored:\n \tldata->echo_tail = tail;\n \treturn old_space - space;\n }\n@@ -750,6 +760,7 @@ static void commit_echoes(struct tty_struct *tty)\n \tsize_t nr, old, echoed;\n \tsize_t head;\n \n+\tmutex_lock(&ldata->output_lock);\n \thead = ldata->echo_head;\n \tldata->echo_mark = head;\n \told = ldata->echo_commit - ldata->echo_tail;\n@@ -758,10 +769,12 @@ static void commit_echoes(struct tty_struct *tty)\n \t * is over the threshold (and try again each time another\n \t * block is accumulated) */\n \tnr = head - ldata->echo_tail;\n-\tif (nr < ECHO_COMMIT_WATERMARK || (nr % ECHO_BLOCK > old % ECHO_BLOCK))\n+\tif (nr < ECHO_COMMIT_WATERMARK ||\n+\t    (nr % ECHO_BLOCK > old % ECHO_BLOCK)) {\n+\t\tmutex_unlock(&ldata->output_lock);\n \t\treturn;\n+\t}\n \n-\tmutex_lock(&ldata->output_lock);\n \tldata->echo_commit = head;\n \techoed = __process_echoes(tty);\n \tmutex_unlock(&ldata->output_lock);\n@@ -812,7 +825,9 @@ static void flush_echoes(struct tty_struct *tty)\n \n static inline void add_echo_byte(unsigned char c, struct n_tty_data *ldata)\n {\n-\t*echo_buf_addr(ldata, ldata->echo_head++) = c;\n+\t*echo_buf_addr(ldata, ldata->echo_head) = c;\n+\tsmp_wmb(); /* Matches smp_rmb() in echo_buf(). */\n+\tldata->echo_head++;\n }\n \n /**\n@@ -1881,30 +1896,21 @@ static int n_tty_open(struct tty_struct *tty)\n \tstruct n_tty_data *ldata;\n \n \t/* Currently a malloc failure here can panic */\n-\tldata = vmalloc(sizeof(*ldata));\n+\tldata = vzalloc(sizeof(*ldata));\n \tif (!ldata)\n-\t\tgoto err;\n+\t\treturn -ENOMEM;\n \n \tldata->overrun_time = jiffies;\n \tmutex_init(&ldata->atomic_read_lock);\n \tmutex_init(&ldata->output_lock);\n \n \ttty->disc_data = ldata;\n-\treset_buffer_flags(tty->disc_data);\n-\tldata->column = 0;\n-\tldata->canon_column = 0;\n-\tldata->num_overrun = 0;\n-\tldata->no_room = 0;\n-\tldata->lnext = 0;\n \ttty->closing = 0;\n \t/* indicate buffer work may resume */\n \tclear_bit(TTY_LDISC_HALTED, &tty->flags);\n \tn_tty_set_termios(tty, NULL);\n \ttty_unthrottle(tty);\n-\n \treturn 0;\n-err:\n-\treturn -ENOMEM;\n }\n \n static inline int input_available_p(struct tty_struct *tty, int poll)\n",
+    "patch_modified_files": [
+        "drivers/tty/n_tty.c"
+    ]
+}

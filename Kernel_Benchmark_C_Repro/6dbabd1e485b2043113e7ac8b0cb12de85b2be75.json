@@ -1,0 +1,39 @@
+{
+    "version": 1,
+    "title": "memory leak in ip_mc_add_src",
+    "display-title": "memory leak in ip_mc_add_src",
+    "id": "6dbabd1e485b2043113e7ac8b0cb12de85b2be75",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ipv4/igmp: fix another memory leak in igmpv3_del_delrec()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3580d04aa674383c42de7b635d28e52a1e5bc72c",
+            "hash": "3580d04aa674383c42de7b635d28e52a1e5bc72c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13f83e8aa00000",
+            "c-reproducer": "/text?tag=ReproC&x=10aec072a00000",
+            "kernel-config": "/text?tag=KernelConfig&x=61dd9e15a761691d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f49aa1de98363b6c5fba4637678d6b0ba3d18065",
+            "kernel-source-commit": "f49aa1de98363b6c5fba4637678d6b0ba3d18065",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8285069f89c9942f65ce760a8f0a5a12254bfeeb",
+            "syzkaller-commit": "8285069f89c9942f65ce760a8f0a5a12254bfeeb",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17c14930a00000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "db51a73282bbed61209b1c071e0a4f62e8918b0a",
+    "patch": "diff --git a/net/ipv4/igmp.c b/net/ipv4/igmp.c\nindex 6c2febc39dca..1a8d36dd49d4 100644\n--- a/net/ipv4/igmp.c\n+++ b/net/ipv4/igmp.c\n@@ -633,6 +633,24 @@ static void igmpv3_clear_zeros(struct ip_sf_list **ppsf)\n \t}\n }\n \n+static void ip_sf_list_clear_all(struct ip_sf_list *psf)\n+{\n+\tstruct ip_sf_list *next;\n+\n+\twhile (psf) {\n+\t\tnext = psf->sf_next;\n+\t\tkfree(psf);\n+\t\tpsf = next;\n+\t}\n+}\n+\n+static void kfree_pmc(struct ip_mc_list *pmc)\n+{\n+\tip_sf_list_clear_all(pmc->sources);\n+\tip_sf_list_clear_all(pmc->tomb);\n+\tkfree(pmc);\n+}\n+\n static void igmpv3_send_cr(struct in_device *in_dev)\n {\n \tstruct ip_mc_list *pmc, *pmc_prev, *pmc_next;\n@@ -669,7 +687,7 @@ static void igmpv3_send_cr(struct in_device *in_dev)\n \t\t\telse\n \t\t\t\tin_dev->mc_tomb = pmc_next;\n \t\t\tin_dev_put(pmc->interface);\n-\t\t\tkfree(pmc);\n+\t\t\tkfree_pmc(pmc);\n \t\t} else\n \t\t\tpmc_prev = pmc;\n \t}\n@@ -1215,14 +1233,18 @@ static void igmpv3_del_delrec(struct in_device *in_dev, struct ip_mc_list *im)\n \t\tim->interface = pmc->interface;\n \t\tif (im->sfmode == MCAST_INCLUDE) {\n \t\t\tim->tomb = pmc->tomb;\n+\t\t\tpmc->tomb = NULL;\n+\n \t\t\tim->sources = pmc->sources;\n+\t\t\tpmc->sources = NULL;\n+\n \t\t\tfor (psf = im->sources; psf; psf = psf->sf_next)\n \t\t\t\tpsf->sf_crcount = in_dev->mr_qrv ?: net->ipv4.sysctl_igmp_qrv;\n \t\t} else {\n \t\t\tim->crcount = in_dev->mr_qrv ?: net->ipv4.sysctl_igmp_qrv;\n \t\t}\n \t\tin_dev_put(pmc->interface);\n-\t\tkfree(pmc);\n+\t\tkfree_pmc(pmc);\n \t}\n \tspin_unlock_bh(&im->lock);\n }\n@@ -1243,21 +1265,18 @@ static void igmpv3_clear_delrec(struct in_device *in_dev)\n \t\tnextpmc = pmc->next;\n \t\tip_mc_clear_src(pmc);\n \t\tin_dev_put(pmc->interface);\n-\t\tkfree(pmc);\n+\t\tkfree_pmc(pmc);\n \t}\n \t/* clear dead sources, too */\n \trcu_read_lock();\n \tfor_each_pmc_rcu(in_dev, pmc) {\n-\t\tstruct ip_sf_list *psf, *psf_next;\n+\t\tstruct ip_sf_list *psf;\n \n \t\tspin_lock_bh(&pmc->lock);\n \t\tpsf = pmc->tomb;\n \t\tpmc->tomb = NULL;\n \t\tspin_unlock_bh(&pmc->lock);\n-\t\tfor (; psf; psf = psf_next) {\n-\t\t\tpsf_next = psf->sf_next;\n-\t\t\tkfree(psf);\n-\t\t}\n+\t\tip_sf_list_clear_all(psf);\n \t}\n \trcu_read_unlock();\n }\n@@ -2123,7 +2142,7 @@ static int ip_mc_add_src(struct in_device *in_dev, __be32 *pmca, int sfmode,\n \n static void ip_mc_clear_src(struct ip_mc_list *pmc)\n {\n-\tstruct ip_sf_list *psf, *nextpsf, *tomb, *sources;\n+\tstruct ip_sf_list *tomb, *sources;\n \n \tspin_lock_bh(&pmc->lock);\n \ttomb = pmc->tomb;\n@@ -2135,14 +2154,8 @@ static void ip_mc_clear_src(struct ip_mc_list *pmc)\n \tpmc->sfcount[MCAST_EXCLUDE] = 1;\n \tspin_unlock_bh(&pmc->lock);\n \n-\tfor (psf = tomb; psf; psf = nextpsf) {\n-\t\tnextpsf = psf->sf_next;\n-\t\tkfree(psf);\n-\t}\n-\tfor (psf = sources; psf; psf = nextpsf) {\n-\t\tnextpsf = psf->sf_next;\n-\t\tkfree(psf);\n-\t}\n+\tip_sf_list_clear_all(tomb);\n+\tip_sf_list_clear_all(sources);\n }\n \n /* Join a multicast group\n",
+    "patch_modified_files": [
+        "net/ipv4/igmp.c"
+    ]
+}

@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in netlbl_catmap_walk",
+    "display-title": "KASAN: use-after-free Read in netlbl_catmap_walk",
+    "id": "c4fd25bc9502e9924e2b0850151cbbf707fb2c31",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "smackfs: Fix use-after-free in netlbl_catmap_walk()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0817534ff9ea809fac1322c5c8c574be8483ea57",
+            "hash": "0817534ff9ea809fac1322c5c8c574be8483ea57",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a814c505ca657a4e@google.com/T/",
+        "https://lore.kernel.org/all/20211108174453.1187052-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20211108174644.1187889-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20211108174832.1189312-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20211108174942.1189927-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20211108175031.1190422-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20211109010649.1191041-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20211109010807.1191567-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20211109010918.1192063-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20211115165313.549179499@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211115165343.579890274@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211115165419.961798833@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211115165428.722074685@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211124115658.328640564@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211124115703.941380739@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211124115710.214900256@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211124115718.822024889@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/53d3eb4e5b3c6f2a0754a5be2b36c38adf32a1dd.1630537810.git.pawan.kumar.gupta@linux.intel.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in netlbl_catmap_walk",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13f72f16300000",
+            "c-reproducer": "/text?tag=ReproC&x=133e338d300000",
+            "kernel-config": "/text?tag=KernelConfig&x=2fd902af77ff1e56",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=6e764bcd1cf72a2846c0e53d3975a09b242c04c9",
+            "kernel-source-commit": "6e764bcd1cf72a2846c0e53d3975a09b242c04c9",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/b599f2fcc734e2183016a340d4f6fc2891d8e41f",
+            "syzkaller-commit": "b599f2fcc734e2183016a340d4f6fc2891d8e41f",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=112a1891300000"
+        }
+    ],
+    "subsystems": [
+        "net",
+        "lsm"
+    ],
+    "parent_of_fix_commit": "6880fa6c56601bb8ed59df6c30fd390cc5f6dd8f",
+    "patch": "diff --git a/security/smack/smackfs.c b/security/smack/smackfs.c\nindex 3a75d2a8f517..9d853c0e55b8 100644\n--- a/security/smack/smackfs.c\n+++ b/security/smack/smackfs.c\n@@ -831,6 +831,7 @@ static int smk_open_cipso(struct inode *inode, struct file *file)\n static ssize_t smk_set_cipso(struct file *file, const char __user *buf,\n \t\t\t\tsize_t count, loff_t *ppos, int format)\n {\n+\tstruct netlbl_lsm_catmap *old_cat;\n \tstruct smack_known *skp;\n \tstruct netlbl_lsm_secattr ncats;\n \tchar mapcatset[SMK_CIPSOLEN];\n@@ -920,9 +921,11 @@ static ssize_t smk_set_cipso(struct file *file, const char __user *buf,\n \n \trc = smk_netlbl_mls(maplevel, mapcatset, &ncats, SMK_CIPSOLEN);\n \tif (rc >= 0) {\n-\t\tnetlbl_catmap_free(skp->smk_netlabel.attr.mls.cat);\n+\t\told_cat = skp->smk_netlabel.attr.mls.cat;\n \t\tskp->smk_netlabel.attr.mls.cat = ncats.attr.mls.cat;\n \t\tskp->smk_netlabel.attr.mls.lvl = ncats.attr.mls.lvl;\n+\t\tsynchronize_rcu();\n+\t\tnetlbl_catmap_free(old_cat);\n \t\trc = count;\n \t\t/*\n \t\t * This mapping may have been cached, so clear the cache.\n",
+    "patch_modified_files": [
+        "security/smack/smackfs.c"
+    ]
+}

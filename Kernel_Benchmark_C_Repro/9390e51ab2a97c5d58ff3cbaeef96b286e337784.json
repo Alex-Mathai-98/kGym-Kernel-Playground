@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in tipc_sub_unsubscribe",
+    "display-title": "KASAN: use-after-free Read in tipc_sub_unsubscribe (2)",
+    "id": "9390e51ab2a97c5d58ff3cbaeef96b286e337784",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "tipc: fix unbalanced reference counter",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c3317f4db831b7564ff8d1670326456a7fbbbcb3",
+            "hash": "c3317f4db831b7564ff8d1670326456a7fbbbcb3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/1523479929-28161-1-git-send-email-jon.maloy@ericsson.com/T/",
+        "https://lore.kernel.org/all/20180503041450.pq2njvkssxtay64o@shao2-debian/T/",
+        "https://lore.kernel.org/all/5aea8661.w550Rg98h+5zS2f1%lkp@intel.com/T/",
+        "https://lore.kernel.org/all/94eb2c049236e1e93b056993eb5e@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=153e9667800000",
+            "c-reproducer": "/text?tag=ReproC&x=14e5843b800000",
+            "kernel-config": "/text?tag=KernelConfig&x=ef07076ec3277c56",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b284d4d5a6785f8cd07eda2646a95782373cd01e",
+            "kernel-source-commit": "b284d4d5a6785f8cd07eda2646a95782373cd01e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8b8de4271424f3341b8a4c78e7d1856ba05a8632",
+            "syzkaller-commit": "8b8de4271424f3341b8a4c78e7d1856ba05a8632",
+            "compiler-description": "gcc (GCC) 8.0.1 20180301 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1780c83b800000"
+        }
+    ],
+    "subsystems": [
+        "tipc"
+    ],
+    "parent_of_fix_commit": "1c2734b31d72316e3faaad88c0c9c46fa92a4b20",
+    "patch": "diff --git a/net/tipc/name_table.c b/net/tipc/name_table.c\nindex b1fe20972aa9..4068eaad61a6 100644\n--- a/net/tipc/name_table.c\n+++ b/net/tipc/name_table.c\n@@ -665,13 +665,14 @@ int tipc_nametbl_withdraw(struct net *net, u32 type, u32 lower,\n /**\n  * tipc_nametbl_subscribe - add a subscription object to the name table\n  */\n-void tipc_nametbl_subscribe(struct tipc_subscription *sub)\n+bool tipc_nametbl_subscribe(struct tipc_subscription *sub)\n {\n \tstruct name_table *nt = tipc_name_table(sub->net);\n \tstruct tipc_net *tn = tipc_net(sub->net);\n \tstruct tipc_subscr *s = &sub->evt.s;\n \tu32 type = tipc_sub_read(s, seq.type);\n \tstruct tipc_service *sc;\n+\tbool res = true;\n \n \tspin_lock_bh(&tn->nametbl_lock);\n \tsc = tipc_service_find(sub->net, type);\n@@ -685,8 +686,10 @@ void tipc_nametbl_subscribe(struct tipc_subscription *sub)\n \t\tpr_warn(\"Failed to subscribe for {%u,%u,%u}\\n\", type,\n \t\t\ttipc_sub_read(s, seq.lower),\n \t\t\ttipc_sub_read(s, seq.upper));\n+\t\tres = false;\n \t}\n \tspin_unlock_bh(&tn->nametbl_lock);\n+\treturn res;\n }\n \n /**\ndiff --git a/net/tipc/name_table.h b/net/tipc/name_table.h\nindex 4b14fc28d9e2..0febba41da86 100644\n--- a/net/tipc/name_table.h\n+++ b/net/tipc/name_table.h\n@@ -126,7 +126,7 @@ struct publication *tipc_nametbl_insert_publ(struct net *net, u32 type,\n struct publication *tipc_nametbl_remove_publ(struct net *net, u32 type,\n \t\t\t\t\t     u32 lower, u32 upper,\n \t\t\t\t\t     u32 node, u32 key);\n-void tipc_nametbl_subscribe(struct tipc_subscription *s);\n+bool tipc_nametbl_subscribe(struct tipc_subscription *s);\n void tipc_nametbl_unsubscribe(struct tipc_subscription *s);\n int tipc_nametbl_init(struct net *net);\n void tipc_nametbl_stop(struct net *net);\ndiff --git a/net/tipc/subscr.c b/net/tipc/subscr.c\nindex b7d80bc5f4ab..f340e53da625 100644\n--- a/net/tipc/subscr.c\n+++ b/net/tipc/subscr.c\n@@ -153,7 +153,10 @@ struct tipc_subscription *tipc_sub_subscribe(struct net *net,\n \tmemcpy(&sub->evt.s, s, sizeof(*s));\n \tspin_lock_init(&sub->lock);\n \tkref_init(&sub->kref);\n-\ttipc_nametbl_subscribe(sub);\n+\tif (!tipc_nametbl_subscribe(sub)) {\n+\t\tkfree(sub);\n+\t\treturn NULL;\n+\t}\n \ttimer_setup(&sub->timer, tipc_sub_timeout, 0);\n \ttimeout = tipc_sub_read(&sub->evt.s, timeout);\n \tif (timeout != TIPC_WAIT_FOREVER)\n",
+    "patch_modified_files": [
+        "net/tipc/name_table.c",
+        "net/tipc/name_table.h",
+        "net/tipc/subscr.c"
+    ]
+}

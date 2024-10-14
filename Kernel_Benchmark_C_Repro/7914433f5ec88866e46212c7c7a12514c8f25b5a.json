@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "UBSAN: array-index-out-of-bounds in pvr2_i2c_core_init",
+    "display-title": "UBSAN: array-index-out-of-bounds in pvr2_i2c_core_init",
+    "id": "7914433f5ec88866e46212c7c7a12514c8f25b5a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: pvrusb2: fix array-index-out-of-bounds in pvr2_i2c_core_init",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=471bec68457aaf981add77b4f590d65dd7da1059",
+            "hash": "471bec68457aaf981add77b4f590d65dd7da1059",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005abf2305dca1b91b@google.com/T/",
+        "https://lore.kernel.org/all/20220415212448.7290-1-paskripkin@gmail.com/T/",
+        "https://lore.kernel.org/all/20220607164908.521895282@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220607164934.766888869@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220607164948.980838585@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220607165002.659942637@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220613094840.720778945@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220613094908.257446132@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220613094923.832156175@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220613094928.482772422@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "UBSAN: array-index-out-of-bounds in pvr2_i2c_core_init",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17279a70f00000",
+            "c-reproducer": "/text?tag=ReproC&x=121dc124f00000",
+            "kernel-config": "/text?tag=KernelConfig&x=307baecfd5e87ced",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4ea3c6425269d33da53c79d539ce9554117cf4d4",
+            "kernel-source-commit": "4ea3c6425269d33da53c79d539ce9554117cf4d4",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e22c3da3b05600c6c0f62142160839b4b7f82a62",
+            "syzkaller-commit": "e22c3da3b05600c6c0f62142160839b4b7f82a62",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15c9d374f00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "pvr2_hdw_create",
+            "drivers/media/usb/pvrusb2/pvrusb2-hdw.c"
+        ]
+    ],
+    "patch_commit_date": "2022-04-15T21:24:48+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "pvrusb2",
+        "usb"
+    ],
+    "parent_of_fix_commit": "6b124062d5b0f594ea46a20968061b60b288b524",
+    "patch": "diff --git a/drivers/media/usb/pvrusb2/pvrusb2-hdw.c b/drivers/media/usb/pvrusb2/pvrusb2-hdw.c\nindex cd7b118d5929..a9666373af6b 100644\n--- a/drivers/media/usb/pvrusb2/pvrusb2-hdw.c\n+++ b/drivers/media/usb/pvrusb2/pvrusb2-hdw.c\n@@ -2569,6 +2569,11 @@ struct pvr2_hdw *pvr2_hdw_create(struct usb_interface *intf,\n \t} while (0);\n \tmutex_unlock(&pvr2_unit_mtx);\n \n+\tINIT_WORK(&hdw->workpoll, pvr2_hdw_worker_poll);\n+\n+\tif (hdw->unit_number == -1)\n+\t\tgoto fail;\n+\n \tcnt1 = 0;\n \tcnt2 = scnprintf(hdw->name+cnt1,sizeof(hdw->name)-cnt1,\"pvrusb2\");\n \tcnt1 += cnt2;\n@@ -2580,8 +2585,6 @@ struct pvr2_hdw *pvr2_hdw_create(struct usb_interface *intf,\n \tif (cnt1 >= sizeof(hdw->name)) cnt1 = sizeof(hdw->name)-1;\n \thdw->name[cnt1] = 0;\n \n-\tINIT_WORK(&hdw->workpoll,pvr2_hdw_worker_poll);\n-\n \tpvr2_trace(PVR2_TRACE_INIT,\"Driver unit number is %d, name is %s\",\n \t\t   hdw->unit_number,hdw->name);\n \n",
+    "patch_modified_files": [
+        "drivers/media/usb/pvrusb2/pvrusb2-hdw.c"
+    ]
+}

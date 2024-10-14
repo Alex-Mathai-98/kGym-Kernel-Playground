@@ -1,0 +1,59 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Write in usb_hcd_poll_rh_status",
+    "display-title": "KASAN: slab-out-of-bounds Write in usb_hcd_poll_rh_status (2)",
+    "id": "e0083a52ae0eb23d3186173d403646079b45c715",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "USB: Fix \"slab-out-of-bounds Write\" bug in usb_hcd_poll_rh_status",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1d7d4c07932e04355d6e6528d44a2f2c9e354346",
+            "hash": "1d7d4c07932e04355d6e6528d44a2f2c9e354346",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000bbbbcf05aec86741@google.com/T/",
+        "https://lore.kernel.org/all/20220114081541.465841464@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220114081542.698002137@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220114081544.849748488@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220114081545.158363487@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183927.095545464@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183932.787526760@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183937.101330125@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183943.102762895@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/Yc+3UIQJ2STbxNua@rowland.harvard.edu/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Write in usb_hcd_poll_rh_status",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11b14c1bb00000",
+            "c-reproducer": "/text?tag=ReproC&x=12ab99edb00000",
+            "kernel-config": "/text?tag=KernelConfig&x=2ebd4b29568807bc",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=eec4df26e24e978e49ccf9bcf49ca0f2ccdaeffe",
+            "kernel-source-commit": "eec4df26e24e978e49ccf9bcf49ca0f2ccdaeffe",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2e49f10dbbcec83bf0aa7651c827503e1faec44c",
+            "syzkaller-commit": "2e49f10dbbcec83bf0aa7651c827503e1faec44c",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17468659b00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "usb_hcd_poll_rh_status",
+            "drivers/usb/core/hcd.c"
+        ]
+    ],
+    "patch_commit_date": "2022-01-01T02:07:12+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "fa0ef93868a6062babe1144df2807a8b1d4924d2",
+    "patch": "diff --git a/drivers/usb/core/hcd.c b/drivers/usb/core/hcd.c\nindex 9ffc63ae65ac..3e01dd6e509b 100644\n--- a/drivers/usb/core/hcd.c\n+++ b/drivers/usb/core/hcd.c\n@@ -753,6 +753,7 @@ void usb_hcd_poll_rh_status(struct usb_hcd *hcd)\n {\n \tstruct urb\t*urb;\n \tint\t\tlength;\n+\tint\t\tstatus;\n \tunsigned long\tflags;\n \tchar\t\tbuffer[6];\t/* Any root hubs with > 31 ports? */\n \n@@ -770,11 +771,17 @@ void usb_hcd_poll_rh_status(struct usb_hcd *hcd)\n \t\tif (urb) {\n \t\t\tclear_bit(HCD_FLAG_POLL_PENDING, &hcd->flags);\n \t\t\thcd->status_urb = NULL;\n+\t\t\tif (urb->transfer_buffer_length >= length) {\n+\t\t\t\tstatus = 0;\n+\t\t\t} else {\n+\t\t\t\tstatus = -EOVERFLOW;\n+\t\t\t\tlength = urb->transfer_buffer_length;\n+\t\t\t}\n \t\t\turb->actual_length = length;\n \t\t\tmemcpy(urb->transfer_buffer, buffer, length);\n \n \t\t\tusb_hcd_unlink_urb_from_ep(hcd, urb);\n-\t\t\tusb_hcd_giveback_urb(hcd, urb, 0);\n+\t\t\tusb_hcd_giveback_urb(hcd, urb, status);\n \t\t} else {\n \t\t\tlength = 0;\n \t\t\tset_bit(HCD_FLAG_POLL_PENDING, &hcd->flags);\n",
+    "patch_modified_files": [
+        "drivers/usb/core/hcd.c"
+    ]
+}

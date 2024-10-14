@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "WARNING: lock held when returning to user space!",
+    "display-title": "WARNING: lock held when returning to user space!",
+    "id": "ffd4b4f9c293485332f7f1c9b09519c9806227de",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "loop: fix LOOP_GET_STATUS lock imbalance",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bdac616db9bbadb90b7d6a406144571015e138f7",
+            "hash": "bdac616db9bbadb90b7d6a406144571015e138f7",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000082922905692da9e1@google.com/T/",
+        "https://lore.kernel.org/all/20180524093018.331893860@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180524093621.979359379@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/6bee3eddc24ef5525ca12efb023e66b2503cb178.1523033157.git.osandov@fb.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=118f1947800000",
+            "c-reproducer": "/text?tag=ReproC&x=16c3fa8b800000",
+            "kernel-config": "/text?tag=KernelConfig&x=af525d2902766246",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=38c23685b273cfb4ccf31a199feccce3bdcb5d83",
+            "kernel-source-commit": "38c23685b273cfb4ccf31a199feccce3bdcb5d83",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4f1152d4db952aaaae79b6efd3a12c983d9f7bb6",
+            "syzkaller-commit": "4f1152d4db952aaaae79b6efd3a12c983d9f7bb6",
+            "compiler-description": "gcc (GCC) 8.0.1 20180301 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=149c9f7b800000"
+        }
+    ],
+    "clean_crash_report": [],
+    "crash_kernel_id": null,
+    "subsystems": [
+        "block"
+    ],
+    "parent_of_fix_commit": "1e047eaab3bb5564f25b41e9cd3a053009f4e789",
+    "patch": "diff --git a/drivers/block/loop.c b/drivers/block/loop.c\nindex e5fc020cceda..c9d04497a415 100644\n--- a/drivers/block/loop.c\n+++ b/drivers/block/loop.c\n@@ -1287,12 +1287,13 @@ static int\n loop_get_status_old(struct loop_device *lo, struct loop_info __user *arg) {\n \tstruct loop_info info;\n \tstruct loop_info64 info64;\n-\tint err = 0;\n+\tint err;\n \n-\tif (!arg)\n-\t\terr = -EINVAL;\n-\tif (!err)\n-\t\terr = loop_get_status(lo, &info64);\n+\tif (!arg) {\n+\t\tmutex_unlock(&lo->lo_ctl_mutex);\n+\t\treturn -EINVAL;\n+\t}\n+\terr = loop_get_status(lo, &info64);\n \tif (!err)\n \t\terr = loop_info64_to_old(&info64, &info);\n \tif (!err && copy_to_user(arg, &info, sizeof(info)))\n@@ -1304,12 +1305,13 @@ loop_get_status_old(struct loop_device *lo, struct loop_info __user *arg) {\n static int\n loop_get_status64(struct loop_device *lo, struct loop_info64 __user *arg) {\n \tstruct loop_info64 info64;\n-\tint err = 0;\n+\tint err;\n \n-\tif (!arg)\n-\t\terr = -EINVAL;\n-\tif (!err)\n-\t\terr = loop_get_status(lo, &info64);\n+\tif (!arg) {\n+\t\tmutex_unlock(&lo->lo_ctl_mutex);\n+\t\treturn -EINVAL;\n+\t}\n+\terr = loop_get_status(lo, &info64);\n \tif (!err && copy_to_user(arg, &info64, sizeof(info64)))\n \t\terr = -EFAULT;\n \n@@ -1533,12 +1535,13 @@ loop_get_status_compat(struct loop_device *lo,\n \t\t       struct compat_loop_info __user *arg)\n {\n \tstruct loop_info64 info64;\n-\tint err = 0;\n+\tint err;\n \n-\tif (!arg)\n-\t\terr = -EINVAL;\n-\tif (!err)\n-\t\terr = loop_get_status(lo, &info64);\n+\tif (!arg) {\n+\t\tmutex_unlock(&lo->lo_ctl_mutex);\n+\t\treturn -EINVAL;\n+\t}\n+\terr = loop_get_status(lo, &info64);\n \tif (!err)\n \t\terr = loop_info64_to_compat(&info64, arg);\n \treturn err;\n",
+    "patch_modified_files": [
+        "drivers/block/loop.c"
+    ]
+}

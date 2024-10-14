@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Write in snd_usb_mixer_notify_id",
+    "display-title": "KASAN: slab-out-of-bounds Write in snd_usb_mixer_notify_id",
+    "id": "d2e6364eae2bc1d7fa2d8cb2cd75595fd223a015",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ALSA: usb-audio: Fix OOB access of mixer element list",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=220345e98f1cdc768eeb6e3364a0fa7ab9647fe7",
+            "hash": "220345e98f1cdc768eeb6e3364a0fa7ab9647fe7",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "usb: gadget: add raw-gadget interface",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f2c2e717642c66f7fe7e5dd69b2e8ff5849f4d10",
+        "hash": "f2c2e717642c66f7fe7e5dd69b2e8ff5849f4d10",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000040aa7e05a8c5a02c@google.com/T/",
+        "https://lore.kernel.org/all/20200629151818.2493727-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200629152523.2494198-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200629153502.2494656-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200629153806.2494953-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200629154007.2495120-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200629155309.2495516-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11bb9d35100000",
+            "c-reproducer": "/text?tag=ReproC&x=1309c569100000",
+            "kernel-config": "/text?tag=KernelConfig&x=d195fe572fb15312",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7ae77150d94d3b535c7b85e6b3647113095e79bf",
+            "kernel-source-commit": "7ae77150d94d3b535c7b85e6b3647113095e79bf",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/81abc33188b4caf19873b9676ab1d8dc0e3511ca",
+            "syzkaller-commit": "81abc33188b4caf19873b9676ab1d8dc0e3511ca",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11aacaa5100000"
+        }
+    ],
+    "subsystems": [
+        "usb",
+        "sound"
+    ],
+    "parent_of_fix_commit": "a32a1fc99807244d920d274adc46ba04b538cc8a",
+    "patch": "diff --git a/sound/usb/mixer.c b/sound/usb/mixer.c\nindex 15769f266790..eab0fd4fd7c3 100644\n--- a/sound/usb/mixer.c\n+++ b/sound/usb/mixer.c\n@@ -581,8 +581,9 @@ static int check_matrix_bitmap(unsigned char *bmap,\n  * if failed, give up and free the control instance.\n  */\n \n-int snd_usb_mixer_add_control(struct usb_mixer_elem_list *list,\n-\t\t\t      struct snd_kcontrol *kctl)\n+int snd_usb_mixer_add_list(struct usb_mixer_elem_list *list,\n+\t\t\t   struct snd_kcontrol *kctl,\n+\t\t\t   bool is_std_info)\n {\n \tstruct usb_mixer_interface *mixer = list->mixer;\n \tint err;\n@@ -596,6 +597,7 @@ int snd_usb_mixer_add_control(struct usb_mixer_elem_list *list,\n \t\treturn err;\n \t}\n \tlist->kctl = kctl;\n+\tlist->is_std_info = is_std_info;\n \tlist->next_id_elem = mixer->id_elems[list->id];\n \tmixer->id_elems[list->id] = list;\n \treturn 0;\n@@ -3234,8 +3236,11 @@ void snd_usb_mixer_notify_id(struct usb_mixer_interface *mixer, int unitid)\n \tunitid = delegate_notify(mixer, unitid, NULL, NULL);\n \n \tfor_each_mixer_elem(list, mixer, unitid) {\n-\t\tstruct usb_mixer_elem_info *info =\n-\t\t\tmixer_elem_list_to_info(list);\n+\t\tstruct usb_mixer_elem_info *info;\n+\n+\t\tif (!list->is_std_info)\n+\t\t\tcontinue;\n+\t\tinfo = mixer_elem_list_to_info(list);\n \t\t/* invalidate cache, so the value is read from the device */\n \t\tinfo->cached = 0;\n \t\tsnd_ctl_notify(mixer->chip->card, SNDRV_CTL_EVENT_MASK_VALUE,\n@@ -3315,6 +3320,8 @@ static void snd_usb_mixer_interrupt_v2(struct usb_mixer_interface *mixer,\n \n \t\tif (!list->kctl)\n \t\t\tcontinue;\n+\t\tif (!list->is_std_info)\n+\t\t\tcontinue;\n \n \t\tinfo = mixer_elem_list_to_info(list);\n \t\tif (count > 1 && info->control != control)\ndiff --git a/sound/usb/mixer.h b/sound/usb/mixer.h\nindex 41ec9dc4139b..c29e27ac43a7 100644\n--- a/sound/usb/mixer.h\n+++ b/sound/usb/mixer.h\n@@ -66,6 +66,7 @@ struct usb_mixer_elem_list {\n \tstruct usb_mixer_elem_list *next_id_elem; /* list of controls with same id */\n \tstruct snd_kcontrol *kctl;\n \tunsigned int id;\n+\tbool is_std_info;\n \tusb_mixer_elem_dump_func_t dump;\n \tusb_mixer_elem_resume_func_t resume;\n };\n@@ -103,8 +104,12 @@ void snd_usb_mixer_notify_id(struct usb_mixer_interface *mixer, int unitid);\n int snd_usb_mixer_set_ctl_value(struct usb_mixer_elem_info *cval,\n \t\t\t\tint request, int validx, int value_set);\n \n-int snd_usb_mixer_add_control(struct usb_mixer_elem_list *list,\n-\t\t\t      struct snd_kcontrol *kctl);\n+int snd_usb_mixer_add_list(struct usb_mixer_elem_list *list,\n+\t\t\t   struct snd_kcontrol *kctl,\n+\t\t\t   bool is_std_info);\n+\n+#define snd_usb_mixer_add_control(list, kctl) \\\n+\tsnd_usb_mixer_add_list(list, kctl, true)\n \n void snd_usb_mixer_elem_init_std(struct usb_mixer_elem_list *list,\n \t\t\t\t struct usb_mixer_interface *mixer,\ndiff --git a/sound/usb/mixer_quirks.c b/sound/usb/mixer_quirks.c\nindex b6bcf2f92383..cec1cfd7edb7 100644\n--- a/sound/usb/mixer_quirks.c\n+++ b/sound/usb/mixer_quirks.c\n@@ -158,7 +158,8 @@ static int add_single_ctl_with_resume(struct usb_mixer_interface *mixer,\n \t\treturn -ENOMEM;\n \t}\n \tkctl->private_free = snd_usb_mixer_elem_free;\n-\treturn snd_usb_mixer_add_control(list, kctl);\n+\t/* don't use snd_usb_mixer_add_control() here, this is a special list element */\n+\treturn snd_usb_mixer_add_list(list, kctl, false);\n }\n \n /*\n",
+    "patch_modified_files": [
+        "sound/usb/mixer.c",
+        "sound/usb/mixer.h",
+        "sound/usb/mixer_quirks.c"
+    ]
+}

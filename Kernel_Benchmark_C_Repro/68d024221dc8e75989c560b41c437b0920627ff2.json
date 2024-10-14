@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "general protection fault in team_nl_cmd_options_set",
+    "display-title": "general protection fault in team_nl_cmd_options_set",
+    "id": "68d024221dc8e75989c560b41c437b0920627ff2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "team: avoid complex list operations in team_nl_cmd_options_set()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2fdeee2549231b1f989f011bb18191f5660d3745",
+            "hash": "2fdeee2549231b1f989f011bb18191f5660d3745",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000004234f60581400dac@google.com/T/",
+        "https://lore.kernel.org/all/20190212055951.6712-1-xiyou.wangcong@gmail.com/T/",
+        "https://lore.kernel.org/all/20190225195034.555044862@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190225195035.713274200@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190225195043.645958524@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190225195054.748060397@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190311195938.139603-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190311195951.139741-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190322111210.465931067@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190322111236.796964179@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/lsq.1556377988.384060557@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1263c10d400000",
+            "c-reproducer": "/text?tag=ReproC&x=130855b7400000",
+            "kernel-config": "/text?tag=KernelConfig&x=861a3573f4e78ba1",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9097a058d49e049925d8da72db07fffcee24efa0",
+            "kernel-source-commit": "9097a058d49e049925d8da72db07fffcee24efa0",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2b4970017d38fd9b148939c7acdbf704c232f1dc",
+            "syzkaller-commit": "2b4970017d38fd9b148939c7acdbf704c232f1dc",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11b36743400000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "a090d7948edab45688e78497ffc072c03db4086c",
+    "patch": "diff --git a/drivers/net/team/team.c b/drivers/net/team/team.c\nindex afd9d25d1992..958f1cf67282 100644\n--- a/drivers/net/team/team.c\n+++ b/drivers/net/team/team.c\n@@ -256,17 +256,6 @@ static void __team_option_inst_mark_removed_port(struct team *team,\n \t}\n }\n \n-static bool __team_option_inst_tmp_find(const struct list_head *opts,\n-\t\t\t\t\tconst struct team_option_inst *needle)\n-{\n-\tstruct team_option_inst *opt_inst;\n-\n-\tlist_for_each_entry(opt_inst, opts, tmp_list)\n-\t\tif (opt_inst == needle)\n-\t\t\treturn true;\n-\treturn false;\n-}\n-\n static int __team_options_register(struct team *team,\n \t\t\t\t   const struct team_option *option,\n \t\t\t\t   size_t option_count)\n@@ -2460,7 +2449,6 @@ static int team_nl_cmd_options_set(struct sk_buff *skb, struct genl_info *info)\n \tint err = 0;\n \tint i;\n \tstruct nlattr *nl_option;\n-\tLIST_HEAD(opt_inst_list);\n \n \trtnl_lock();\n \n@@ -2480,6 +2468,7 @@ static int team_nl_cmd_options_set(struct sk_buff *skb, struct genl_info *info)\n \t\tstruct nlattr *opt_attrs[TEAM_ATTR_OPTION_MAX + 1];\n \t\tstruct nlattr *attr;\n \t\tstruct nlattr *attr_data;\n+\t\tLIST_HEAD(opt_inst_list);\n \t\tenum team_option_type opt_type;\n \t\tint opt_port_ifindex = 0; /* != 0 for per-port options */\n \t\tu32 opt_array_index = 0;\n@@ -2584,23 +2573,17 @@ static int team_nl_cmd_options_set(struct sk_buff *skb, struct genl_info *info)\n \t\t\tif (err)\n \t\t\t\tgoto team_put;\n \t\t\topt_inst->changed = true;\n-\n-\t\t\t/* dumb/evil user-space can send us duplicate opt,\n-\t\t\t * keep only the last one\n-\t\t\t */\n-\t\t\tif (__team_option_inst_tmp_find(&opt_inst_list,\n-\t\t\t\t\t\t\topt_inst))\n-\t\t\t\tcontinue;\n-\n \t\t\tlist_add(&opt_inst->tmp_list, &opt_inst_list);\n \t\t}\n \t\tif (!opt_found) {\n \t\t\terr = -ENOENT;\n \t\t\tgoto team_put;\n \t\t}\n-\t}\n \n-\terr = team_nl_send_event_options_get(team, &opt_inst_list);\n+\t\terr = team_nl_send_event_options_get(team, &opt_inst_list);\n+\t\tif (err)\n+\t\t\tbreak;\n+\t}\n \n team_put:\n \tteam_nl_team_put(team);\n",
+    "patch_modified_files": [
+        "drivers/net/team/team.c"
+    ]
+}

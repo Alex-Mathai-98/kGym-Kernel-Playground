@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "title": "INFO: rcu detected stall in snd_pcm_oss_read",
+    "display-title": "INFO: rcu detected stall in snd_pcm_oss_read",
+    "id": "be292393a21b15b703e80f44d8d086de711bd813",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ALSA: pcm: Fix tight loop of OSS capture stream",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e190161f96b88ffae870405fd6c3fdd1d2e7f98d",
+            "hash": "e190161f96b88ffae870405fd6c3fdd1d2e7f98d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e259a2057dc62f0d@google.com/T/",
+        "https://lore.kernel.org/all/20190204103620.287366543@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190903162519.7136-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=131fdcdd400000",
+            "c-reproducer": "/text?tag=ReproC&x=1647bf7d400000",
+            "kernel-config": "/text?tag=KernelConfig&x=861a3573f4e78ba1",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3c730b1041aefa2a92b96fcba9db237d28585922",
+            "kernel-source-commit": "3c730b1041aefa2a92b96fcba9db237d28585922",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e3bd7ab805a9a4541c9fe135ec90c95089f49153",
+            "syzkaller-commit": "e3bd7ab805a9a4541c9fe135ec90c95089f49153",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1316a315400000"
+        }
+    ],
+    "subsystems": [
+        "sound"
+    ],
+    "parent_of_fix_commit": "9e6966646b6bc5078d579151b90016522d4ff2cb",
+    "patch": "diff --git a/sound/core/pcm_lib.c b/sound/core/pcm_lib.c\nindex 40013b26f671..6c99fa8ac5fa 100644\n--- a/sound/core/pcm_lib.c\n+++ b/sound/core/pcm_lib.c\n@@ -2112,6 +2112,13 @@ int pcm_lib_apply_appl_ptr(struct snd_pcm_substream *substream,\n \treturn 0;\n }\n \n+/* allow waiting for a capture stream that hasn't been started */\n+#if IS_ENABLED(CONFIG_SND_PCM_OSS)\n+#define wait_capture_start(substream)\t((substream)->oss.oss)\n+#else\n+#define wait_capture_start(substream)\tfalse\n+#endif\n+\n /* the common loop for read/write data */\n snd_pcm_sframes_t __snd_pcm_lib_xfer(struct snd_pcm_substream *substream,\n \t\t\t\t     void *data, bool interleaved,\n@@ -2182,7 +2189,7 @@ snd_pcm_sframes_t __snd_pcm_lib_xfer(struct snd_pcm_substream *substream,\n \t\t\terr = snd_pcm_start(substream);\n \t\t\tif (err < 0)\n \t\t\t\tgoto _end_unlock;\n-\t\t} else {\n+\t\t} else if (!wait_capture_start(substream)) {\n \t\t\t/* nothing to do */\n \t\t\terr = 0;\n \t\t\tgoto _end_unlock;\n",
+    "patch_modified_files": [
+        "sound/core/pcm_lib.c"
+    ]
+}

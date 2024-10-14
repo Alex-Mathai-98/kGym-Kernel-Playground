@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-use-after-free Read in nilfs_load_inode_block",
+    "display-title": "KASAN: slab-use-after-free Read in nilfs_load_inode_block (2)",
+    "id": "accafa9281766c4630ea5aeaad0d83decd70406d",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: fix use-after-free of nilfs_root in dirtying inodes via iput",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f8654743a0e6909dc634cbfad6db6816f10f3399",
+            "hash": "f8654743a0e6909dc634cbfad6db6816f10f3399",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "nilfs2: do not write dirty data after degenerating to read-only",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=28a65b49eb53e172d23567005465019658bfdb4d",
+        "hash": "28a65b49eb53e172d23567005465019658bfdb4d",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b4e906060113fd63@google.com/T/",
+        "https://lore.kernel.org/all/20230728191318.33047-1-konishi.ryusuke@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-use-after-free Read in nilfs_load_inode_block",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15176d81a80000",
+            "c-reproducer": "/text?tag=ReproC&x=132d93d9a80000",
+            "kernel-config": "/text?tag=KernelConfig&x=5d10d93e1ae1f229",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=5f0bc0b042fc77ff70e14c790abdec960cde4ec1",
+            "kernel-source-commit": "5f0bc0b042fc77ff70e14c790abdec960cde4ec1",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/41fe1bae463b32861fb14e967372da7e318bc6e1",
+            "syzkaller-commit": "41fe1bae463b32861fb14e967372da7e318bc6e1",
+            "compiler-description": "Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15c7ca86a80000"
+        }
+    ],
+    "subsystems": [
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "fac2650276eced3c94bcdbc21d0e5be637c1e582",
+    "patch": "diff --git a/fs/nilfs2/inode.c b/fs/nilfs2/inode.c\nindex a8ce522ac747..35bc79305318 100644\n--- a/fs/nilfs2/inode.c\n+++ b/fs/nilfs2/inode.c\n@@ -1101,9 +1101,17 @@ int nilfs_set_file_dirty(struct inode *inode, unsigned int nr_dirty)\n \n int __nilfs_mark_inode_dirty(struct inode *inode, int flags)\n {\n+\tstruct the_nilfs *nilfs = inode->i_sb->s_fs_info;\n \tstruct buffer_head *ibh;\n \tint err;\n \n+\t/*\n+\t * Do not dirty inodes after the log writer has been detached\n+\t * and its nilfs_root struct has been freed.\n+\t */\n+\tif (unlikely(nilfs_purging(nilfs)))\n+\t\treturn 0;\n+\n \terr = nilfs_load_inode_block(inode, &ibh);\n \tif (unlikely(err)) {\n \t\tnilfs_warn(inode->i_sb,\ndiff --git a/fs/nilfs2/segment.c b/fs/nilfs2/segment.c\nindex c2553024bd25..581691e4be49 100644\n--- a/fs/nilfs2/segment.c\n+++ b/fs/nilfs2/segment.c\n@@ -2845,6 +2845,7 @@ void nilfs_detach_log_writer(struct super_block *sb)\n \t\tnilfs_segctor_destroy(nilfs->ns_writer);\n \t\tnilfs->ns_writer = NULL;\n \t}\n+\tset_nilfs_purging(nilfs);\n \n \t/* Force to free the list of dirty files */\n \tspin_lock(&nilfs->ns_inode_lock);\n@@ -2857,4 +2858,5 @@ void nilfs_detach_log_writer(struct super_block *sb)\n \tup_write(&nilfs->ns_segctor_sem);\n \n \tnilfs_dispose_list(nilfs, &garbage_list, 1);\n+\tclear_nilfs_purging(nilfs);\n }\ndiff --git a/fs/nilfs2/the_nilfs.h b/fs/nilfs2/the_nilfs.h\nindex 47c7dfbb7ea5..cd4ae1b8ae16 100644\n--- a/fs/nilfs2/the_nilfs.h\n+++ b/fs/nilfs2/the_nilfs.h\n@@ -29,6 +29,7 @@ enum {\n \tTHE_NILFS_DISCONTINUED,\t/* 'next' pointer chain has broken */\n \tTHE_NILFS_GC_RUNNING,\t/* gc process is running */\n \tTHE_NILFS_SB_DIRTY,\t/* super block is dirty */\n+\tTHE_NILFS_PURGING,\t/* disposing dirty files for cleanup */\n };\n \n /**\n@@ -208,6 +209,7 @@ THE_NILFS_FNS(INIT, init)\n THE_NILFS_FNS(DISCONTINUED, discontinued)\n THE_NILFS_FNS(GC_RUNNING, gc_running)\n THE_NILFS_FNS(SB_DIRTY, sb_dirty)\n+THE_NILFS_FNS(PURGING, purging)\n \n /*\n  * Mount option operations\n",
+    "patch_modified_files": [
+        "fs/nilfs2/inode.c",
+        "fs/nilfs2/segment.c",
+        "fs/nilfs2/the_nilfs.h"
+    ]
+}

@@ -1,0 +1,74 @@
+{
+    "version": 1,
+    "title": "general protection fault in inet_csk_accept",
+    "display-title": "general protection fault in inet_csk_accept",
+    "id": "c2be48c653fee8b658c47350c317e480b50ced41",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mptcp: never allow the PM to close a listener subflow",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b0cdc5dbcf2ba0d99785da5aabf1b17943805b8a",
+            "hash": "b0cdc5dbcf2ba0d99785da5aabf1b17943805b8a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "ip6_gre: proper dev_{hold|put} in ndo_[un]init methods",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7f700334be9aeb91d5d86ef9ad2d901b9b453e9b",
+        "hash": "7f700334be9aeb91d5d86ef9ad2d901b9b453e9b",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000004c679505d2c8c1d4@google.com/T/",
+        "https://lore.kernel.org/all/20211220143040.058287525@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/299865ffd73315ea549ed4a8026783633203a237.1639155048.git.pabeni@redhat.com/T/",
+        "https://lore.kernel.org/all/ebc7594cdd420d241fb2172ddb8542ba64717657.1639238695.git.pabeni@redhat.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in inet_csk_accept",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16280ae5b00000",
+            "c-reproducer": "/text?tag=ReproC&x=1000fdc5b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=221ffc09e39ebbd1",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=2a987e65025e2b79c6d453b78cb5985ac6e5eb26",
+            "kernel-source-commit": "2a987e65025e2b79c6d453b78cb5985ac6e5eb26",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a4a2a50158b25d4af0fd07528f38e6656b903d68",
+            "syzkaller-commit": "a4a2a50158b25d4af0fd07528f38e6656b903d68",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=145deabdb00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "mptcp_pm_nl_rm_addr_or_subflow",
+            "net/mptcp/pm_netlink.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "ip6gre_newlink_common",
+            "net/ipv6/ip6_gre.c"
+        ],
+        [
+            "ip6gre_tunnel_init_common",
+            "net/ipv6/ip6_gre.c"
+        ],
+        [
+            "ip6erspan_tap_init",
+            "net/ipv6/ip6_gre.c"
+        ]
+    ],
+    "patch_commit_date": "2021-12-11T16:11:12+00:00",
+    "cause_commit_date": "2021-03-29T18:39:51+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "884d2b845477cd0a18302444dc20fe2d9a01743e",
+    "patch": "diff --git a/net/mptcp/pm_netlink.c b/net/mptcp/pm_netlink.c\nindex 7b96be1e9f14..f523051f5aef 100644\n--- a/net/mptcp/pm_netlink.c\n+++ b/net/mptcp/pm_netlink.c\n@@ -700,6 +700,9 @@ static void mptcp_pm_nl_rm_addr_or_subflow(struct mptcp_sock *msk,\n \n \tmsk_owned_by_me(msk);\n \n+\tif (sk->sk_state == TCP_LISTEN)\n+\t\treturn;\n+\n \tif (!rm_list->nr)\n \t\treturn;\n \n",
+    "patch_modified_files": [
+        "net/mptcp/pm_netlink.c"
+    ]
+}

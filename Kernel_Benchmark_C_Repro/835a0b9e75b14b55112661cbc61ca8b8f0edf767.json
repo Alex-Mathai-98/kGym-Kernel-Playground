@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "INFO: task hung in __get_super",
+    "display-title": "INFO: task hung in __get_super",
+    "id": "835a0b9e75b14b55112661cbc61ca8b8f0edf767",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "loop: Don't change loop device under exclusive opener",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=33ec3e53e7b1869d7851e59e126bdb0fe0bd1982",
+            "hash": "33ec3e53e7b1869d7851e59e126bdb0fe0bd1982",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/001a113ed5540f411c0568cc8418@google.com/T/",
+        "https://lore.kernel.org/all/201905150102.x4F12b6o009249@www262.sakura.ne.jp/T/",
+        "https://lore.kernel.org/all/20190516140127.23272-1-jack@suse.cz/T/",
+        "https://lore.kernel.org/all/20190608113950.8033-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190608114232.8731-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1291b1f4a00000",
+            "c-reproducer": "/text?tag=ReproC&x=135385a8a00000",
+            "kernel-config": "/text?tag=KernelConfig&x=a42d110b47dd6b36",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=037904a22bf8b2c999a6e2a8ba971b549c1e9600",
+            "kernel-source-commit": "037904a22bf8b2c999a6e2a8ba971b549c1e9600",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/b617407b25b37a7a8efa47127005d1f20dd0abe1",
+            "syzkaller-commit": "b617407b25b37a7a8efa47127005d1f20dd0abe1",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17e019a8a00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "loop_set_fd",
+            "drivers/block/loop.c"
+        ]
+    ],
+    "patch_commit_date": "2019-05-16T14:01:27+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "a278682dad37fd2f8d2f30d8e84e376a856ab472",
+    "patch": "diff --git a/drivers/block/loop.c b/drivers/block/loop.c\nindex 102d79575895..f11b7dc16e9d 100644\n--- a/drivers/block/loop.c\n+++ b/drivers/block/loop.c\n@@ -945,9 +945,20 @@ static int loop_set_fd(struct loop_device *lo, fmode_t mode,\n \tif (!file)\n \t\tgoto out;\n \n+\t/*\n+\t * If we don't hold exclusive handle for the device, upgrade to it\n+\t * here to avoid changing device under exclusive owner.\n+\t */\n+\tif (!(mode & FMODE_EXCL)) {\n+\t\tbdgrab(bdev);\n+\t\terror = blkdev_get(bdev, mode | FMODE_EXCL, loop_set_fd);\n+\t\tif (error)\n+\t\t\tgoto out_putf;\n+\t}\n+\n \terror = mutex_lock_killable(&loop_ctl_mutex);\n \tif (error)\n-\t\tgoto out_putf;\n+\t\tgoto out_bdev;\n \n \terror = -EBUSY;\n \tif (lo->lo_state != Lo_unbound)\n@@ -1012,10 +1023,15 @@ static int loop_set_fd(struct loop_device *lo, fmode_t mode,\n \tmutex_unlock(&loop_ctl_mutex);\n \tif (partscan)\n \t\tloop_reread_partitions(lo, bdev);\n+\tif (!(mode & FMODE_EXCL))\n+\t\tblkdev_put(bdev, mode | FMODE_EXCL);\n \treturn 0;\n \n out_unlock:\n \tmutex_unlock(&loop_ctl_mutex);\n+out_bdev:\n+\tif (!(mode & FMODE_EXCL))\n+\t\tblkdev_put(bdev, mode | FMODE_EXCL);\n out_putf:\n \tfput(file);\n out:\n",
+    "patch_modified_files": [
+        "drivers/block/loop.c"
+    ]
+}

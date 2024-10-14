@@ -1,0 +1,70 @@
+{
+    "version": 1,
+    "title": "memory leak in ieee80211_check_fast_xmit",
+    "display-title": "memory leak in ieee80211_check_fast_xmit",
+    "id": "ef0fa4c7084a1a7f971f3d5055106ab7cb01d0e0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mac80211: always wind down STA state",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=dcd479e10a0510522a5d88b29b8f79ea3467d501",
+            "hash": "dcd479e10a0510522a5d88b29b8f79ea3467d501",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000477d5705b00bcbec@google.com/T/",
+        "https://lore.kernel.org/all/20201009141710.7223b322a955.I95bd08b9ad0e039c034927cce0b75beea38e059b@changeid/T/",
+        "https://lore.kernel.org/all/20201110035318.423757-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201110035440.424258-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201110035541.424648-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201110035611.424867-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201110035633.425030-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201110035651.425177-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201110105138.3f84f2055a30.I65a9d01564067122c47d0b5b6448bb4702a06b02@changeid/T/",
+        "https://lore.kernel.org/all/20201117122106.144800239@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201117122109.116890262@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201117122111.018425544@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201117122113.128215851@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201117122121.381905960@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201117122138.925150709@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201120104539.534424264@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201120104539.706905067@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201120104539.806156260@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201120104540.414709708@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201120104541.058449969@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201120104541.168007611@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1762d887900000",
+            "c-reproducer": "/text?tag=ReproC&x=174c88ad900000",
+            "kernel-config": "/text?tag=KernelConfig&x=23de0cdbdd5f681b",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c9c9e6a49f8998e9334507378c08cc16cb3ec0e5",
+            "kernel-source-commit": "c9c9e6a49f8998e9334507378c08cc16cb3ec0e5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/54289b0835634ca07a8117613c48b73e9e647d13",
+            "syzkaller-commit": "54289b0835634ca07a8117613c48b73e9e647d13",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=102a3881900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "sta_info_get_by_idx",
+            "net/mac80211/sta_info.c"
+        ]
+    ],
+    "patch_commit_date": "2020-10-09T12:17:11+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "9bdaf3b91efd229dd272b228e13df10310c80d19",
+    "patch": "diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c\nindex fb4f2b9b294f..4fe284ff1ea3 100644\n--- a/net/mac80211/sta_info.c\n+++ b/net/mac80211/sta_info.c\n@@ -258,6 +258,24 @@ struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,\n  */\n void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)\n {\n+\t/*\n+\t * If we had used sta_info_pre_move_state() then we might not\n+\t * have gone through the state transitions down again, so do\n+\t * it here now (and warn if it's inserted).\n+\t *\n+\t * This will clear state such as fast TX/RX that may have been\n+\t * allocated during state transitions.\n+\t */\n+\twhile (sta->sta_state > IEEE80211_STA_NONE) {\n+\t\tint ret;\n+\n+\t\tWARN_ON_ONCE(test_sta_flag(sta, WLAN_STA_INSERTED));\n+\n+\t\tret = sta_info_move_state(sta, sta->sta_state - 1);\n+\t\tif (WARN_ONCE(ret, \"sta_info_move_state() returned %d\\n\", ret))\n+\t\t\tbreak;\n+\t}\n+\n \tif (sta->rate_ctrl)\n \t\trate_control_free_sta(sta);\n \n",
+    "patch_modified_files": [
+        "net/mac80211/sta_info.c"
+    ]
+}

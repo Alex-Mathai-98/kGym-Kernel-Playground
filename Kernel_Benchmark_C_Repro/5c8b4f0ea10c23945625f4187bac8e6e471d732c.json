@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "kernel BUG in __page_mapcount",
+    "display-title": "kernel BUG in __page_mapcount",
+    "id": "5c8b4f0ea10c23945625f4187bac8e6e471d732c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/proc: task_mmu.c: don't read mapcount for migration entry",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=24d7275ce2791829953ed4e72f68277ceb2571c6",
+            "hash": "24d7275ce2791829953ed4e72f68277ceb2571c6",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000017977605c395a751@google.com/T/",
+        "https://lore.kernel.org/all/20220112215625.4144871-1-shy828301@gmail.com/T/",
+        "https://lore.kernel.org/all/20220120202805.3369-1-shy828301@gmail.com/T/",
+        "https://lore.kernel.org/all/20220201223837.790617-1-shy828301@gmail.com/T/",
+        "https://lore.kernel.org/all/20220203182641.824731-1-shy828301@gmail.com/T/",
+        "https://lore.kernel.org/all/20220212003227.1A586C340E9@smtp.kernel.org/T/",
+        "https://lore.kernel.org/all/20220214092510.221474733@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220215221503.855815-1-shy828301@gmail.com/T/",
+        "https://lore.kernel.org/all/20220215221616.855894-1-shy828301@gmail.com/T/",
+        "https://lore.kernel.org/all/20220221084921.147454846@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220221084930.872957717@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "kernel BUG in __page_mapcount",
+            "syz-reproducer": "/text?tag=ReproSyz&x=133200fdb00000",
+            "c-reproducer": "/text?tag=ReproC&x=17c3102db00000",
+            "kernel-config": "/text?tag=KernelConfig&x=ae22d1ee4fbca18",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=6e0567b7305209c2d689ce57180a63d8dc657ad8",
+            "kernel-source-commit": "6e0567b7305209c2d689ce57180a63d8dc657ad8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a938f0b814c3578d9608be02ef72b45d2b10cf4b",
+            "syzkaller-commit": "a938f0b814c3578d9608be02ef72b45d2b10cf4b",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15ff477db00000"
+        }
+    ],
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "925346c129da1171222a9cdb11fa2b734d9955da",
+    "patch": "diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c\nindex 18f8c3acbb85..6e97ed775074 100644\n--- a/fs/proc/task_mmu.c\n+++ b/fs/proc/task_mmu.c\n@@ -440,7 +440,8 @@ static void smaps_page_accumulate(struct mem_size_stats *mss,\n }\n \n static void smaps_account(struct mem_size_stats *mss, struct page *page,\n-\t\tbool compound, bool young, bool dirty, bool locked)\n+\t\tbool compound, bool young, bool dirty, bool locked,\n+\t\tbool migration)\n {\n \tint i, nr = compound ? compound_nr(page) : 1;\n \tunsigned long size = nr * PAGE_SIZE;\n@@ -467,8 +468,15 @@ static void smaps_account(struct mem_size_stats *mss, struct page *page,\n \t * page_count(page) == 1 guarantees the page is mapped exactly once.\n \t * If any subpage of the compound page mapped with PTE it would elevate\n \t * page_count().\n+\t *\n+\t * The page_mapcount() is called to get a snapshot of the mapcount.\n+\t * Without holding the page lock this snapshot can be slightly wrong as\n+\t * we cannot always read the mapcount atomically.  It is not safe to\n+\t * call page_mapcount() even with PTL held if the page is not mapped,\n+\t * especially for migration entries.  Treat regular migration entries\n+\t * as mapcount == 1.\n \t */\n-\tif (page_count(page) == 1) {\n+\tif ((page_count(page) == 1) || migration) {\n \t\tsmaps_page_accumulate(mss, page, size, size << PSS_SHIFT, dirty,\n \t\t\tlocked, true);\n \t\treturn;\n@@ -517,6 +525,7 @@ static void smaps_pte_entry(pte_t *pte, unsigned long addr,\n \tstruct vm_area_struct *vma = walk->vma;\n \tbool locked = !!(vma->vm_flags & VM_LOCKED);\n \tstruct page *page = NULL;\n+\tbool migration = false;\n \n \tif (pte_present(*pte)) {\n \t\tpage = vm_normal_page(vma, addr, *pte);\n@@ -536,8 +545,11 @@ static void smaps_pte_entry(pte_t *pte, unsigned long addr,\n \t\t\t} else {\n \t\t\t\tmss->swap_pss += (u64)PAGE_SIZE << PSS_SHIFT;\n \t\t\t}\n-\t\t} else if (is_pfn_swap_entry(swpent))\n+\t\t} else if (is_pfn_swap_entry(swpent)) {\n+\t\t\tif (is_migration_entry(swpent))\n+\t\t\t\tmigration = true;\n \t\t\tpage = pfn_swap_entry_to_page(swpent);\n+\t\t}\n \t} else {\n \t\tsmaps_pte_hole_lookup(addr, walk);\n \t\treturn;\n@@ -546,7 +558,8 @@ static void smaps_pte_entry(pte_t *pte, unsigned long addr,\n \tif (!page)\n \t\treturn;\n \n-\tsmaps_account(mss, page, false, pte_young(*pte), pte_dirty(*pte), locked);\n+\tsmaps_account(mss, page, false, pte_young(*pte), pte_dirty(*pte),\n+\t\t      locked, migration);\n }\n \n #ifdef CONFIG_TRANSPARENT_HUGEPAGE\n@@ -557,6 +570,7 @@ static void smaps_pmd_entry(pmd_t *pmd, unsigned long addr,\n \tstruct vm_area_struct *vma = walk->vma;\n \tbool locked = !!(vma->vm_flags & VM_LOCKED);\n \tstruct page *page = NULL;\n+\tbool migration = false;\n \n \tif (pmd_present(*pmd)) {\n \t\t/* FOLL_DUMP will return -EFAULT on huge zero page */\n@@ -564,8 +578,10 @@ static void smaps_pmd_entry(pmd_t *pmd, unsigned long addr,\n \t} else if (unlikely(thp_migration_supported() && is_swap_pmd(*pmd))) {\n \t\tswp_entry_t entry = pmd_to_swp_entry(*pmd);\n \n-\t\tif (is_migration_entry(entry))\n+\t\tif (is_migration_entry(entry)) {\n+\t\t\tmigration = true;\n \t\t\tpage = pfn_swap_entry_to_page(entry);\n+\t\t}\n \t}\n \tif (IS_ERR_OR_NULL(page))\n \t\treturn;\n@@ -577,7 +593,9 @@ static void smaps_pmd_entry(pmd_t *pmd, unsigned long addr,\n \t\t/* pass */;\n \telse\n \t\tmss->file_thp += HPAGE_PMD_SIZE;\n-\tsmaps_account(mss, page, true, pmd_young(*pmd), pmd_dirty(*pmd), locked);\n+\n+\tsmaps_account(mss, page, true, pmd_young(*pmd), pmd_dirty(*pmd),\n+\t\t      locked, migration);\n }\n #else\n static void smaps_pmd_entry(pmd_t *pmd, unsigned long addr,\n@@ -1378,6 +1396,7 @@ static pagemap_entry_t pte_to_pagemap_entry(struct pagemapread *pm,\n {\n \tu64 frame = 0, flags = 0;\n \tstruct page *page = NULL;\n+\tbool migration = false;\n \n \tif (pte_present(pte)) {\n \t\tif (pm->show_pfn)\n@@ -1399,13 +1418,14 @@ static pagemap_entry_t pte_to_pagemap_entry(struct pagemapread *pm,\n \t\t\tframe = swp_type(entry) |\n \t\t\t\t(swp_offset(entry) << MAX_SWAPFILES_SHIFT);\n \t\tflags |= PM_SWAP;\n+\t\tmigration = is_migration_entry(entry);\n \t\tif (is_pfn_swap_entry(entry))\n \t\t\tpage = pfn_swap_entry_to_page(entry);\n \t}\n \n \tif (page && !PageAnon(page))\n \t\tflags |= PM_FILE;\n-\tif (page && page_mapcount(page) == 1)\n+\tif (page && !migration && page_mapcount(page) == 1)\n \t\tflags |= PM_MMAP_EXCLUSIVE;\n \tif (vma->vm_flags & VM_SOFTDIRTY)\n \t\tflags |= PM_SOFT_DIRTY;\n@@ -1421,8 +1441,9 @@ static int pagemap_pmd_range(pmd_t *pmdp, unsigned long addr, unsigned long end,\n \tspinlock_t *ptl;\n \tpte_t *pte, *orig_pte;\n \tint err = 0;\n-\n #ifdef CONFIG_TRANSPARENT_HUGEPAGE\n+\tbool migration = false;\n+\n \tptl = pmd_trans_huge_lock(pmdp, vma);\n \tif (ptl) {\n \t\tu64 flags = 0, frame = 0;\n@@ -1461,11 +1482,12 @@ static int pagemap_pmd_range(pmd_t *pmdp, unsigned long addr, unsigned long end,\n \t\t\tif (pmd_swp_uffd_wp(pmd))\n \t\t\t\tflags |= PM_UFFD_WP;\n \t\t\tVM_BUG_ON(!is_pmd_migration_entry(pmd));\n+\t\t\tmigration = is_migration_entry(entry);\n \t\t\tpage = pfn_swap_entry_to_page(entry);\n \t\t}\n #endif\n \n-\t\tif (page && page_mapcount(page) == 1)\n+\t\tif (page && !migration && page_mapcount(page) == 1)\n \t\t\tflags |= PM_MMAP_EXCLUSIVE;\n \n \t\tfor (; addr != end; addr += PAGE_SIZE) {\n",
+    "patch_modified_files": [
+        "fs/proc/task_mmu.c"
+    ]
+}

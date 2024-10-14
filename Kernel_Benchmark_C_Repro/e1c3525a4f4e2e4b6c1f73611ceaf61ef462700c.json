@@ -1,0 +1,62 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in thrustmaster_probe",
+    "display-title": "KASAN: slab-out-of-bounds Read in thrustmaster_probe",
+    "id": "e1c3525a4f4e2e4b6c1f73611ceaf61ef462700c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "HID: hid-thrustmaster: fix OOB read in thrustmaster_interrupts",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fc3ef2e3297b3c0e2006b5d7b3d66965e3392036",
+            "hash": "fc3ef2e3297b3c0e2006b5d7b3d66965e3392036",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "ASoC: amd: fix acpi dependency kernel warning",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d463cead11ace05c81de31a0fb9c2507c5c1d0a2",
+        "hash": "d463cead11ace05c81de31a0fb9c2507c5c1d0a2",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000d181a205d874c066@google.com/T/",
+        "https://lore.kernel.org/all/20220220160114.26882-1-paskripkin@gmail.com/T/",
+        "https://lore.kernel.org/all/20220314112743.029192918@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220314112744.120491875@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Read in thrustmaster_probe",
+            "syz-reproducer": "/text?tag=ReproSyz&x=175ecbf2700000",
+            "c-reproducer": "/text?tag=ReproC&x=109973f2700000",
+            "kernel-config": "/text?tag=KernelConfig&x=a78b064590b9f912",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c5d9ae265b105d9a67575fb67bd4650a6fc08e25",
+            "kernel-source-commit": "c5d9ae265b105d9a67575fb67bd4650a6fc08e25",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8b9ca619df135211a89cc19719f2705d0016045d",
+            "syzkaller-commit": "8b9ca619df135211a89cc19719f2705d0016045d",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17cce422700000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "thrustmaster_interrupts",
+            "drivers/hid/hid-thrustmaster.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2022-02-20T16:01:14+00:00",
+    "cause_commit_date": "2021-03-26T16:44:31+00:00",
+    "subsystems": [
+        "input",
+        "usb"
+    ],
+    "parent_of_fix_commit": "ac89895213d8950dba6ab342863a0959f73142a7",
+    "patch": "diff --git a/drivers/hid/hid-thrustmaster.c b/drivers/hid/hid-thrustmaster.c\nindex a4e20f9e598b..c3e6d69fdfbd 100644\n--- a/drivers/hid/hid-thrustmaster.c\n+++ b/drivers/hid/hid-thrustmaster.c\n@@ -160,6 +160,12 @@ static void thrustmaster_interrupts(struct hid_device *hdev)\n \t\treturn;\n \t}\n \n+\tif (usbif->cur_altsetting->desc.bNumEndpoints < 2) {\n+\t\tkfree(send_buf);\n+\t\thid_err(hdev, \"Wrong number of endpoints?\\n\");\n+\t\treturn;\n+\t}\n+\n \tep = &usbif->cur_altsetting->endpoint[1];\n \tb_ep = ep->desc.bEndpointAddress;\n \n",
+    "patch_modified_files": [
+        "drivers/hid/hid-thrustmaster.c"
+    ]
+}

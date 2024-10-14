@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "WARNING in percpu_ref_kill_and_confirm",
+    "display-title": "WARNING in percpu_ref_kill_and_confirm (2)",
+    "id": "dac215157cdf29ade72d0436f902d39988cb0edf",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: fix double io_uring free",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9faadcc8abe4b83d0263216dc3a6321d5bbd616b",
+            "hash": "9faadcc8abe4b83d0263216dc3a6321d5bbd616b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "lockdep: Fix lockdep recursion",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4d004099a668c41522242aa146a38cc4eb59cb1e",
+        "hash": "4d004099a668c41522242aa146a38cc4eb59cb1e",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000004d454d05b69b5bd3@google.com/T/",
+        "https://lore.kernel.org/all/20201228125020.963311703@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/cover.1608575562.git.asml.silence@gmail.com/T/",
+        "https://lore.kernel.org/all/e8def1be-928f-5406-4f10-fbf41e6ef4f1@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1407c287500000",
+            "c-reproducer": "/text?tag=ReproC&x=10ed5f07500000",
+            "kernel-config": "/text?tag=KernelConfig&x=3416bb960d5c705d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7b1b868e1d9156484ccce9bf11122c053de82617",
+            "kernel-source-commit": "7b1b868e1d9156484ccce9bf11122c053de82617",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/bca53db974f570410921f59b8c2c59a3d263cb44",
+            "syzkaller-commit": "bca53db974f570410921f59b8c2c59a3d263cb44",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=123b0f9b500000"
+        }
+    ],
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "a528b04ea40690ff40501f50d618a62a02b19620",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex 846c635d0620..7c0b77d49cd2 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -9379,55 +9379,52 @@ static int io_allocate_scq_urings(struct io_ring_ctx *ctx,\n \treturn 0;\n }\n \n+static int io_uring_install_fd(struct io_ring_ctx *ctx, struct file *file)\n+{\n+\tint ret, fd;\n+\n+\tfd = get_unused_fd_flags(O_RDWR | O_CLOEXEC);\n+\tif (fd < 0)\n+\t\treturn fd;\n+\n+\tret = io_uring_add_task_file(ctx, file);\n+\tif (ret) {\n+\t\tput_unused_fd(fd);\n+\t\treturn ret;\n+\t}\n+\tfd_install(fd, file);\n+\treturn fd;\n+}\n+\n /*\n  * Allocate an anonymous fd, this is what constitutes the application\n  * visible backing of an io_uring instance. The application mmaps this\n  * fd to gain access to the SQ/CQ ring details. If UNIX sockets are enabled,\n  * we have to tie this fd to a socket for file garbage collection purposes.\n  */\n-static int io_uring_get_fd(struct io_ring_ctx *ctx)\n+static struct file *io_uring_get_file(struct io_ring_ctx *ctx)\n {\n \tstruct file *file;\n+#if defined(CONFIG_UNIX)\n \tint ret;\n-\tint fd;\n \n-#if defined(CONFIG_UNIX)\n \tret = sock_create_kern(&init_net, PF_UNIX, SOCK_RAW, IPPROTO_IP,\n \t\t\t\t&ctx->ring_sock);\n \tif (ret)\n-\t\treturn ret;\n+\t\treturn ERR_PTR(ret);\n #endif\n \n-\tret = get_unused_fd_flags(O_RDWR | O_CLOEXEC);\n-\tif (ret < 0)\n-\t\tgoto err;\n-\tfd = ret;\n-\n \tfile = anon_inode_getfile(\"[io_uring]\", &io_uring_fops, ctx,\n \t\t\t\t\tO_RDWR | O_CLOEXEC);\n-\tif (IS_ERR(file)) {\n-\t\tput_unused_fd(fd);\n-\t\tret = PTR_ERR(file);\n-\t\tgoto err;\n-\t}\n-\n #if defined(CONFIG_UNIX)\n-\tctx->ring_sock->file = file;\n-#endif\n-\tret = io_uring_add_task_file(ctx, file);\n-\tif (ret) {\n-\t\tfput(file);\n-\t\tput_unused_fd(fd);\n-\t\tgoto err;\n+\tif (IS_ERR(file)) {\n+\t\tsock_release(ctx->ring_sock);\n+\t\tctx->ring_sock = NULL;\n+\t} else {\n+\t\tctx->ring_sock->file = file;\n \t}\n-\tfd_install(fd, file);\n-\treturn fd;\n-err:\n-#if defined(CONFIG_UNIX)\n-\tsock_release(ctx->ring_sock);\n-\tctx->ring_sock = NULL;\n #endif\n-\treturn ret;\n+\treturn file;\n }\n \n static int io_uring_create(unsigned entries, struct io_uring_params *p,\n@@ -9435,6 +9432,7 @@ static int io_uring_create(unsigned entries, struct io_uring_params *p,\n {\n \tstruct user_struct *user = NULL;\n \tstruct io_ring_ctx *ctx;\n+\tstruct file *file;\n \tbool limit_mem;\n \tint ret;\n \n@@ -9582,13 +9580,22 @@ static int io_uring_create(unsigned entries, struct io_uring_params *p,\n \t\tgoto err;\n \t}\n \n+\tfile = io_uring_get_file(ctx);\n+\tif (IS_ERR(file)) {\n+\t\tret = PTR_ERR(file);\n+\t\tgoto err;\n+\t}\n+\n \t/*\n \t * Install ring fd as the very last thing, so we don't risk someone\n \t * having closed it before we finish setup\n \t */\n-\tret = io_uring_get_fd(ctx);\n-\tif (ret < 0)\n-\t\tgoto err;\n+\tret = io_uring_install_fd(ctx, file);\n+\tif (ret < 0) {\n+\t\t/* fput will clean it up */\n+\t\tfput(file);\n+\t\treturn ret;\n+\t}\n \n \ttrace_io_uring_create(ret, ctx, p->sq_entries, p->cq_entries, p->flags);\n \treturn ret;\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

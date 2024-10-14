@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "WARNING in userfaultfd_ioctl",
+    "display-title": "WARNING in userfaultfd_ioctl",
+    "id": "8399806dbab1110cc271fc758282afa745423dd6",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "userfaultfd: check VM_MAYWRITE was set after verifying the uffd is registered",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=01e881f5a1fca4677e82733061868c6d6ea05ca7",
+            "hash": "01e881f5a1fca4677e82733061868c6d6ea05ca7",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000d803f9057c263f74@google.com/T/",
+        "https://lore.kernel.org/all/20181206212028.18726-1-aarcange@redhat.com/T/",
+        "https://lore.kernel.org/all/20181218163927.119623235@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20181220085922.332225035@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=112711a3400000",
+            "c-reproducer": "/text?tag=ReproC&x=169eb87d400000",
+            "kernel-config": "/text?tag=KernelConfig&x=4602730af4f872ef",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d8f190ee836a4581ba906731835d735cb97948f5",
+            "kernel-source-commit": "d8f190ee836a4581ba906731835d735cb97948f5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/5a58167323289751602879a986a1b9f95531a31b",
+            "syzkaller-commit": "5a58167323289751602879a986a1b9f95531a31b",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1349187d400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "userfaultfd_unregister",
+            "fs/userfaultfd.c"
+        ]
+    ],
+    "patch_commit_date": "2018-12-14T22:17:17+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "61c6de667263184125d5ca75e894fcad632b0dd3",
+    "patch": "diff --git a/fs/userfaultfd.c b/fs/userfaultfd.c\nindex cd58939dc977..7a85e609fc27 100644\n--- a/fs/userfaultfd.c\n+++ b/fs/userfaultfd.c\n@@ -1566,7 +1566,6 @@ static int userfaultfd_unregister(struct userfaultfd_ctx *ctx,\n \t\tcond_resched();\n \n \t\tBUG_ON(!vma_can_userfault(vma));\n-\t\tWARN_ON(!(vma->vm_flags & VM_MAYWRITE));\n \n \t\t/*\n \t\t * Nothing to do: this vma is already registered into this\n@@ -1575,6 +1574,8 @@ static int userfaultfd_unregister(struct userfaultfd_ctx *ctx,\n \t\tif (!vma->vm_userfaultfd_ctx.ctx)\n \t\t\tgoto skip;\n \n+\t\tWARN_ON(!(vma->vm_flags & VM_MAYWRITE));\n+\n \t\tif (vma->vm_start > start)\n \t\t\tstart = vma->vm_start;\n \t\tvma_end = min(end, vma->vm_end);\n",
+    "patch_modified_files": [
+        "fs/userfaultfd.c"
+    ]
+}

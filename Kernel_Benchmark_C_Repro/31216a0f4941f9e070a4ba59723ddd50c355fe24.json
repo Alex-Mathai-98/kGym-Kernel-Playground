@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel NULL pointer dereference in fifo_set_limit",
+    "display-title": "BUG: unable to handle kernel NULL pointer dereference in fifo_set_limit",
+    "id": "31216a0f4941f9e070a4ba59723ddd50c355fe24",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net_sched: fix NULL deref in fifo_set_limit()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=560ee196fe9e5037e5015e2cdb14b3aecb1cd7dc",
+            "hash": "560ee196fe9e5037e5015e2cdb14b3aecb1cd7dc",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "BUG: unable to handle kernel NULL pointer dereference in fifo_set_limit",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14ba2e0f300000",
+            "c-reproducer": "/text?tag=ReproC&x=175392df300000",
+            "kernel-config": "/text?tag=KernelConfig&x=9290a409049988d4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=02d5e016800d082058b3d3b7c3ede136cdc6ddcb",
+            "kernel-source-commit": "02d5e016800d082058b3d3b7c3ede136cdc6ddcb",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/be530f6c7e0a2e1f66d03a5ad71d209302219d37",
+            "syzkaller-commit": "be530f6c7e0a2e1f66d03a5ad71d209302219d37",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14e339df300000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "fifo_set_limit",
+            "net/sched/sch_fifo.c"
+        ]
+    ],
+    "patch_commit_date": "2021-09-30T21:22:39+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "5fb14d20f8241461d351bef73e49871e4b2330ab",
+    "patch": "diff --git a/net/sched/sch_fifo.c b/net/sched/sch_fifo.c\nindex a579a4131d22..e1040421b797 100644\n--- a/net/sched/sch_fifo.c\n+++ b/net/sched/sch_fifo.c\n@@ -233,6 +233,9 @@ int fifo_set_limit(struct Qdisc *q, unsigned int limit)\n \tif (strncmp(q->ops->id + 1, \"fifo\", 4) != 0)\n \t\treturn 0;\n \n+\tif (!q->ops->change)\n+\t\treturn 0;\n+\n \tnla = kmalloc(nla_attr_size(sizeof(struct tc_fifo_qopt)), GFP_KERNEL);\n \tif (nla) {\n \t\tnla->nla_type = RTM_NEWQDISC;\n",
+    "patch_modified_files": [
+        "net/sched/sch_fifo.c"
+    ]
+}

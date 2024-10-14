@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "memory leak in copy_process",
+    "display-title": "memory leak in copy_process",
+    "id": "337be0b664722d3f6eb65ffce8f596807743b5d5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm/madvise: fix memory leak from process_madvise",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=450677dcb0cce5cb751538360b7196c28b733f3e",
+            "hash": "450677dcb0cce5cb751538360b7196c28b733f3e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=102c1906500000",
+            "c-reproducer": "/text?tag=ReproC&x=16af8506500000",
+            "kernel-config": "/text?tag=KernelConfig&x=a3f13716fa0212fd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e28c0d7c92c89016c12a677616668957351e7542",
+            "kernel-source-commit": "e28c0d7c92c89016c12a677616668957351e7542",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/1bf9a662c66aa432ff2fe3bf2562578cef626c09",
+            "syzkaller-commit": "1bf9a662c66aa432ff2fe3bf2562578cef626c09",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15396af6500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "SYSCALL_DEFINE5",
+            "mm/madvise.c"
+        ]
+    ],
+    "patch_commit_date": "2020-11-22T06:16:58+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "a349e4c659609fd20e4beea89e5c4a4038e33a95",
+    "patch": "diff --git a/mm/madvise.c b/mm/madvise.c\nindex 416a56b8e757..7e773f949ef9 100644\n--- a/mm/madvise.c\n+++ b/mm/madvise.c\n@@ -1231,8 +1231,6 @@ SYSCALL_DEFINE5(process_madvise, int, pidfd, const struct iovec __user *, vec,\n \t\tret = total_len - iov_iter_count(&iter);\n \n \tmmput(mm);\n-\treturn ret;\n-\n release_task:\n \tput_task_struct(task);\n put_pid:\n",
+    "patch_modified_files": [
+        "mm/madvise.c"
+    ]
+}

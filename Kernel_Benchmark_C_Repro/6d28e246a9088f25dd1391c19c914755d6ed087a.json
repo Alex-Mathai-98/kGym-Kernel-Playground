@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel NULL pointer dereference in __lookup_slow",
+    "display-title": "BUG: unable to handle kernel NULL pointer dereference in __lookup_slow",
+    "id": "6d28e246a9088f25dd1391c19c914755d6ed087a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "reiserfs: add check for an invalid ih_entry_count",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d24396c5290ba8ab04ba505176874c4e04a2d53c",
+            "hash": "d24396c5290ba8ab04ba505176874c4e04a2d53c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b0bbc905b05ab8d5@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1737b8a7500000",
+            "c-reproducer": "/text?tag=ReproC&x=1697246b500000",
+            "kernel-config": "/text?tag=KernelConfig&x=e597c2b53c984cd8",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a68a0262abdaa251e12c53715f48e698a18ef402",
+            "kernel-source-commit": "a68a0262abdaa251e12c53715f48e698a18ef402",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c090b4da255257841173fb4eb18c19d69b293180",
+            "syzkaller-commit": "c090b4da255257841173fb4eb18c19d69b293180",
+            "compiler-description": "clang version 11.0.0 (https://github.com/llvm/llvm-project.git ca2dcbd030eadbf0aa9b660efe864ff08af6e18b)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13333623500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "is_leaf",
+            "fs/reiserfs/stree.c"
+        ]
+    ],
+    "patch_commit_date": "2020-11-01T14:09:58+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "reiserfs"
+    ],
+    "parent_of_fix_commit": "8fca3c8a3451514c6f20dd26d5e66e78220d16e3",
+    "patch": "diff --git a/fs/reiserfs/stree.c b/fs/reiserfs/stree.c\nindex 8bf88d690729..476a7ff49482 100644\n--- a/fs/reiserfs/stree.c\n+++ b/fs/reiserfs/stree.c\n@@ -454,6 +454,12 @@ static int is_leaf(char *buf, int blocksize, struct buffer_head *bh)\n \t\t\t\t\t \"(second one): %h\", ih);\n \t\t\treturn 0;\n \t\t}\n+\t\tif (is_direntry_le_ih(ih) && (ih_item_len(ih) < (ih_entry_count(ih) * IH_SIZE))) {\n+\t\t\treiserfs_warning(NULL, \"reiserfs-5093\",\n+\t\t\t\t\t \"item entry count seems wrong %h\",\n+\t\t\t\t\t ih);\n+\t\t\treturn 0;\n+\t\t}\n \t\tprev_location = ih_location(ih);\n \t}\n \n",
+    "patch_modified_files": [
+        "fs/reiserfs/stree.c"
+    ]
+}

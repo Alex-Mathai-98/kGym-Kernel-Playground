@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "memory leak in __proc_create",
+    "display-title": "memory leak in __proc_create",
+    "id": "848057f402cb7a9107901060c07f48cd2e00e0e9",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "scsi: core: Fix a procfs host directory removal regression",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=be03df3d4bfe7e8866d4aa43d62e648ffe884f5f",
+            "hash": "be03df3d4bfe7e8866d4aa43d62e648ffe884f5f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000890fab05f65342b6@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in __proc_create",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17500b98c80000",
+            "kernel-config": "/text?tag=KernelConfig&x=337fc5840f41dbbe",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=8ca09d5fa3549d142c2080a72a4c70ce389163cd",
+            "kernel-source-commit": "8ca09d5fa3549d142c2080a72a4c70ce389163cd",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/ffaa5c552d93a977259a79c7a485b18f7235a71c",
+            "syzkaller-commit": "ffaa5c552d93a977259a79c7a485b18f7235a71c",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=115582ccc80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "scsi_host_dev_release",
+            "drivers/scsi/hosts.c"
+        ]
+    ],
+    "patch_commit_date": "2023-03-07T21:44:28+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "scsi",
+        "usb"
+    ],
+    "parent_of_fix_commit": "4b1a2c2a8e0ddcb89c5f6c5003bd9b53142f69e3",
+    "patch": "diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c\nindex f7f62e56afca..9b6fbbe15d92 100644\n--- a/drivers/scsi/hosts.c\n+++ b/drivers/scsi/hosts.c\n@@ -341,9 +341,6 @@ static void scsi_host_dev_release(struct device *dev)\n \tstruct Scsi_Host *shost = dev_to_shost(dev);\n \tstruct device *parent = dev->parent;\n \n-\t/* In case scsi_remove_host() has not been called. */\n-\tscsi_proc_hostdir_rm(shost->hostt);\n-\n \t/* Wait for functions invoked through call_rcu(&scmd->rcu, ...) */\n \trcu_barrier();\n \n",
+    "patch_modified_files": [
+        "drivers/scsi/hosts.c"
+    ]
+}

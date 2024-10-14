@@ -1,0 +1,78 @@
+{
+    "version": 1,
+    "title": "possible deadlock in io_worker_cancel_cb",
+    "display-title": "possible deadlock in io_worker_cancel_cb",
+    "id": "92c7a10270ed8cc8a362dea644c043e1aa070566",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io-wq: drop wqe lock before creating new worker",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d800c65c2d4eccebb27ffb7808e842d5b533823c",
+            "hash": "d800c65c2d4eccebb27ffb7808e842d5b533823c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "io-wq: check for wq exit after adding new worker task_work",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=71a85387546e50b1a37b0fa45dadcae3bfb35cf6",
+        "hash": "71a85387546e50b1a37b0fa45dadcae3bfb35cf6",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000080c88305d300e67f@google.com/T/",
+        "https://lore.kernel.org/all/20211220143040.058287525@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/7bc9f658-79d0-cef4-87b3-060e5748fa3e@kernel.dk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "possible deadlock in io_worker_cancel_cb",
+            "syz-reproducer": "/text?tag=ReproSyz&x=143f7551b00000",
+            "c-reproducer": "/text?tag=ReproC&x=17f56825b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=7d5e878e3399b6cc",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a763d5a5abd65797aec3dd1bf01fe2ccbec32967",
+            "kernel-source-commit": "a763d5a5abd65797aec3dd1bf01fe2ccbec32967",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/49ca1f59e37fcf63dc38a6bd2b60fcc47a0a708e",
+            "syzkaller-commit": "49ca1f59e37fcf63dc38a6bd2b60fcc47a0a708e",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1731d4f5b00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "io_wqe_dec_running",
+            "fs/io-wq.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "io_wq_exit_start",
+            "fs/io-wq.c"
+        ],
+        [
+            "io_acct_cancel_pending_work",
+            "fs/io-wq.c"
+        ],
+        [
+            "io_queue_worker_create",
+            "fs/io-wq.c"
+        ],
+        [
+            "io_wq_exit_workers",
+            "fs/io-wq.c"
+        ]
+    ],
+    "patch_commit_date": "2021-12-13T16:04:01+00:00",
+    "cause_commit_date": "2021-12-10T15:29:30+00:00",
+    "subsystems": [
+        "fs",
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "71a85387546e50b1a37b0fa45dadcae3bfb35cf6",
+    "patch": "diff --git a/fs/io-wq.c b/fs/io-wq.c\nindex 8d2bb818a3bb..5c4f582d6549 100644\n--- a/fs/io-wq.c\n+++ b/fs/io-wq.c\n@@ -395,7 +395,9 @@ static void io_wqe_dec_running(struct io_worker *worker)\n \tif (atomic_dec_and_test(&acct->nr_running) && io_acct_run_queue(acct)) {\n \t\tatomic_inc(&acct->nr_running);\n \t\tatomic_inc(&wqe->wq->worker_refs);\n+\t\traw_spin_unlock(&wqe->lock);\n \t\tio_queue_worker_create(worker, acct, create_worker_cb);\n+\t\traw_spin_lock(&wqe->lock);\n \t}\n }\n \n",
+    "patch_modified_files": [
+        "fs/io-wq.c"
+    ]
+}

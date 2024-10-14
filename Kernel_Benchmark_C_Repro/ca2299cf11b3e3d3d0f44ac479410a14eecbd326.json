@@ -1,0 +1,66 @@
+{
+    "version": 1,
+    "title": "WARNING in idr_alloc",
+    "display-title": "WARNING in idr_alloc",
+    "id": "ca2299cf11b3e3d3d0f44ac479410a14eecbd326",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: qrtr: fix usage of idr in port assignment to socket",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8dfddfb79653df7c38a9c8c4c034f242a36acee9",
+            "hash": "8dfddfb79653df7c38a9c8c4c034f242a36acee9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "net: qrtr: Do not depend on ARCH_QCOM",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e42671084361302141a09284fde9bbc14fdd16bf",
+        "hash": "e42671084361302141a09284fde9bbc14fdd16bf",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ea237605a8e368a9@google.com/T/",
+        "https://lore.kernel.org/all/20200814101000.2463612-1-fazilyildiran@gmail.com/T/",
+        "https://lore.kernel.org/all/20200817073900.3085391-1-fazilyildiran@gmail.com/T/",
+        "https://lore.kernel.org/all/20200817155447.3158787-1-fazilyildiran@gmail.com/T/",
+        "https://lore.kernel.org/all/20200826114849.295321031@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200826114911.216745274@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200901150934.576210879@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200901150952.963606936@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15252c4b100000",
+            "c-reproducer": "/text?tag=ReproC&x=10159291100000",
+            "kernel-config": "/text?tag=KernelConfig&x=d195fe572fb15312",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7ae77150d94d3b535c7b85e6b3647113095e79bf",
+            "kernel-source-commit": "7ae77150d94d3b535c7b85e6b3647113095e79bf",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/54566aff1679fc74487d3efb9f7bbfbc21beed4b",
+            "syzkaller-commit": "54566aff1679fc74487d3efb9f7bbfbc21beed4b",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1578cbd1100000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "qrtr_port_remove",
+            "net/qrtr/qrtr.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2020-08-17T15:54:48+00:00",
+    "cause_commit_date": "2020-05-07T12:53:06+00:00",
+    "subsystems": [
+        "arm-msm",
+        "net"
+    ],
+    "parent_of_fix_commit": "bcf7ddb0186d366f761f86196b480ea6dd2dc18c",
+    "patch": "diff --git a/net/qrtr/qrtr.c b/net/qrtr/qrtr.c\nindex b4c0db0b7d31..90c558f89d46 100644\n--- a/net/qrtr/qrtr.c\n+++ b/net/qrtr/qrtr.c\n@@ -692,23 +692,25 @@ static void qrtr_port_remove(struct qrtr_sock *ipc)\n  */\n static int qrtr_port_assign(struct qrtr_sock *ipc, int *port)\n {\n+\tu32 min_port;\n \tint rc;\n \n \tmutex_lock(&qrtr_port_lock);\n \tif (!*port) {\n-\t\trc = idr_alloc(&qrtr_ports, ipc,\n-\t\t\t       QRTR_MIN_EPH_SOCKET, QRTR_MAX_EPH_SOCKET + 1,\n-\t\t\t       GFP_ATOMIC);\n-\t\tif (rc >= 0)\n-\t\t\t*port = rc;\n+\t\tmin_port = QRTR_MIN_EPH_SOCKET;\n+\t\trc = idr_alloc_u32(&qrtr_ports, ipc, &min_port, QRTR_MAX_EPH_SOCKET, GFP_ATOMIC);\n+\t\tif (!rc)\n+\t\t\t*port = min_port;\n \t} else if (*port < QRTR_MIN_EPH_SOCKET && !capable(CAP_NET_ADMIN)) {\n \t\trc = -EACCES;\n \t} else if (*port == QRTR_PORT_CTRL) {\n-\t\trc = idr_alloc(&qrtr_ports, ipc, 0, 1, GFP_ATOMIC);\n+\t\tmin_port = 0;\n+\t\trc = idr_alloc_u32(&qrtr_ports, ipc, &min_port, 0, GFP_ATOMIC);\n \t} else {\n-\t\trc = idr_alloc(&qrtr_ports, ipc, *port, *port + 1, GFP_ATOMIC);\n-\t\tif (rc >= 0)\n-\t\t\t*port = rc;\n+\t\tmin_port = *port;\n+\t\trc = idr_alloc_u32(&qrtr_ports, ipc, &min_port, *port, GFP_ATOMIC);\n+\t\tif (!rc)\n+\t\t\t*port = min_port;\n \t}\n \tmutex_unlock(&qrtr_port_lock);\n \n",
+    "patch_modified_files": [
+        "net/qrtr/qrtr.c"
+    ]
+}

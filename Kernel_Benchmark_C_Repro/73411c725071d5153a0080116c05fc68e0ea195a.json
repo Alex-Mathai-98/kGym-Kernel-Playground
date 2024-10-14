@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "title": "general protection fault in skb_queue_tail",
+    "display-title": "general protection fault in skb_queue_tail",
+    "id": "73411c725071d5153a0080116c05fc68e0ea195a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "rxrpc: fix race condition in rxrpc_input_packet()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=032be5f19a94de51093851757089133dcc1e92aa",
+            "hash": "032be5f19a94de51093851757089133dcc1e92aa",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "rxrpc: Use IPv4 addresses throught the IPv6",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=46894a13599a977ac35411b536fb3e0b2feefa95",
+        "hash": "46894a13599a977ac35411b536fb3e0b2feefa95",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13f279e4a00000",
+            "c-reproducer": "/text?tag=ReproC&x=1796e947200000",
+            "kernel-config": "/text?tag=KernelConfig&x=a42d110b47dd6b36",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=085b7755808aa11f78ab9377257e1dad2e6fa4bb",
+            "kernel-source-commit": "085b7755808aa11f78ab9377257e1dad2e6fa4bb",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/53199d6e8aee5f0ebd3775d2b1c674f4e6e64e2b",
+            "syzkaller-commit": "53199d6e8aee5f0ebd3775d2b1c674f4e6e64e2b",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17f5b528a00000"
+        }
+    ],
+    "subsystems": [
+        "wireless",
+        "afs"
+    ],
+    "parent_of_fix_commit": "4b9fc7146249a6e0e3175d0acc033fdcd2bfcb17",
+    "patch": "diff --git a/net/rxrpc/input.c b/net/rxrpc/input.c\nindex 4c6f9d0a00e7..c2c35cf4e308 100644\n--- a/net/rxrpc/input.c\n+++ b/net/rxrpc/input.c\n@@ -1161,19 +1161,19 @@ int rxrpc_extract_header(struct rxrpc_skb_priv *sp, struct sk_buff *skb)\n  * handle data received on the local endpoint\n  * - may be called in interrupt context\n  *\n- * The socket is locked by the caller and this prevents the socket from being\n- * shut down and the local endpoint from going away, thus sk_user_data will not\n- * be cleared until this function returns.\n+ * [!] Note that as this is called from the encap_rcv hook, the socket is not\n+ * held locked by the caller and nothing prevents sk_user_data on the UDP from\n+ * being cleared in the middle of processing this function.\n  *\n  * Called with the RCU read lock held from the IP layer via UDP.\n  */\n int rxrpc_input_packet(struct sock *udp_sk, struct sk_buff *skb)\n {\n+\tstruct rxrpc_local *local = rcu_dereference_sk_user_data(udp_sk);\n \tstruct rxrpc_connection *conn;\n \tstruct rxrpc_channel *chan;\n \tstruct rxrpc_call *call = NULL;\n \tstruct rxrpc_skb_priv *sp;\n-\tstruct rxrpc_local *local = udp_sk->sk_user_data;\n \tstruct rxrpc_peer *peer = NULL;\n \tstruct rxrpc_sock *rx = NULL;\n \tunsigned int channel;\n@@ -1181,6 +1181,10 @@ int rxrpc_input_packet(struct sock *udp_sk, struct sk_buff *skb)\n \n \t_enter(\"%p\", udp_sk);\n \n+\tif (unlikely(!local)) {\n+\t\tkfree_skb(skb);\n+\t\treturn 0;\n+\t}\n \tif (skb->tstamp == 0)\n \t\tskb->tstamp = ktime_get_real();\n \ndiff --git a/net/rxrpc/local_object.c b/net/rxrpc/local_object.c\nindex 15cf42d5b53a..01959db51445 100644\n--- a/net/rxrpc/local_object.c\n+++ b/net/rxrpc/local_object.c\n@@ -304,7 +304,8 @@ struct rxrpc_local *rxrpc_lookup_local(struct net *net,\n \tret = -ENOMEM;\n sock_error:\n \tmutex_unlock(&rxnet->local_mutex);\n-\tkfree(local);\n+\tif (local)\n+\t\tcall_rcu(&local->rcu, rxrpc_local_rcu);\n \t_leave(\" = %d\", ret);\n \treturn ERR_PTR(ret);\n \n",
+    "patch_modified_files": [
+        "net/rxrpc/input.c",
+        "net/rxrpc/local_object.c"
+    ]
+}

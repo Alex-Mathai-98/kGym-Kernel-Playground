@@ -1,0 +1,40 @@
+{
+    "version": 1,
+    "title": "memory leak in inet6_create",
+    "display-title": "memory leak in inet6_create",
+    "id": "4462b73f1e909dcd0f6e0d5d2f0b3e8be5191b69",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: correct udp zerocopy refcnt also when zerocopy only on append",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=522924b583082f51b8a2406624a2f27c22119b20",
+            "hash": "522924b583082f51b8a2406624a2f27c22119b20",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1569c62ea00000",
+            "c-reproducer": "/text?tag=ReproC&x=1617e90ea00000",
+            "kernel-config": "/text?tag=KernelConfig&x=d5c73825cbdc7326",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=156c05917e0920ef5643eb54c0ea71aae5d60c3d",
+            "kernel-source-commit": "156c05917e0920ef5643eb54c0ea71aae5d60c3d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/698773cb4fbe8873ee0a2c37b86caef01e2c6159",
+            "syzkaller-commit": "698773cb4fbe8873ee0a2c37b86caef01e2c6159",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=130e0baaa00000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "dce5ccccd1231c6eaec5ede80bce85f2ae536826",
+    "patch": "diff --git a/net/ipv4/ip_output.c b/net/ipv4/ip_output.c\nindex 8c9189a41b13..16f9159234a2 100644\n--- a/net/ipv4/ip_output.c\n+++ b/net/ipv4/ip_output.c\n@@ -918,7 +918,7 @@ static int __ip_append_data(struct sock *sk,\n \t\tuarg = sock_zerocopy_realloc(sk, length, skb_zcopy(skb));\n \t\tif (!uarg)\n \t\t\treturn -ENOBUFS;\n-\t\textra_uref = !skb;\t/* only extra ref if !MSG_MORE */\n+\t\textra_uref = !skb_zcopy(skb);\t/* only ref on new uarg */\n \t\tif (rt->dst.dev->features & NETIF_F_SG &&\n \t\t    csummode == CHECKSUM_PARTIAL) {\n \t\t\tpaged = true;\ndiff --git a/net/ipv6/ip6_output.c b/net/ipv6/ip6_output.c\nindex 934c88f128ab..834475717110 100644\n--- a/net/ipv6/ip6_output.c\n+++ b/net/ipv6/ip6_output.c\n@@ -1340,7 +1340,7 @@ static int __ip6_append_data(struct sock *sk,\n \t\tuarg = sock_zerocopy_realloc(sk, length, skb_zcopy(skb));\n \t\tif (!uarg)\n \t\t\treturn -ENOBUFS;\n-\t\textra_uref = !skb;\t/* only extra ref if !MSG_MORE */\n+\t\textra_uref = !skb_zcopy(skb);\t/* only ref on new uarg */\n \t\tif (rt->dst.dev->features & NETIF_F_SG &&\n \t\t    csummode == CHECKSUM_PARTIAL) {\n \t\t\tpaged = true;\n",
+    "patch_modified_files": [
+        "net/ipv4/ip_output.c",
+        "net/ipv6/ip6_output.c"
+    ]
+}

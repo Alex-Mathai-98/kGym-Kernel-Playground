@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "memory leak in pfkey_xfrm_policy2msg_prep",
+    "display-title": "memory leak in pfkey_xfrm_policy2msg_prep",
+    "id": "a8e738a29ae80ea17c25ab6a136d95f7e96f76dc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "af_key: fix leaks in key_pol_get_resp and dump_sp.",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7c80eb1c7e2b8420477fbc998971d62a648035d9",
+            "hash": "7c80eb1c7e2b8420477fbc998971d62a648035d9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000113abb0589b9c77c@google.com/T/",
+        "https://lore.kernel.org/all/20190525180204.6936-1-jeremy@azazel.net/T/",
+        "https://lore.kernel.org/all/20190705082700.31107-3-steffen.klassert@secunet.com/T/",
+        "https://lore.kernel.org/all/20190715134655.4076-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715140341.6443-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715141809.8445-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715142839.9896-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715143629.10893-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715144535.11636-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190724191655.268628197@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190724191724.382593077@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190724191735.096702571@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190729190820.321094988@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190802092203.671944552@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190802092238.692035242@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/lsq.1572026581.992411028@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=179bd84ca00000",
+            "c-reproducer": "/text?tag=ReproC&x=124004a2a00000",
+            "kernel-config": "/text?tag=KernelConfig&x=61dd9e15a761691d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4dde821e4296e156d133b98ddc4c45861935a4fb",
+            "kernel-source-commit": "4dde821e4296e156d133b98ddc4c45861935a4fb",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0dadcd9d912d7faab1cd5fc0dfad21ff95ff86a8",
+            "syzkaller-commit": "0dadcd9d912d7faab1cd5fc0dfad21ff95ff86a8",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=129f4682a00000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "b38ff4075a80b4da5cb2202d7965332ca0efb213",
+    "patch": "diff --git a/net/key/af_key.c b/net/key/af_key.c\nindex 4af1e1d60b9f..51c0f10bb131 100644\n--- a/net/key/af_key.c\n+++ b/net/key/af_key.c\n@@ -2442,8 +2442,10 @@ static int key_pol_get_resp(struct sock *sk, struct xfrm_policy *xp, const struc\n \t\tgoto out;\n \t}\n \terr = pfkey_xfrm_policy2msg(out_skb, xp, dir);\n-\tif (err < 0)\n+\tif (err < 0) {\n+\t\tkfree_skb(out_skb);\n \t\tgoto out;\n+\t}\n \n \tout_hdr = (struct sadb_msg *) out_skb->data;\n \tout_hdr->sadb_msg_version = hdr->sadb_msg_version;\n@@ -2694,8 +2696,10 @@ static int dump_sp(struct xfrm_policy *xp, int dir, int count, void *ptr)\n \t\treturn PTR_ERR(out_skb);\n \n \terr = pfkey_xfrm_policy2msg(out_skb, xp, dir);\n-\tif (err < 0)\n+\tif (err < 0) {\n+\t\tkfree_skb(out_skb);\n \t\treturn err;\n+\t}\n \n \tout_hdr = (struct sadb_msg *) out_skb->data;\n \tout_hdr->sadb_msg_version = pfk->dump.msg_version;\n",
+    "patch_modified_files": [
+        "net/key/af_key.c"
+    ]
+}

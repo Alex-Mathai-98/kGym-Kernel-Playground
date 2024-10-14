@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "WARNING in nilfs_dat_prepare_end",
+    "display-title": "WARNING in nilfs_dat_prepare_end",
+    "id": "8db097bf9d28642881b6dee785166885150fbd86",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: replace WARN_ONs for invalid DAT metadata block requests",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5124a0a549857c4b87173280e192eea24dea72ad",
+            "hash": "5124a0a549857c4b87173280e192eea24dea72ad",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005cc3d205ea23ddcf@google.com/T/",
+        "https://lore.kernel.org/all/20230126164114.6911-1-konishi.ryusuke@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in nilfs_dat_prepare_end",
+            "syz-reproducer": "/text?tag=ReproSyz&x=165b2f98880000",
+            "c-reproducer": "/text?tag=ReproC&x=12c20e82880000",
+            "kernel-config": "/text?tag=KernelConfig&x=ba0d23aa7e1ffaf5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a962b54e162c2977ff37905726cab29728380835",
+            "kernel-source-commit": "a962b54e162c2977ff37905726cab29728380835",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/feb5635181eb12a6e3516172a3f5af06a3bc93e1",
+            "syzkaller-commit": "feb5635181eb12a6e3516172a3f5af06a3bc93e1",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=103d4b04880000"
+        }
+    ],
+    "subsystems": [
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "1b381f6fe495fffbbdace1ee530afb74287c809d",
+    "patch": "diff --git a/fs/nilfs2/dat.c b/fs/nilfs2/dat.c\nindex 9930fa901039..1e7f653c1df7 100644\n--- a/fs/nilfs2/dat.c\n+++ b/fs/nilfs2/dat.c\n@@ -40,8 +40,21 @@ static inline struct nilfs_dat_info *NILFS_DAT_I(struct inode *dat)\n static int nilfs_dat_prepare_entry(struct inode *dat,\n \t\t\t\t   struct nilfs_palloc_req *req, int create)\n {\n-\treturn nilfs_palloc_get_entry_block(dat, req->pr_entry_nr,\n-\t\t\t\t\t    create, &req->pr_entry_bh);\n+\tint ret;\n+\n+\tret = nilfs_palloc_get_entry_block(dat, req->pr_entry_nr,\n+\t\t\t\t\t   create, &req->pr_entry_bh);\n+\tif (unlikely(ret == -ENOENT)) {\n+\t\tnilfs_err(dat->i_sb,\n+\t\t\t  \"DAT doesn't have a block to manage vblocknr = %llu\",\n+\t\t\t  (unsigned long long)req->pr_entry_nr);\n+\t\t/*\n+\t\t * Return internal code -EINVAL to notify bmap layer of\n+\t\t * metadata corruption.\n+\t\t */\n+\t\tret = -EINVAL;\n+\t}\n+\treturn ret;\n }\n \n static void nilfs_dat_commit_entry(struct inode *dat,\n@@ -123,11 +136,7 @@ static void nilfs_dat_commit_free(struct inode *dat,\n \n int nilfs_dat_prepare_start(struct inode *dat, struct nilfs_palloc_req *req)\n {\n-\tint ret;\n-\n-\tret = nilfs_dat_prepare_entry(dat, req, 0);\n-\tWARN_ON(ret == -ENOENT);\n-\treturn ret;\n+\treturn nilfs_dat_prepare_entry(dat, req, 0);\n }\n \n void nilfs_dat_commit_start(struct inode *dat, struct nilfs_palloc_req *req,\n@@ -154,10 +163,8 @@ int nilfs_dat_prepare_end(struct inode *dat, struct nilfs_palloc_req *req)\n \tint ret;\n \n \tret = nilfs_dat_prepare_entry(dat, req, 0);\n-\tif (ret < 0) {\n-\t\tWARN_ON(ret == -ENOENT);\n+\tif (ret < 0)\n \t\treturn ret;\n-\t}\n \n \tkaddr = kmap_atomic(req->pr_entry_bh->b_page);\n \tentry = nilfs_palloc_block_get_entry(dat, req->pr_entry_nr,\n",
+    "patch_modified_files": [
+        "fs/nilfs2/dat.c"
+    ]
+}

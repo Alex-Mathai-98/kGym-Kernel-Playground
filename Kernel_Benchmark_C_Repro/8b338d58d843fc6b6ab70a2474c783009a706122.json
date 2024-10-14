@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "title": "memory leak in netlink_policy_dump_add_policy",
+    "display-title": "memory leak in netlink_policy_dump_add_policy",
+    "id": "8b338d58d843fc6b6ab70a2474c783009a706122",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: genl: fix error path memory leak in policy dumping",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=249801360db3dec4f73768c502192020bfddeacc",
+            "hash": "249801360db3dec4f73768c502192020bfddeacc",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003fcafc05e60e466e@google.com/T/",
+        "https://lore.kernel.org/all/20220815182021.48925-1-kuba@kernel.org/T/",
+        "https://lore.kernel.org/all/20220816161939.577583-1-kuba@kernel.org/T/",
+        "https://lore.kernel.org/all/20220823080046.056825146@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220823080059.091088642@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220823080118.128342613@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in netlink_policy_dump_add_policy",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1443be71080000",
+            "c-reproducer": "/text?tag=ReproC&x=11e5918e080000",
+            "kernel-config": "/text?tag=KernelConfig&x=3a433c7a2539f51c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4e23eeebb2e57f5a28b36221aa776b5a1122dde5",
+            "kernel-source-commit": "4e23eeebb2e57f5a28b36221aa776b5a1122dde5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/88e3a1226bc591d81c1fb98e83cb63cd4f341c6e",
+            "syzkaller-commit": "88e3a1226bc591d81c1fb98e83cb63cd4f341c6e",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=112eb3ca080000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "5c23d6b717e4e956376f3852b90f58e262946b50",
+    "patch": "diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c\nindex 1afca2a6c2ac..57010927e20a 100644\n--- a/net/netlink/genetlink.c\n+++ b/net/netlink/genetlink.c\n@@ -1174,13 +1174,17 @@ static int ctrl_dumppolicy_start(struct netlink_callback *cb)\n \t\t\t\t\t\t\t     op.policy,\n \t\t\t\t\t\t\t     op.maxattr);\n \t\t\tif (err)\n-\t\t\t\treturn err;\n+\t\t\t\tgoto err_free_state;\n \t\t}\n \t}\n \n \tif (!ctx->state)\n \t\treturn -ENODATA;\n \treturn 0;\n+\n+err_free_state:\n+\tnetlink_policy_dump_free(ctx->state);\n+\treturn err;\n }\n \n static void *ctrl_dumppolicy_prep(struct sk_buff *skb,\ndiff --git a/net/netlink/policy.c b/net/netlink/policy.c\nindex 8d7c900e27f4..87e3de0fde89 100644\n--- a/net/netlink/policy.c\n+++ b/net/netlink/policy.c\n@@ -144,7 +144,7 @@ int netlink_policy_dump_add_policy(struct netlink_policy_dump_state **pstate,\n \n \terr = add_policy(&state, policy, maxtype);\n \tif (err)\n-\t\treturn err;\n+\t\tgoto err_try_undo;\n \n \tfor (policy_idx = 0;\n \t     policy_idx < state->n_alloc && state->policies[policy_idx].policy;\n@@ -164,7 +164,7 @@ int netlink_policy_dump_add_policy(struct netlink_policy_dump_state **pstate,\n \t\t\t\t\t\t policy[type].nested_policy,\n \t\t\t\t\t\t policy[type].len);\n \t\t\t\tif (err)\n-\t\t\t\t\treturn err;\n+\t\t\t\t\tgoto err_try_undo;\n \t\t\t\tbreak;\n \t\t\tdefault:\n \t\t\t\tbreak;\n@@ -174,6 +174,16 @@ int netlink_policy_dump_add_policy(struct netlink_policy_dump_state **pstate,\n \n \t*pstate = state;\n \treturn 0;\n+\n+err_try_undo:\n+\t/* Try to preserve reasonable unwind semantics - if we're starting from\n+\t * scratch clean up fully, otherwise record what we got and caller will.\n+\t */\n+\tif (!*pstate)\n+\t\tnetlink_policy_dump_free(state);\n+\telse\n+\t\t*pstate = state;\n+\treturn err;\n }\n \n static bool\n",
+    "patch_modified_files": [
+        "net/netlink/genetlink.c",
+        "net/netlink/policy.c"
+    ]
+}

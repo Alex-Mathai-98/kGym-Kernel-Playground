@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "WARNING: refcount bug in qrtr_recvmsg",
+    "display-title": "WARNING: refcount bug in qrtr_recvmsg (2)",
+    "id": "943853d124b5c70143eb385e993d35cb42a883c7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: qrtr: Fix a refcount bug in qrtr_recvmsg()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=44d807320000db0d0013372ad39b53e12d52f758",
+            "hash": "44d807320000db0d0013372ad39b53e12d52f758",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e3e09c05f78683a6@google.com/T/",
+        "https://lore.kernel.org/all/20230330012532.1065159-1-william.xuanziyang@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING: refcount bug in qrtr_recvmsg",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13c9f8a4c80000",
+            "c-reproducer": "/text?tag=ReproC&x=10e8fe2cc80000",
+            "kernel-config": "/text?tag=KernelConfig&x=6c84f77790aba2eb",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9c1bec9c0b08abeac72ed6214b723adc224013bf",
+            "kernel-source-commit": "9c1bec9c0b08abeac72ed6214b723adc224013bf",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/18b586030b9a7e7f4c7208f44be8994740608841",
+            "syzkaller-commit": "18b586030b9a7e7f4c7208f44be8994740608841",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1282f12ac80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "qrtr_node_lookup",
+            "net/qrtr/af_qrtr.c"
+        ]
+    ],
+    "patch_commit_date": "2023-03-30T01:25:32+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "arm-msm",
+        "net"
+    ],
+    "parent_of_fix_commit": "f9d2b1e146e0f82f3d04629afd92698522058361",
+    "patch": "diff --git a/net/qrtr/af_qrtr.c b/net/qrtr/af_qrtr.c\nindex 5c2fb992803b..3a70255c8d02 100644\n--- a/net/qrtr/af_qrtr.c\n+++ b/net/qrtr/af_qrtr.c\n@@ -393,10 +393,12 @@ static struct qrtr_node *qrtr_node_lookup(unsigned int nid)\n \tstruct qrtr_node *node;\n \tunsigned long flags;\n \n+\tmutex_lock(&qrtr_node_lock);\n \tspin_lock_irqsave(&qrtr_nodes_lock, flags);\n \tnode = radix_tree_lookup(&qrtr_nodes, nid);\n \tnode = qrtr_node_acquire(node);\n \tspin_unlock_irqrestore(&qrtr_nodes_lock, flags);\n+\tmutex_unlock(&qrtr_node_lock);\n \n \treturn node;\n }\n",
+    "patch_modified_files": [
+        "net/qrtr/af_qrtr.c"
+    ]
+}

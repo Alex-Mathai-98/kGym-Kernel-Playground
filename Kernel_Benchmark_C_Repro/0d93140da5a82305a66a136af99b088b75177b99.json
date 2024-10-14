@@ -1,0 +1,71 @@
+{
+    "version": 1,
+    "title": "general protection fault in hci_event_packet",
+    "display-title": "general protection fault in hci_event_packet",
+    "id": "0d93140da5a82305a66a136af99b088b75177b99",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: Fix null pointer dereference in hci_event_packet()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6dfccd13db2ff2b709ef60a50163925d477549aa",
+            "hash": "6dfccd13db2ff2b709ef60a50163925d477549aa",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "ethernet: amd: use IS_ENABLED() instead of checking for built-in or module",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=941992d2944789641470626e9336d663236b1d28",
+        "hash": "941992d2944789641470626e9336d663236b1d28",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a7eb5e05abeb197d@google.com/T/",
+        "https://lore.kernel.org/all/20200829124112.227133-1-anmol.karan123@gmail.com/T/",
+        "https://lore.kernel.org/all/20200910043424.19894-1-anmol.karan123@gmail.com/T/",
+        "https://lore.kernel.org/all/20201228124846.409999325@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124853.216621466@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124904.654293249@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124919.745526410@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124937.240114599@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228125020.963311703@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=146f0832900000",
+            "c-reproducer": "/text?tag=ReproC&x=101f8e04900000",
+            "kernel-config": "/text?tag=KernelConfig&x=e59ee776d5aa8d55",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=ac3a0c8472969a03c0496ae774b3a29eb26c8d5a",
+            "kernel-source-commit": "ac3a0c8472969a03c0496ae774b3a29eb26c8d5a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/63a7334112fa63edb0c0a3f317d3d92135a6ead9",
+            "syzkaller-commit": "63a7334112fa63edb0c0a3f317d3d92135a6ead9",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=158a7c92900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "hci_phy_link_complete_evt",
+            "net/bluetooth/hci_event.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "READRDP",
+            "drivers/net/ethernet/amd/7990.c"
+        ]
+    ],
+    "patch_commit_date": "2020-09-30T14:18:13+00:00",
+    "cause_commit_date": "2016-09-12T14:03:34+00:00",
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "547801380ec7e6104ea679f599d03c342b4b39a0",
+    "patch": "diff --git a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c\nindex f04963914366..e72982b69f6b 100644\n--- a/net/bluetooth/hci_event.c\n+++ b/net/bluetooth/hci_event.c\n@@ -4941,6 +4941,11 @@ static void hci_phy_link_complete_evt(struct hci_dev *hdev,\n \t\treturn;\n \t}\n \n+\tif (!hcon->amp_mgr) {\n+\t\thci_dev_unlock(hdev);\n+\t\treturn;\n+\t}\n+\n \tif (ev->status) {\n \t\thci_conn_del(hcon);\n \t\thci_dev_unlock(hdev);\n",
+    "patch_modified_files": [
+        "net/bluetooth/hci_event.c"
+    ]
+}

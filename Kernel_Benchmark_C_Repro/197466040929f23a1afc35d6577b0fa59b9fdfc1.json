@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "WARNING in io_wq_submit_work",
+    "display-title": "WARNING in io_wq_submit_work (2)",
+    "id": "197466040929f23a1afc35d6577b0fa59b9fdfc1",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io-wq: fix cancellation on create-worker failure",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=713b9825a4c47897f66ad69409581e7734a8728e",
+            "hash": "713b9825a4c47897f66ad69409581e7734a8728e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "io-wq: make worker creation resilient against signals",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3146cba99aa284b1d4a10fbd923df953f1d18035",
+        "hash": "3146cba99aa284b1d4a10fbd923df953f1d18035",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000004bda3905cb84cfc0@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in io_wq_submit_work",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11e4357d300000",
+            "c-reproducer": "/text?tag=ReproC&x=1173a663300000",
+            "kernel-config": "/text?tag=KernelConfig&x=37df9ef5660a8387",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=926de8c4326c14fcf35f1de142019043597a4fac",
+            "kernel-source-commit": "926de8c4326c14fcf35f1de142019043597a4fac",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/5ae8508a2dd5f8e16a2b9830ae9a6f37d54ec8e7",
+            "syzkaller-commit": "5ae8508a2dd5f8e16a2b9830ae9a6f37d54ec8e7",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=104787ed300000"
+        }
+    ],
+    "subsystems": [
+        "io-uring",
+        "fs"
+    ],
+    "parent_of_fix_commit": "626bf91a292e2035af5b9d9cce35c5c138dfe06d",
+    "patch": "diff --git a/fs/io-wq.c b/fs/io-wq.c\nindex d80e4a735677..35e7ee26f7ea 100644\n--- a/fs/io-wq.c\n+++ b/fs/io-wq.c\n@@ -832,6 +832,11 @@ static void io_wqe_insert_work(struct io_wqe *wqe, struct io_wq_work *work)\n \twq_list_add_after(&work->list, &tail->list, &acct->work_list);\n }\n \n+static bool io_wq_work_match_item(struct io_wq_work *work, void *data)\n+{\n+\treturn work == data;\n+}\n+\n static void io_wqe_enqueue(struct io_wqe *wqe, struct io_wq_work *work)\n {\n \tstruct io_wqe_acct *acct = io_work_get_acct(wqe, work);\n@@ -844,7 +849,6 @@ static void io_wqe_enqueue(struct io_wqe *wqe, struct io_wq_work *work)\n \t */\n \tif (test_bit(IO_WQ_BIT_EXIT, &wqe->wq->state) ||\n \t    (work->flags & IO_WQ_WORK_CANCEL)) {\n-run_cancel:\n \t\tio_run_cancel(work, wqe);\n \t\treturn;\n \t}\n@@ -864,15 +868,22 @@ static void io_wqe_enqueue(struct io_wqe *wqe, struct io_wq_work *work)\n \t\tbool did_create;\n \n \t\tdid_create = io_wqe_create_worker(wqe, acct);\n-\t\tif (unlikely(!did_create)) {\n-\t\t\traw_spin_lock(&wqe->lock);\n-\t\t\t/* fatal condition, failed to create the first worker */\n-\t\t\tif (!acct->nr_workers) {\n-\t\t\t\traw_spin_unlock(&wqe->lock);\n-\t\t\t\tgoto run_cancel;\n-\t\t\t}\n-\t\t\traw_spin_unlock(&wqe->lock);\n+\t\tif (likely(did_create))\n+\t\t\treturn;\n+\n+\t\traw_spin_lock(&wqe->lock);\n+\t\t/* fatal condition, failed to create the first worker */\n+\t\tif (!acct->nr_workers) {\n+\t\t\tstruct io_cb_cancel_data match = {\n+\t\t\t\t.fn\t\t= io_wq_work_match_item,\n+\t\t\t\t.data\t\t= work,\n+\t\t\t\t.cancel_all\t= false,\n+\t\t\t};\n+\n+\t\t\tif (io_acct_cancel_pending_work(wqe, acct, &match))\n+\t\t\t\traw_spin_lock(&wqe->lock);\n \t\t}\n+\t\traw_spin_unlock(&wqe->lock);\n \t}\n }\n \n",
+    "patch_modified_files": [
+        "fs/io-wq.c"
+    ]
+}

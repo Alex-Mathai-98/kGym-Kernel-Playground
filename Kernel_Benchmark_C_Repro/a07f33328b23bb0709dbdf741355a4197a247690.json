@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "WARNING in get_signal",
+    "display-title": "WARNING in get_signal",
+    "id": "a07f33328b23bb0709dbdf741355a4197a247690",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ptrace: fix task_join_group_stop() for the case when current is traced",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7b3c36fc4c231ca532120bbc0df67a12f09c1d96",
+            "hash": "7b3c36fc4c231ca532120bbc0df67a12f09c1d96",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000da06e405b0b20f1e@google.com/T/",
+        "https://lore.kernel.org/all/20201019134237.GA18810@redhat.com/T/",
+        "https://lore.kernel.org/all/20201102010744.XtB_G6WSD%akpm@linux-foundation.org/T/",
+        "https://lore.kernel.org/all/20201109125019.906191744@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201109125022.614792961@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201109125030.706496283@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1211120b900000",
+            "c-reproducer": "/text?tag=ReproC&x=16474c67900000",
+            "kernel-config": "/text?tag=KernelConfig&x=89ab6a0c48f30b49",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=fcadab740480e0e0e9fa9bd272acd409884d431a",
+            "kernel-source-commit": "fcadab740480e0e0e9fa9bd272acd409884d431a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9602ddf403bdf3cfd87efef14becc76f9a38b81d",
+            "syzkaller-commit": "9602ddf403bdf3cfd87efef14becc76f9a38b81d",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1469437b900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "task_participate_group_stop",
+            "kernel/signal.c"
+        ]
+    ],
+    "patch_commit_date": "2020-11-02T01:07:44+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "3f08842098e842c51e3b97d0dcdebf810b32558e",
+    "patch": "diff --git a/kernel/signal.c b/kernel/signal.c\nindex a38b3edc6851..ef8f2a28d37c 100644\n--- a/kernel/signal.c\n+++ b/kernel/signal.c\n@@ -391,16 +391,17 @@ static bool task_participate_group_stop(struct task_struct *task)\n \n void task_join_group_stop(struct task_struct *task)\n {\n+\tunsigned long mask = current->jobctl & JOBCTL_STOP_SIGMASK;\n+\tstruct signal_struct *sig = current->signal;\n+\n+\tif (sig->group_stop_count) {\n+\t\tsig->group_stop_count++;\n+\t\tmask |= JOBCTL_STOP_CONSUME;\n+\t} else if (!(sig->flags & SIGNAL_STOP_STOPPED))\n+\t\treturn;\n+\n \t/* Have the new thread join an on-going signal group stop */\n-\tunsigned long jobctl = current->jobctl;\n-\tif (jobctl & JOBCTL_STOP_PENDING) {\n-\t\tstruct signal_struct *sig = current->signal;\n-\t\tunsigned long signr = jobctl & JOBCTL_STOP_SIGMASK;\n-\t\tunsigned long gstop = JOBCTL_STOP_PENDING | JOBCTL_STOP_CONSUME;\n-\t\tif (task_set_jobctl_pending(task, signr | gstop)) {\n-\t\t\tsig->group_stop_count++;\n-\t\t}\n-\t}\n+\ttask_set_jobctl_pending(task, mask | JOBCTL_STOP_PENDING);\n }\n \n /*\n",
+    "patch_modified_files": [
+        "kernel/signal.c"
+    ]
+}

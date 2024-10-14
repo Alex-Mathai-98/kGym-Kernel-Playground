@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "WARNING in blk_mq_release",
+    "display-title": "WARNING in blk_mq_release",
+    "id": "1abe2db081aaca3d3ca9eef2108f8131ec128bd4",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "block: Do not call blk_put_queue() if gendisk allocation fails",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=aa0c680c3aa96a5f9f160d90dd95402ad578e2b0",
+            "hash": "aa0c680c3aa96a5f9f160d90dd95402ad578e2b0",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ab752605e5c85e9a@google.com/T/",
+        "https://lore.kernel.org/all/20220811232338.254673-1-rafaelmendsr@gmail.com/T/",
+        "https://lore.kernel.org/all/20220926100806.522017616@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in blk_mq_release",
+            "syz-reproducer": "/text?tag=ReproSyz&x=106b302a080000",
+            "c-reproducer": "/text?tag=ReproC&x=16b1dae1080000",
+            "kernel-config": "/text?tag=KernelConfig&x=a3f4d6985d3164cd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=200e340f2196d7fd427a5810d06e893b932f145a",
+            "kernel-source-commit": "200e340f2196d7fd427a5810d06e893b932f145a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/da700653bf1ea72171f93dc607c08b53cc9a4f0c",
+            "syzkaller-commit": "da700653bf1ea72171f93dc607c08b53cc9a4f0c",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13b22b51080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__alloc_disk_node",
+            "block/genhd.c"
+        ]
+    ],
+    "patch_commit_date": "2022-08-11T23:23:37+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "block"
+    ],
+    "parent_of_fix_commit": "cd83cd55878409299f4614c5138d24dffacc39bd",
+    "patch": "diff --git a/block/genhd.c b/block/genhd.c\nindex b901fea1d55a..d36fabf0abc1 100644\n--- a/block/genhd.c\n+++ b/block/genhd.c\n@@ -1341,7 +1341,7 @@ struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,\n \n \tdisk = kzalloc_node(sizeof(struct gendisk), GFP_KERNEL, node_id);\n \tif (!disk)\n-\t\tgoto out_put_queue;\n+\t\treturn NULL;\n \n \tif (bioset_init(&disk->bio_split, BIO_POOL_SIZE, 0, 0))\n \t\tgoto out_free_disk;\n@@ -1390,8 +1390,6 @@ struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,\n \tbioset_exit(&disk->bio_split);\n out_free_disk:\n \tkfree(disk);\n-out_put_queue:\n-\tblk_put_queue(q);\n \treturn NULL;\n }\n \n",
+    "patch_modified_files": [
+        "block/genhd.c"
+    ]
+}

@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "general protection fault in ntfs_update_mftmirr",
+    "display-title": "general protection fault in ntfs_update_mftmirr",
+    "id": "4157935be2e32fae6b62aa95bb0a08b07160b986",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/ntfs3: Fix NULL deref in ntfs_update_mftmirr",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=321460ca3b55f48b3ba6008248264ab2bd6407d9",
+            "hash": "321460ca3b55f48b3ba6008248264ab2bd6407d9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000022487405dd25bd0d@google.com/T/",
+        "https://lore.kernel.org/all/20220823080059.091088642@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220823080118.128342613@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/85293dd018cae78e4d48d74ca77710b11eed59ba.1650574393.git.paskripkin@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in ntfs_update_mftmirr",
+            "syz-reproducer": "/text?tag=ReproSyz&x=175b13c0f00000",
+            "c-reproducer": "/text?tag=ReproC&x=1502f854f00000",
+            "kernel-config": "/text?tag=KernelConfig&x=4cdc9619f45633df",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b253435746d9a4a701b5f09211b9c14d3370d0da",
+            "kernel-source-commit": "b253435746d9a4a701b5f09211b9c14d3370d0da",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d4befee155c308c896933484e16a54b9e3290ee8",
+            "syzkaller-commit": "d4befee155c308c896933484e16a54b9e3290ee8",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14faabd0f00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ntfs_update_mftmirr",
+            "fs/ntfs3/fsntfs.c"
+        ]
+    ],
+    "patch_commit_date": "2022-04-21T20:53:36+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ntfs3"
+    ],
+    "parent_of_fix_commit": "e4d2f4fd5341064d2b3c5158da69421a581e7ec1",
+    "patch": "diff --git a/fs/ntfs3/fsntfs.c b/fs/ntfs3/fsntfs.c\nindex 3de5700a9b83..891125ca6848 100644\n--- a/fs/ntfs3/fsntfs.c\n+++ b/fs/ntfs3/fsntfs.c\n@@ -831,10 +831,15 @@ int ntfs_update_mftmirr(struct ntfs_sb_info *sbi, int wait)\n {\n \tint err;\n \tstruct super_block *sb = sbi->sb;\n-\tu32 blocksize = sb->s_blocksize;\n+\tu32 blocksize;\n \tsector_t block1, block2;\n \tu32 bytes;\n \n+\tif (!sb)\n+\t\treturn -EINVAL;\n+\n+\tblocksize = sb->s_blocksize;\n+\n \tif (!(sbi->flags & NTFS_FLAGS_MFTMIRR))\n \t\treturn 0;\n \n",
+    "patch_modified_files": [
+        "fs/ntfs3/fsntfs.c"
+    ]
+}

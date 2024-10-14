@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Write in dbgfs_rm_context_write",
+    "display-title": "KASAN: slab-out-of-bounds Write in dbgfs_rm_context_write",
+    "id": "a675c44f8bbdab80d58d552c5abe2829c1a867e9",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm/damon/dbgfs: check if rm_contexts input is for a real context",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1de09a7281edecfdba19b3a07417f6d65243ab5f",
+            "hash": "1de09a7281edecfdba19b3a07417f6d65243ab5f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ede3ac05ec4abf8e@google.com/T/",
+        "https://lore.kernel.org/all/20221031182554.7882-1-sj@kernel.org/T/",
+        "https://lore.kernel.org/all/20221107165001.5717-1-sj@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in dbgfs_rm_context_write",
+            "syz-reproducer": "/text?tag=ReproSyz&x=167e3f4a880000",
+            "c-reproducer": "/text?tag=ReproC&x=1262cb86880000",
+            "kernel-config": "/text?tag=KernelConfig&x=a66c6c673fb555e8",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=98555239e4c3aab1810d84073166eef6d54eeb3d",
+            "kernel-source-commit": "98555239e4c3aab1810d84073166eef6d54eeb3d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/86777b7fb4a452ebbd7430a2c4add0486734922b",
+            "syzkaller-commit": "86777b7fb4a452ebbd7430a2c4add0486734922b",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12275336880000"
+        }
+    ],
+    "subsystems": [
+        "damon"
+    ],
+    "parent_of_fix_commit": "7dc5ba6254bb242a9f45e43549171a2d84d25e6a",
+    "patch": "diff --git a/mm/damon/dbgfs.c b/mm/damon/dbgfs.c\nindex 6f0ae7d3ae39..b3f454a5c682 100644\n--- a/mm/damon/dbgfs.c\n+++ b/mm/damon/dbgfs.c\n@@ -890,6 +890,7 @@ static ssize_t dbgfs_mk_context_write(struct file *file,\n static int dbgfs_rm_context(char *name)\n {\n \tstruct dentry *root, *dir, **new_dirs;\n+\tstruct inode *inode;\n \tstruct damon_ctx **new_ctxs;\n \tint i, j;\n \tint ret = 0;\n@@ -905,6 +906,12 @@ static int dbgfs_rm_context(char *name)\n \tif (!dir)\n \t\treturn -ENOENT;\n \n+\tinode = d_inode(dir);\n+\tif (!S_ISDIR(inode->i_mode)) {\n+\t\tret = -EINVAL;\n+\t\tgoto out_dput;\n+\t}\n+\n \tnew_dirs = kmalloc_array(dbgfs_nr_ctxs - 1, sizeof(*dbgfs_dirs),\n \t\t\tGFP_KERNEL);\n \tif (!new_dirs) {\n",
+    "patch_modified_files": [
+        "mm/damon/dbgfs.c"
+    ]
+}

@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "WARNING: suspicious RCU usage in ctrl_cmd_new_lookup",
+    "display-title": "WARNING: suspicious RCU usage in ctrl_cmd_new_lookup",
+    "id": "07c9d71dc1a215b19c6a245c68f502bc57dbdb83",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: qrtr: ns: Protect radix_tree_deref_slot() using rcu read locks",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a7809ff90ce6c48598d3c4ab54eb599bec1e9c42",
+            "hash": "a7809ff90ce6c48598d3c4ab54eb599bec1e9c42",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "net: qrtr: Do not depend on ARCH_QCOM",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e42671084361302141a09284fde9bbc14fdd16bf",
+        "hash": "e42671084361302141a09284fde9bbc14fdd16bf",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000add83505a8e38c4c@google.com/T/",
+        "https://lore.kernel.org/all/20200908233329.200473-1-anant.thazhemadam@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11802cf9100000",
+            "c-reproducer": "/text?tag=ReproC&x=144acc03100000",
+            "kernel-config": "/text?tag=KernelConfig&x=d195fe572fb15312",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7ae77150d94d3b535c7b85e6b3647113095e79bf",
+            "kernel-source-commit": "7ae77150d94d3b535c7b85e6b3647113095e79bf",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/54566aff1679fc74487d3efb9f7bbfbc21beed4b",
+            "syzkaller-commit": "54566aff1679fc74487d3efb9f7bbfbc21beed4b",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1228f009100000"
+        }
+    ],
+    "subsystems": [
+        "arm-msm",
+        "net"
+    ],
+    "parent_of_fix_commit": "0ba56b89fabc139849cf27e475287b0361f550d3",
+    "patch": "diff --git a/net/qrtr/ns.c b/net/qrtr/ns.c\nindex d8252fdab851..934999b56d60 100644\n--- a/net/qrtr/ns.c\n+++ b/net/qrtr/ns.c\n@@ -193,12 +193,13 @@ static int announce_servers(struct sockaddr_qrtr *sq)\n \tstruct qrtr_server *srv;\n \tstruct qrtr_node *node;\n \tvoid __rcu **slot;\n-\tint ret;\n+\tint ret = 0;\n \n \tnode = node_get(qrtr_ns.local_node);\n \tif (!node)\n \t\treturn 0;\n \n+\trcu_read_lock();\n \t/* Announce the list of servers registered in this node */\n \tradix_tree_for_each_slot(slot, &node->servers, &iter, 0) {\n \t\tsrv = radix_tree_deref_slot(slot);\n@@ -206,11 +207,14 @@ static int announce_servers(struct sockaddr_qrtr *sq)\n \t\tret = service_announce_new(sq, srv);\n \t\tif (ret < 0) {\n \t\t\tpr_err(\"failed to announce new service\\n\");\n-\t\t\treturn ret;\n+\t\t\tgoto err_out;\n \t\t}\n \t}\n \n-\treturn 0;\n+err_out:\n+\trcu_read_unlock();\n+\n+\treturn ret;\n }\n \n static struct qrtr_server *server_add(unsigned int service,\n@@ -335,7 +339,7 @@ static int ctrl_cmd_bye(struct sockaddr_qrtr *from)\n \tstruct qrtr_node *node;\n \tvoid __rcu **slot;\n \tstruct kvec iv;\n-\tint ret;\n+\tint ret = 0;\n \n \tiv.iov_base = &pkt;\n \tiv.iov_len = sizeof(pkt);\n@@ -344,11 +348,13 @@ static int ctrl_cmd_bye(struct sockaddr_qrtr *from)\n \tif (!node)\n \t\treturn 0;\n \n+\trcu_read_lock();\n \t/* Advertise removal of this client to all servers of remote node */\n \tradix_tree_for_each_slot(slot, &node->servers, &iter, 0) {\n \t\tsrv = radix_tree_deref_slot(slot);\n \t\tserver_del(node, srv->port);\n \t}\n+\trcu_read_unlock();\n \n \t/* Advertise the removal of this client to all local servers */\n \tlocal_node = node_get(qrtr_ns.local_node);\n@@ -359,6 +365,7 @@ static int ctrl_cmd_bye(struct sockaddr_qrtr *from)\n \tpkt.cmd = cpu_to_le32(QRTR_TYPE_BYE);\n \tpkt.client.node = cpu_to_le32(from->sq_node);\n \n+\trcu_read_lock();\n \tradix_tree_for_each_slot(slot, &local_node->servers, &iter, 0) {\n \t\tsrv = radix_tree_deref_slot(slot);\n \n@@ -372,11 +379,14 @@ static int ctrl_cmd_bye(struct sockaddr_qrtr *from)\n \t\tret = kernel_sendmsg(qrtr_ns.sock, &msg, &iv, 1, sizeof(pkt));\n \t\tif (ret < 0) {\n \t\t\tpr_err(\"failed to send bye cmd\\n\");\n-\t\t\treturn ret;\n+\t\t\tgoto err_out;\n \t\t}\n \t}\n \n-\treturn 0;\n+err_out:\n+\trcu_read_unlock();\n+\n+\treturn ret;\n }\n \n static int ctrl_cmd_del_client(struct sockaddr_qrtr *from,\n@@ -394,7 +404,7 @@ static int ctrl_cmd_del_client(struct sockaddr_qrtr *from,\n \tstruct list_head *li;\n \tvoid __rcu **slot;\n \tstruct kvec iv;\n-\tint ret;\n+\tint ret = 0;\n \n \tiv.iov_base = &pkt;\n \tiv.iov_len = sizeof(pkt);\n@@ -434,6 +444,7 @@ static int ctrl_cmd_del_client(struct sockaddr_qrtr *from,\n \tpkt.client.node = cpu_to_le32(node_id);\n \tpkt.client.port = cpu_to_le32(port);\n \n+\trcu_read_lock();\n \tradix_tree_for_each_slot(slot, &local_node->servers, &iter, 0) {\n \t\tsrv = radix_tree_deref_slot(slot);\n \n@@ -447,11 +458,14 @@ static int ctrl_cmd_del_client(struct sockaddr_qrtr *from,\n \t\tret = kernel_sendmsg(qrtr_ns.sock, &msg, &iv, 1, sizeof(pkt));\n \t\tif (ret < 0) {\n \t\t\tpr_err(\"failed to send del client cmd\\n\");\n-\t\t\treturn ret;\n+\t\t\tgoto err_out;\n \t\t}\n \t}\n \n-\treturn 0;\n+err_out:\n+\trcu_read_unlock();\n+\n+\treturn ret;\n }\n \n static int ctrl_cmd_new_server(struct sockaddr_qrtr *from,\n@@ -554,6 +568,7 @@ static int ctrl_cmd_new_lookup(struct sockaddr_qrtr *from,\n \tfilter.service = service;\n \tfilter.instance = instance;\n \n+\trcu_read_lock();\n \tradix_tree_for_each_slot(node_slot, &nodes, &node_iter, 0) {\n \t\tnode = radix_tree_deref_slot(node_slot);\n \n@@ -568,6 +583,7 @@ static int ctrl_cmd_new_lookup(struct sockaddr_qrtr *from,\n \t\t\tlookup_notify(from, srv, true);\n \t\t}\n \t}\n+\trcu_read_unlock();\n \n \t/* Empty notification, to indicate end of listing */\n \tlookup_notify(from, NULL, true);\n",
+    "patch_modified_files": [
+        "net/qrtr/ns.c"
+    ]
+}

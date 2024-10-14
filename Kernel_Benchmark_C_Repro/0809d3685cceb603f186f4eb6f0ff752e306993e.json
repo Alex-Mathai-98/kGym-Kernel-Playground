@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "INFO: task hung in io_wqe_worker",
+    "display-title": "INFO: task hung in io_wqe_worker",
+    "id": "0809d3685cceb603f186f4eb6f0ff752e306993e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io-wq: remove worker to owner tw dependency",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1d5f5ea7cb7d15b9fb1cc82673ebb054f02cd7d2",
+            "hash": "1d5f5ea7cb7d15b9fb1cc82673ebb054f02cd7d2",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "drm/amd/display: [FW Promotion] Release 0.0.76",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=add0733d19c5610b10a1b398fcfb370a9f21afec",
+        "hash": "add0733d19c5610b10a1b398fcfb370a9f21afec",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ddc11905cee3521c@google.com/T/",
+        "https://lore.kernel.org/all/142a716f4ed936feae868959059154362bfa8c19.1635509451.git.asml.silence@gmail.com/T/",
+        "https://lore.kernel.org/all/1b519092-2ebf-3800-306d-c354c24a9ad1@gmail.com/T/",
+        "https://lore.kernel.org/all/20211115165428.722074685@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "INFO: task hung in io_wqe_worker",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10d3f7ccb00000",
+            "c-reproducer": "/text?tag=ReproC&x=15d3600cb00000",
+            "kernel-config": "/text?tag=KernelConfig&x=bab9d35f204746a7",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d999ade1cc86cd2951d41c11ea769cb4452c8811",
+            "kernel-source-commit": "d999ade1cc86cd2951d41c11ea769cb4452c8811",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0c5d9412d774262384cbdbe9d672b077364ed776",
+            "syzkaller-commit": "0c5d9412d774262384cbdbe9d672b077364ed776",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13fae3c8b00000"
+        }
+    ],
+    "subsystems": [
+        "fs",
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "f75d118349be055d47407b4ba4ceb98e6437e472",
+    "patch": "diff --git a/fs/io-wq.c b/fs/io-wq.c\nindex 0c283bb18fb2..fe6b2abcaa49 100644\n--- a/fs/io-wq.c\n+++ b/fs/io-wq.c\n@@ -140,6 +140,7 @@ static void io_wqe_dec_running(struct io_worker *worker);\n static bool io_acct_cancel_pending_work(struct io_wqe *wqe,\n \t\t\t\t\tstruct io_wqe_acct *acct,\n \t\t\t\t\tstruct io_cb_cancel_data *match);\n+static void create_worker_cb(struct callback_head *cb);\n \n static bool io_worker_get(struct io_worker *worker)\n {\n@@ -174,9 +175,44 @@ static void io_worker_ref_put(struct io_wq *wq)\n \t\tcomplete(&wq->worker_done);\n }\n \n+static void io_worker_cancel_cb(struct io_worker *worker)\n+{\n+\tstruct io_wqe_acct *acct = io_wqe_get_acct(worker);\n+\tstruct io_wqe *wqe = worker->wqe;\n+\tstruct io_wq *wq = wqe->wq;\n+\n+\tatomic_dec(&acct->nr_running);\n+\traw_spin_lock(&worker->wqe->lock);\n+\tacct->nr_workers--;\n+\traw_spin_unlock(&worker->wqe->lock);\n+\tio_worker_ref_put(wq);\n+\tclear_bit_unlock(0, &worker->create_state);\n+\tio_worker_release(worker);\n+}\n+\n+static bool io_task_worker_match(struct callback_head *cb, void *data)\n+{\n+\tstruct io_worker *worker;\n+\n+\tif (cb->func != create_worker_cb)\n+\t\treturn false;\n+\tworker = container_of(cb, struct io_worker, create_work);\n+\treturn worker == data;\n+}\n+\n static void io_worker_exit(struct io_worker *worker)\n {\n \tstruct io_wqe *wqe = worker->wqe;\n+\tstruct io_wq *wq = wqe->wq;\n+\n+\twhile (1) {\n+\t\tstruct callback_head *cb = task_work_cancel_match(wq->task,\n+\t\t\t\t\t\tio_task_worker_match, worker);\n+\n+\t\tif (!cb)\n+\t\t\tbreak;\n+\t\tio_worker_cancel_cb(worker);\n+\t}\n \n \tio_worker_release(worker);\n \twait_for_completion(&worker->ref_done);\n@@ -1148,17 +1184,9 @@ static void io_wq_exit_workers(struct io_wq *wq)\n \n \twhile ((cb = task_work_cancel_match(wq->task, io_task_work_match, wq)) != NULL) {\n \t\tstruct io_worker *worker;\n-\t\tstruct io_wqe_acct *acct;\n \n \t\tworker = container_of(cb, struct io_worker, create_work);\n-\t\tacct = io_wqe_get_acct(worker);\n-\t\tatomic_dec(&acct->nr_running);\n-\t\traw_spin_lock(&worker->wqe->lock);\n-\t\tacct->nr_workers--;\n-\t\traw_spin_unlock(&worker->wqe->lock);\n-\t\tio_worker_ref_put(wq);\n-\t\tclear_bit_unlock(0, &worker->create_state);\n-\t\tio_worker_release(worker);\n+\t\tio_worker_cancel_cb(worker);\n \t}\n \n \trcu_read_lock();\n",
+    "patch_modified_files": [
+        "fs/io-wq.c"
+    ]
+}

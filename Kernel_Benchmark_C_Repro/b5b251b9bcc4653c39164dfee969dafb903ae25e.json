@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in dummy_hub_control",
+    "display-title": "UBSAN: shift-out-of-bounds in dummy_hub_control",
+    "id": "b5b251b9bcc4653c39164dfee969dafb903ae25e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "USB: Gadget: dummy-hcd: Fix shift-out-of-bounds bug",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c318840fb2a42ce25febc95c4c19357acf1ae5ca",
+            "hash": "c318840fb2a42ce25febc95c4c19357acf1ae5ca",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "USB: dummy-hcd: increase max number of devices to 32",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8442b02bf3c6770e0d7e7ea17be36c30e95987b6",
+        "hash": "8442b02bf3c6770e0d7e7ea17be36c30e95987b6",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000cad14c05b74f714c@google.com/T/",
+        "https://lore.kernel.org/all/20201230162044.GA727759@rowland.harvard.edu/T/",
+        "https://lore.kernel.org/all/20210111130048.499958175@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1781fc5b500000",
+            "c-reproducer": "/text?tag=ReproC&x=157cd123500000",
+            "kernel-config": "/text?tag=KernelConfig&x=98408202fed1f636",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e37b12e4bb21e7c81732370b0a2b34bd196f380b",
+            "kernel-source-commit": "e37b12e4bb21e7c81732370b0a2b34bd196f380b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/04201c0669446145fd9c347c5538da0ca13ff29b",
+            "syzkaller-commit": "04201c0669446145fd9c347c5538da0ca13ff29b",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12973e0f500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "dummy_hub_control",
+            "drivers/usb/gadget/udc/dummy_hcd.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2020-12-30T16:20:44+00:00",
+    "cause_commit_date": "2019-10-21T14:20:58+00:00",
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "9389044f27081d6ec77730c36d5bf9a1288bcda2",
+    "patch": "diff --git a/drivers/usb/gadget/udc/dummy_hcd.c b/drivers/usb/gadget/udc/dummy_hcd.c\nindex ab5e978b5052..1a953f44183a 100644\n--- a/drivers/usb/gadget/udc/dummy_hcd.c\n+++ b/drivers/usb/gadget/udc/dummy_hcd.c\n@@ -2118,9 +2118,21 @@ static int dummy_hub_control(\n \t\t\t\tdum_hcd->port_status &= ~USB_PORT_STAT_POWER;\n \t\t\tset_link_state(dum_hcd);\n \t\t\tbreak;\n-\t\tdefault:\n+\t\tcase USB_PORT_FEAT_ENABLE:\n+\t\tcase USB_PORT_FEAT_C_ENABLE:\n+\t\tcase USB_PORT_FEAT_C_SUSPEND:\n+\t\t\t/* Not allowed for USB-3 */\n+\t\t\tif (hcd->speed == HCD_USB3)\n+\t\t\t\tgoto error;\n+\t\t\tfallthrough;\n+\t\tcase USB_PORT_FEAT_C_CONNECTION:\n+\t\tcase USB_PORT_FEAT_C_RESET:\n \t\t\tdum_hcd->port_status &= ~(1 << wValue);\n \t\t\tset_link_state(dum_hcd);\n+\t\t\tbreak;\n+\t\tdefault:\n+\t\t/* Disallow INDICATOR and C_OVER_CURRENT */\n+\t\t\tgoto error;\n \t\t}\n \t\tbreak;\n \tcase GetHubDescriptor:\n@@ -2281,18 +2293,17 @@ static int dummy_hub_control(\n \t\t\t */\n \t\t\tdum_hcd->re_timeout = jiffies + msecs_to_jiffies(50);\n \t\t\tfallthrough;\n+\t\tcase USB_PORT_FEAT_C_CONNECTION:\n+\t\tcase USB_PORT_FEAT_C_RESET:\n+\t\tcase USB_PORT_FEAT_C_ENABLE:\n+\t\tcase USB_PORT_FEAT_C_SUSPEND:\n+\t\t\t/* Not allowed for USB-3, and ignored for USB-2 */\n+\t\t\tif (hcd->speed == HCD_USB3)\n+\t\t\t\tgoto error;\n+\t\t\tbreak;\n \t\tdefault:\n-\t\t\tif (hcd->speed == HCD_USB3) {\n-\t\t\t\tif ((dum_hcd->port_status &\n-\t\t\t\t     USB_SS_PORT_STAT_POWER) != 0) {\n-\t\t\t\t\tdum_hcd->port_status |= (1 << wValue);\n-\t\t\t\t}\n-\t\t\t} else\n-\t\t\t\tif ((dum_hcd->port_status &\n-\t\t\t\t     USB_PORT_STAT_POWER) != 0) {\n-\t\t\t\t\tdum_hcd->port_status |= (1 << wValue);\n-\t\t\t\t}\n-\t\t\tset_link_state(dum_hcd);\n+\t\t/* Disallow TEST, INDICATOR, and C_OVER_CURRENT */\n+\t\t\tgoto error;\n \t\t}\n \t\tbreak;\n \tcase GetPortErrorCount:\n",
+    "patch_modified_files": [
+        "drivers/usb/gadget/udc/dummy_hcd.c"
+    ]
+}

@@ -1,0 +1,63 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in xfs_getbmap",
+    "display-title": "KASAN: slab-out-of-bounds Read in xfs_getbmap",
+    "id": "37f68bc0a80819d1509e1b024c413389ae877175",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "xfs: fix negative array access in xfs_getbmap",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1bba82fe1afac69c85c1f5ea137c8e73de3c8032",
+            "hash": "1bba82fe1afac69c85c1f5ea137c8e73de3c8032",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "xfs: fix BUG_ON in xfs_getbmap()",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8ee81ed581ff35882b006a5205100db0b57bf070",
+        "hash": "8ee81ed581ff35882b006a5205100db0b57bf070",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c5beb705faa6577d@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Read in xfs_getbmap",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12e25f2c280000",
+            "c-reproducer": "/text?tag=ReproC&x=14945d10280000",
+            "kernel-config": "/text?tag=KernelConfig&x=5eadbf0d3c2ece89",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=58390c8ce1bddb6c623f62e7ed36383e7fa5c02f",
+            "kernel-source-commit": "58390c8ce1bddb6c623f62e7ed36383e7fa5c02f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/62df2017e3b1edd786a4c737bd4ccba2b4581d88",
+            "syzkaller-commit": "62df2017e3b1edd786a4c737bd4ccba2b4581d88",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=116d36f8280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "xfs_getbmap",
+            "fs/xfs/xfs_bmap_util.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "xfs_getbmap_report_one",
+            "fs/xfs/xfs_bmap_util.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-01T23:15:01+00:00",
+    "cause_commit_date": "2023-04-12T05:49:44+00:00",
+    "subsystems": [
+        "xfs"
+    ],
+    "parent_of_fix_commit": "1f1397b7218d7f8e53e33c6b58cbf9601cd2d8e6",
+    "patch": "diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c\nindex f032d3a4b727..fbb675563208 100644\n--- a/fs/xfs/xfs_bmap_util.c\n+++ b/fs/xfs/xfs_bmap_util.c\n@@ -558,7 +558,9 @@ xfs_getbmap(\n \t\tif (!xfs_iext_next_extent(ifp, &icur, &got)) {\n \t\t\txfs_fileoff_t\tend = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));\n \n-\t\t\tout[bmv->bmv_entries - 1].bmv_oflags |= BMV_OF_LAST;\n+\t\t\tif (bmv->bmv_entries > 0)\n+\t\t\t\tout[bmv->bmv_entries - 1].bmv_oflags |=\n+\t\t\t\t\t\t\t\tBMV_OF_LAST;\n \n \t\t\tif (whichfork != XFS_ATTR_FORK && bno < end &&\n \t\t\t    !xfs_getbmap_full(bmv)) {\n",
+    "patch_modified_files": [
+        "fs/xfs/xfs_bmap_util.c"
+    ]
+}

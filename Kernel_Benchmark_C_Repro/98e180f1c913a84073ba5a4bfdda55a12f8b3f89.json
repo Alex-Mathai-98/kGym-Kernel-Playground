@@ -1,0 +1,66 @@
+{
+    "version": 1,
+    "title": "possible deadlock in dquot_commit",
+    "display-title": "possible deadlock in dquot_commit",
+    "id": "98e180f1c913a84073ba5a4bfdda55a12f8b3f89",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: make sure to reset inode lockdep class when quota enabling fails",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4013d47a5307fdb5c13370b5392498b00fedd274",
+            "hash": "4013d47a5307fdb5c13370b5392498b00fedd274",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Merge tag 'for-linus' of git://git.kernel.org/pub/scm/virt/kvm/kvm",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fe38bd6862074c0a2b9be7f31f043aaa70b2af5f",
+        "hash": "fe38bd6862074c0a2b9be7f31f043aaa70b2af5f",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a05b3b05baf9a856@google.com/T/",
+        "https://lore.kernel.org/all/20210810092142.GB18722@quack2.suse.cz/T/",
+        "https://lore.kernel.org/all/20210812135529.GD14675@quack2.suse.cz/T/",
+        "https://lore.kernel.org/all/20211007155336.12493-1-jack@suse.cz/T/",
+        "https://lore.kernel.org/all/20220124183943.102762895@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124183953.750177707@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124184024.407936072@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124184100.867127425@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220124184125.121143506@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "possible deadlock in dquot_commit",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15aeba6e300000",
+            "c-reproducer": "/text?tag=ReproC&x=17a609e6300000",
+            "kernel-config": "/text?tag=KernelConfig&x=702bfdfbf389c324",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=66745863ecdec7abbfc3325c2d917eecb739c069",
+            "kernel-source-commit": "66745863ecdec7abbfc3325c2d917eecb739c069",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/6972b10616d785401dea17cec890cca8916424a7",
+            "syzkaller-commit": "6972b10616d785401dea17cec890cca8916424a7",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=138b8eaa300000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ext4_enable_quotas",
+            "fs/ext4/super.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2021-10-07T15:53:36+00:00",
+    "cause_commit_date": "2019-09-18T16:49:13+00:00",
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "15fc69bbbbbc8c72e5f6cc4e1be0f51283c5448e",
+    "patch": "diff --git a/fs/ext4/super.c b/fs/ext4/super.c\nindex 863a3eae505a..1b55f234e006 100644\n--- a/fs/ext4/super.c\n+++ b/fs/ext4/super.c\n@@ -6837,8 +6837,19 @@ int ext4_enable_quotas(struct super_block *sb)\n \t\t\t\t\t\"Failed to enable quota tracking \"\n \t\t\t\t\t\"(type=%d, err=%d). Please run \"\n \t\t\t\t\t\"e2fsck to fix.\", type, err);\n-\t\t\t\tfor (type--; type >= 0; type--)\n+\t\t\t\tfor (type--; type >= 0; type--) {\n+\t\t\t\t\tstruct inode *inode;\n+\n+\t\t\t\t\tinode = sb_dqopt(sb)->files[type];\n+\t\t\t\t\tif (inode)\n+\t\t\t\t\t\tinode = igrab(inode);\n \t\t\t\t\tdquot_quota_off(sb, type);\n+\t\t\t\t\tif (inode) {\n+\t\t\t\t\t\tlockdep_set_quota_inode(inode,\n+\t\t\t\t\t\t\tI_DATA_SEM_NORMAL);\n+\t\t\t\t\t\tiput(inode);\n+\t\t\t\t\t}\n+\t\t\t\t}\n \n \t\t\t\treturn err;\n \t\t\t}\n",
+    "patch_modified_files": [
+        "fs/ext4/super.c"
+    ]
+}

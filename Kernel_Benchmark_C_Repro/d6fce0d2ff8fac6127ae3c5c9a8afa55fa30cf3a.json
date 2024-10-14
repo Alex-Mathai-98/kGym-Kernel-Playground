@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "general protection fault in ieee80211_subif_start_xmit",
+    "display-title": "general protection fault in ieee80211_subif_start_xmit",
+    "id": "d6fce0d2ff8fac6127ae3c5c9a8afa55fa30cf3a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mac80211: pause TX while changing interface type",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=054c9939b4800a91475d8d89905827bf9e1ad97a",
+            "hash": "054c9939b4800a91475d8d89905827bf9e1ad97a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=687ee0ad4e897e29f4b41f7a20c866d74c5e0660",
+        "hash": "687ee0ad4e897e29f4b41f7a20c866d74c5e0660",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000002953ba05b4c351f4@google.com/T/",
+        "https://lore.kernel.org/all/20210122171115.b321f98f4d4f.I6997841933c17b093535c31d29355be3c0c39628@changeid/T/",
+        "https://lore.kernel.org/all/20210202132941.180062901@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210202132942.035179752@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210202132942.138623851@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210202132942.915040339@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210202132946.480479453@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210202132957.692094111@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1229d0fd500000",
+            "c-reproducer": "/text?tag=ReproC&x=11a963d1500000",
+            "kernel-config": "/text?tag=KernelConfig&x=b81aff78c272da44",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=80145ac2f739558e66bd8789df3414bc0e111c58",
+            "kernel-source-commit": "80145ac2f739558e66bd8789df3414bc0e111c58",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e34b696c0d7c04dbc824dee8b5123969bbca19b7",
+            "syzkaller-commit": "e34b696c0d7c04dbc824dee8b5123969bbca19b7",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15193615500000"
+        }
+    ],
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "5122565188bae59d507d90a9a9fd2fd6107f4439",
+    "patch": "diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h\nindex 8bf9c0e974d6..8e281c2e644d 100644\n--- a/net/mac80211/ieee80211_i.h\n+++ b/net/mac80211/ieee80211_i.h\n@@ -1078,6 +1078,7 @@ enum queue_stop_reason {\n \tIEEE80211_QUEUE_STOP_REASON_FLUSH,\n \tIEEE80211_QUEUE_STOP_REASON_TDLS_TEARDOWN,\n \tIEEE80211_QUEUE_STOP_REASON_RESERVE_TID,\n+\tIEEE80211_QUEUE_STOP_REASON_IFTYPE_CHANGE,\n \n \tIEEE80211_QUEUE_STOP_REASONS,\n };\ndiff --git a/net/mac80211/iface.c b/net/mac80211/iface.c\nindex 3b9ec4ef81c3..b31417f40bd5 100644\n--- a/net/mac80211/iface.c\n+++ b/net/mac80211/iface.c\n@@ -1617,6 +1617,10 @@ static int ieee80211_runtime_change_iftype(struct ieee80211_sub_if_data *sdata,\n \tif (ret)\n \t\treturn ret;\n \n+\tieee80211_stop_vif_queues(local, sdata,\n+\t\t\t\t  IEEE80211_QUEUE_STOP_REASON_IFTYPE_CHANGE);\n+\tsynchronize_net();\n+\n \tieee80211_do_stop(sdata, false);\n \n \tieee80211_teardown_sdata(sdata);\n@@ -1639,6 +1643,8 @@ static int ieee80211_runtime_change_iftype(struct ieee80211_sub_if_data *sdata,\n \terr = ieee80211_do_open(&sdata->wdev, false);\n \tWARN(err, \"type change: do_open returned %d\", err);\n \n+\tieee80211_wake_vif_queues(local, sdata,\n+\t\t\t\t  IEEE80211_QUEUE_STOP_REASON_IFTYPE_CHANGE);\n \treturn ret;\n }\n \n",
+    "patch_modified_files": [
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/iface.c"
+    ]
+}

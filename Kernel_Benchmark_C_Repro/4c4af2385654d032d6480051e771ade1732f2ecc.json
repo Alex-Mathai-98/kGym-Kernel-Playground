@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "WARNING in f2fs_is_valid_blkaddr",
+    "display-title": "WARNING in f2fs_is_valid_blkaddr",
+    "id": "4c4af2385654d032d6480051e771ade1732f2ecc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "f2fs: remove WARN_ON in f2fs_is_valid_blkaddr",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=dc2f78e2d4cc844a1458653d57ce1b54d4a29f21",
+            "hash": "dc2f78e2d4cc844a1458653d57ce1b54d4a29f21",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000019e9e05afcfcb96@google.com/T/",
+        "https://lore.kernel.org/all/20220408052207.209856-1-dzm91@hust.edu.cn/T/",
+        "https://lore.kernel.org/all/20220415131902.55028-1-dzm91@hust.edu.cn/T/",
+        "https://lore.kernel.org/all/20220613094850.166931805@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220613094922.843438024@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220613094924.913340374@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220613094926.497929857@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220613094928.482772422@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12c469ab900000",
+            "c-reproducer": "/text?tag=ReproC&x=10093365900000",
+            "kernel-config": "/text?tag=KernelConfig&x=b12e84189082991c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=325d0eab4f31c6240b59d5b2b8042c88f59405b5",
+            "kernel-source-commit": "325d0eab4f31c6240b59d5b2b8042c88f59405b5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9564d2e9821aea842b6ab213174aabd4b578b039",
+            "syzkaller-commit": "9564d2e9821aea842b6ab213174aabd4b578b039",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=178b348d900000"
+        }
+    ],
+    "subsystems": [
+        "f2fs"
+    ],
+    "parent_of_fix_commit": "9e3a845df9ea56387d2a6011299d44ddf21b3322",
+    "patch": "diff --git a/fs/f2fs/checkpoint.c b/fs/f2fs/checkpoint.c\nindex 909085a78f9c..71b1e93cbe0c 100644\n--- a/fs/f2fs/checkpoint.c\n+++ b/fs/f2fs/checkpoint.c\n@@ -158,7 +158,7 @@ static bool __is_bitmap_valid(struct f2fs_sb_info *sbi, block_t blkaddr,\n \t\tf2fs_err(sbi, \"Inconsistent error blkaddr:%u, sit bitmap:%d\",\n \t\t\t blkaddr, exist);\n \t\tset_sbi_flag(sbi, SBI_NEED_FSCK);\n-\t\tWARN_ON(1);\n+\t\tdump_stack();\n \t}\n \treturn exist;\n }\n@@ -196,7 +196,7 @@ bool f2fs_is_valid_blkaddr(struct f2fs_sb_info *sbi,\n \t\t\tf2fs_warn(sbi, \"access invalid blkaddr:%u\",\n \t\t\t\t  blkaddr);\n \t\t\tset_sbi_flag(sbi, SBI_NEED_FSCK);\n-\t\t\tWARN_ON(1);\n+\t\t\tdump_stack();\n \t\t\treturn false;\n \t\t} else {\n \t\t\treturn __is_bitmap_valid(sbi, blkaddr, type);\n",
+    "patch_modified_files": [
+        "fs/f2fs/checkpoint.c"
+    ]
+}

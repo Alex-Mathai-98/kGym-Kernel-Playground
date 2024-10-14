@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in delayed_uprobe_remove",
+    "display-title": "KASAN: use-after-free Read in delayed_uprobe_remove",
+    "id": "ab72104359c8066fb418e18d9227eb00b677360a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Uprobes: Fix kernel oops with delayed_uprobe_remove()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1aed58e67a6ec1e7a18bfabe8ba6ec2d27c15636",
+            "hash": "1aed58e67a6ec1e7a18bfabe8ba6ec2d27c15636",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000000d55405799d3d58@google.com/T/",
+        "https://lore.kernel.org/all/20181114081921.26484-1-ravi.bangoria@linux.ibm.com/T/",
+        "https://lore.kernel.org/all/20181206124719.1fa76d92@vmware.local.home/T/",
+        "https://lore.kernel.org/all/f24ba5f2-dcc8-45d2-9599-3a0d40fe4d95@linux.ibm.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15b32583400000",
+            "c-reproducer": "/text?tag=ReproC&x=10bb34b9400000",
+            "kernel-config": "/text?tag=KernelConfig&x=9384ecb1c973baed",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=71e56028173bc84f01456a5679d8be9d681b49f1",
+            "kernel-source-commit": "71e56028173bc84f01456a5679d8be9d681b49f1",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8bd6bd63656d411729c450d452e1355b42adf900",
+            "syzkaller-commit": "8bd6bd63656d411729c450d452e1355b42adf900",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1718c425400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "put_uprobe",
+            "kernel/events/uprobes.c"
+        ]
+    ],
+    "patch_commit_date": "2018-12-05T03:34:23+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "perf"
+    ],
+    "parent_of_fix_commit": "5cf99a0f3161bc3ae2391269d134d6bf7e26f00e",
+    "patch": "diff --git a/kernel/events/uprobes.c b/kernel/events/uprobes.c\nindex 96d4bee83489..98b9312ce6b2 100644\n--- a/kernel/events/uprobes.c\n+++ b/kernel/events/uprobes.c\n@@ -572,7 +572,9 @@ static void put_uprobe(struct uprobe *uprobe)\n \t\t * gets called, we don't get a chance to remove uprobe from\n \t\t * delayed_uprobe_list from remove_breakpoint(). Do it here.\n \t\t */\n+\t\tmutex_lock(&delayed_uprobe_lock);\n \t\tdelayed_uprobe_remove(uprobe, NULL);\n+\t\tmutex_unlock(&delayed_uprobe_lock);\n \t\tkfree(uprobe);\n \t}\n }\n",
+    "patch_modified_files": [
+        "kernel/events/uprobes.c"
+    ]
+}

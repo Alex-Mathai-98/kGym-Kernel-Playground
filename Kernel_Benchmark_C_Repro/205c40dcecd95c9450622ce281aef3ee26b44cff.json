@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in filp_close",
+    "display-title": "KASAN: use-after-free Read in filp_close",
+    "id": "205c40dcecd95c9450622ce281aef3ee26b44cff",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fix the breakage in close_fd_get_file() calling conventions change",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=40a1926022d128057376d35167128a7c74e3dca4",
+            "hash": "40a1926022d128057376d35167128a7c74e3dca4",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Unify the primitives for file descriptor closing",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6319194ec57b0452dcda4589d24c4e7db299c5bf",
+        "hash": "6319194ec57b0452dcda4589d24c4e7db299c5bf",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000fd54f805e0351875@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in filp_close",
+            "syz-reproducer": "/text?tag=ReproSyz&x=114f7bcdf00000",
+            "c-reproducer": "/text?tag=ReproC&x=1659a94ff00000",
+            "kernel-config": "/text?tag=KernelConfig&x=3096247591885bfa",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=952923ddc01120190dcf671e7b354364ce1d1362",
+            "kernel-source-commit": "952923ddc01120190dcf671e7b354364ce1d1362",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c885789257c76ea4479ea36282f5e0a2c7861e26",
+            "syzkaller-commit": "c885789257c76ea4479ea36282f5e0a2c7861e26",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14218905f00000"
+        }
+    ],
+    "subsystems": [
+        "io-uring",
+        "fs"
+    ],
+    "parent_of_fix_commit": "6319194ec57b0452dcda4589d24c4e7db299c5bf",
+    "patch": "diff --git a/drivers/android/binder.c b/drivers/android/binder.c\nindex 27c9b004823a..73beea5dc18c 100644\n--- a/drivers/android/binder.c\n+++ b/drivers/android/binder.c\n@@ -1857,6 +1857,8 @@ static void binder_deferred_fd_close(int fd)\n \tinit_task_work(&twcb->twork, binder_do_fd_close);\n \ttwcb->file = close_fd_get_file(fd);\n \tif (twcb->file) {\n+\t\t// pin it until binder_do_fd_close(); see comments there\n+\t\tget_file(twcb->file);\n \t\tfilp_close(twcb->file, current->files);\n \t\ttask_work_add(current, &twcb->twork, TWA_RESUME);\n \t} else {\ndiff --git a/fs/file.c b/fs/file.c\nindex dd6692048f4f..3bcc1ecc314a 100644\n--- a/fs/file.c\n+++ b/fs/file.c\n@@ -800,8 +800,7 @@ struct file *__close_fd_get_file(unsigned int fd)\n \n /*\n  * variant of close_fd that gets a ref on the file for later fput.\n- * The caller must ensure that filp_close() called on the file, and then\n- * an fput().\n+ * The caller must ensure that filp_close() called on the file.\n  */\n struct file *close_fd_get_file(unsigned int fd)\n {\ndiff --git a/fs/io_uring.c b/fs/io_uring.c\nindex 7257b0870353..33da5116cc38 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -5110,7 +5110,7 @@ static int io_close(struct io_kiocb *req, unsigned int issue_flags)\n \tstruct files_struct *files = current->files;\n \tstruct io_close *close = &req->close;\n \tstruct fdtable *fdt;\n-\tstruct file *file = NULL;\n+\tstruct file *file;\n \tint ret = -EBADF;\n \n \tif (req->close.file_slot) {\n@@ -5127,7 +5127,6 @@ static int io_close(struct io_kiocb *req, unsigned int issue_flags)\n \tfile = fdt->fd[close->fd];\n \tif (!file || file->f_op == &io_uring_fops) {\n \t\tspin_unlock(&files->file_lock);\n-\t\tfile = NULL;\n \t\tgoto err;\n \t}\n \n@@ -5147,8 +5146,6 @@ static int io_close(struct io_kiocb *req, unsigned int issue_flags)\n err:\n \tif (ret < 0)\n \t\treq_set_fail(req);\n-\tif (file)\n-\t\tfput(file);\n \t__io_req_complete(req, issue_flags, ret, 0);\n \treturn 0;\n }\n",
+    "patch_modified_files": [
+        "drivers/android/binder.c",
+        "fs/file.c",
+        "fs/io_uring.c"
+    ]
+}

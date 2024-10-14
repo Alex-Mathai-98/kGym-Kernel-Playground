@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in rdma_listen",
+    "display-title": "KASAN: use-after-free Read in rdma_listen",
+    "id": "b8febdb3c7c8c1f1b606fb903cee66b21b2fd02f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "RDMA/cma: Rollback source IP address if failing to acquire device",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5fc01fb846bce8fa6d5f95e2625b8ce0f8e86810",
+            "hash": "5fc01fb846bce8fa6d5f95e2625b8ce0f8e86810",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a2a25b0568d750c3@google.com/T/",
+        "https://lore.kernel.org/all/20190104064537.GA352@myunghoj-Precision-5530/T/",
+        "https://lore.kernel.org/all/20190110062727.GA25844@myunghoj-Precision-5530/T/",
+        "https://lore.kernel.org/all/20190326042700.963224437@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190326042702.565683325@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16c1f7eb800000",
+            "c-reproducer": "/text?tag=ReproC&x=1667973b800000",
+            "kernel-config": "/text?tag=KernelConfig&x=d9b0d91297e224bc",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=10b84daddbec72c6b440216a69de9a9605127f7a",
+            "kernel-source-commit": "10b84daddbec72c6b440216a69de9a9605127f7a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/dc88925771c47ef787f6f3a7b6756b8f0ce40af5",
+            "syzkaller-commit": "dc88925771c47ef787f6f3a7b6756b8f0ce40af5",
+            "compiler-description": "gcc (GCC) 7.1.1 20170620",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=127591d3800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "addr_handler",
+            "drivers/infiniband/core/cma.c"
+        ]
+    ],
+    "patch_commit_date": "2019-01-10T06:27:31+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "rdma"
+    ],
+    "parent_of_fix_commit": "97099cc6529cdf50af32a496b588d9428c57341f",
+    "patch": "diff --git a/drivers/infiniband/core/cma.c b/drivers/infiniband/core/cma.c\nindex 63a7cc00bae0..8cd113b0ddfb 100644\n--- a/drivers/infiniband/core/cma.c\n+++ b/drivers/infiniband/core/cma.c\n@@ -2963,13 +2963,22 @@ static void addr_handler(int status, struct sockaddr *src_addr,\n {\n \tstruct rdma_id_private *id_priv = context;\n \tstruct rdma_cm_event event = {};\n+\tstruct sockaddr *addr;\n+\tstruct sockaddr_storage old_addr;\n \n \tmutex_lock(&id_priv->handler_mutex);\n \tif (!cma_comp_exch(id_priv, RDMA_CM_ADDR_QUERY,\n \t\t\t   RDMA_CM_ADDR_RESOLVED))\n \t\tgoto out;\n \n-\tmemcpy(cma_src_addr(id_priv), src_addr, rdma_addr_size(src_addr));\n+\t/*\n+\t * Store the previous src address, so that if we fail to acquire\n+\t * matching rdma device, old address can be restored back, which helps\n+\t * to cancel the cma listen operation correctly.\n+\t */\n+\taddr = cma_src_addr(id_priv);\n+\tmemcpy(&old_addr, addr, rdma_addr_size(addr));\n+\tmemcpy(addr, src_addr, rdma_addr_size(src_addr));\n \tif (!status && !id_priv->cma_dev) {\n \t\tstatus = cma_acquire_dev_by_src_ip(id_priv);\n \t\tif (status)\n@@ -2980,6 +2989,8 @@ static void addr_handler(int status, struct sockaddr *src_addr,\n \t}\n \n \tif (status) {\n+\t\tmemcpy(addr, &old_addr,\n+\t\t       rdma_addr_size((struct sockaddr *)&old_addr));\n \t\tif (!cma_comp_exch(id_priv, RDMA_CM_ADDR_RESOLVED,\n \t\t\t\t   RDMA_CM_ADDR_BOUND))\n \t\t\tgoto out;\n",
+    "patch_modified_files": [
+        "drivers/infiniband/core/cma.c"
+    ]
+}

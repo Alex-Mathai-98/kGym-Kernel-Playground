@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "memory leak in nfcmrvl_nci_register_dev",
+    "display-title": "memory leak in nfcmrvl_nci_register_dev",
+    "id": "bfa97c20456b53075bb5ec214f4beac81b19504b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "NFC: nci: fix memory leak in nci_allocate_device",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e0652f8bb44d6294eeeac06d703185357f25d50b",
+            "hash": "e0652f8bb44d6294eeeac06d703185357f25d50b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000041eaff05b7e65f96@google.com/T/",
+        "https://lore.kernel.org/all/20210514074248.780647-1-mudongliangabcd@gmail.com/T/",
+        "https://lore.kernel.org/all/20210514232906.982825-1-mudongliangabcd@gmail.com/T/",
+        "https://lore.kernel.org/all/20210527151139.224619013@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210527151139.241267495@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210527151139.242182390@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210531130635.070310929@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210531130636.002722319@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210531130636.254683895@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210531130640.131924542@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=119df6a3500000",
+            "c-reproducer": "/text?tag=ReproC&x=1147e40b500000",
+            "kernel-config": "/text?tag=KernelConfig&x=f182e38c52a35dc6",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=dea8dcf2a9fa8cc540136a6cd885c3beece16ec3",
+            "kernel-source-commit": "dea8dcf2a9fa8cc540136a6cd885c3beece16ec3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8259d56c46408d79f7a64443f7c25dcafb1cdc45",
+            "syzkaller-commit": "8259d56c46408d79f7a64443f7c25dcafb1cdc45",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1462942b500000"
+        }
+    ],
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "31db0dbd72444abe645d90c20ecb84d668f5af5e",
+    "patch": "diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h\nindex bd76e8e082c0..1df0f8074c9d 100644\n--- a/include/net/nfc/nci_core.h\n+++ b/include/net/nfc/nci_core.h\n@@ -298,6 +298,7 @@ int nci_nfcc_loopback(struct nci_dev *ndev, void *data, size_t data_len,\n \t\t      struct sk_buff **resp);\n \n struct nci_hci_dev *nci_hci_allocate(struct nci_dev *ndev);\n+void nci_hci_deallocate(struct nci_dev *ndev);\n int nci_hci_send_event(struct nci_dev *ndev, u8 gate, u8 event,\n \t\t       const u8 *param, size_t param_len);\n int nci_hci_send_cmd(struct nci_dev *ndev, u8 gate,\ndiff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c\nindex 9a585332ea84..da7fe9db1b00 100644\n--- a/net/nfc/nci/core.c\n+++ b/net/nfc/nci/core.c\n@@ -1191,6 +1191,7 @@ EXPORT_SYMBOL(nci_allocate_device);\n void nci_free_device(struct nci_dev *ndev)\n {\n \tnfc_free_device(ndev->nfc_dev);\n+\tnci_hci_deallocate(ndev);\n \tkfree(ndev);\n }\n EXPORT_SYMBOL(nci_free_device);\ndiff --git a/net/nfc/nci/hci.c b/net/nfc/nci/hci.c\nindex 6b275a387a92..96865142104f 100644\n--- a/net/nfc/nci/hci.c\n+++ b/net/nfc/nci/hci.c\n@@ -792,3 +792,8 @@ struct nci_hci_dev *nci_hci_allocate(struct nci_dev *ndev)\n \n \treturn hdev;\n }\n+\n+void nci_hci_deallocate(struct nci_dev *ndev)\n+{\n+\tkfree(ndev->hci_dev);\n+}\n",
+    "patch_modified_files": [
+        "include/net/nfc/nci_core.h",
+        "net/nfc/nci/core.c",
+        "net/nfc/nci/hci.c"
+    ]
+}

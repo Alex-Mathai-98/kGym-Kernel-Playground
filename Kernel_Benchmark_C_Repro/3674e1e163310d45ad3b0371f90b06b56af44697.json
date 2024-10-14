@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "general protection fault in nft_tunnel_get_init",
+    "display-title": "general protection fault in nft_tunnel_get_init",
+    "id": "3674e1e163310d45ad3b0371f90b06b56af44697",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: nft_tunnel: fix null-attribute check",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1c702bf902bd37349f6d91cd7f4b372b1e46d0ed",
+            "hash": "1c702bf902bd37349f6d91cd7f4b372b1e46d0ed",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b62bda059c36db7c@google.com/T/",
+        "https://lore.kernel.org/all/20200116074411.19511-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20200116195044.326614-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20200122092803.587683021@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200122092833.339495161@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200124141817.28793-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200124142012.29752-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=166f4bfee00000",
+            "c-reproducer": "/text?tag=ReproC&x=159c4371e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=d9290aeb7e6cf1c4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=51d69817519f5f00041a1a039277f0367d76c82c",
+            "kernel-source-commit": "51d69817519f5f00041a1a039277f0367d76c82c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f9b6950728295eb8f52b05a0d9e5dccd99f93eaa",
+            "syzkaller-commit": "f9b6950728295eb8f52b05a0d9e5dccd99f93eaa",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13ad1821e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nft_tunnel_get_init",
+            "net/netfilter/nft_tunnel.c"
+        ]
+    ],
+    "patch_commit_date": "2020-01-16T07:44:11+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "ec7470b834fe7b5d7eff11b6677f5d7fdf5e9a91",
+    "patch": "diff --git a/net/netfilter/nft_tunnel.c b/net/netfilter/nft_tunnel.c\nindex 3d4c2ae605a8..d89c7c553030 100644\n--- a/net/netfilter/nft_tunnel.c\n+++ b/net/netfilter/nft_tunnel.c\n@@ -76,7 +76,7 @@ static int nft_tunnel_get_init(const struct nft_ctx *ctx,\n \tstruct nft_tunnel *priv = nft_expr_priv(expr);\n \tu32 len;\n \n-\tif (!tb[NFTA_TUNNEL_KEY] &&\n+\tif (!tb[NFTA_TUNNEL_KEY] ||\n \t    !tb[NFTA_TUNNEL_DREG])\n \t\treturn -EINVAL;\n \n",
+    "patch_modified_files": [
+        "net/netfilter/nft_tunnel.c"
+    ]
+}

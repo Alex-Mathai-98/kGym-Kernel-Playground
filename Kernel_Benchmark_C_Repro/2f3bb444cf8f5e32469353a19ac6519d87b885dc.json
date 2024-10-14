@@ -1,0 +1,229 @@
+{
+    "version": 1,
+    "title": "WARNING: bad unlock balance in sch_direct_xmit",
+    "display-title": "WARNING: bad unlock balance in sch_direct_xmit",
+    "id": "2f3bb444cf8f5e32469353a19ac6519d87b885dc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: avoid updating qdisc_xmit_lock_key in netdev_update_lockdep_key()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=53d374979ef147ab51f5d632dfe20b14aebeccd0",
+            "hash": "53d374979ef147ab51f5d632dfe20b14aebeccd0",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "net: core: add generic lockdep keys",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ab92d68fc22f9afab480153bd82a20f6e2533769",
+        "hash": "ab92d68fc22f9afab480153bd82a20f6e2533769",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ab3f800598cec624@google.com/T/",
+        "https://lore.kernel.org/all/20200115210238.4107-1-xiyou.wangcong@gmail.com/T/",
+        "https://lore.kernel.org/all/20200122092833.339495161@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1722c5c1e00000",
+            "c-reproducer": "/text?tag=ReproC&x=167aee3ee00000",
+            "kernel-config": "/text?tag=KernelConfig&x=f2f3ef188b7e16cf",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=36487907f34131c7e3df5b1e6b30b4e3dfcdc0af",
+            "kernel-source-commit": "36487907f34131c7e3df5b1e6b30b4e3dfcdc0af",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d646e21ff436cd2a40b23314436cd53f21ae9500",
+            "syzkaller-commit": "d646e21ff436cd2a40b23314436cd53f21ae9500",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12da2c9ee00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "netdev_unregister_lockdep_key",
+            "net/core/dev.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "lowpan_get_iflink",
+            "net/ieee802154/6lowpan/core.c"
+        ],
+        [
+            "nr_proto_init",
+            "net/netrom/af_netrom.c"
+        ],
+        [
+            "batadv_softif_init_late",
+            "net/batman-adv/soft-interface.c"
+        ],
+        [
+            "vlan_dev_init",
+            "net/8021q/vlan_dev.c"
+        ],
+        [
+            "dsa_slave_create",
+            "net/dsa/slave.c"
+        ],
+        [
+            "dsa_master_setup",
+            "net/dsa/master.c"
+        ],
+        [
+            "br_dev_init",
+            "net/bridge/br_device.c"
+        ],
+        [
+            "prism2_clear_set_tim_queue",
+            "drivers/net/wireless/intersil/hostap/hostap_hw.c"
+        ],
+        [
+            "RAW_NOTIFIER_HEAD",
+            "net/core/dev.c"
+        ],
+        [
+            "l2tp_eth_dev_init",
+            "net/l2tp/l2tp_eth.c"
+        ],
+        [
+            "alloc_netdev_mqs",
+            "net/core/dev.c"
+        ],
+        [
+            "DEFINE_SPINLOCK",
+            "net/netrom/af_netrom.c"
+        ],
+        [
+            "br_dev_xmit",
+            "net/bridge/br_device.c"
+        ],
+        [
+            "dsa_slave_phy_setup",
+            "net/dsa/slave.c"
+        ],
+        [
+            "macvlan_init",
+            "drivers/net/macvlan.c"
+        ],
+        [
+            "ipvlan_init",
+            "drivers/net/ipvlan/ipvlan_main.c"
+        ],
+        [
+            "rose_proto_init",
+            "net/rose/af_rose.c"
+        ],
+        [
+            "ppp_dev_init",
+            "drivers/net/ppp/ppp_generic.c"
+        ],
+        [
+            "netvsc_probe",
+            "drivers/net/hyperv/netvsc_drv.c"
+        ],
+        [
+            "netif_stop_queue",
+            "include/linux/netdevice.h"
+        ],
+        [
+            "register_netdevice",
+            "net/core/dev.c"
+        ],
+        [
+            "dsa_master_reset_mtu",
+            "net/dsa/master.c"
+        ],
+        [
+            "nfp_repr_init",
+            "drivers/net/ethernet/netronome/nfp/nfp_net_repr.c"
+        ],
+        [
+            "do_set_master",
+            "net/core/rtnetlink.c"
+        ],
+        [
+            "macvlan_do_ioctl",
+            "drivers/net/macvlan.c"
+        ],
+        [
+            "bond_init",
+            "drivers/net/bonding/bond_main.c"
+        ],
+        [
+            "macsec_newlink",
+            "drivers/net/macsec.c"
+        ],
+        [
+            "nfp_repr_clean",
+            "drivers/net/ethernet/netronome/nfp/nfp_net_repr.c"
+        ],
+        [
+            "netif_tx_stop_all_queues",
+            "net/core/dev.c"
+        ],
+        [
+            "bpq_new_device",
+            "drivers/net/hamradio/bpqether.c"
+        ],
+        [
+            "qdisc_alloc",
+            "net/sched/sch_generic.c"
+        ],
+        [
+            "netdev_for_each_tx_queue",
+            "include/linux/netdevice.h"
+        ],
+        [
+            "vrf_dev_init",
+            "drivers/net/vrf.c"
+        ],
+        [
+            "netdev_init_one_queue",
+            "net/core/dev.c"
+        ],
+        [
+            "bt_xmit",
+            "net/bluetooth/6lowpan.c"
+        ],
+        [
+            "vlan_dev_set_rx_mode",
+            "net/8021q/vlan_dev.c"
+        ],
+        [
+            "free_netdev",
+            "net/core/dev.c"
+        ],
+        [
+            "macvlan_get_nest_level",
+            "drivers/net/macvlan.c"
+        ],
+        [
+            "batadv_interface_kill_vid",
+            "net/batman-adv/soft-interface.c"
+        ],
+        [
+            "team_init",
+            "drivers/net/team/team.c"
+        ],
+        [
+            "macsec_start_xmit",
+            "drivers/net/macsec.c"
+        ],
+        [
+            "while",
+            "drivers/net/wireless/intersil/hostap/hostap_hw.c"
+        ]
+    ],
+    "patch_commit_date": "2020-01-15T21:02:38+00:00",
+    "cause_commit_date": "2019-10-21T18:47:51+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "44c23d71599f81a1c7fe8389e0319822dd50c37c",
+    "patch": "diff --git a/net/core/dev.c b/net/core/dev.c\nindex 0ad39c87b7fd..7e885d069707 100644\n--- a/net/core/dev.c\n+++ b/net/core/dev.c\n@@ -9177,22 +9177,10 @@ static void netdev_unregister_lockdep_key(struct net_device *dev)\n \n void netdev_update_lockdep_key(struct net_device *dev)\n {\n-\tstruct netdev_queue *queue;\n-\tint i;\n-\n-\tlockdep_unregister_key(&dev->qdisc_xmit_lock_key);\n \tlockdep_unregister_key(&dev->addr_list_lock_key);\n-\n-\tlockdep_register_key(&dev->qdisc_xmit_lock_key);\n \tlockdep_register_key(&dev->addr_list_lock_key);\n \n \tlockdep_set_class(&dev->addr_list_lock, &dev->addr_list_lock_key);\n-\tfor (i = 0; i < dev->num_tx_queues; i++) {\n-\t\tqueue = netdev_get_tx_queue(dev, i);\n-\n-\t\tlockdep_set_class(&queue->_xmit_lock,\n-\t\t\t\t  &dev->qdisc_xmit_lock_key);\n-\t}\n }\n EXPORT_SYMBOL(netdev_update_lockdep_key);\n \n",
+    "patch_modified_files": [
+        "net/core/dev.c"
+    ]
+}

@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "KASAN: invalid-free in p9_client_create",
+    "display-title": "KASAN: invalid-free in p9_client_create (2)",
+    "id": "08a86f0867ba0f092bf6ecbd6d5c2ae5e16a52d7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Revert \"mm/slub: fix a memory leak in sysfs_slab_add()\"",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=757fed1d0898b893d7daa84183947c70f27632f3",
+            "hash": "757fed1d0898b893d7daa84183947c70f27632f3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "mm/slub: fix a memory leak in sysfs_slab_add()",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=dde3c6b72a16c2db826f54b2d49bdea26c3534a2",
+        "hash": "dde3c6b72a16c2db826f54b2d49bdea26c3534a2",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000672eda05b9e291ff@google.com/T/",
+        "https://lore.kernel.org/all/20210128113250.60078-1-wanghai38@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: invalid-free in p9_client_create",
+            "syz-reproducer": "/text?tag=ReproSyz&x=138a8eb4d00000",
+            "c-reproducer": "/text?tag=ReproC&x=131ac26f500000",
+            "kernel-config": "/text?tag=KernelConfig&x=be33d8015c9de024",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=fe75a21824e78405b8d812421974524092250c63",
+            "kernel-source-commit": "fe75a21824e78405b8d812421974524092250c63",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/52e3731913ab2677be27c29ed8142b04e8f28521",
+            "syzkaller-commit": "52e3731913ab2677be27c29ed8142b04e8f28521",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1387d944d00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "sysfs_slab_add",
+            "mm/slub.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "sysfs_slab_add",
+            "mm/slub.c"
+        ]
+    ],
+    "patch_commit_date": "2021-01-28T11:32:50+00:00",
+    "cause_commit_date": "2020-06-03T22:56:21+00:00",
+    "subsystems": [
+        "v9fs"
+    ],
+    "parent_of_fix_commit": "76c057c84d286140c6c416c3b4ba832cd1d8984e",
+    "patch": "diff --git a/mm/slub.c b/mm/slub.c\nindex 69742ab9a21d..7ecbbbe5bc0c 100644\n--- a/mm/slub.c\n+++ b/mm/slub.c\n@@ -5625,10 +5625,8 @@ static int sysfs_slab_add(struct kmem_cache *s)\n \n \ts->kobj.kset = kset;\n \terr = kobject_init_and_add(&s->kobj, &slab_ktype, NULL, \"%s\", name);\n-\tif (err) {\n-\t\tkobject_put(&s->kobj);\n+\tif (err)\n \t\tgoto out;\n-\t}\n \n \terr = sysfs_create_group(&s->kobj, &slab_attr_group);\n \tif (err)\n",
+    "patch_modified_files": [
+        "mm/slub.c"
+    ]
+}

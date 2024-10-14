@@ -1,0 +1,45 @@
+{
+    "version": 1,
+    "title": "WARNING in __nf_unregister_net_hook",
+    "display-title": "WARNING in __nf_unregister_net_hook (4)",
+    "id": "0b6b2d6d6cefa8b462930e55be699efba635788f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: nf_tables: skip netdev events generated on netns removal",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=68a3765c659f809dcaac20030853a054646eb739",
+            "hash": "68a3765c659f809dcaac20030853a054646eb739",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000008ce91e05bf9f62bc@google.com/T/",
+        "https://lore.kernel.org/all/20211006142034.10362-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20211021100821.964677-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20211025191017.756020307@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in __nf_unregister_net_hook",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1400bf0f300000",
+            "c-reproducer": "/text?tag=ReproC&x=144eaf17300000",
+            "kernel-config": "/text?tag=KernelConfig&x=9290a409049988d4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=02d5e016800d082058b3d3b7c3ede136cdc6ddcb",
+            "kernel-source-commit": "02d5e016800d082058b3d3b7c3ede136cdc6ddcb",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/be530f6c7e0a2e1f66d03a5ad71d209302219d37",
+            "syzkaller-commit": "be530f6c7e0a2e1f66d03a5ad71d209302219d37",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1715a6db300000"
+        }
+    ],
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "77076934afdcd46516caf18ed88b2f88025c9ddb",
+    "patch": "diff --git a/net/netfilter/nft_chain_filter.c b/net/netfilter/nft_chain_filter.c\nindex 5b02408a920b..3ced0eb6b7c3 100644\n--- a/net/netfilter/nft_chain_filter.c\n+++ b/net/netfilter/nft_chain_filter.c\n@@ -342,12 +342,6 @@ static void nft_netdev_event(unsigned long event, struct net_device *dev,\n \t\treturn;\n \t}\n \n-\t/* UNREGISTER events are also happening on netns exit.\n-\t *\n-\t * Although nf_tables core releases all tables/chains, only this event\n-\t * handler provides guarantee that hook->ops.dev is still accessible,\n-\t * so we cannot skip exiting net namespaces.\n-\t */\n \t__nft_release_basechain(ctx);\n }\n \n@@ -366,6 +360,9 @@ static int nf_tables_netdev_event(struct notifier_block *this,\n \t    event != NETDEV_CHANGENAME)\n \t\treturn NOTIFY_DONE;\n \n+\tif (!check_net(ctx.net))\n+\t\treturn NOTIFY_DONE;\n+\n \tnft_net = nft_pernet(ctx.net);\n \tmutex_lock(&nft_net->commit_mutex);\n \tlist_for_each_entry(table, &nft_net->tables, list) {\n",
+    "patch_modified_files": [
+        "net/netfilter/nft_chain_filter.c"
+    ]
+}

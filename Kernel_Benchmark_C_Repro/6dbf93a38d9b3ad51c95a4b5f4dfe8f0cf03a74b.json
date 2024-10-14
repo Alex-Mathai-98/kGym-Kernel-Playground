@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "memory leak in sctp_v6_create_accept_sk",
+    "display-title": "memory leak in sctp_v6_create_accept_sk",
+    "id": "6dbf93a38d9b3ad51c95a4b5f4dfe8f0cf03a74b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "sctp: change to hold sk after auth shkey is created successfully",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=25bff6d5478b2a02368097015b7d8eb727c87e16",
+            "hash": "25bff6d5478b2a02368097015b7d8eb727c87e16",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000004c134d058a5d0096@google.com/T/",
+        "https://lore.kernel.org/all/14de0d292dc2fe01ecadaba00feb925b337b558f.1561393305.git.lucien.xin@gmail.com/T/",
+        "https://lore.kernel.org/all/20190625054930.GC17703@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20190702080123.904399496@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190702080124.103022729@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190702080124.564652899@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190708150513.136580595@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190708150525.973820964@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/lsq.1570043210.379046399@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16195636a00000",
+            "c-reproducer": "/text?tag=ReproC&x=1717d286a00000",
+            "kernel-config": "/text?tag=KernelConfig&x=50393f7bfe444ff6",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3ab4436f688c2d2f221793953cd05435ca84261c",
+            "kernel-source-commit": "3ab4436f688c2d2f221793953cd05435ca84261c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/53c81ea5385ee17c68d0afa4e524b6aead37c903",
+            "syzkaller-commit": "53c81ea5385ee17c68d0afa4e524b6aead37c903",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=101859a2a00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "sctp_endpoint_init",
+            "net/sctp/endpointola.c"
+        ]
+    ],
+    "patch_commit_date": "2019-06-24T16:21:45+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "sctp"
+    ],
+    "parent_of_fix_commit": "13696531dc90d2bd54d143aabcb766d228240e06",
+    "patch": "diff --git a/net/sctp/endpointola.c b/net/sctp/endpointola.c\nindex e358437ba29b..69cebb2c998b 100644\n--- a/net/sctp/endpointola.c\n+++ b/net/sctp/endpointola.c\n@@ -118,10 +118,6 @@ static struct sctp_endpoint *sctp_endpoint_init(struct sctp_endpoint *ep,\n \t/* Initialize the bind addr area */\n \tsctp_bind_addr_init(&ep->base.bind_addr, 0);\n \n-\t/* Remember who we are attached to.  */\n-\tep->base.sk = sk;\n-\tsock_hold(ep->base.sk);\n-\n \t/* Create the lists of associations.  */\n \tINIT_LIST_HEAD(&ep->asocs);\n \n@@ -154,6 +150,10 @@ static struct sctp_endpoint *sctp_endpoint_init(struct sctp_endpoint *ep,\n \tep->prsctp_enable = net->sctp.prsctp_enable;\n \tep->reconf_enable = net->sctp.reconf_enable;\n \n+\t/* Remember who we are attached to.  */\n+\tep->base.sk = sk;\n+\tsock_hold(ep->base.sk);\n+\n \treturn ep;\n \n nomem_shkey:\n",
+    "patch_modified_files": [
+        "net/sctp/endpointola.c"
+    ]
+}

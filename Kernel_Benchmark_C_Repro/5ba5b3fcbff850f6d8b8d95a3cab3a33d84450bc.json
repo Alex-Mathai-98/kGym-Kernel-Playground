@@ -1,0 +1,96 @@
+{
+    "version": 1,
+    "title": "general protection fault in io_uring_show_cred",
+    "display-title": "general protection fault in io_uring_show_cred",
+    "id": "5ba5b3fcbff850f6d8b8d95a3cab3a33d84450bc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: use correct pointer for io_uring_show_cred()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6b47ab81c9a9b56a94882815e9949d40e4207c92",
+            "hash": "6b47ab81c9a9b56a94882815e9949d40e4207c92",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "io_uring: COW io_identity on mismatch",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1e6fa5216a0e59ef02e8b6b40d553238a3b81d49",
+        "hash": "1e6fa5216a0e59ef02e8b6b40d553238a3b81d49",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003afa6905b35e6386@google.com/T/",
+        "https://lore.kernel.org/all/87ad2150-609f-3b42-84a9-22873e6b2d6d@kernel.dk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11022732500000",
+            "c-reproducer": "/text?tag=ReproC&x=13649314500000",
+            "kernel-config": "/text?tag=KernelConfig&x=61033507391c77ff",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4ef8451b332662d004df269d4cdeb7d9f31419b5",
+            "kernel-source-commit": "4ef8451b332662d004df269d4cdeb7d9f31419b5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/64069d48f293e0be98d4a78a6f7be23861cc1e06",
+            "syzkaller-commit": "64069d48f293e0be98d4a78a6f7be23861cc1e06",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14137f14500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "SYSCALL_DEFINE6",
+            "fs/io_uring.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "io_req_clean_work",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_prep_async_work",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_probe",
+            "fs/io_uring.c"
+        ],
+        [
+            "req_set_fail_links",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_dismantle_req",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_req_init_async",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_uring_fasync",
+            "fs/io_uring.c"
+        ],
+        [
+            "__io_commit_cqring",
+            "fs/io_uring.c"
+        ],
+        [
+            "io_init_req",
+            "fs/io_uring.c"
+        ]
+    ],
+    "patch_commit_date": "2020-11-05T16:50:16+00:00",
+    "cause_commit_date": "2020-10-15T14:46:24+00:00",
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "ef9865a442286e2737f37f56eb54c12ef8465905",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex 3d489cf31926..29f1417690d5 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -8974,7 +8974,8 @@ SYSCALL_DEFINE6(io_uring_enter, unsigned int, fd, u32, to_submit,\n #ifdef CONFIG_PROC_FS\n static int io_uring_show_cred(int id, void *p, void *data)\n {\n-\tconst struct cred *cred = p;\n+\tstruct io_identity *iod = p;\n+\tconst struct cred *cred = iod->creds;\n \tstruct seq_file *m = data;\n \tstruct user_namespace *uns = seq_user_ns(m);\n \tstruct group_info *gi;\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

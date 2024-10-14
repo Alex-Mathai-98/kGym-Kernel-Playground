@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel paging request in percpu_ref_exit",
+    "display-title": "BUG: unable to handle kernel paging request in percpu_ref_exit",
+    "id": "afa337a1ede8e89814a04c6b82a4eb86953d80a0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: Fix return value from alloc_fixed_file_ref_node",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3e2224c5867fead6c0b94b84727cc676ac6353a3",
+            "hash": "3e2224c5867fead6c0b94b84727cc676ac6353a3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "lockdep: Fix lockdep recursion",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4d004099a668c41522242aa146a38cc4eb59cb1e",
+        "hash": "4d004099a668c41522242aa146a38cc4eb59cb1e",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000cfdf1c05b87a25e8@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10496f70d00000",
+            "c-reproducer": "/text?tag=ReproC&x=10cedf70d00000",
+            "kernel-config": "/text?tag=KernelConfig&x=8aa30b9da402d224",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=36bbbd0e234d817938bdc52121a0f5473b3e58f5",
+            "kernel-source-commit": "36bbbd0e234d817938bdc52121a0f5473b3e58f5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a0234d980eccaa87f5821ac8e95ed9c94a104acf",
+            "syzkaller-commit": "a0234d980eccaa87f5821ac8e95ed9c94a104acf",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1397e7a8d00000"
+        }
+    ],
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "170b3bbda08852277b97f4f0516df0785c939764",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex dc92ca5090a3..27a8c226abf8 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -7696,12 +7696,12 @@ static struct fixed_file_ref_node *alloc_fixed_file_ref_node(\n \n \tref_node = kzalloc(sizeof(*ref_node), GFP_KERNEL);\n \tif (!ref_node)\n-\t\treturn ERR_PTR(-ENOMEM);\n+\t\treturn NULL;\n \n \tif (percpu_ref_init(&ref_node->refs, io_file_data_ref_zero,\n \t\t\t    0, GFP_KERNEL)) {\n \t\tkfree(ref_node);\n-\t\treturn ERR_PTR(-ENOMEM);\n+\t\treturn NULL;\n \t}\n \tINIT_LIST_HEAD(&ref_node->node);\n \tINIT_LIST_HEAD(&ref_node->file_list);\n@@ -7795,9 +7795,9 @@ static int io_sqe_files_register(struct io_ring_ctx *ctx, void __user *arg,\n \t}\n \n \tref_node = alloc_fixed_file_ref_node(ctx);\n-\tif (IS_ERR(ref_node)) {\n+\tif (!ref_node) {\n \t\tio_sqe_files_unregister(ctx);\n-\t\treturn PTR_ERR(ref_node);\n+\t\treturn -ENOMEM;\n \t}\n \n \tio_sqe_files_set_node(file_data, ref_node);\n@@ -7897,8 +7897,8 @@ static int __io_sqe_files_update(struct io_ring_ctx *ctx,\n \t\treturn -EINVAL;\n \n \tref_node = alloc_fixed_file_ref_node(ctx);\n-\tif (IS_ERR(ref_node))\n-\t\treturn PTR_ERR(ref_node);\n+\tif (!ref_node)\n+\t\treturn -ENOMEM;\n \n \tdone = 0;\n \tfds = u64_to_user_ptr(up->fds);\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

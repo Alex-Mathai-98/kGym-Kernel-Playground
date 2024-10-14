@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "possible deadlock in hfs_find_init",
+    "display-title": "possible deadlock in hfs_find_init",
+    "id": "f007ef1d7a31a469e3be7aeb0fde0769b18585db",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "hfs: add lock nesting notation to hfs_find_init",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b3b2177a2d795e35dc11597b2609eb1e7e57e570",
+            "hash": "b3b2177a2d795e35dc11597b2609eb1e7e57e570",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f64410056a7995db@google.com/T/",
+        "https://lore.kernel.org/all/20210629144803.62541-1-desmondcheongzx@gmail.com/T/",
+        "https://lore.kernel.org/all/20210701030756.58760-1-desmondcheongzx@gmail.com/T/",
+        "https://lore.kernel.org/all/20210715042708.eP0VysJim%akpm@linux-foundation.org/T/",
+        "https://lore.kernel.org/all/20210723035721.531372-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210723035748.531594-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210723035813.531837-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210723035835.532148-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210723035852.532303-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210723035906.532444-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210723035918.532573-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210729135137.260993951@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210729135137.267680390@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210729135137.336097792@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210729135142.920143237@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210802134332.033552261@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210802134332.931915241@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210802134334.835358048@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10eeb8a7800000",
+            "c-reproducer": "/text?tag=ReproC&x=1533ef87800000",
+            "kernel-config": "/text?tag=KernelConfig&x=191a2635dcad1c46",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=43f70c960180c11d64ee3e9e53075fe1acd43ff1",
+            "kernel-source-commit": "43f70c960180c11d64ee3e9e53075fe1acd43ff1",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/cc402841ba1e067327a4adaf0a65335e47b5e83c",
+            "syzkaller-commit": "cc402841ba1e067327a4adaf0a65335e47b5e83c",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1029c7fb800000"
+        }
+    ],
+    "subsystems": [
+        "hfs"
+    ],
+    "parent_of_fix_commit": "54a5ead6f5e2b47131a7385d0c0af18e7b89cb02",
+    "patch": "diff --git a/fs/hfs/bfind.c b/fs/hfs/bfind.c\nindex 4af318fbda77..ef9498a6e88a 100644\n--- a/fs/hfs/bfind.c\n+++ b/fs/hfs/bfind.c\n@@ -25,7 +25,19 @@ int hfs_find_init(struct hfs_btree *tree, struct hfs_find_data *fd)\n \tfd->key = ptr + tree->max_key_len + 2;\n \thfs_dbg(BNODE_REFS, \"find_init: %d (%p)\\n\",\n \t\ttree->cnid, __builtin_return_address(0));\n-\tmutex_lock(&tree->tree_lock);\n+\tswitch (tree->cnid) {\n+\tcase HFS_CAT_CNID:\n+\t\tmutex_lock_nested(&tree->tree_lock, CATALOG_BTREE_MUTEX);\n+\t\tbreak;\n+\tcase HFS_EXT_CNID:\n+\t\tmutex_lock_nested(&tree->tree_lock, EXTENTS_BTREE_MUTEX);\n+\t\tbreak;\n+\tcase HFS_ATTR_CNID:\n+\t\tmutex_lock_nested(&tree->tree_lock, ATTR_BTREE_MUTEX);\n+\t\tbreak;\n+\tdefault:\n+\t\treturn -EINVAL;\n+\t}\n \treturn 0;\n }\n \ndiff --git a/fs/hfs/btree.h b/fs/hfs/btree.h\nindex 4ba45caf5939..0e6baee93245 100644\n--- a/fs/hfs/btree.h\n+++ b/fs/hfs/btree.h\n@@ -13,6 +13,13 @@ typedef int (*btree_keycmp)(const btree_key *, const btree_key *);\n \n #define NODE_HASH_SIZE  256\n \n+/* B-tree mutex nested subclasses */\n+enum hfs_btree_mutex_classes {\n+\tCATALOG_BTREE_MUTEX,\n+\tEXTENTS_BTREE_MUTEX,\n+\tATTR_BTREE_MUTEX,\n+};\n+\n /* A HFS BTree held in memory */\n struct hfs_btree {\n \tstruct super_block *sb;\n",
+    "patch_modified_files": [
+        "fs/hfs/bfind.c",
+        "fs/hfs/btree.h"
+    ]
+}

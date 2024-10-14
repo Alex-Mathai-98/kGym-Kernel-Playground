@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Write in __vb2_cleanup_fileio",
+    "display-title": "KASAN: use-after-free Write in __vb2_cleanup_fileio",
+    "id": "0264f823322ea8600fbe3fb7e9e016569ca542d8",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: vb2: add waiting_in_dqbuf flag",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d65842f7126aa1a87fb44b7c9980c12630ed4f33",
+            "hash": "d65842f7126aa1a87fb44b7c9980c12630ed4f33",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "bonding: initialize work-queues during creation of bond",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4493b81bea24269df898339dee638d7c5cb2b2df",
+        "hash": "4493b81bea24269df898339dee638d7c5cb2b2df",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000204051057963c4dc@google.com/T/",
+        "https://lore.kernel.org/all/20190627035314.GD721@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20190724013934.GC643@sol.localdomain/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1346e183400000",
+            "c-reproducer": "/text?tag=ReproC&x=117c2713400000",
+            "kernel-config": "/text?tag=KernelConfig&x=62118286bb772a24",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9f51ae62c84a23ade0ba86457d30a30c9db0c50f",
+            "kernel-source-commit": "9f51ae62c84a23ade0ba86457d30a30c9db0c50f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/7df9db2eb2c94fd6324472f2ff0045cbcee9b74e",
+            "syzkaller-commit": "7df9db2eb2c94fd6324472f2ff0045cbcee9b74e",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=178307cb400000"
+        }
+    ],
+    "subsystems": [
+        "media"
+    ],
+    "parent_of_fix_commit": "c1ced46c7b49ad7bc064e68d966e0ad303f917fb",
+    "patch": "diff --git a/drivers/media/common/videobuf2/videobuf2-core.c b/drivers/media/common/videobuf2/videobuf2-core.c\nindex b98ec6e1a222..7ebd58a1c431 100644\n--- a/drivers/media/common/videobuf2/videobuf2-core.c\n+++ b/drivers/media/common/videobuf2/videobuf2-core.c\n@@ -672,6 +672,11 @@ int vb2_core_reqbufs(struct vb2_queue *q, enum vb2_memory memory,\n \t\treturn -EBUSY;\n \t}\n \n+\tif (q->waiting_in_dqbuf && *count) {\n+\t\tdprintk(1, \"another dup()ped fd is waiting for a buffer\\n\");\n+\t\treturn -EBUSY;\n+\t}\n+\n \tif (*count == 0 || q->num_buffers != 0 ||\n \t    (q->memory != VB2_MEMORY_UNKNOWN && q->memory != memory)) {\n \t\t/*\n@@ -807,6 +812,10 @@ int vb2_core_create_bufs(struct vb2_queue *q, enum vb2_memory memory,\n \t}\n \n \tif (!q->num_buffers) {\n+\t\tif (q->waiting_in_dqbuf && *count) {\n+\t\t\tdprintk(1, \"another dup()ped fd is waiting for a buffer\\n\");\n+\t\t\treturn -EBUSY;\n+\t\t}\n \t\tmemset(q->alloc_devs, 0, sizeof(q->alloc_devs));\n \t\tq->memory = memory;\n \t\tq->waiting_for_buffers = !q->is_output;\n@@ -1656,6 +1665,11 @@ static int __vb2_wait_for_done_vb(struct vb2_queue *q, int nonblocking)\n \tfor (;;) {\n \t\tint ret;\n \n+\t\tif (q->waiting_in_dqbuf) {\n+\t\t\tdprintk(1, \"another dup()ped fd is waiting for a buffer\\n\");\n+\t\t\treturn -EBUSY;\n+\t\t}\n+\n \t\tif (!q->streaming) {\n \t\t\tdprintk(1, \"streaming off, will not wait for buffers\\n\");\n \t\t\treturn -EINVAL;\n@@ -1683,6 +1697,7 @@ static int __vb2_wait_for_done_vb(struct vb2_queue *q, int nonblocking)\n \t\t\treturn -EAGAIN;\n \t\t}\n \n+\t\tq->waiting_in_dqbuf = 1;\n \t\t/*\n \t\t * We are streaming and blocking, wait for another buffer to\n \t\t * become ready or for streamoff. Driver's lock is released to\n@@ -1703,6 +1718,7 @@ static int __vb2_wait_for_done_vb(struct vb2_queue *q, int nonblocking)\n \t\t * the locks or return an error if one occurred.\n \t\t */\n \t\tcall_void_qop(q, wait_finish, q);\n+\t\tq->waiting_in_dqbuf = 0;\n \t\tif (ret) {\n \t\t\tdprintk(1, \"sleep was interrupted\\n\");\n \t\t\treturn ret;\n@@ -2585,6 +2601,12 @@ static size_t __vb2_perform_fileio(struct vb2_queue *q, char __user *data, size_\n \tif (!data)\n \t\treturn -EINVAL;\n \n+\tif (q->waiting_in_dqbuf) {\n+\t\tdprintk(3, \"another dup()ped fd is %s\\n\",\n+\t\t\tread ? \"reading\" : \"writing\");\n+\t\treturn -EBUSY;\n+\t}\n+\n \t/*\n \t * Initialize emulator on first call.\n \t */\ndiff --git a/include/media/videobuf2-core.h b/include/media/videobuf2-core.h\nindex fe010ad62b90..22f3ff76a8b5 100644\n--- a/include/media/videobuf2-core.h\n+++ b/include/media/videobuf2-core.h\n@@ -596,6 +596,7 @@ struct vb2_queue {\n \tunsigned int\t\t\tstart_streaming_called:1;\n \tunsigned int\t\t\terror:1;\n \tunsigned int\t\t\twaiting_for_buffers:1;\n+\tunsigned int\t\t\twaiting_in_dqbuf:1;\n \tunsigned int\t\t\tis_multiplanar:1;\n \tunsigned int\t\t\tis_output:1;\n \tunsigned int\t\t\tcopy_timestamp:1;\n",
+    "patch_modified_files": [
+        "drivers/media/common/videobuf2/videobuf2-core.c",
+        "include/media/videobuf2-core.h"
+    ]
+}

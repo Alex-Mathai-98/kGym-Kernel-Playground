@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in decrypt_internal",
+    "display-title": "KASAN: slab-out-of-bounds Read in decrypt_internal",
+    "id": "02617ac69815ae324053c954118c2dc7ba0e59b2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/tls: fix slab-out-of-bounds bug in decrypt_internal",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9381fe8c849cfbe50245ac01fc077554f6eaa0e2",
+            "hash": "9381fe8c849cfbe50245ac01fc077554f6eaa0e2",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Read in decrypt_internal",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16d818d3b00000",
+            "c-reproducer": "/text?tag=ReproC&x=125f7353b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=32f9fa260d7413b4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=ddec8ed2d4905d0967ce2ec432e440e582aa52c6",
+            "kernel-source-commit": "ddec8ed2d4905d0967ce2ec432e440e582aa52c6",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2ca0d3855c36da0994766801f4b5067a74824437",
+            "syzkaller-commit": "2ca0d3855c36da0994766801f4b5067a74824437",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13026a3bb00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "decrypt_internal",
+            "net/tls/tls_sw.c"
+        ]
+    ],
+    "patch_commit_date": "2022-03-31T07:04:28+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "059a47f1da93811d37533556d67e72f2261b1127",
+    "patch": "diff --git a/net/tls/tls_sw.c b/net/tls/tls_sw.c\nindex 0024a692f0f8..a8976ef95528 100644\n--- a/net/tls/tls_sw.c\n+++ b/net/tls/tls_sw.c\n@@ -1496,7 +1496,7 @@ static int decrypt_internal(struct sock *sk, struct sk_buff *skb,\n \tif (prot->version == TLS_1_3_VERSION ||\n \t    prot->cipher_type == TLS_CIPHER_CHACHA20_POLY1305)\n \t\tmemcpy(iv + iv_offset, tls_ctx->rx.iv,\n-\t\t       crypto_aead_ivsize(ctx->aead_recv));\n+\t\t       prot->iv_size + prot->salt_size);\n \telse\n \t\tmemcpy(iv + iv_offset, tls_ctx->rx.iv, prot->salt_size);\n \n",
+    "patch_modified_files": [
+        "net/tls/tls_sw.c"
+    ]
+}

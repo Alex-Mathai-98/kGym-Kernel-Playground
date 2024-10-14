@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "WARNING in __flush_work",
+    "display-title": "WARNING in __flush_work (2)",
+    "id": "feb49e622c3d0ca5ff931e55e2310f96a4d0231e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "drm/vkms: Fix flush_work() without INIT_WORK().",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b30b61ff6b1dc37f276cf56a8328b80086a3ffca",
+            "hash": "b30b61ff6b1dc37f276cf56a8328b80086a3ffca",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000581fa9058389a78d@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15186357200000",
+            "c-reproducer": "/text?tag=ReproC&x=1502c533200000",
+            "kernel-config": "/text?tag=KernelConfig&x=83f72881c3c30b7c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1fc1cd8399ab5541a488a7e47b2f21537dd76c2d",
+            "kernel-source-commit": "1fc1cd8399ab5541a488a7e47b2f21537dd76c2d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4b69c3cbaccd51b7ea719e7bd756d680e825988d",
+            "syzkaller-commit": "4b69c3cbaccd51b7ea719e7bd756d680e825988d",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10e54323200000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "vkms_atomic_crtc_reset",
+            "drivers/gpu/drm/vkms/vkms_crtc.c"
+        ]
+    ],
+    "patch_commit_date": "2019-01-18T16:43:43+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "dri"
+    ],
+    "parent_of_fix_commit": "46f3ceaffa81e846677bca8668e0ad40e643cffd",
+    "patch": "diff --git a/drivers/gpu/drm/vkms/vkms_crtc.c b/drivers/gpu/drm/vkms/vkms_crtc.c\nindex 177bbcb38306..3c37d8c41d4a 100644\n--- a/drivers/gpu/drm/vkms/vkms_crtc.c\n+++ b/drivers/gpu/drm/vkms/vkms_crtc.c\n@@ -104,6 +104,7 @@ static void vkms_atomic_crtc_reset(struct drm_crtc *crtc)\n \tvkms_state = kzalloc(sizeof(*vkms_state), GFP_KERNEL);\n \tif (!vkms_state)\n \t\treturn;\n+\tINIT_WORK(&vkms_state->crc_work, vkms_crc_work_handle);\n \n \tcrtc->state = &vkms_state->base;\n \tcrtc->state->crtc = crtc;\n",
+    "patch_modified_files": [
+        "drivers/gpu/drm/vkms/vkms_crtc.c"
+    ]
+}

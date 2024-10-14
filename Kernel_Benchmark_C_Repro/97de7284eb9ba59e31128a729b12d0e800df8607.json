@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "UBSAN: array-index-out-of-bounds in dbAllocDmapLev",
+    "display-title": "UBSAN: array-index-out-of-bounds in dbAllocDmapLev",
+    "id": "97de7284eb9ba59e31128a729b12d0e800df8607",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs: jfs: Fix UBSAN: array-index-out-of-bounds in dbAllocDmapLev",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4e302336d5ca1767a06beee7596a72d3bdc8d983",
+            "hash": "4e302336d5ca1767a06beee7596a72d3bdc8d983",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a9b84f05f07c2d1f@google.com/T/",
+        "https://lore.kernel.org/all/20230724011338.2298062-55-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230724012118.2316073-38-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20230724012334.2317140-20-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/ZJNDT7ro6OA4hYM9@zephyrusG14/T/"
+    ],
+    "crashes": [
+        {
+            "title": "UBSAN: array-index-out-of-bounds in dbAllocDmapLev",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14eedba0480000",
+            "c-reproducer": "/text?tag=ReproC&x=13760874480000",
+            "kernel-config": "/text?tag=KernelConfig&x=4e2d7bfa2d6d5a76",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=0a924817d2ed9396401e0557c6134276d2e26382",
+            "kernel-source-commit": "0a924817d2ed9396401e0557c6134276d2e26382",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9da18ae8fa827d046ef8da48cc23c97418553c23",
+            "syzkaller-commit": "9da18ae8fa827d046ef8da48cc23c97418553c23",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1081a2df880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "dbAllocDmapLev",
+            "fs/jfs/jfs_dmap.c"
+        ]
+    ],
+    "patch_commit_date": "2023-06-21T18:37:03+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "jfs"
+    ],
+    "parent_of_fix_commit": "f3fb462443a5e150599fa6692e660e25c974e7be",
+    "patch": "diff --git a/fs/jfs/jfs_dmap.c b/fs/jfs/jfs_dmap.c\nindex d4d094168a2f..a14a0f18a4c4 100644\n--- a/fs/jfs/jfs_dmap.c\n+++ b/fs/jfs/jfs_dmap.c\n@@ -1959,6 +1959,9 @@ dbAllocDmapLev(struct bmap * bmp,\n \tif (dbFindLeaf((dmtree_t *) & dp->tree, l2nb, &leafidx))\n \t\treturn -ENOSPC;\n \n+\tif (leafidx < 0)\n+\t\treturn -EIO;\n+\n \t/* determine the block number within the file system corresponding\n \t * to the leaf at which free space was found.\n \t */\n",
+    "patch_modified_files": [
+        "fs/jfs/jfs_dmap.c"
+    ]
+}

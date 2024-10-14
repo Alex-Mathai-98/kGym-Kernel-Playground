@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "general protection fault in tcf_ife_cleanup",
+    "display-title": "general protection fault in tcf_ife_cleanup",
+    "id": "2c91a9ebeb17895972ec695b8349426d1904d7b3",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/sched: act_ife: initalize ife->metalist earlier",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=44c23d71599f81a1c7fe8389e0319822dd50c37c",
+            "hash": "44c23d71599f81a1c7fe8389e0319822dd50c37c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "net/sched: act_ife: validate the control action inside init()",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=11a94d7fd80f92325e7b8653290ad3d2cd67f119",
+        "hash": "11a94d7fd80f92325e7b8653290ad3d2cd67f119",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=121c69e1e00000",
+            "c-reproducer": "/text?tag=ReproC&x=16ad4d15e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=18698c0c240ba616",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e69ec487b2c7c82ef99b4b15122f58a2a99289a3",
+            "kernel-source-commit": "e69ec487b2c7c82ef99b4b15122f58a2a99289a3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4de4e9f01d7139b72102ae0b8a1e810730467774",
+            "syzkaller-commit": "4de4e9f01d7139b72102ae0b8a1e810730467774",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15e8a021e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "tcf_ife_init",
+            "net/sched/act_ife.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "tcf_ife_init",
+            "net/sched/act_ife.c"
+        ]
+    ],
+    "patch_commit_date": "2020-01-15T16:20:39+00:00",
+    "cause_commit_date": "2019-03-20T14:00:03+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "a72b6a1ee4d9fde48ad5c308f492ca60df654f19",
+    "patch": "diff --git a/net/sched/act_ife.c b/net/sched/act_ife.c\nindex 5e6379028fc3..c1fcd85719d6 100644\n--- a/net/sched/act_ife.c\n+++ b/net/sched/act_ife.c\n@@ -537,6 +537,9 @@ static int tcf_ife_init(struct net *net, struct nlattr *nla,\n \t}\n \n \tife = to_ife(*a);\n+\tif (ret == ACT_P_CREATED)\n+\t\tINIT_LIST_HEAD(&ife->metalist);\n+\n \terr = tcf_action_check_ctrlact(parm->action, tp, &goto_ch, extack);\n \tif (err < 0)\n \t\tgoto release_idr;\n@@ -566,10 +569,6 @@ static int tcf_ife_init(struct net *net, struct nlattr *nla,\n \t\tp->eth_type = ife_type;\n \t}\n \n-\n-\tif (ret == ACT_P_CREATED)\n-\t\tINIT_LIST_HEAD(&ife->metalist);\n-\n \tif (tb[TCA_IFE_METALST]) {\n \t\terr = nla_parse_nested_deprecated(tb2, IFE_META_MAX,\n \t\t\t\t\t\t  tb[TCA_IFE_METALST], NULL,\n",
+    "patch_modified_files": [
+        "net/sched/act_ife.c"
+    ]
+}

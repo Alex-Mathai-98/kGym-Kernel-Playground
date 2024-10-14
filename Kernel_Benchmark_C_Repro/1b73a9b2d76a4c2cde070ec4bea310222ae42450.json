@@ -1,0 +1,59 @@
+{
+    "version": 1,
+    "title": "WARNING in blk_mq_sched_free_requests",
+    "display-title": "WARNING in blk_mq_sched_free_requests",
+    "id": "1b73a9b2d76a4c2cde070ec4bea310222ae42450",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "blk-mq: remove WARN_ON(!q->elevator) from blk_mq_sched_free_requests",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c326f846ebc2a30eca386b85dffba96e23803d81",
+            "hash": "c326f846ebc2a30eca386b85dffba96e23803d81",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Linux 5.1",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e93c9c99a629c61837d5a7fc2120cd2b6c70dbdd",
+        "hash": "e93c9c99a629c61837d5a7fc2120cd2b6c70dbdd",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000fc4a7b058b04669e@google.com/T/",
+        "https://lore.kernel.org/all/20190611093153.7147-1-ming.lei@redhat.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11c67dd2a00000",
+            "c-reproducer": "/text?tag=ReproC&x=154be66aa00000",
+            "kernel-config": "/text?tag=KernelConfig&x=fa9f7e1b6a8bb586",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d1fdb6d8f6a4109a4263176c84b899076a5f8008",
+            "kernel-source-commit": "d1fdb6d8f6a4109a4263176c84b899076a5f8008",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0159583c3bcfe4ece6b839712327cd955aabee66",
+            "syzkaller-commit": "0159583c3bcfe4ece6b839712327cd955aabee66",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=146cc3d2a00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "blk_mq_sched_free_requests",
+            "block/blk-mq-sched.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2019-06-11T09:31:53+00:00",
+    "cause_commit_date": "2019-05-06T00:42:58+00:00",
+    "subsystems": [
+        "block"
+    ],
+    "parent_of_fix_commit": "fb5772cbfe48575711bf789767d561582376f7f1",
+    "patch": "diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c\nindex 500cb04901cc..2766066a15db 100644\n--- a/block/blk-mq-sched.c\n+++ b/block/blk-mq-sched.c\n@@ -555,7 +555,6 @@ void blk_mq_sched_free_requests(struct request_queue *q)\n \tint i;\n \n \tlockdep_assert_held(&q->sysfs_lock);\n-\tWARN_ON(!q->elevator);\n \n \tqueue_for_each_hw_ctx(q, hctx, i) {\n \t\tif (hctx->sched_tags)\n",
+    "patch_modified_files": [
+        "block/blk-mq-sched.c"
+    ]
+}

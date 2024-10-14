@@ -1,0 +1,45 @@
+{
+    "version": 1,
+    "title": "WARNING in bpf_check",
+    "display-title": "WARNING in bpf_check (2)",
+    "id": "0ec05481e31f2772a2c6f16aecb38f48467da26e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "bpf: fix off-by-one error in adjust_subprog_starts",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=afd594240806acc138cf696c09f2f4829d55d02f",
+            "hash": "afd594240806acc138cf696c09f2f4829d55d02f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c9fe68057aaf48ff@google.com/T/",
+        "https://lore.kernel.org/all/20181214115747.053633987@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/bce0322a-6392-3fd4-a6fb-562160c26198@solarflare.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=172b626d400000",
+            "c-reproducer": "/text?tag=ReproC&x=148dcb0b400000",
+            "kernel-config": "/text?tag=KernelConfig&x=4a0a89f12ca9b0f5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=ccda4af0f4b92f7b4c308d3acc262f4a7e3affad",
+            "kernel-source-commit": "ccda4af0f4b92f7b4c308d3acc262f4a7e3affad",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/5f5f6d14e80b8bd6b42db961118e902387716bcb",
+            "syzkaller-commit": "5f5f6d14e80b8bd6b42db961118e902387716bcb",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=166d5f7b400000"
+        }
+    ],
+    "subsystems": [
+        "bpf"
+    ],
+    "parent_of_fix_commit": "da85d8bfd1512461bcfb64929e8426cf340b3707",
+    "patch": "diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c\nindex 1971ca325fb4..6dd419550aba 100644\n--- a/kernel/bpf/verifier.c\n+++ b/kernel/bpf/verifier.c\n@@ -5650,7 +5650,7 @@ static void adjust_subprog_starts(struct bpf_verifier_env *env, u32 off, u32 len\n \t\treturn;\n \t/* NOTE: fake 'exit' subprog should be updated as well. */\n \tfor (i = 0; i <= env->subprog_cnt; i++) {\n-\t\tif (env->subprog_info[i].start < off)\n+\t\tif (env->subprog_info[i].start <= off)\n \t\t\tcontinue;\n \t\tenv->subprog_info[i].start += len - 1;\n \t}\ndiff --git a/tools/testing/selftests/bpf/test_verifier.c b/tools/testing/selftests/bpf/test_verifier.c\nindex 6f61df62f690..550b7e46bf4a 100644\n--- a/tools/testing/selftests/bpf/test_verifier.c\n+++ b/tools/testing/selftests/bpf/test_verifier.c\n@@ -13896,6 +13896,25 @@ static struct bpf_test tests[] = {\n \t\t.prog_type = BPF_PROG_TYPE_SCHED_CLS,\n \t\t.result = ACCEPT,\n \t},\n+\t{\n+\t\t\"calls: ctx read at start of subprog\",\n+\t\t.insns = {\n+\t\t\tBPF_MOV64_REG(BPF_REG_6, BPF_REG_1),\n+\t\t\tBPF_RAW_INSN(BPF_JMP | BPF_CALL, 0, 1, 0, 5),\n+\t\t\tBPF_JMP_REG(BPF_JSGT, BPF_REG_0, BPF_REG_0, 0),\n+\t\t\tBPF_MOV64_REG(BPF_REG_1, BPF_REG_6),\n+\t\t\tBPF_RAW_INSN(BPF_JMP | BPF_CALL, 0, 1, 0, 2),\n+\t\t\tBPF_MOV64_REG(BPF_REG_1, BPF_REG_0),\n+\t\t\tBPF_EXIT_INSN(),\n+\t\t\tBPF_LDX_MEM(BPF_B, BPF_REG_9, BPF_REG_1, 0),\n+\t\t\tBPF_MOV64_IMM(BPF_REG_0, 0),\n+\t\t\tBPF_EXIT_INSN(),\n+\t\t},\n+\t\t.prog_type = BPF_PROG_TYPE_SOCKET_FILTER,\n+\t\t.errstr_unpriv = \"function calls to other bpf functions are allowed for root only\",\n+\t\t.result_unpriv = REJECT,\n+\t\t.result = ACCEPT,\n+\t},\n };\n \n static int probe_filter_length(const struct bpf_insn *fp)\n",
+    "patch_modified_files": [
+        "kernel/bpf/verifier.c",
+        "tools/testing/selftests/bpf/test_verifier.c"
+    ]
+}

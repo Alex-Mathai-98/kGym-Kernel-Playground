@@ -1,0 +1,70 @@
+{
+    "version": 1,
+    "title": "UBSAN: array-index-out-of-bounds in dquot_resume",
+    "display-title": "UBSAN: array-index-out-of-bounds in dquot_resume",
+    "id": "a6b85665ee98a38adff4459261702f3c3a6bf6e9",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs: quota: fix array-index-out-of-bounds bug by passing correct argument to vfs_cleanup_quota_inode()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e51d68e76d604c6d5d1eb13ae1d6da7f6c8c0dfc",
+            "hash": "e51d68e76d604c6d5d1eb13ae1d6da7f6c8c0dfc",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "quota: Simplify dquot_resume()",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ae45f07d47cc30e9170488a4e5fe91ba4fe5ed4e",
+        "hash": "ae45f07d47cc30e9170488a4e5fe91ba4fe5ed4e",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001bf87305b5e47a9d@google.com/T/",
+        "https://lore.kernel.org/all/20201208142208.14096-1-jack@suse.cz/T/",
+        "https://lore.kernel.org/all/20201208194338.7064-1-anant.thazhemadam@gmail.com/T/",
+        "https://lore.kernel.org/all/20201223150515.553836647@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10391d45500000",
+            "c-reproducer": "/text?tag=ReproC&x=16eab99b500000",
+            "kernel-config": "/text?tag=KernelConfig&x=c3904d1cc0af152",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b3298500b23f0b53a8d81e0d5ad98a29db71f4f0",
+            "kernel-source-commit": "b3298500b23f0b53a8d81e0d5ad98a29db71f4f0",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/5050311712ecf43945d306df4653fc28da89fb43",
+            "syzkaller-commit": "5050311712ecf43945d306df4653fc28da89fb43",
+            "compiler-description": "clang version 11.0.0 (https://github.com/llvm/llvm-project.git ca2dcbd030eadbf0aa9b660efe864ff08af6e18b)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=173f2927500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "dquot_resume",
+            "fs/quota/dquot.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "vfs_load_quota_inode",
+            "fs/quota/dquot.c"
+        ],
+        [
+            "dquot_resume",
+            "fs/quota/dquot.c"
+        ]
+    ],
+    "patch_commit_date": "2020-12-08T19:43:38+00:00",
+    "cause_commit_date": "2019-11-01T16:51:05+00:00",
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "d24396c5290ba8ab04ba505176874c4e04a2d53c",
+    "patch": "diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c\nindex bb02989d92b6..4f1373463766 100644\n--- a/fs/quota/dquot.c\n+++ b/fs/quota/dquot.c\n@@ -2455,7 +2455,7 @@ int dquot_resume(struct super_block *sb, int type)\n \t\tret = dquot_load_quota_sb(sb, cnt, dqopt->info[cnt].dqi_fmt_id,\n \t\t\t\t\t  flags);\n \t\tif (ret < 0)\n-\t\t\tvfs_cleanup_quota_inode(sb, type);\n+\t\t\tvfs_cleanup_quota_inode(sb, cnt);\n \t}\n \n \treturn ret;\n",
+    "patch_modified_files": [
+        "fs/quota/dquot.c"
+    ]
+}

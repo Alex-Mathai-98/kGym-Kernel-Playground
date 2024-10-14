@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "possible deadlock in do_user_addr_fault",
+    "display-title": "possible deadlock in do_user_addr_fault",
+    "id": "72c3096dbc86cdffde7afa178a39dc1a29dec67a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "exfat: release s_lock before calling dir_emit()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ff84772fd45d486e4fc78c82e2f70ce5333543e6",
+            "hash": "ff84772fd45d486e4fc78c82e2f70ce5333543e6",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Merge tag 'mtd/for-5.15' of git://git.kernel.org/pub/scm/linux/kernel/git/mtd/linux",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6b6dc4f40c5264556223ba94693f20d83796ab1f",
+        "hash": "6b6dc4f40c5264556223ba94693f20d83796ab1f",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000069948205f7fb357f@google.com/T/",
+        "https://lore.kernel.org/all/00000000000075fd0505ff917517@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "possible deadlock in do_user_addr_fault",
+            "syz-reproducer": "/text?tag=ReproSyz&x=144ccf79280000",
+            "c-reproducer": "/text?tag=ReproC&x=135fab79280000",
+            "kernel-config": "/text?tag=KernelConfig&x=3c980bfe8b399968",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f8dba31b0a826e691949cd4fdfa5c30defaac8c5",
+            "kernel-source-commit": "f8dba31b0a826e691949cd4fdfa5c30defaac8c5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a4ae4f428721da42ac15f07d6f3b54584dedee27",
+            "syzkaller-commit": "a4ae4f428721da42ac15f07d6f3b54584dedee27",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13ba1a7d280000"
+        }
+    ],
+    "subsystems": [
+        "exfat"
+    ],
+    "parent_of_fix_commit": "d42334578eba1390859012ebb91e1e556d51db49",
+    "patch": "diff --git a/fs/exfat/dir.c b/fs/exfat/dir.c\nindex bc48f3329921..598081d0d059 100644\n--- a/fs/exfat/dir.c\n+++ b/fs/exfat/dir.c\n@@ -218,7 +218,10 @@ static void exfat_free_namebuf(struct exfat_dentry_namebuf *nb)\n \texfat_init_namebuf(nb);\n }\n \n-/* skip iterating emit_dots when dir is empty */\n+/*\n+ * Before calling dir_emit*(), sbi->s_lock should be released\n+ * because page fault can occur in dir_emit*().\n+ */\n #define ITER_POS_FILLED_DOTS    (2)\n static int exfat_iterate(struct file *file, struct dir_context *ctx)\n {\n@@ -233,11 +236,10 @@ static int exfat_iterate(struct file *file, struct dir_context *ctx)\n \tint err = 0, fake_offset = 0;\n \n \texfat_init_namebuf(nb);\n-\tmutex_lock(&EXFAT_SB(sb)->s_lock);\n \n \tcpos = ctx->pos;\n \tif (!dir_emit_dots(file, ctx))\n-\t\tgoto unlock;\n+\t\tgoto out;\n \n \tif (ctx->pos == ITER_POS_FILLED_DOTS) {\n \t\tcpos = 0;\n@@ -249,16 +251,18 @@ static int exfat_iterate(struct file *file, struct dir_context *ctx)\n \t/* name buffer should be allocated before use */\n \terr = exfat_alloc_namebuf(nb);\n \tif (err)\n-\t\tgoto unlock;\n+\t\tgoto out;\n get_new:\n+\tmutex_lock(&EXFAT_SB(sb)->s_lock);\n+\n \tif (ei->flags == ALLOC_NO_FAT_CHAIN && cpos >= i_size_read(inode))\n \t\tgoto end_of_dir;\n \n \terr = exfat_readdir(inode, &cpos, &de);\n \tif (err) {\n \t\t/*\n-\t\t * At least we tried to read a sector.  Move cpos to next sector\n-\t\t * position (should be aligned).\n+\t\t * At least we tried to read a sector.\n+\t\t * Move cpos to next sector position (should be aligned).\n \t\t */\n \t\tif (err == -EIO) {\n \t\t\tcpos += 1 << (sb->s_blocksize_bits);\n@@ -281,16 +285,10 @@ static int exfat_iterate(struct file *file, struct dir_context *ctx)\n \t\tinum = iunique(sb, EXFAT_ROOT_INO);\n \t}\n \n-\t/*\n-\t * Before calling dir_emit(), sb_lock should be released.\n-\t * Because page fault can occur in dir_emit() when the size\n-\t * of buffer given from user is larger than one page size.\n-\t */\n \tmutex_unlock(&EXFAT_SB(sb)->s_lock);\n \tif (!dir_emit(ctx, nb->lfn, strlen(nb->lfn), inum,\n \t\t\t(de.attr & ATTR_SUBDIR) ? DT_DIR : DT_REG))\n-\t\tgoto out_unlocked;\n-\tmutex_lock(&EXFAT_SB(sb)->s_lock);\n+\t\tgoto out;\n \tctx->pos = cpos;\n \tgoto get_new;\n \n@@ -298,9 +296,8 @@ static int exfat_iterate(struct file *file, struct dir_context *ctx)\n \tif (!cpos && fake_offset)\n \t\tcpos = ITER_POS_FILLED_DOTS;\n \tctx->pos = cpos;\n-unlock:\n \tmutex_unlock(&EXFAT_SB(sb)->s_lock);\n-out_unlocked:\n+out:\n \t/*\n \t * To improve performance, free namebuf after unlock sb_lock.\n \t * If namebuf is not allocated, this function do nothing\n",
+    "patch_modified_files": [
+        "fs/exfat/dir.c"
+    ]
+}

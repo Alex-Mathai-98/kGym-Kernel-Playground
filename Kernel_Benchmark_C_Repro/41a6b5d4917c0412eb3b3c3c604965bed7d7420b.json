@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "memory leak in ext4_expand_extra_isize_ea",
+    "display-title": "memory leak in ext4_expand_extra_isize_ea",
+    "id": "41a6b5d4917c0412eb3b3c3c604965bed7d7420b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: fix invalid free tracking in ext4_xattr_move_to_block()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b87c7cdf2bed4928b899e1ce91ef0d147017ba45",
+            "hash": "b87c7cdf2bed4928b899e1ce91ef0d147017ba45",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000286e1a05f5d9b3c6@google.com/T/",
+        "https://lore.kernel.org/all/20230430160426.581366-1-tytso@mit.edu/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in ext4_expand_extra_isize_ea",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16598c22c80000",
+            "c-reproducer": "/text?tag=ReproC&x=12376874c80000",
+            "kernel-config": "/text?tag=KernelConfig&x=f5733ca1757172ad",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c0927a7a5391f7d8e593e5e50ead7505a23cadf9",
+            "kernel-source-commit": "c0927a7a5391f7d8e593e5e50ead7505a23cadf9",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f8902b5747fbe3d5b860bd782eec63fc9c7da6e7",
+            "syzkaller-commit": "f8902b5747fbe3d5b860bd782eec63fc9c7da6e7",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17291438c80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ext4_xattr_move_to_block",
+            "fs/ext4/xattr.c"
+        ]
+    ],
+    "patch_commit_date": "2023-04-30T07:04:13+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "463808f237cf73e98a1a45ff7460c2406a150a0b",
+    "patch": "diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c\nindex dadad29bd81b..dfc2e223bd10 100644\n--- a/fs/ext4/xattr.c\n+++ b/fs/ext4/xattr.c\n@@ -2614,6 +2614,7 @@ static int ext4_xattr_move_to_block(handle_t *handle, struct inode *inode,\n \t\t.in_inode = !!entry->e_value_inum,\n \t};\n \tstruct ext4_xattr_ibody_header *header = IHDR(inode, raw_inode);\n+\tint needs_kvfree = 0;\n \tint error;\n \n \tis = kzalloc(sizeof(struct ext4_xattr_ibody_find), GFP_NOFS);\n@@ -2636,7 +2637,7 @@ static int ext4_xattr_move_to_block(handle_t *handle, struct inode *inode,\n \t\t\terror = -ENOMEM;\n \t\t\tgoto out;\n \t\t}\n-\n+\t\tneeds_kvfree = 1;\n \t\terror = ext4_xattr_inode_get(inode, entry, buffer, value_size);\n \t\tif (error)\n \t\t\tgoto out;\n@@ -2675,7 +2676,7 @@ static int ext4_xattr_move_to_block(handle_t *handle, struct inode *inode,\n \n out:\n \tkfree(b_entry_name);\n-\tif (entry->e_value_inum && buffer)\n+\tif (needs_kvfree && buffer)\n \t\tkvfree(buffer);\n \tif (is)\n \t\tbrelse(is->iloc.bh);\n",
+    "patch_modified_files": [
+        "fs/ext4/xattr.c"
+    ]
+}

@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "memory leak in bsg_register_queue",
+    "display-title": "memory leak in bsg_register_queue",
+    "id": "ee107e687b29b99d101ba328f28abfad4e58a91a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "scsi: bsg: Fix device unregistration",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1a0db7744e453844aa2db3f2959aea4a378025ea",
+            "hash": "1a0db7744e453844aa2db3f2959aea4a378025ea",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f5edbe05cba2df23@google.com/T/",
+        "https://lore.kernel.org/all/20210911085726.34778-1-cuibixuan@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in bsg_register_queue",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15b2e115300000",
+            "c-reproducer": "/text?tag=ReproC&x=10f2147d300000",
+            "kernel-config": "/text?tag=KernelConfig&x=4d196bb8b1e038c0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=0319b848b155185815724e1b46103c550627a845",
+            "kernel-source-commit": "0319b848b155185815724e1b46103c550627a845",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d236a457274375e5273ac4e958722659929c469f",
+            "syzkaller-commit": "d236a457274375e5273ac4e958722659929c469f",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13b15ab5300000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "bsg_register_queue",
+            "block/bsg.c"
+        ]
+    ],
+    "patch_commit_date": "2021-09-11T10:53:06+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "4521428c48118b0f5f7a637ce7dedd76c29bcdaa",
+    "patch": "diff --git a/block/bsg.c b/block/bsg.c\nindex 351095193788..882f56bff14f 100644\n--- a/block/bsg.c\n+++ b/block/bsg.c\n@@ -165,13 +165,20 @@ static const struct file_operations bsg_fops = {\n \t.llseek\t\t=\tdefault_llseek,\n };\n \n+static void bsg_device_release(struct device *dev)\n+{\n+\tstruct bsg_device *bd = container_of(dev, struct bsg_device, device);\n+\n+\tida_simple_remove(&bsg_minor_ida, MINOR(bd->device.devt));\n+\tkfree(bd);\n+}\n+\n void bsg_unregister_queue(struct bsg_device *bd)\n {\n \tif (bd->queue->kobj.sd)\n \t\tsysfs_remove_link(&bd->queue->kobj, \"bsg\");\n \tcdev_device_del(&bd->cdev, &bd->device);\n-\tida_simple_remove(&bsg_minor_ida, MINOR(bd->device.devt));\n-\tkfree(bd);\n+\tput_device(&bd->device);\n }\n EXPORT_SYMBOL_GPL(bsg_unregister_queue);\n \n@@ -193,11 +200,13 @@ struct bsg_device *bsg_register_queue(struct request_queue *q,\n \tif (ret < 0) {\n \t\tif (ret == -ENOSPC)\n \t\t\tdev_err(parent, \"bsg: too many bsg devices\\n\");\n-\t\tgoto out_kfree;\n+\t\tkfree(bd);\n+\t\treturn ERR_PTR(ret);\n \t}\n \tbd->device.devt = MKDEV(bsg_major, ret);\n \tbd->device.class = bsg_class;\n \tbd->device.parent = parent;\n+\tbd->device.release = bsg_device_release;\n \tdev_set_name(&bd->device, \"%s\", name);\n \tdevice_initialize(&bd->device);\n \n@@ -205,7 +214,7 @@ struct bsg_device *bsg_register_queue(struct request_queue *q,\n \tbd->cdev.owner = THIS_MODULE;\n \tret = cdev_device_add(&bd->cdev, &bd->device);\n \tif (ret)\n-\t\tgoto out_ida_remove;\n+\t\tgoto out_put_device;\n \n \tif (q->kobj.sd) {\n \t\tret = sysfs_create_link(&q->kobj, &bd->device.kobj, \"bsg\");\n@@ -217,10 +226,8 @@ struct bsg_device *bsg_register_queue(struct request_queue *q,\n \n out_device_del:\n \tcdev_device_del(&bd->cdev, &bd->device);\n-out_ida_remove:\n-\tida_simple_remove(&bsg_minor_ida, MINOR(bd->device.devt));\n-out_kfree:\n-\tkfree(bd);\n+out_put_device:\n+\tput_device(&bd->device);\n \treturn ERR_PTR(ret);\n }\n EXPORT_SYMBOL_GPL(bsg_register_queue);\n",
+    "patch_modified_files": [
+        "block/bsg.c"
+    ]
+}

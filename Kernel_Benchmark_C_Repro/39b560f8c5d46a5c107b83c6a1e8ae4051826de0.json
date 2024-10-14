@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "general protection fault in pse_prepare_data",
+    "display-title": "general protection fault in pse_prepare_data",
+    "id": "39b560f8c5d46a5c107b83c6a1e8ae4051826de0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ethtool: pse-pd: fix null-deref on genl_info in dump",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=46cdedf2a0fa20a99ca8be40bccde7487e13b77a",
+            "hash": "46cdedf2a0fa20a99ca8be40bccde7487e13b77a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000044139d05eb617b1c@google.com/T/",
+        "https://lore.kernel.org/all/20221019223551.1171204-1-kuba@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in pse_prepare_data",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13470244880000",
+            "c-reproducer": "/text?tag=ReproC&x=146e88b4880000",
+            "kernel-config": "/text?tag=KernelConfig&x=df75278aabf0681a",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=55be6084c8e0e0ada9278c2ab60b7a584378efda",
+            "kernel-source-commit": "55be6084c8e0e0ada9278c2ab60b7a584378efda",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/67cb024cd1a3c95e311263a5c95e957f9abfd8ca",
+            "syzkaller-commit": "67cb024cd1a3c95e311263a5c95e957f9abfd8ca",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1620db62880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "pse_prepare_data",
+            "net/ethtool/pse-pd.c"
+        ]
+    ],
+    "patch_commit_date": "2022-10-19T22:35:51+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "e840d8f4a1b323973052a1af5ad4edafcde8ae3d",
+    "patch": "diff --git a/net/ethtool/pse-pd.c b/net/ethtool/pse-pd.c\nindex 5a471e115b66..e8683e485dc9 100644\n--- a/net/ethtool/pse-pd.c\n+++ b/net/ethtool/pse-pd.c\n@@ -64,7 +64,7 @@ static int pse_prepare_data(const struct ethnl_req_info *req_base,\n \tif (ret < 0)\n \t\treturn ret;\n \n-\tret = pse_get_pse_attributes(dev, info->extack, data);\n+\tret = pse_get_pse_attributes(dev, info ? info->extack : NULL, data);\n \n \tethnl_ops_complete(dev);\n \n",
+    "patch_modified_files": [
+        "net/ethtool/pse-pd.c"
+    ]
+}

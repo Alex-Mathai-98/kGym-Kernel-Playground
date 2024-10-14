@@ -1,0 +1,61 @@
+{
+    "version": 1,
+    "title": "BUG: corrupted list in team_nl_cmd_options_set",
+    "display-title": "BUG: corrupted list in team_nl_cmd_options_set",
+    "id": "fc36b8e053a3de897ec8e28a8753ffc66ccd897d",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "team: avoid adding twice the same option to the event list",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4fb0534fb7bbc2346ba7d3a072b538007f4135a5",
+            "hash": "4fb0534fb7bbc2346ba7d3a072b538007f4135a5",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0e295e62358a68b22c646adece4272a9bd0473f8.1523620752.git.pabeni@redhat.com/T/",
+        "https://lore.kernel.org/all/20180427135631.584839868@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180427135655.623669681@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180427135709.899303463@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180427135732.928644313@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180427135743.216853156@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180503041450.pq2njvkssxtay64o@shao2-debian/T/",
+        "https://lore.kernel.org/all/20190212055951.6712-1-xiyou.wangcong@gmail.com/T/",
+        "https://lore.kernel.org/all/20190225195034.555044862@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190225195035.713274200@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190225195043.645958524@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190225195054.748060397@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190311195938.139603-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190311195951.139741-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190322111210.465931067@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190322111236.796964179@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/5aea8661.w550Rg98h+5zS2f1%lkp@intel.com/T/",
+        "https://lore.kernel.org/all/94eb2c0b816e53d353056998f3f8@google.com/T/",
+        "https://lore.kernel.org/all/lsq.1539530740.755408431@decadent.org.uk/T/",
+        "https://lore.kernel.org/all/lsq.1556377988.384060557@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13e5843b800000",
+            "c-reproducer": "/text?tag=ReproC&x=15e38a87800000",
+            "kernel-config": "/text?tag=KernelConfig&x=ef07076ec3277c56",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b284d4d5a6785f8cd07eda2646a95782373cd01e",
+            "kernel-source-commit": "b284d4d5a6785f8cd07eda2646a95782373cd01e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8b8de4271424f3341b8a4c78e7d1856ba05a8632",
+            "syzkaller-commit": "8b8de4271424f3341b8a4c78e7d1856ba05a8632",
+            "compiler-description": "gcc (GCC) 8.0.1 20180301 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1261cb47800000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "982e05001c472066ab288e4269ad6cab48889f0d",
+    "patch": "diff --git a/drivers/net/team/team.c b/drivers/net/team/team.c\nindex a6c6ce19eeee..acbe84967834 100644\n--- a/drivers/net/team/team.c\n+++ b/drivers/net/team/team.c\n@@ -261,6 +261,17 @@ static void __team_option_inst_mark_removed_port(struct team *team,\n \t}\n }\n \n+static bool __team_option_inst_tmp_find(const struct list_head *opts,\n+\t\t\t\t\tconst struct team_option_inst *needle)\n+{\n+\tstruct team_option_inst *opt_inst;\n+\n+\tlist_for_each_entry(opt_inst, opts, tmp_list)\n+\t\tif (opt_inst == needle)\n+\t\t\treturn true;\n+\treturn false;\n+}\n+\n static int __team_options_register(struct team *team,\n \t\t\t\t   const struct team_option *option,\n \t\t\t\t   size_t option_count)\n@@ -2568,6 +2579,14 @@ static int team_nl_cmd_options_set(struct sk_buff *skb, struct genl_info *info)\n \t\t\tif (err)\n \t\t\t\tgoto team_put;\n \t\t\topt_inst->changed = true;\n+\n+\t\t\t/* dumb/evil user-space can send us duplicate opt,\n+\t\t\t * keep only the last one\n+\t\t\t */\n+\t\t\tif (__team_option_inst_tmp_find(&opt_inst_list,\n+\t\t\t\t\t\t\topt_inst))\n+\t\t\t\tcontinue;\n+\n \t\t\tlist_add(&opt_inst->tmp_list, &opt_inst_list);\n \t\t}\n \t\tif (!opt_found) {\n",
+    "patch_modified_files": [
+        "drivers/net/team/team.c"
+    ]
+}

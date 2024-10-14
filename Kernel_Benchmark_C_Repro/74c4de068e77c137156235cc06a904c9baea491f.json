@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-use-after-free Read in nilfs_load_inode_block",
+    "display-title": "KASAN: slab-use-after-free Read in nilfs_load_inode_block",
+    "id": "74c4de068e77c137156235cc06a904c9baea491f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: fix use-after-free bug of nilfs_root in nilfs_evict_inode()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9b5a04ac3ad9898c4745cba46ea26de74ba56a8e",
+            "hash": "9b5a04ac3ad9898c4745cba46ea26de74ba56a8e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000099e5ac05fb1c3b85@google.com/T/",
+        "https://lore.kernel.org/all/20230509152956.8313-1-konishi.ryusuke@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-use-after-free Read in nilfs_load_inode_block",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16cd28ea280000",
+            "c-reproducer": "/text?tag=ReproC&x=1273a95c280000",
+            "kernel-config": "/text?tag=KernelConfig&x=73a06f6ef2d5b492",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=fc4354c6e5c21257cf4a50b32f7c11c7d65c55b3",
+            "kernel-source-commit": "fc4354c6e5c21257cf4a50b32f7c11c7d65c55b3",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/90c93c40627cb0ac3c2c7cb99d807fd4c137adcb",
+            "syzkaller-commit": "90c93c40627cb0ac3c2c7cb99d807fd4c137adcb",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15dda1bc280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nilfs_evict_inode",
+            "fs/nilfs2/inode.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-09T15:29:56+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "04fc7816089c5a32c29a04ec94b998e219dfb946",
+    "patch": "diff --git a/fs/nilfs2/inode.c b/fs/nilfs2/inode.c\nindex 1310d2d5feb3..a8ce522ac747 100644\n--- a/fs/nilfs2/inode.c\n+++ b/fs/nilfs2/inode.c\n@@ -917,6 +917,7 @@ void nilfs_evict_inode(struct inode *inode)\n \tstruct nilfs_transaction_info ti;\n \tstruct super_block *sb = inode->i_sb;\n \tstruct nilfs_inode_info *ii = NILFS_I(inode);\n+\tstruct the_nilfs *nilfs;\n \tint ret;\n \n \tif (inode->i_nlink || !ii->i_root || unlikely(is_bad_inode(inode))) {\n@@ -929,6 +930,23 @@ void nilfs_evict_inode(struct inode *inode)\n \n \ttruncate_inode_pages_final(&inode->i_data);\n \n+\tnilfs = sb->s_fs_info;\n+\tif (unlikely(sb_rdonly(sb) || !nilfs->ns_writer)) {\n+\t\t/*\n+\t\t * If this inode is about to be disposed after the file system\n+\t\t * has been degraded to read-only due to file system corruption\n+\t\t * or after the writer has been detached, do not make any\n+\t\t * changes that cause writes, just clear it.\n+\t\t * Do this check after read-locking ns_segctor_sem by\n+\t\t * nilfs_transaction_begin() in order to avoid a race with\n+\t\t * the writer detach operation.\n+\t\t */\n+\t\tclear_inode(inode);\n+\t\tnilfs_clear_inode(inode);\n+\t\tnilfs_transaction_abort(sb);\n+\t\treturn;\n+\t}\n+\n \t/* TODO: some of the following operations may fail.  */\n \tnilfs_truncate_bmap(ii, 0);\n \tnilfs_mark_inode_dirty(inode);\n",
+    "patch_modified_files": [
+        "fs/nilfs2/inode.c"
+    ]
+}

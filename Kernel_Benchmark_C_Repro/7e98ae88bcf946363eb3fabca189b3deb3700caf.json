@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "WARNING: suspicious RCU usage in wiphy_apply_custom_regulatory",
+    "display-title": "WARNING: suspicious RCU usage in wiphy_apply_custom_regulatory",
+    "id": "7e98ae88bcf946363eb3fabca189b3deb3700caf",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "cfg80211: Save the regulatory domain with a lock",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=51d62f2f2c501a93d9a6a46f43731f984e227764",
+            "hash": "51d62f2f2c501a93d9a6a46f43731f984e227764",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "cfg80211: Save the regulatory domain when setting custom regulatory",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=beee246951571cc5452176f3dbfe9aa5a10ba2b9",
+        "hash": "beee246951571cc5452176f3dbfe9aa5a10ba2b9",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005fb61b05b6dc095b@google.com/T/",
+        "https://lore.kernel.org/all/iwlwifi.20210105165657.613e9a876829.Ia38d27dbebea28bf9c56d70691d243186ede70e7@changeid/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1593f703500000",
+            "c-reproducer": "/text?tag=ReproC&x=176dc937500000",
+            "kernel-config": "/text?tag=KernelConfig&x=c3556e4856b17a95",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d635a69dd4981cc51f90293f5f64268620ed1565",
+            "kernel-source-commit": "d635a69dd4981cc51f90293f5f64268620ed1565",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f213e07ead587b07a84e60c356520bce7277166c",
+            "syzkaller-commit": "f213e07ead587b07a84e60c356520bce7277166c",
+            "compiler-description": "clang version 11.0.0 (https://github.com/llvm/llvm-project.git ca2dcbd030eadbf0aa9b660efe864ff08af6e18b)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15c6dd97500000"
+        }
+    ],
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "70b6ff35d62050d1573876cc0e1e078acd3e6008",
+    "patch": "diff --git a/net/wireless/reg.c b/net/wireless/reg.c\nindex bb72447ad960..8114bba8556c 100644\n--- a/net/wireless/reg.c\n+++ b/net/wireless/reg.c\n@@ -5,7 +5,7 @@\n  * Copyright 2008-2011\tLuis R. Rodriguez <mcgrof@qca.qualcomm.com>\n  * Copyright 2013-2014  Intel Mobile Communications GmbH\n  * Copyright      2017  Intel Deutschland GmbH\n- * Copyright (C) 2018 - 2019 Intel Corporation\n+ * Copyright (C) 2018 - 2021 Intel Corporation\n  *\n  * Permission to use, copy, modify, and/or distribute this software for any\n  * purpose with or without fee is hereby granted, provided that the above\n@@ -139,6 +139,11 @@ static const struct ieee80211_regdomain *get_cfg80211_regdom(void)\n \treturn rcu_dereference_rtnl(cfg80211_regdomain);\n }\n \n+/*\n+ * Returns the regulatory domain associated with the wiphy.\n+ *\n+ * Requires either RTNL or RCU protection\n+ */\n const struct ieee80211_regdomain *get_wiphy_regdom(struct wiphy *wiphy)\n {\n \treturn rcu_dereference_rtnl(wiphy->regd);\n@@ -2571,9 +2576,13 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,\n \tif (IS_ERR(new_regd))\n \t\treturn;\n \n+\trtnl_lock();\n+\n \ttmp = get_wiphy_regdom(wiphy);\n \trcu_assign_pointer(wiphy->regd, new_regd);\n \trcu_free_regdom(tmp);\n+\n+\trtnl_unlock();\n }\n EXPORT_SYMBOL(wiphy_apply_custom_regulatory);\n \n",
+    "patch_modified_files": [
+        "net/wireless/reg.c"
+    ]
+}

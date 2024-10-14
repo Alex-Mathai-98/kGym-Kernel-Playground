@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "KASAN: null-ptr-deref Read in refcount_sub_and_test_checked",
+    "display-title": "KASAN: null-ptr-deref Read in refcount_sub_and_test_checked (2)",
+    "id": "17535f4bf5b322437f7c639b59161ce343fc55a9",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: vb2: check memory model for VIDIOC_CREATE_BUFS",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=62dcb4f41836bd3c44b5b651bb6df07ea4cb1551",
+            "hash": "62dcb4f41836bd3c44b5b651bb6df07ea4cb1551",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000057e614057a9abcd3@google.com/T/",
+        "https://lore.kernel.org/all/20190627035314.GD721@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20190724013934.GC643@sol.localdomain/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16d20893400000",
+            "c-reproducer": "/text?tag=ReproC&x=118f5a2b400000",
+            "kernel-config": "/text?tag=KernelConfig&x=4a0a89f12ca9b0f5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=ccda4af0f4b92f7b4c308d3acc262f4a7e3affad",
+            "kernel-source-commit": "ccda4af0f4b92f7b4c308d3acc262f4a7e3affad",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/5f5f6d14e80b8bd6b42db961118e902387716bcb",
+            "syzkaller-commit": "5f5f6d14e80b8bd6b42db961118e902387716bcb",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=101b826d400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "vb2_core_create_bufs",
+            "drivers/media/common/videobuf2/videobuf2-core.c"
+        ]
+    ],
+    "patch_commit_date": "2018-11-08T12:23:37+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "media"
+    ],
+    "parent_of_fix_commit": "2912289a518077ddb8214e05336700148e97e235",
+    "patch": "diff --git a/drivers/media/common/videobuf2/videobuf2-core.c b/drivers/media/common/videobuf2/videobuf2-core.c\nindex 2fcab61b8ff5..03954c13024c 100644\n--- a/drivers/media/common/videobuf2/videobuf2-core.c\n+++ b/drivers/media/common/videobuf2/videobuf2-core.c\n@@ -812,6 +812,9 @@ int vb2_core_create_bufs(struct vb2_queue *q, enum vb2_memory memory,\n \t\tmemset(q->alloc_devs, 0, sizeof(q->alloc_devs));\n \t\tq->memory = memory;\n \t\tq->waiting_for_buffers = !q->is_output;\n+\t} else if (q->memory != memory) {\n+\t\tdprintk(1, \"memory model mismatch\\n\");\n+\t\treturn -EINVAL;\n \t}\n \n \tnum_buffers = min(*count, VB2_MAX_FRAME - q->num_buffers);\n",
+    "patch_modified_files": [
+        "drivers/media/common/videobuf2/videobuf2-core.c"
+    ]
+}

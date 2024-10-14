@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Write in nft_ct_tmpl_put_pcpu",
+    "display-title": "KASAN: use-after-free Write in nft_ct_tmpl_put_pcpu",
+    "id": "34b3d29c783f19d70086206194da85e59c448167",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: nft_ct: protect nft_ct_pcpu_template_refcnt with mutex",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e3245a7b7b34bd2e97f744fd79463add6e9d41f4",
+            "hash": "e3245a7b7b34bd2e97f744fd79463add6e9d41f4",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "netfilter: nf_tables: allow to specify stateful expression in set definition",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=65038428b2c6c5be79d3f78a6b79c0cdc3a58a41",
+        "hash": "65038428b2c6c5be79d3f78a6b79c0cdc3a58a41",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b720b705c8f8599f@google.com/T/",
+        "https://lore.kernel.org/all/20210810125523.15312-1-paskripkin@gmail.com/T/",
+        "https://lore.kernel.org/all/20210903163020.13741-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20210920163915.757887582@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210920163921.633181900@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Write in nft_ct_tmpl_put_pcpu",
+            "syz-reproducer": "/text?tag=ReproSyz&x=110319aa300000",
+            "c-reproducer": "/text?tag=ReproC&x=1142fac9d00000",
+            "kernel-config": "/text?tag=KernelConfig&x=343fd21f6f4da2d6",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=894d6f401b21865962aba776ecaa918b2f0abaa6",
+            "kernel-source-commit": "894d6f401b21865962aba776ecaa918b2f0abaa6",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/6972b10616d785401dea17cec890cca8916424a7",
+            "syzkaller-commit": "6972b10616d785401dea17cec890cca8916424a7",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10471759300000"
+        }
+    ],
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "519133debcc19f5c834e7e28480b60bdc234fe02",
+    "patch": "diff --git a/net/netfilter/nft_ct.c b/net/netfilter/nft_ct.c\nindex 337e22d8b40b..99b1de14ff7e 100644\n--- a/net/netfilter/nft_ct.c\n+++ b/net/netfilter/nft_ct.c\n@@ -41,6 +41,7 @@ struct nft_ct_helper_obj  {\n #ifdef CONFIG_NF_CONNTRACK_ZONES\n static DEFINE_PER_CPU(struct nf_conn *, nft_ct_pcpu_template);\n static unsigned int nft_ct_pcpu_template_refcnt __read_mostly;\n+static DEFINE_MUTEX(nft_ct_pcpu_mutex);\n #endif\n \n static u64 nft_ct_get_eval_counter(const struct nf_conn_counter *c,\n@@ -525,8 +526,10 @@ static void __nft_ct_set_destroy(const struct nft_ctx *ctx, struct nft_ct *priv)\n #endif\n #ifdef CONFIG_NF_CONNTRACK_ZONES\n \tcase NFT_CT_ZONE:\n+\t\tmutex_lock(&nft_ct_pcpu_mutex);\n \t\tif (--nft_ct_pcpu_template_refcnt == 0)\n \t\t\tnft_ct_tmpl_put_pcpu();\n+\t\tmutex_unlock(&nft_ct_pcpu_mutex);\n \t\tbreak;\n #endif\n \tdefault:\n@@ -564,9 +567,13 @@ static int nft_ct_set_init(const struct nft_ctx *ctx,\n #endif\n #ifdef CONFIG_NF_CONNTRACK_ZONES\n \tcase NFT_CT_ZONE:\n-\t\tif (!nft_ct_tmpl_alloc_pcpu())\n+\t\tmutex_lock(&nft_ct_pcpu_mutex);\n+\t\tif (!nft_ct_tmpl_alloc_pcpu()) {\n+\t\t\tmutex_unlock(&nft_ct_pcpu_mutex);\n \t\t\treturn -ENOMEM;\n+\t\t}\n \t\tnft_ct_pcpu_template_refcnt++;\n+\t\tmutex_unlock(&nft_ct_pcpu_mutex);\n \t\tlen = sizeof(u16);\n \t\tbreak;\n #endif\n",
+    "patch_modified_files": [
+        "net/netfilter/nft_ct.c"
+    ]
+}

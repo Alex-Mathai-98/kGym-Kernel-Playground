@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "KASAN: stack-out-of-bounds Read in pick_next_task_fair",
+    "display-title": "KASAN: stack-out-of-bounds Read in pick_next_task_fair",
+    "id": "7e80ecfea1e14e6470f0bc4dcc03d14aaa95b9a3",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fou6: Prevent unbounded recursion in GUE error handler",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=44039e00171b0fe930c07ff7b43e6023eaf1ed31",
+            "hash": "44039e00171b0fe930c07ff7b43e6023eaf1ed31",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14dfb26f400000",
+            "c-reproducer": "/text?tag=ReproC&x=168ebebb400000",
+            "kernel-config": "/text?tag=KernelConfig&x=7308e68273924137",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=96d4f267e40f9509e8a66e2b39e8b95655617693",
+            "kernel-source-commit": "96d4f267e40f9509e8a66e2b39e8b95655617693",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0127e3baa7b78ca59d4b1ebb3482a270c6c1c2af",
+            "syzkaller-commit": "0127e3baa7b78ca59d4b1ebb3482a270c6c1c2af",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16ad514b400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "gue6_err",
+            "net/ipv6/fou6.c"
+        ]
+    ],
+    "patch_commit_date": "2019-01-03T20:43:35+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "bc6e019b6ee65ff4ebf3ca272f774cf6c67db669",
+    "patch": "diff --git a/net/ipv6/fou6.c b/net/ipv6/fou6.c\nindex bd675c61deb1..7da7bf3b7fe3 100644\n--- a/net/ipv6/fou6.c\n+++ b/net/ipv6/fou6.c\n@@ -131,6 +131,14 @@ static int gue6_err(struct sk_buff *skb, struct inet6_skb_parm *opt,\n \tif (validate_gue_flags(guehdr, optlen))\n \t\treturn -EINVAL;\n \n+\t/* Handling exceptions for direct UDP encapsulation in GUE would lead to\n+\t * recursion. Besides, this kind of encapsulation can't even be\n+\t * configured currently. Discard this.\n+\t */\n+\tif (guehdr->proto_ctype == IPPROTO_UDP ||\n+\t    guehdr->proto_ctype == IPPROTO_UDPLITE)\n+\t\treturn -EOPNOTSUPP;\n+\n \tskb_set_transport_header(skb, -(int)sizeof(struct icmp6hdr));\n \tret = gue6_err_proto_handler(guehdr->proto_ctype, skb,\n \t\t\t\t     opt, type, code, offset, info);\n",
+    "patch_modified_files": [
+        "net/ipv6/fou6.c"
+    ]
+}

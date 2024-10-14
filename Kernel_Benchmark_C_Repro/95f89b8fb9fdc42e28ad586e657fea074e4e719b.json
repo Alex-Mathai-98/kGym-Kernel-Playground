@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in cma_cancel_operation",
+    "display-title": "KASAN: use-after-free Read in cma_cancel_operation",
+    "id": "95f89b8fb9fdc42e28ad586e657fea074e4e719b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "RDMA/ucma: Put a lock around every call to the rdma_cm layer",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7c11910783a1ea17e88777552ef146cace607b3c",
+            "hash": "7c11910783a1ea17e88777552ef146cace607b3c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/20190625054850.GB17703@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20190724014840.GL643@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20200411115456.934174282@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200411115459.324496182@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200411115504.124035693@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200411115508.284500414@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200411230347.22371-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200411230706.23855-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200411230943.24951-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200411231203.25933-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/94eb2c054604ad40010568e8ea21@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1595a77b800000",
+            "c-reproducer": "/text?tag=ReproC&x=1786130b800000",
+            "kernel-config": "/text?tag=KernelConfig&x=5e630e8cb6d3da36",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=86bbbebac1933e6e95e8234c4f7d220c5ddd38bc",
+            "kernel-source-commit": "86bbbebac1933e6e95e8234c4f7d220c5ddd38bc",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/676bd07e7e80f8a270af7f0276443c68f4a99e25",
+            "syzkaller-commit": "676bd07e7e80f8a270af7f0276443c68f4a99e25",
+            "compiler-description": "gcc (GCC) 7.1.1 20170620",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17044b7b800000"
+        }
+    ],
+    "subsystems": [
+        "rdma"
+    ],
+    "parent_of_fix_commit": "25baba217cdfc1dfc75a9f427f4551b9a90e372b",
+    "patch": "diff --git a/drivers/infiniband/core/ucma.c b/drivers/infiniband/core/ucma.c\nindex 66ad29c672fc..16b6cf57fa85 100644\n--- a/drivers/infiniband/core/ucma.c\n+++ b/drivers/infiniband/core/ucma.c\n@@ -91,6 +91,7 @@ struct ucma_context {\n \n \tstruct ucma_file\t*file;\n \tstruct rdma_cm_id\t*cm_id;\n+\tstruct mutex\t\tmutex;\n \tu64\t\t\tuid;\n \n \tstruct list_head\tlist;\n@@ -216,6 +217,7 @@ static struct ucma_context *ucma_alloc_ctx(struct ucma_file *file)\n \tinit_completion(&ctx->comp);\n \tINIT_LIST_HEAD(&ctx->mc_list);\n \tctx->file = file;\n+\tmutex_init(&ctx->mutex);\n \n \tif (xa_alloc(&ctx_table, &ctx->id, ctx, xa_limit_32b, GFP_KERNEL))\n \t\tgoto error;\n@@ -589,6 +591,7 @@ static int ucma_free_ctx(struct ucma_context *ctx)\n \t}\n \n \tevents_reported = ctx->events_reported;\n+\tmutex_destroy(&ctx->mutex);\n \tkfree(ctx);\n \treturn events_reported;\n }\n@@ -658,7 +661,10 @@ static ssize_t ucma_bind_ip(struct ucma_file *file, const char __user *inbuf,\n \tif (IS_ERR(ctx))\n \t\treturn PTR_ERR(ctx);\n \n+\tmutex_lock(&ctx->mutex);\n \tret = rdma_bind_addr(ctx->cm_id, (struct sockaddr *) &cmd.addr);\n+\tmutex_unlock(&ctx->mutex);\n+\n \tucma_put_ctx(ctx);\n \treturn ret;\n }\n@@ -681,7 +687,9 @@ static ssize_t ucma_bind(struct ucma_file *file, const char __user *inbuf,\n \tif (IS_ERR(ctx))\n \t\treturn PTR_ERR(ctx);\n \n+\tmutex_lock(&ctx->mutex);\n \tret = rdma_bind_addr(ctx->cm_id, (struct sockaddr *) &cmd.addr);\n+\tmutex_unlock(&ctx->mutex);\n \tucma_put_ctx(ctx);\n \treturn ret;\n }\n@@ -705,8 +713,10 @@ static ssize_t ucma_resolve_ip(struct ucma_file *file,\n \tif (IS_ERR(ctx))\n \t\treturn PTR_ERR(ctx);\n \n+\tmutex_lock(&ctx->mutex);\n \tret = rdma_resolve_addr(ctx->cm_id, (struct sockaddr *) &cmd.src_addr,\n \t\t\t\t(struct sockaddr *) &cmd.dst_addr, cmd.timeout_ms);\n+\tmutex_unlock(&ctx->mutex);\n \tucma_put_ctx(ctx);\n \treturn ret;\n }\n@@ -731,8 +741,10 @@ static ssize_t ucma_resolve_addr(struct ucma_file *file,\n \tif (IS_ERR(ctx))\n \t\treturn PTR_ERR(ctx);\n \n+\tmutex_lock(&ctx->mutex);\n \tret = rdma_resolve_addr(ctx->cm_id, (struct sockaddr *) &cmd.src_addr,\n \t\t\t\t(struct sockaddr *) &cmd.dst_addr, cmd.timeout_ms);\n+\tmutex_unlock(&ctx->mutex);\n \tucma_put_ctx(ctx);\n \treturn ret;\n }\n@@ -752,7 +764,9 @@ static ssize_t ucma_resolve_route(struct ucma_file *file,\n \tif (IS_ERR(ctx))\n \t\treturn PTR_ERR(ctx);\n \n+\tmutex_lock(&ctx->mutex);\n \tret = rdma_resolve_route(ctx->cm_id, cmd.timeout_ms);\n+\tmutex_unlock(&ctx->mutex);\n \tucma_put_ctx(ctx);\n \treturn ret;\n }\n@@ -841,6 +855,7 @@ static ssize_t ucma_query_route(struct ucma_file *file,\n \tif (IS_ERR(ctx))\n \t\treturn PTR_ERR(ctx);\n \n+\tmutex_lock(&ctx->mutex);\n \tmemset(&resp, 0, sizeof resp);\n \taddr = (struct sockaddr *) &ctx->cm_id->route.addr.src_addr;\n \tmemcpy(&resp.src_addr, addr, addr->sa_family == AF_INET ?\n@@ -864,6 +879,7 @@ static ssize_t ucma_query_route(struct ucma_file *file,\n \t\tucma_copy_iw_route(&resp, &ctx->cm_id->route);\n \n out:\n+\tmutex_unlock(&ctx->mutex);\n \tif (copy_to_user(u64_to_user_ptr(cmd.response),\n \t\t\t &resp, sizeof(resp)))\n \t\tret = -EFAULT;\n@@ -1014,6 +1030,7 @@ static ssize_t ucma_query(struct ucma_file *file,\n \tif (IS_ERR(ctx))\n \t\treturn PTR_ERR(ctx);\n \n+\tmutex_lock(&ctx->mutex);\n \tswitch (cmd.option) {\n \tcase RDMA_USER_CM_QUERY_ADDR:\n \t\tret = ucma_query_addr(ctx, response, out_len);\n@@ -1028,6 +1045,7 @@ static ssize_t ucma_query(struct ucma_file *file,\n \t\tret = -ENOSYS;\n \t\tbreak;\n \t}\n+\tmutex_unlock(&ctx->mutex);\n \n \tucma_put_ctx(ctx);\n \treturn ret;\n@@ -1068,7 +1086,9 @@ static ssize_t ucma_connect(struct ucma_file *file, const char __user *inbuf,\n \t\treturn PTR_ERR(ctx);\n \n \tucma_copy_conn_param(ctx->cm_id, &conn_param, &cmd.conn_param);\n+\tmutex_lock(&ctx->mutex);\n \tret = rdma_connect(ctx->cm_id, &conn_param);\n+\tmutex_unlock(&ctx->mutex);\n \tucma_put_ctx(ctx);\n \treturn ret;\n }\n@@ -1089,7 +1109,9 @@ static ssize_t ucma_listen(struct ucma_file *file, const char __user *inbuf,\n \n \tctx->backlog = cmd.backlog > 0 && cmd.backlog < max_backlog ?\n \t\t       cmd.backlog : max_backlog;\n+\tmutex_lock(&ctx->mutex);\n \tret = rdma_listen(ctx->cm_id, ctx->backlog);\n+\tmutex_unlock(&ctx->mutex);\n \tucma_put_ctx(ctx);\n \treturn ret;\n }\n@@ -1112,13 +1134,17 @@ static ssize_t ucma_accept(struct ucma_file *file, const char __user *inbuf,\n \tif (cmd.conn_param.valid) {\n \t\tucma_copy_conn_param(ctx->cm_id, &conn_param, &cmd.conn_param);\n \t\tmutex_lock(&file->mut);\n+\t\tmutex_lock(&ctx->mutex);\n \t\tret = __rdma_accept(ctx->cm_id, &conn_param, NULL);\n+\t\tmutex_unlock(&ctx->mutex);\n \t\tif (!ret)\n \t\t\tctx->uid = cmd.uid;\n \t\tmutex_unlock(&file->mut);\n-\t} else\n+\t} else {\n+\t\tmutex_lock(&ctx->mutex);\n \t\tret = __rdma_accept(ctx->cm_id, NULL, NULL);\n-\n+\t\tmutex_unlock(&ctx->mutex);\n+\t}\n \tucma_put_ctx(ctx);\n \treturn ret;\n }\n@@ -1137,7 +1163,9 @@ static ssize_t ucma_reject(struct ucma_file *file, const char __user *inbuf,\n \tif (IS_ERR(ctx))\n \t\treturn PTR_ERR(ctx);\n \n+\tmutex_lock(&ctx->mutex);\n \tret = rdma_reject(ctx->cm_id, cmd.private_data, cmd.private_data_len);\n+\tmutex_unlock(&ctx->mutex);\n \tucma_put_ctx(ctx);\n \treturn ret;\n }\n@@ -1156,7 +1184,9 @@ static ssize_t ucma_disconnect(struct ucma_file *file, const char __user *inbuf,\n \tif (IS_ERR(ctx))\n \t\treturn PTR_ERR(ctx);\n \n+\tmutex_lock(&ctx->mutex);\n \tret = rdma_disconnect(ctx->cm_id);\n+\tmutex_unlock(&ctx->mutex);\n \tucma_put_ctx(ctx);\n \treturn ret;\n }\n@@ -1187,7 +1217,9 @@ static ssize_t ucma_init_qp_attr(struct ucma_file *file,\n \tresp.qp_attr_mask = 0;\n \tmemset(&qp_attr, 0, sizeof qp_attr);\n \tqp_attr.qp_state = cmd.qp_state;\n+\tmutex_lock(&ctx->mutex);\n \tret = rdma_init_qp_attr(ctx->cm_id, &qp_attr, &resp.qp_attr_mask);\n+\tmutex_unlock(&ctx->mutex);\n \tif (ret)\n \t\tgoto out;\n \n@@ -1273,9 +1305,13 @@ static int ucma_set_ib_path(struct ucma_context *ctx,\n \t\tstruct sa_path_rec opa;\n \n \t\tsa_convert_path_ib_to_opa(&opa, &sa_path);\n+\t\tmutex_lock(&ctx->mutex);\n \t\tret = rdma_set_ib_path(ctx->cm_id, &opa);\n+\t\tmutex_unlock(&ctx->mutex);\n \t} else {\n+\t\tmutex_lock(&ctx->mutex);\n \t\tret = rdma_set_ib_path(ctx->cm_id, &sa_path);\n+\t\tmutex_unlock(&ctx->mutex);\n \t}\n \tif (ret)\n \t\treturn ret;\n@@ -1308,7 +1344,9 @@ static int ucma_set_option_level(struct ucma_context *ctx, int level,\n \n \tswitch (level) {\n \tcase RDMA_OPTION_ID:\n+\t\tmutex_lock(&ctx->mutex);\n \t\tret = ucma_set_option_id(ctx, optname, optval, optlen);\n+\t\tmutex_unlock(&ctx->mutex);\n \t\tbreak;\n \tcase RDMA_OPTION_IB:\n \t\tret = ucma_set_option_ib(ctx, optname, optval, optlen);\n@@ -1368,8 +1406,10 @@ static ssize_t ucma_notify(struct ucma_file *file, const char __user *inbuf,\n \tif (IS_ERR(ctx))\n \t\treturn PTR_ERR(ctx);\n \n+\tmutex_lock(&ctx->mutex);\n \tif (ctx->cm_id->device)\n \t\tret = rdma_notify(ctx->cm_id, (enum ib_event_type)cmd.event);\n+\tmutex_unlock(&ctx->mutex);\n \n \tucma_put_ctx(ctx);\n \treturn ret;\n@@ -1412,8 +1452,10 @@ static ssize_t ucma_process_join(struct ucma_file *file,\n \tmc->join_state = join_state;\n \tmc->uid = cmd->uid;\n \tmemcpy(&mc->addr, addr, cmd->addr_size);\n+\tmutex_lock(&ctx->mutex);\n \tret = rdma_join_multicast(ctx->cm_id, (struct sockaddr *)&mc->addr,\n \t\t\t\t  join_state, mc);\n+\tmutex_unlock(&ctx->mutex);\n \tif (ret)\n \t\tgoto err2;\n \n@@ -1513,7 +1555,10 @@ static ssize_t ucma_leave_multicast(struct ucma_file *file,\n \t\tgoto out;\n \t}\n \n+\tmutex_lock(&mc->ctx->mutex);\n \trdma_leave_multicast(mc->ctx->cm_id, (struct sockaddr *) &mc->addr);\n+\tmutex_unlock(&mc->ctx->mutex);\n+\n \tmutex_lock(&mc->ctx->file->mut);\n \tucma_cleanup_mc_events(mc);\n \tlist_del(&mc->list);\n",
+    "patch_modified_files": [
+        "drivers/infiniband/core/ucma.c"
+    ]
+}

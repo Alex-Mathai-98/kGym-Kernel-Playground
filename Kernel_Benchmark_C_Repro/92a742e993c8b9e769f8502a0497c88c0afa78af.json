@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "memory leak in gs_usb_probe",
+    "display-title": "memory leak in gs_usb_probe",
+    "id": "92a742e993c8b9e769f8502a0497c88c0afa78af",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "can: gs_usb: gs_make_candev(): fix memory leak for devices with extended bit timing configuration",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=50d34a0d151dc7abbdbec781bd7f09f2b3cbf01a",
+            "hash": "50d34a0d151dc7abbdbec781bd7f09f2b3cbf01a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000bd6ee505db5cfec6@google.com/T/",
+        "https://lore.kernel.org/all/20220331084634.869744-1-mkl@pengutronix.de/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in gs_usb_probe",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12e96e1d700000",
+            "c-reproducer": "/text?tag=ReproC&x=12f8b513700000",
+            "kernel-config": "/text?tag=KernelConfig&x=9ca2a67ddb20027f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=52deda9551a01879b3562e7b41748e85c591f14c",
+            "kernel-source-commit": "52deda9551a01879b3562e7b41748e85c591f14c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/89bc860804252dbacb8c2bea60b9204859f4afd7",
+            "syzkaller-commit": "89bc860804252dbacb8c2bea60b9204859f4afd7",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11b6732b700000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "gs_make_candev",
+            "drivers/net/can/usb/gs_usb.c"
+        ]
+    ],
+    "patch_commit_date": "2022-03-29T19:29:43+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "can",
+        "usb"
+    ],
+    "parent_of_fix_commit": "136bed0bfd3bc9c95c88aafff2d22ecb3a919f23",
+    "patch": "diff --git a/drivers/net/can/usb/gs_usb.c b/drivers/net/can/usb/gs_usb.c\nindex 67408e316062..b29ba9138866 100644\n--- a/drivers/net/can/usb/gs_usb.c\n+++ b/drivers/net/can/usb/gs_usb.c\n@@ -1092,6 +1092,8 @@ static struct gs_can *gs_make_candev(unsigned int channel,\n \t\tdev->data_bt_const.brp_inc = le32_to_cpu(bt_const_extended->dbrp_inc);\n \n \t\tdev->can.data_bittiming_const = &dev->data_bt_const;\n+\n+\t\tkfree(bt_const_extended);\n \t}\n \n \tSET_NETDEV_DEV(netdev, &intf->dev);\n",
+    "patch_modified_files": [
+        "drivers/net/can/usb/gs_usb.c"
+    ]
+}

@@ -1,0 +1,63 @@
+{
+    "version": 1,
+    "title": "KASAN: null-ptr-deref Write in blk_mq_map_swqueue",
+    "display-title": "KASAN: null-ptr-deref Write in blk_mq_map_swqueue",
+    "id": "e6d33ba16dd43f0047f94ae8bd34351c395c3726",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "blk-mq: Fix a recently introduced regression in blk_mq_realloc_hw_ctxs()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d0930bb8f46b8fb4a7d429c0bf1c91b3ed00a7cf",
+            "hash": "d0930bb8f46b8fb4a7d429c0bf1c91b3ed00a7cf",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "io_uring: don't do flush cancel under inflight_lock",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=768134d4f48109b90f4248feecbeeb7d684e410c",
+        "hash": "768134d4f48109b90f4248feecbeeb7d684e410c",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000047770d05a1c70ecb@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13850447e00000",
+            "c-reproducer": "/text?tag=ReproC&x=119a26f5e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=27392dd2975fd692",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1b649e0bcae71c118c1333e02249a7510ba7f70a",
+            "kernel-source-commit": "1b649e0bcae71c118c1333e02249a7510ba7f70a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/6d25c5a09d4115832b286e56380045283679ce52",
+            "syzkaller-commit": "6d25c5a09d4115832b286e56380045283679ce52",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11f69d3de00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "blk_mq_realloc_hw_ctxs",
+            "block/blk-mq.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "io_uring_cancel_files",
+            "fs/io_uring.c"
+        ]
+    ],
+    "patch_commit_date": "2020-03-10T04:26:18+00:00",
+    "cause_commit_date": "2019-11-11T03:30:53+00:00",
+    "subsystems": [
+        "block"
+    ],
+    "parent_of_fix_commit": "6e66b49392419f3fe134e1be583323ef75da1e4b",
+    "patch": "diff --git a/block/blk-mq.c b/block/blk-mq.c\nindex d4bd9b961726..37ff8dfb8ab9 100644\n--- a/block/blk-mq.c\n+++ b/block/blk-mq.c\n@@ -2824,7 +2824,6 @@ static void blk_mq_realloc_hw_ctxs(struct blk_mq_tag_set *set,\n \t\t\tmemcpy(new_hctxs, hctxs, q->nr_hw_queues *\n \t\t\t       sizeof(*hctxs));\n \t\tq->queue_hw_ctx = new_hctxs;\n-\t\tq->nr_hw_queues = set->nr_hw_queues;\n \t\tkfree(hctxs);\n \t\thctxs = new_hctxs;\n \t}\n",
+    "patch_modified_files": [
+        "block/blk-mq.c"
+    ]
+}

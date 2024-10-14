@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "memory leak in kobject_set_name_vargs",
+    "display-title": "memory leak in kobject_set_name_vargs (3)",
+    "id": "7e8739307ccbbc3219b5b7c398ffae51e9fc315b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: fix leaking sysfs kobject after failed mount",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cb8d53d2c97369029cc638c9274ac7be0a316c75",
+            "hash": "cb8d53d2c97369029cc638c9274ac7be0a316c75",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000443d8a05afcff2b5@google.com/T/",
+        "https://lore.kernel.org/all/20200922162456.93657-1-ebiggers@kernel.org/T/",
+        "https://lore.kernel.org/all/20201103203156.372184213@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201103203232.656475008@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201103203249.448706377@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201103203348.153465465@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201117122106.144800239@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201117122109.116890262@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14c33cad900000",
+            "c-reproducer": "/text?tag=ReproC&x=154bc6c3900000",
+            "kernel-config": "/text?tag=KernelConfig&x=a1f3c5052e8097e9",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=bdcf11de8f776152c82d2197b255c2d04603f976",
+            "kernel-source-commit": "bdcf11de8f776152c82d2197b255c2d04603f976",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9564d2e9821aea842b6ab213174aabd4b578b039",
+            "syzkaller-commit": "9564d2e9821aea842b6ab213174aabd4b578b039",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10fb3281900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ext4_fill_super",
+            "fs/ext4/super.c"
+        ]
+    ],
+    "patch_commit_date": "2020-09-22T16:24:56+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "5b3dc19dda6691e8ab574e8eede1aef6f02a4f1c",
+    "patch": "diff --git a/fs/ext4/super.c b/fs/ext4/super.c\nindex ea425b49b345..41953b86ffe3 100644\n--- a/fs/ext4/super.c\n+++ b/fs/ext4/super.c\n@@ -4872,6 +4872,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)\n \n failed_mount8:\n \text4_unregister_sysfs(sb);\n+\tkobject_put(&sbi->s_kobj);\n failed_mount7:\n \text4_unregister_li_request(sb);\n failed_mount6:\n",
+    "patch_modified_files": [
+        "fs/ext4/super.c"
+    ]
+}

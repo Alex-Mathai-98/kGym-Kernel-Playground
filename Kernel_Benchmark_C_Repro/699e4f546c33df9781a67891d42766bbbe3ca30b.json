@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "possible deadlock in fuse_reverse_inval_entry",
+    "display-title": "possible deadlock in fuse_reverse_inval_entry",
+    "id": "699e4f546c33df9781a67891d42766bbbe3ca30b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fuse: annotate lock in fuse_reverse_inval_entry()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bda9a71980e083699a0360963c0135657b73f47a",
+            "hash": "bda9a71980e083699a0360963c0135657b73f47a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a4cc9405c95d0e1c@google.com/T/",
+        "https://lore.kernel.org/all/20211220143019.974513085@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211220143022.266532675@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211220143023.451982183@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211220143025.683747691@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211220143029.352940568@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211220143040.058287525@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "possible deadlock in fuse_reverse_inval_entry",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1427c9aa300000",
+            "c-reproducer": "/text?tag=ReproC&x=1540a2f6300000",
+            "kernel-config": "/text?tag=KernelConfig&x=343fd21f6f4da2d6",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=85a90500f9a1717c4e142ce92e6c1cb1a339ec78",
+            "kernel-source-commit": "85a90500f9a1717c4e142ce92e6c1cb1a339ec78",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/6972b10616d785401dea17cec890cca8916424a7",
+            "syzkaller-commit": "6972b10616d785401dea17cec890cca8916424a7",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17c0109a300000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "fuse_reverse_inval_entry",
+            "fs/fuse/dir.c"
+        ]
+    ],
+    "patch_commit_date": "2021-10-22T15:03:01+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fuse"
+    ],
+    "parent_of_fix_commit": "36ea23374d1f7b6a9d96a2b61d38830fdf23e45d",
+    "patch": "diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c\nindex 2798fbe8d001..80a2181b402b 100644\n--- a/fs/fuse/dir.c\n+++ b/fs/fuse/dir.c\n@@ -1079,7 +1079,7 @@ int fuse_reverse_inval_entry(struct fuse_conn *fc, u64 parent_nodeid,\n \tif (!parent)\n \t\treturn -ENOENT;\n \n-\tinode_lock(parent);\n+\tinode_lock_nested(parent, I_MUTEX_PARENT);\n \tif (!S_ISDIR(parent->i_mode))\n \t\tgoto unlock;\n \n",
+    "patch_modified_files": [
+        "fs/fuse/dir.c"
+    ]
+}

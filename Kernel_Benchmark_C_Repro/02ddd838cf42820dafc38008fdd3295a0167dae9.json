@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "general protection fault in wext_handle_ioctl",
+    "display-title": "general protection fault in wext_handle_ioctl",
+    "id": "02ddd838cf42820dafc38008fdd3295a0167dae9",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "wext: fix NULL-ptr-dereference with cfg80211's lack of commit()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5122565188bae59d507d90a9a9fd2fd6107f4439",
+            "hash": "5122565188bae59d507d90a9a9fd2fd6107f4439",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003b856d05b2bdb5f7@google.com/T/",
+        "https://lore.kernel.org/all/20210121171621.2076e4a37d5a.I5d9c72220fe7bb133fb718751da0180a57ecba4e@changeid/T/",
+        "https://lore.kernel.org/all/20210202132941.180062901@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210202132942.035179752@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210202132942.138623851@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210202132942.915040339@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210202132946.480479453@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210202132957.692094111@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13706da1500000",
+            "c-reproducer": "/text?tag=ReproC&x=10229fdc500000",
+            "kernel-config": "/text?tag=KernelConfig&x=37bf5609aacce0b6",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e28c0d7c92c89016c12a677616668957351e7542",
+            "kernel-source-commit": "e28c0d7c92c89016c12a677616668957351e7542",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/1bf9a662c66aa432ff2fe3bf2562578cef626c09",
+            "syzkaller-commit": "1bf9a662c66aa432ff2fe3bf2562578cef626c09",
+            "compiler-description": "clang version 11.0.0 (https://github.com/llvm/llvm-project.git ca2dcbd030eadbf0aa9b660efe864ff08af6e18b)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=173f8506500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ioctl_standard_iw_point",
+            "net/wireless/wext-core.c"
+        ]
+    ],
+    "patch_commit_date": "2021-01-21T16:16:22+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "dcf3c8fb32ddbfa3b8227db38aa6746405bd4527",
+    "patch": "diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c\nindex 69102fda9ebd..76a80a41615b 100644\n--- a/net/wireless/wext-core.c\n+++ b/net/wireless/wext-core.c\n@@ -896,8 +896,9 @@ static int ioctl_standard_iw_point(struct iw_point *iwp, unsigned int cmd,\n int call_commit_handler(struct net_device *dev)\n {\n #ifdef CONFIG_WIRELESS_EXT\n-\tif ((netif_running(dev)) &&\n-\t   (dev->wireless_handlers->standard[0] != NULL))\n+\tif (netif_running(dev) &&\n+\t    dev->wireless_handlers &&\n+\t    dev->wireless_handlers->standard[0])\n \t\t/* Call the commit handler on the driver */\n \t\treturn dev->wireless_handlers->standard[0](dev, NULL,\n \t\t\t\t\t\t\t   NULL, NULL);\n",
+    "patch_modified_files": [
+        "net/wireless/wext-core.c"
+    ]
+}

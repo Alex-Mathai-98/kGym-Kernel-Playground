@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in ntfs_trim_fs",
+    "display-title": "KASAN: slab-out-of-bounds Read in ntfs_trim_fs",
+    "id": "45a4efa3f29d05eff1e3e56c440194d641505e61",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/ntfs3: Fix slab-out-of-bounds read in ntfs_trim_fs",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=557d19675a470bb0a98beccec38c5dc3735c20fa",
+            "hash": "557d19675a470bb0a98beccec38c5dc3735c20fa",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "fs/ntfs3: Add NTFS3 in fs/Kconfig and fs/Makefile",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6e5be40d32fb1907285277c02e74493ed43d77fe",
+        "hash": "6e5be40d32fb1907285277c02e74493ed43d77fe",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000eca83705e9a72fb9@google.com/T/",
+        "https://lore.kernel.org/all/20221001070024.1366018-1-abdun.nihaal@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Read in ntfs_trim_fs",
+            "syz-reproducer": "/text?tag=ReproSyz&x=133c8540880000",
+            "c-reproducer": "/text?tag=ReproC&x=11b74870880000",
+            "kernel-config": "/text?tag=KernelConfig&x=ba0d23aa7e1ffaf5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f76349cf41451c5c42a99f18a9163377e4b364ff",
+            "kernel-source-commit": "f76349cf41451c5c42a99f18a9163377e4b364ff",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/d59ba98314e02be939938f682fd67cd68bbb3b68",
+            "syzkaller-commit": "d59ba98314e02be939938f682fd67cd68bbb3b68",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=141ffb54880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ntfs_trim_fs",
+            "fs/ntfs3/bitmap.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "obj",
+            "fs/Makefile"
+        ]
+    ],
+    "patch_commit_date": "2022-10-01T07:00:24+00:00",
+    "cause_commit_date": "2021-08-13T14:21:30+00:00",
+    "subsystems": [
+        "ntfs3"
+    ],
+    "parent_of_fix_commit": "bfcdbae0523bd95eb75a739ffb6221a37109881e",
+    "patch": "diff --git a/fs/ntfs3/bitmap.c b/fs/ntfs3/bitmap.c\nindex 1675c9a69788..629c1ee97268 100644\n--- a/fs/ntfs3/bitmap.c\n+++ b/fs/ntfs3/bitmap.c\n@@ -1424,7 +1424,7 @@ int ntfs_trim_fs(struct ntfs_sb_info *sbi, struct fstrim_range *range)\n \n \tdown_read_nested(&wnd->rw_lock, BITMAP_MUTEX_CLUSTERS);\n \n-\tfor (; iw < wnd->nbits; iw++, wbit = 0) {\n+\tfor (; iw < wnd->nwnd; iw++, wbit = 0) {\n \t\tCLST lcn_wnd = iw * wbits;\n \t\tstruct buffer_head *bh;\n \n",
+    "patch_modified_files": [
+        "fs/ntfs3/bitmap.c"
+    ]
+}

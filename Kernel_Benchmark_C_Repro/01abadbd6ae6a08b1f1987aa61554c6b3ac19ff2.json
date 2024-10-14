@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in extAlloc",
+    "display-title": "UBSAN: shift-out-of-bounds in extAlloc",
+    "id": "01abadbd6ae6a08b1f1987aa61554c6b3ac19ff2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "jfs: validate max amount of blocks before allocation.",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0225e10972fa809728b8d4c1bd2772b3ec3fdb57",
+            "hash": "0225e10972fa809728b8d4c1bd2772b3ec3fdb57",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000106e2405ff4122ba@google.com/T/",
+        "https://lore.kernel.org/all/0000000000009a2a1b05fa4eef8f@google.com/T/",
+        "https://lore.kernel.org/all/000000000000a6505105e9916037@google.com/T/",
+        "https://lore.kernel.org/all/000000000000a739a605f7dfc08d@google.com/T/",
+        "https://lore.kernel.org/all/000000000000f15a5105fce4daea@google.com/T/",
+        "https://lore.kernel.org/all/20230722142401.71257-1-halip0503@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "UBSAN: shift-out-of-bounds in extAlloc",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14735cdf080000",
+            "c-reproducer": "/text?tag=ReproC&x=15dfcdc4880000",
+            "kernel-config": "/text?tag=KernelConfig&x=122d7bd4fc8e0ecb",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=105a36f3694edc680f3e9318cdd3c03722e42554",
+            "kernel-source-commit": "105a36f3694edc680f3e9318cdd3c03722e42554",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0042f2b4c00ce1ceeaa44a0147909fe3a6f86c5c",
+            "syzkaller-commit": "0042f2b4c00ce1ceeaa44a0147909fe3a6f86c5c",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15e3e404880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "extBalloc",
+            "fs/jfs/jfs_extent.c"
+        ]
+    ],
+    "patch_commit_date": "2023-08-19T17:32:16+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "jfs"
+    ],
+    "parent_of_fix_commit": "87098a0d9e42cba2ec49b56dfbf1e4944a6e7bb6",
+    "patch": "diff --git a/fs/jfs/jfs_extent.c b/fs/jfs/jfs_extent.c\nindex adaa9ad50d4c..63d21822d309 100644\n--- a/fs/jfs/jfs_extent.c\n+++ b/fs/jfs/jfs_extent.c\n@@ -311,6 +311,11 @@ extBalloc(struct inode *ip, s64 hint, s64 * nblocks, s64 * blkno)\n \t * blocks in the map. in that case, we'll start off with the\n \t * maximum free.\n \t */\n+\n+\t/* give up if no space left */\n+\tif (bmp->db_maxfreebud == -1)\n+\t\treturn -ENOSPC;\n+\n \tmax = (s64) 1 << bmp->db_maxfreebud;\n \tif (*nblocks >= max && *nblocks > nbperpage)\n \t\tnb = nblks = (max > nbperpage) ? max : nbperpage;\n",
+    "patch_modified_files": [
+        "fs/jfs/jfs_extent.c"
+    ]
+}

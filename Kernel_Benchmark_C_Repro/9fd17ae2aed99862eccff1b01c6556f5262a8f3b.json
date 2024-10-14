@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "possible deadlock in btrfs_search_slot",
+    "display-title": "possible deadlock in btrfs_search_slot",
+    "id": "9fd17ae2aed99862eccff1b01c6556f5262a8f3b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "btrfs: free btrfs_path before copying root refs to userspace",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b740d806166979488e798e41743aaec051f2443f",
+            "hash": "b740d806166979488e798e41743aaec051f2443f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000716a8005fce4e592@google.com/T/",
+        "https://lore.kernel.org/all/000000000000a015e205ff41f54a@google.com/T/",
+        "https://lore.kernel.org/all/000000000000c122fa05fa4e9c55@google.com/T/",
+        "https://lore.kernel.org/all/000000000000fd151d05ece59b42@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "possible deadlock in btrfs_search_slot",
+            "syz-reproducer": "/text?tag=ReproSyz&x=124fc309880000",
+            "c-reproducer": "/text?tag=ReproC&x=126dfde5880000",
+            "kernel-config": "/text?tag=KernelConfig&x=8d01b6e3197974dd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=eb7081409f94a9a8608593d0fb63a1aa3d6f95d8",
+            "kernel-source-commit": "eb7081409f94a9a8608593d0fb63a1aa3d6f95d8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/52fdf57a86cb556640e5ebcc234bc826ff249546",
+            "syzkaller-commit": "52fdf57a86cb556640e5ebcc234bc826ff249546",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=136aabdd880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "btrfs_ioctl_get_subvol_rootref",
+            "fs/btrfs/ioctl.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-07T16:44:51+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "btrfs"
+    ],
+    "parent_of_fix_commit": "bdcdd86ca94b5e9faa18d6f4d3dda660ac5c887e",
+    "patch": "diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c\nindex d5dd8bed1488..89b8d14cb68c 100644\n--- a/fs/btrfs/ioctl.c\n+++ b/fs/btrfs/ioctl.c\n@@ -3194,6 +3194,8 @@ static int btrfs_ioctl_get_subvol_rootref(struct btrfs_root *root,\n \t}\n \n out:\n+\tbtrfs_free_path(path);\n+\n \tif (!ret || ret == -EOVERFLOW) {\n \t\trootrefs->num_items = found;\n \t\t/* update min_treeid for next search */\n@@ -3205,7 +3207,6 @@ static int btrfs_ioctl_get_subvol_rootref(struct btrfs_root *root,\n \t}\n \n \tkfree(rootrefs);\n-\tbtrfs_free_path(path);\n \n \treturn ret;\n }\n",
+    "patch_modified_files": [
+        "fs/btrfs/ioctl.c"
+    ]
+}

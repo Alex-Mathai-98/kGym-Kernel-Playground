@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in sctp_getsockopt",
+    "display-title": "KASAN: slab-out-of-bounds Read in sctp_getsockopt",
+    "id": "ec324fb855382395411b32d87a6eafd5da721ecc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "sctp: check policy more carefully when getting pr status",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=713358369382cebf92f6e98ce2005f94e7344931",
+            "hash": "713358369382cebf92f6e98ce2005f94e7344931",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e80c930579245751@google.com/T/",
+        "https://lore.kernel.org/all/20181027195853.30243-1-tomasbortoli@gmail.com/T/",
+        "https://lore.kernel.org/all/20181027202026.32157-1-tomasbortoli@gmail.com/T/",
+        "https://lore.kernel.org/all/20181027205320.14975-1-tomasbortoli@gmail.com/T/",
+        "https://lore.kernel.org/all/20181102182839.725385066@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/cadb9859cc2015b176433d4ac7bb1bc228f97574.1540825991.git.lucien.xin@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16b3ea33400000",
+            "c-reproducer": "/text?tag=ReproC&x=17f9f1bd400000",
+            "kernel-config": "/text?tag=KernelConfig&x=2dd8629d56664133",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=bd6bf7c10484f026505814b690104cdef27ed460",
+            "kernel-source-commit": "bd6bf7c10484f026505814b690104cdef27ed460",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/a8292de95851bd79cba2006dd032e28142f06c25",
+            "syzkaller-commit": "a8292de95851bd79cba2006dd032e28142f06c25",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11456999400000"
+        }
+    ],
+    "subsystems": [
+        "sctp"
+    ],
+    "parent_of_fix_commit": "df132eff463873e14e019a07f387b4d577d6d1f9",
+    "patch": "diff --git a/net/sctp/socket.c b/net/sctp/socket.c\nindex fc0386e8ff23..739f3e50120d 100644\n--- a/net/sctp/socket.c\n+++ b/net/sctp/socket.c\n@@ -7083,14 +7083,15 @@ static int sctp_getsockopt_pr_assocstatus(struct sock *sk, int len,\n \t}\n \n \tpolicy = params.sprstat_policy;\n-\tif (!policy || (policy & ~(SCTP_PR_SCTP_MASK | SCTP_PR_SCTP_ALL)))\n+\tif (!policy || (policy & ~(SCTP_PR_SCTP_MASK | SCTP_PR_SCTP_ALL)) ||\n+\t    ((policy & SCTP_PR_SCTP_ALL) && (policy & SCTP_PR_SCTP_MASK)))\n \t\tgoto out;\n \n \tasoc = sctp_id2assoc(sk, params.sprstat_assoc_id);\n \tif (!asoc)\n \t\tgoto out;\n \n-\tif (policy & SCTP_PR_SCTP_ALL) {\n+\tif (policy == SCTP_PR_SCTP_ALL) {\n \t\tparams.sprstat_abandoned_unsent = 0;\n \t\tparams.sprstat_abandoned_sent = 0;\n \t\tfor (policy = 0; policy <= SCTP_PR_INDEX(MAX); policy++) {\n@@ -7142,7 +7143,8 @@ static int sctp_getsockopt_pr_streamstatus(struct sock *sk, int len,\n \t}\n \n \tpolicy = params.sprstat_policy;\n-\tif (!policy || (policy & ~(SCTP_PR_SCTP_MASK | SCTP_PR_SCTP_ALL)))\n+\tif (!policy || (policy & ~(SCTP_PR_SCTP_MASK | SCTP_PR_SCTP_ALL)) ||\n+\t    ((policy & SCTP_PR_SCTP_ALL) && (policy & SCTP_PR_SCTP_MASK)))\n \t\tgoto out;\n \n \tasoc = sctp_id2assoc(sk, params.sprstat_assoc_id);\n",
+    "patch_modified_files": [
+        "net/sctp/socket.c"
+    ]
+}

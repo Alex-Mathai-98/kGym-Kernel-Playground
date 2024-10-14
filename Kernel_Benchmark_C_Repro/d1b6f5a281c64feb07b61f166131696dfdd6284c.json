@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "WARNING in udf_free_inode",
+    "display-title": "WARNING in udf_free_inode",
+    "id": "d1b6f5a281c64feb07b61f166131696dfdd6284c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "udf: Detect system inodes linked into directory hierarchy",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=85a37983ec69cc9fcd188bc37c4de15ee326355a",
+            "hash": "85a37983ec69cc9fcd188bc37c4de15ee326355a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f53bd605ea58b20d@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in udf_free_inode",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14797f98880000",
+            "c-reproducer": "/text?tag=ReproC&x=16c19d82880000",
+            "kernel-config": "/text?tag=KernelConfig&x=9df203be43a870b5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=2bca25eaeba6190efbfcb38ed169bd7ee43b5aaf",
+            "kernel-source-commit": "2bca25eaeba6190efbfcb38ed169bd7ee43b5aaf",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2c6543adc4c5a9108455d1e59b0df0d4afc05c99",
+            "syzkaller-commit": "2c6543adc4c5a9108455d1e59b0df0d4afc05c99",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1440ddec880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__udf_iget",
+            "fs/udf/inode.c"
+        ]
+    ],
+    "patch_commit_date": "2023-01-03T09:03:35+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "udf"
+    ],
+    "parent_of_fix_commit": "fc8033a34a3ca7d23353e645e6dde5d364ac5f12",
+    "patch": "diff --git a/fs/udf/inode.c b/fs/udf/inode.c\nindex 9ee269d3d546..96873fa2f683 100644\n--- a/fs/udf/inode.c\n+++ b/fs/udf/inode.c\n@@ -1813,8 +1813,13 @@ struct inode *__udf_iget(struct super_block *sb, struct kernel_lb_addr *ino,\n \tif (!inode)\n \t\treturn ERR_PTR(-ENOMEM);\n \n-\tif (!(inode->i_state & I_NEW))\n+\tif (!(inode->i_state & I_NEW)) {\n+\t\tif (UDF_I(inode)->i_hidden != hidden_inode) {\n+\t\t\tiput(inode);\n+\t\t\treturn ERR_PTR(-EFSCORRUPTED);\n+\t\t}\n \t\treturn inode;\n+\t}\n \n \tmemcpy(&UDF_I(inode)->i_location, ino, sizeof(struct kernel_lb_addr));\n \terr = udf_read_inode(inode, hidden_inode);\n",
+    "patch_modified_files": [
+        "fs/udf/inode.c"
+    ]
+}

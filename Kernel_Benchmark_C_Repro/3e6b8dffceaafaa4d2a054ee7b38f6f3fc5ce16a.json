@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "general protection fault in end_page_writeback",
+    "display-title": "general protection fault in end_page_writeback",
+    "id": "3e6b8dffceaafaa4d2a054ee7b38f6f3fc5ce16a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: fix nilfs_sufile_mark_dirty() not set segment usage as dirty",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=512c5ca01a3610ab14ff6309db363de51f1c13a6",
+            "hash": "512c5ca01a3610ab14ff6309db363de51f1c13a6",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000002f9ede05eb40cfbd@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in end_page_writeback",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11ad8cc2880000",
+            "c-reproducer": "/text?tag=ReproC&x=106b5906880000",
+            "kernel-config": "/text?tag=KernelConfig&x=df75278aabf0681a",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=55be6084c8e0e0ada9278c2ab60b7a584378efda",
+            "kernel-source-commit": "55be6084c8e0e0ada9278c2ab60b7a584378efda",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/67cb024cd1a3c95e311263a5c95e957f9abfd8ca",
+            "syzkaller-commit": "67cb024cd1a3c95e311263a5c95e957f9abfd8ca",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=108e9506880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nilfs_sufile_do_free",
+            "fs/nilfs2/sufile.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-18T06:33:04+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "mm",
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "81a70c21d9170de67a45843bdd627f4cce9c4215",
+    "patch": "diff --git a/fs/nilfs2/sufile.c b/fs/nilfs2/sufile.c\nindex 77ff8e95421f..dc359b56fdfa 100644\n--- a/fs/nilfs2/sufile.c\n+++ b/fs/nilfs2/sufile.c\n@@ -495,14 +495,22 @@ void nilfs_sufile_do_free(struct inode *sufile, __u64 segnum,\n int nilfs_sufile_mark_dirty(struct inode *sufile, __u64 segnum)\n {\n \tstruct buffer_head *bh;\n+\tvoid *kaddr;\n+\tstruct nilfs_segment_usage *su;\n \tint ret;\n \n+\tdown_write(&NILFS_MDT(sufile)->mi_sem);\n \tret = nilfs_sufile_get_segment_usage_block(sufile, segnum, 0, &bh);\n \tif (!ret) {\n \t\tmark_buffer_dirty(bh);\n \t\tnilfs_mdt_mark_dirty(sufile);\n+\t\tkaddr = kmap_atomic(bh->b_page);\n+\t\tsu = nilfs_sufile_block_get_segment_usage(sufile, segnum, bh, kaddr);\n+\t\tnilfs_segment_usage_set_dirty(su);\n+\t\tkunmap_atomic(kaddr);\n \t\tbrelse(bh);\n \t}\n+\tup_write(&NILFS_MDT(sufile)->mi_sem);\n \treturn ret;\n }\n \n",
+    "patch_modified_files": [
+        "fs/nilfs2/sufile.c"
+    ]
+}

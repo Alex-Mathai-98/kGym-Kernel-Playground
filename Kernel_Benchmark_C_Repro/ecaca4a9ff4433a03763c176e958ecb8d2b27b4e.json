@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "memory leak in __memcg_init_list_lru_node",
+    "display-title": "memory leak in __memcg_init_list_lru_node",
+    "id": "ecaca4a9ff4433a03763c176e958ecb8d2b27b4e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm/list_lru.c: fix memory leak in __memcg_init_list_lru_node",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3510955b327176fd4cbab5baa75b449f077722a2",
+            "hash": "3510955b327176fd4cbab5baa75b449f077722a2",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/20190528043202.99980-1-shakeelb@google.com/T/",
+        "https://lore.kernel.org/all/20190617210745.104187490@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190617210752.799453599@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190617210759.929316339@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190620174337.538228162@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190620174351.964339809@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=161c9616a00000",
+            "c-reproducer": "/text?tag=ReproC&x=17d1b926a00000",
+            "kernel-config": "/text?tag=KernelConfig&x=61dd9e15a761691d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=35efb51eee2241a970dcf70ed950f9db7e5351f7",
+            "kernel-source-commit": "35efb51eee2241a970dcf70ed950f9db7e5351f7",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/85c573157db1baae51178263fe3289c8329e6dc2",
+            "syzkaller-commit": "85c573157db1baae51178263fe3289c8329e6dc2",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10e8ae9aa00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__memcg_init_list_lru_node",
+            "mm/list_lru.c"
+        ]
+    ],
+    "patch_commit_date": "2019-06-13T22:55:49+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "815744d75152078cde5391fc1e3c2d4424323fb6",
+    "patch": "diff --git a/mm/list_lru.c b/mm/list_lru.c\nindex e4709fdaa8e6..927d85be32f6 100644\n--- a/mm/list_lru.c\n+++ b/mm/list_lru.c\n@@ -354,7 +354,7 @@ static int __memcg_init_list_lru_node(struct list_lru_memcg *memcg_lrus,\n \t}\n \treturn 0;\n fail:\n-\t__memcg_destroy_list_lru_node(memcg_lrus, begin, i - 1);\n+\t__memcg_destroy_list_lru_node(memcg_lrus, begin, i);\n \treturn -ENOMEM;\n }\n \n",
+    "patch_modified_files": [
+        "mm/list_lru.c"
+    ]
+}

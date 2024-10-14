@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "WARNING in inc_nlink",
+    "display-title": "WARNING in inc_nlink",
+    "id": "e5469128a20e1e23153b6e3259e41c0ef5f73a6e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/minix: don't allow getting deleted inodes",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=facb03dddec04e4aac1bb2139accdceb04deb1f3",
+            "hash": "facb03dddec04e4aac1bb2139accdceb04deb1f3",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000519c8405a229cbc2@google.com/T/",
+        "https://lore.kernel.org/all/20200628060846.682158-1-ebiggers@kernel.org/T/",
+        "https://lore.kernel.org/all/20200812013527.F8o9sw3XQ%akpm@linux-foundation.org/T/",
+        "https://lore.kernel.org/all/20200817143733.692105228@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200817143755.807583758@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200817143819.579311991@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200817143833.737102804@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200820091602.251285210@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200820091607.532711107@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200820092125.688850368@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13d33183e00000",
+            "c-reproducer": "/text?tag=ReproC&x=1076297be00000",
+            "kernel-config": "/text?tag=KernelConfig&x=27392dd2975fd692",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e595dd94515ed6bc5ba38fce0f9598db8c0ee9a9",
+            "kernel-source-commit": "e595dd94515ed6bc5ba38fce0f9598db8c0ee9a9",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/05736b290dd5af17adbb0fb5ea67405a0167a7c8",
+            "syzkaller-commit": "05736b290dd5af17adbb0fb5ea67405a0167a7c8",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=120ae59de00000"
+        }
+    ],
+    "subsystems": [
+        "origin:lts-only",
+        "fs",
+        "jfs",
+        "origin:upstream"
+    ],
+    "parent_of_fix_commit": "da27e0a0e5f655f0d58d4e153c3182bb2b290f64",
+    "patch": "diff --git a/fs/minix/inode.c b/fs/minix/inode.c\nindex 7cb5fd38eb14..2bca95abe8f4 100644\n--- a/fs/minix/inode.c\n+++ b/fs/minix/inode.c\n@@ -468,6 +468,13 @@ static struct inode *V1_minix_iget(struct inode *inode)\n \t\tiget_failed(inode);\n \t\treturn ERR_PTR(-EIO);\n \t}\n+\tif (raw_inode->i_nlinks == 0) {\n+\t\tprintk(\"MINIX-fs: deleted inode referenced: %lu\\n\",\n+\t\t       inode->i_ino);\n+\t\tbrelse(bh);\n+\t\tiget_failed(inode);\n+\t\treturn ERR_PTR(-ESTALE);\n+\t}\n \tinode->i_mode = raw_inode->i_mode;\n \ti_uid_write(inode, raw_inode->i_uid);\n \ti_gid_write(inode, raw_inode->i_gid);\n@@ -501,6 +508,13 @@ static struct inode *V2_minix_iget(struct inode *inode)\n \t\tiget_failed(inode);\n \t\treturn ERR_PTR(-EIO);\n \t}\n+\tif (raw_inode->i_nlinks == 0) {\n+\t\tprintk(\"MINIX-fs: deleted inode referenced: %lu\\n\",\n+\t\t       inode->i_ino);\n+\t\tbrelse(bh);\n+\t\tiget_failed(inode);\n+\t\treturn ERR_PTR(-ESTALE);\n+\t}\n \tinode->i_mode = raw_inode->i_mode;\n \ti_uid_write(inode, raw_inode->i_uid);\n \ti_gid_write(inode, raw_inode->i_gid);\n",
+    "patch_modified_files": [
+        "fs/minix/inode.c"
+    ]
+}

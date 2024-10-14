@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "memory leak in kobject_set_name_vargs",
+    "display-title": "memory leak in kobject_set_name_vargs (4)",
+    "id": "ffa386c1cdd38dc60c8d3a1cae5409420adecd6e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: fix memory leak in nilfs_sysfs_delete_device_group",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8fd0c1b0647a6bda4067ee0cd61e8395954b6f28",
+            "hash": "8fd0c1b0647a6bda4067ee0cd61e8395954b6f28",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000006f4d3c05b48c263d@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=172afce2500000",
+            "c-reproducer": "/text?tag=ReproC&x=12c8a9d6500000",
+            "kernel-config": "/text?tag=KernelConfig&x=dc8ee843c1fc6693",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c2e7554e1b85935d962127efa3c2a76483b0b3b6",
+            "kernel-source-commit": "c2e7554e1b85935d962127efa3c2a76483b0b3b6",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0767f13fbd87c99aea7893eb64199b76be42cd61",
+            "syzkaller-commit": "0767f13fbd87c99aea7893eb64199b76be42cd61",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=163197be500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nilfs_sysfs_delete_device_group",
+            "fs/nilfs2/sysfs.c"
+        ]
+    ],
+    "patch_commit_date": "2021-06-25T01:39:33+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "a7a69d8ba88d8dcee7ef00e91d413a4bd003a814",
+    "patch": "diff --git a/fs/nilfs2/sysfs.c b/fs/nilfs2/sysfs.c\nindex 303d71430bdd..9c6c0e2e5880 100644\n--- a/fs/nilfs2/sysfs.c\n+++ b/fs/nilfs2/sysfs.c\n@@ -1053,6 +1053,7 @@ void nilfs_sysfs_delete_device_group(struct the_nilfs *nilfs)\n \tnilfs_sysfs_delete_superblock_group(nilfs);\n \tnilfs_sysfs_delete_segctor_group(nilfs);\n \tkobject_del(&nilfs->ns_dev_kobj);\n+\tkobject_put(&nilfs->ns_dev_kobj);\n \tkfree(nilfs->ns_dev_subgroups);\n }\n \n",
+    "patch_modified_files": [
+        "fs/nilfs2/sysfs.c"
+    ]
+}

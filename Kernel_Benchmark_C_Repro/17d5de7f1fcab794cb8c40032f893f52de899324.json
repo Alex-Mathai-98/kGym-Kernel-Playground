@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "WARNING in __might_sleep",
+    "display-title": "WARNING in __might_sleep (2)",
+    "id": "17d5de7f1fcab794cb8c40032f893f52de899324",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "tty/n_hdlc: fix __might_sleep warning",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fc01d8c61ce02c034e67378cd3e645734bc18c8c",
+            "hash": "fc01d8c61ce02c034e67378cd3e645734bc18c8c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000449587057e1e6f8b@google.com/T/",
+        "https://lore.kernel.org/all/20190129113131.751891514@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190129113139.826927690@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190129113159.567154026@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190129113207.477505932@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190204103557.903263774@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190204103610.583715954@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/49b3b189-a51f-6a97-0e1f-bc3f2c305299@I-love.SAKURA.ne.jp/T/",
+        "https://lore.kernel.org/all/lsq.1556377988.384060557@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1617cd8b400000",
+            "c-reproducer": "/text?tag=ReproC&x=11f5089b400000",
+            "kernel-config": "/text?tag=KernelConfig&x=7d581260bae0899a",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=8fe28cb58bcb235034b64cbbb7550a8a43fd88be",
+            "kernel-source-commit": "8fe28cb58bcb235034b64cbbb7550a8a43fd88be",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8a41a0ad8ed91a6c7a65663b1bacaf6d79cde558",
+            "syzkaller-commit": "8a41a0ad8ed91a6c7a65663b1bacaf6d79cde558",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=133952dd400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "n_hdlc_tty_read",
+            "drivers/tty/n_hdlc.c"
+        ]
+    ],
+    "patch_commit_date": "2019-01-01T20:28:53+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "serial"
+    ],
+    "parent_of_fix_commit": "352c4cf40c4a7d439fa5d30aa2160f54b394da82",
+    "patch": "diff --git a/drivers/tty/n_hdlc.c b/drivers/tty/n_hdlc.c\nindex 4164414d4c64..8bdf42bc8fc8 100644\n--- a/drivers/tty/n_hdlc.c\n+++ b/drivers/tty/n_hdlc.c\n@@ -597,6 +597,7 @@ static ssize_t n_hdlc_tty_read(struct tty_struct *tty, struct file *file,\n \t\t\t\t/* too large for caller's buffer */\n \t\t\t\tret = -EOVERFLOW;\n \t\t\t} else {\n+\t\t\t\t__set_current_state(TASK_RUNNING);\n \t\t\t\tif (copy_to_user(buf, rbuf->buf, rbuf->count))\n \t\t\t\t\tret = -EFAULT;\n \t\t\t\telse\n",
+    "patch_modified_files": [
+        "drivers/tty/n_hdlc.c"
+    ]
+}

@@ -1,0 +1,79 @@
+{
+    "version": 1,
+    "title": "WARNING in rds_rdma_extra_size",
+    "display-title": "WARNING in rds_rdma_extra_size",
+    "id": "d524c1aac21f8ea2759b6314c2e48bfa230c38b0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/rds: restrict iovecs length for RDS_CMSG_RDMA_ARGS",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a11148e6fcce2ae53f47f0a442d098d860b4f7db",
+            "hash": "a11148e6fcce2ae53f47f0a442d098d860b4f7db",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "bpf: fix bpf_jit_limit knob for PAGE_SIZE >= 64K",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fdadd04931c2d7cd294dc5b2b342863f94be53a3",
+        "hash": "fdadd04931c2d7cd294dc5b2b342863f94be53a3",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000030bc3305b87debd4@google.com/T/",
+        "https://lore.kernel.org/all/20210201203233.1324704-1-snovitoll@gmail.com/T/",
+        "https://lore.kernel.org/all/20210215152715.401453874@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210215152719.459796636@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210222121019.925481519@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1351c11f500000",
+            "c-reproducer": "/text?tag=ReproC&x=1710cb50d00000",
+            "kernel-config": "/text?tag=KernelConfig&x=8aa30b9da402d224",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=6207214a70bfaec7b41f39502353fd3ca89df68c",
+            "kernel-source-commit": "6207214a70bfaec7b41f39502353fd3ca89df68c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/b1c228e1773559f05fa98950902ab025d6ab946e",
+            "syzkaller-commit": "b1c228e1773559f05fa98950902ab025d6ab946e",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12e0532b500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "rds_rdma_extra_size",
+            "net/rds/rdma.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "bpf_get_kallsym",
+            "kernel/bpf/core.c"
+        ],
+        [
+            "bpf_run_sk_reuseport",
+            "include/linux/filter.h"
+        ],
+        [
+            "bpf_prog_kallsyms_del_all",
+            "kernel/bpf/core.c"
+        ],
+        [
+            "proc_dointvec_minmax_bpf_restricted",
+            "net/core/sysctl_net_core.c"
+        ]
+    ],
+    "patch_commit_date": "2021-02-01T20:32:33+00:00",
+    "cause_commit_date": "2018-12-11T11:14:12+00:00",
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "43f4a20a1266d393840ce010f547486d14cc0071",
+    "patch": "diff --git a/net/rds/rdma.c b/net/rds/rdma.c\nindex 1d0afb1dd77b..6f1a50d50d06 100644\n--- a/net/rds/rdma.c\n+++ b/net/rds/rdma.c\n@@ -565,6 +565,9 @@ int rds_rdma_extra_size(struct rds_rdma_args *args,\n \tif (args->nr_local == 0)\n \t\treturn -EINVAL;\n \n+\tif (args->nr_local > UIO_MAXIOV)\n+\t\treturn -EMSGSIZE;\n+\n \tiov->iov = kcalloc(args->nr_local,\n \t\t\t   sizeof(struct rds_iovec),\n \t\t\t   GFP_KERNEL);\n",
+    "patch_modified_files": [
+        "net/rds/rdma.c"
+    ]
+}

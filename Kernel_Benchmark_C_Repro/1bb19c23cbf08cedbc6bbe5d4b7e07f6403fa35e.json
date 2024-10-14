@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "WARNING: suspicious RCU usage in mas_start",
+    "display-title": "WARNING: suspicious RCU usage in mas_start",
+    "id": "1bb19c23cbf08cedbc6bbe5d4b7e07f6403fa35e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm/ksm: fix race with VMA iteration and mm_struct teardown",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6db504ce55bdbc575723938fc480713c9183f6a2",
+            "hash": "6db504ce55bdbc575723938fc480713c9183f6a2",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003f3d9a05f56fcac5@google.com/T/",
+        "https://lore.kernel.org/all/000000000000afecda05f8836cba@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING: suspicious RCU usage in mas_start",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12cfaf1cc80000",
+            "c-reproducer": "/text?tag=ReproC&x=149edbf0c80000",
+            "kernel-config": "/text?tag=KernelConfig&x=dd442ddf29eaca0c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f3a2439f20d918930cc4ae8f76fe1c1afd26958f",
+            "kernel-source-commit": "f3a2439f20d918930cc4ae8f76fe1c1afd26958f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e792ae78c524597ed9bdc16cf10503e2c0079be5",
+            "syzkaller-commit": "e792ae78c524597ed9bdc16cf10503e2c0079be5",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=136229a8c80000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "unmerge_and_remove_all_rmap_items",
+            "mm/ksm.c"
+        ]
+    ],
+    "patch_commit_date": "2023-03-08T22:03:10+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "kernfs"
+    ],
+    "parent_of_fix_commit": "d035230ec9937a9138921d2a0eeb99496ea7eac0",
+    "patch": "diff --git a/mm/ksm.c b/mm/ksm.c\nindex ad591b779d53..2b8d30068cbb 100644\n--- a/mm/ksm.c\n+++ b/mm/ksm.c\n@@ -988,9 +988,15 @@ static int unmerge_and_remove_all_rmap_items(void)\n \n \t\tmm = mm_slot->slot.mm;\n \t\tmmap_read_lock(mm);\n+\n+\t\t/*\n+\t\t * Exit right away if mm is exiting to avoid lockdep issue in\n+\t\t * the maple tree\n+\t\t */\n+\t\tif (ksm_test_exit(mm))\n+\t\t\tgoto mm_exiting;\n+\n \t\tfor_each_vma(vmi, vma) {\n-\t\t\tif (ksm_test_exit(mm))\n-\t\t\t\tbreak;\n \t\t\tif (!(vma->vm_flags & VM_MERGEABLE) || !vma->anon_vma)\n \t\t\t\tcontinue;\n \t\t\terr = unmerge_ksm_pages(vma,\n@@ -999,6 +1005,7 @@ static int unmerge_and_remove_all_rmap_items(void)\n \t\t\t\tgoto error;\n \t\t}\n \n+mm_exiting:\n \t\tremove_trailing_rmap_items(&mm_slot->rmap_list);\n \t\tmmap_read_unlock(mm);\n \n",
+    "patch_modified_files": [
+        "mm/ksm.c"
+    ]
+}

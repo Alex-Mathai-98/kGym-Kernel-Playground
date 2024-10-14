@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "title": "memory leak in keyctl_watch_key",
+    "display-title": "memory leak in keyctl_watch_key",
+    "id": "7d3c28ba3d4bf4b26e89ed1f1ca146e0223a2d36",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "watch_queue: Actually free the watch",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3d8dcf278b1ee1eff1e90be848fa2237db4c07a7",
+            "hash": "3d8dcf278b1ee1eff1e90be848fa2237db4c07a7",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000003c424505daaed1b7@google.com/T/",
+        "https://lore.kernel.org/all/164786764630.1025645.12332376420230352947.stgit@warthog.procyon.org.uk/T/",
+        "https://lore.kernel.org/all/20220405070258.802373272@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220405070339.801210740@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220405070354.155796697@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220405070407.513532867@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in keyctl_watch_key",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1786c3b5700000",
+            "c-reproducer": "/text?tag=ReproC&x=171ca6b1700000",
+            "kernel-config": "/text?tag=KernelConfig&x=6c80259f3b3fdf91",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=56e337f2cf1326323844927a04e9dbce9a244835",
+            "kernel-source-commit": "56e337f2cf1326323844927a04e9dbce9a244835",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/dfa9a8ed6b12b102fe3625ca8fc786aa86d54a5a",
+            "syzkaller-commit": "dfa9a8ed6b12b102fe3625ca8fc786aa86d54a5a",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16a7dfc3700000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "free_watch",
+            "kernel/watch_queue.c"
+        ]
+    ],
+    "patch_commit_date": "2022-03-21T11:18:54+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "keyrings",
+        "lsm"
+    ],
+    "parent_of_fix_commit": "a635415a064e77bcfbf43da413fd9dfe0bbed9cb",
+    "patch": "diff --git a/kernel/watch_queue.c b/kernel/watch_queue.c\nindex 5848d4795816..3990e4df3d7b 100644\n--- a/kernel/watch_queue.c\n+++ b/kernel/watch_queue.c\n@@ -395,6 +395,7 @@ static void free_watch(struct rcu_head *rcu)\n \tput_watch_queue(rcu_access_pointer(watch->queue));\n \tatomic_dec(&watch->cred->user->nr_watches);\n \tput_cred(watch->cred);\n+\tkfree(watch);\n }\n \n static void __put_watch(struct kref *kref)\n",
+    "patch_modified_files": [
+        "kernel/watch_queue.c"
+    ]
+}

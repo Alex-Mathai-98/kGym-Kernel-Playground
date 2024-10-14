@@ -1,0 +1,46 @@
+{
+    "version": 1,
+    "title": "memory leak in xskq_create",
+    "display-title": "memory leak in xskq_create",
+    "id": "fea808dfe3c6dfdd6ba9778becbffe0b14e91294",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "xsk: Fix memory leak for failed bind",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8bee683384087a6275c9183a483435225f7bb209",
+            "hash": "8bee683384087a6275c9183a483435225f7bb209",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000002aca2e05b659af04@google.com/T/",
+        "https://lore.kernel.org/all/20201214085127.3960-1-magnus.karlsson@gmail.com/T/",
+        "https://lore.kernel.org/all/20210111130048.499958175@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1180a237500000",
+            "c-reproducer": "/text?tag=ReproC&x=114067cf500000",
+            "kernel-config": "/text?tag=KernelConfig&x=4305fa9ea70c7a9f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a68a0262abdaa251e12c53715f48e698a18ef402",
+            "kernel-source-commit": "a68a0262abdaa251e12c53715f48e698a18ef402",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c090b4da255257841173fb4eb18c19d69b293180",
+            "syzkaller-commit": "c090b4da255257841173fb4eb18c19d69b293180",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1672cb9b500000"
+        }
+    ],
+    "subsystems": [
+        "bpf",
+        "net"
+    ],
+    "parent_of_fix_commit": "1a3449c19407a28f7019a887cdf0d6ba2444751a",
+    "patch": "diff --git a/net/xdp/xsk.c b/net/xdp/xsk.c\nindex ac4a317038f1..c6532d77fde7 100644\n--- a/net/xdp/xsk.c\n+++ b/net/xdp/xsk.c\n@@ -878,6 +878,10 @@ static int xsk_bind(struct socket *sock, struct sockaddr *addr, int addr_len)\n \t\t}\n \t}\n \n+\t/* FQ and CQ are now owned by the buffer pool and cleaned up with it. */\n+\txs->fq_tmp = NULL;\n+\txs->cq_tmp = NULL;\n+\n \txs->dev = dev;\n \txs->zc = xs->umem->zc;\n \txs->queue_id = qid;\ndiff --git a/net/xdp/xsk_buff_pool.c b/net/xdp/xsk_buff_pool.c\nindex 67a4494d63b6..818b75060922 100644\n--- a/net/xdp/xsk_buff_pool.c\n+++ b/net/xdp/xsk_buff_pool.c\n@@ -75,8 +75,6 @@ struct xsk_buff_pool *xp_create_and_assign_umem(struct xdp_sock *xs,\n \n \tpool->fq = xs->fq_tmp;\n \tpool->cq = xs->cq_tmp;\n-\txs->fq_tmp = NULL;\n-\txs->cq_tmp = NULL;\n \n \tfor (i = 0; i < pool->free_heads_cnt; i++) {\n \t\txskb = &pool->heads[i];\n",
+    "patch_modified_files": [
+        "net/xdp/xsk.c",
+        "net/xdp/xsk_buff_pool.c"
+    ]
+}

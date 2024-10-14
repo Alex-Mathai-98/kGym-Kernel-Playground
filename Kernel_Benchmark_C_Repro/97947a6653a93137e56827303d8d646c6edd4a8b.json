@@ -1,0 +1,39 @@
+{
+    "version": 1,
+    "title": "WARNING in ipvlan_queue_xmit",
+    "display-title": "WARNING in ipvlan_queue_xmit",
+    "id": "97947a6653a93137e56827303d8d646c6edd4a8b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ipvlan: Fix out-of-bound bugs caused by unset skb->mac_header",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=81225b2ea161af48e093f58e8dfee6d705b16af4",
+            "hash": "81225b2ea161af48e093f58e8dfee6d705b16af4",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in ipvlan_queue_xmit",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11ccd7a3080000",
+            "c-reproducer": "/text?tag=ReproC&x=173afd95080000",
+            "kernel-config": "/text?tag=KernelConfig&x=892a57667b7af6cf",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b90cb1053190353cc30f0fef0ef1f378ccc063c5",
+            "kernel-source-commit": "b90cb1053190353cc30f0fef0ef1f378ccc063c5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/5b44472de8e0d3937519a576f390ac9e4f3ac777",
+            "syzkaller-commit": "5b44472de8e0d3937519a576f390ac9e4f3ac777",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12bbfe45080000"
+        }
+    ],
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "df2a60173a61a5acf44fca2cfb2d8d9f5b810a3f",
+    "patch": "diff --git a/drivers/net/ipvlan/ipvlan_core.c b/drivers/net/ipvlan/ipvlan_core.c\nindex dfeb5b392e64..bb1c298c1e78 100644\n--- a/drivers/net/ipvlan/ipvlan_core.c\n+++ b/drivers/net/ipvlan/ipvlan_core.c\n@@ -495,7 +495,6 @@ static int ipvlan_process_v6_outbound(struct sk_buff *skb)\n \n static int ipvlan_process_outbound(struct sk_buff *skb)\n {\n-\tstruct ethhdr *ethh = eth_hdr(skb);\n \tint ret = NET_XMIT_DROP;\n \n \t/* The ipvlan is a pseudo-L2 device, so the packets that we receive\n@@ -505,6 +504,8 @@ static int ipvlan_process_outbound(struct sk_buff *skb)\n \tif (skb_mac_header_was_set(skb)) {\n \t\t/* In this mode we dont care about\n \t\t * multicast and broadcast traffic */\n+\t\tstruct ethhdr *ethh = eth_hdr(skb);\n+\n \t\tif (is_multicast_ether_addr(ethh->h_dest)) {\n \t\t\tpr_debug_ratelimited(\n \t\t\t\t\"Dropped {multi|broad}cast of type=[%x]\\n\",\n@@ -589,7 +590,7 @@ static int ipvlan_xmit_mode_l3(struct sk_buff *skb, struct net_device *dev)\n static int ipvlan_xmit_mode_l2(struct sk_buff *skb, struct net_device *dev)\n {\n \tconst struct ipvl_dev *ipvlan = netdev_priv(dev);\n-\tstruct ethhdr *eth = eth_hdr(skb);\n+\tstruct ethhdr *eth = skb_eth_hdr(skb);\n \tstruct ipvl_addr *addr;\n \tvoid *lyr3h;\n \tint addr_type;\n@@ -619,6 +620,7 @@ static int ipvlan_xmit_mode_l2(struct sk_buff *skb, struct net_device *dev)\n \t\treturn dev_forward_skb(ipvlan->phy_dev, skb);\n \n \t} else if (is_multicast_ether_addr(eth->h_dest)) {\n+\t\tskb_reset_mac_header(skb);\n \t\tipvlan_skb_crossing_ns(skb, NULL);\n \t\tipvlan_multicast_enqueue(ipvlan->port, skb, true);\n \t\treturn NET_XMIT_SUCCESS;\n",
+    "patch_modified_files": [
+        "drivers/net/ipvlan/ipvlan_core.c"
+    ]
+}

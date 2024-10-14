@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "WARNING in devl_port_unregister",
+    "display-title": "WARNING in devl_port_unregister",
+    "id": "9afdd91cdda65ec7a69ff606cc3fa59d3525bad5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "devlink: Fix warning when unregistering a port",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1fb22ed671950bbc0c402034d206fcb334d1fd3a",
+            "hash": "1fb22ed671950bbc0c402034d206fcb334d1fd3a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in devl_port_unregister",
+            "syz-reproducer": "/text?tag=ReproSyz&x=165f6db7480000",
+            "c-reproducer": "/text?tag=ReproC&x=15f99e93480000",
+            "kernel-config": "/text?tag=KernelConfig&x=6bb1911ff9919df0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=420b2d431d18a2572c8e86579e78105cb5ed45b0",
+            "kernel-source-commit": "420b2d431d18a2572c8e86579e78105cb5ed45b0",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/93e26d605eebce2ad19e6f37d9e96a872ca55cce",
+            "syzkaller-commit": "93e26d605eebce2ad19e6f37d9e96a872ca55cce",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1694c4b3480000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "devlink_netdevice_event",
+            "net/core/devlink.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-10T08:51:50+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "79b0872b1075abd36b3c141f510ff7ec1878c22f",
+    "patch": "diff --git a/net/core/devlink.c b/net/core/devlink.c\nindex 6bbe230c4ec5..7f789bbcbbd7 100644\n--- a/net/core/devlink.c\n+++ b/net/core/devlink.c\n@@ -10177,7 +10177,7 @@ static int devlink_netdevice_event(struct notifier_block *nb,\n \t\t * we take into account netdev pointer appearing in this\n \t\t * namespace.\n \t\t */\n-\t\t__devlink_port_type_set(devlink_port, DEVLINK_PORT_TYPE_ETH,\n+\t\t__devlink_port_type_set(devlink_port, devlink_port->type,\n \t\t\t\t\tnetdev);\n \t\tbreak;\n \tcase NETDEV_UNREGISTER:\n@@ -10185,7 +10185,7 @@ static int devlink_netdevice_event(struct notifier_block *nb,\n \t\t * also during net namespace change so we need to clear\n \t\t * pointer to netdev that is going to another net namespace.\n \t\t */\n-\t\t__devlink_port_type_set(devlink_port, DEVLINK_PORT_TYPE_ETH,\n+\t\t__devlink_port_type_set(devlink_port, devlink_port->type,\n \t\t\t\t\tNULL);\n \t\tbreak;\n \tcase NETDEV_PRE_UNINIT:\n",
+    "patch_modified_files": [
+        "net/core/devlink.c"
+    ]
+}

@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in ar5523_cmd_tx_cb",
+    "display-title": "KASAN: use-after-free Read in ar5523_cmd_tx_cb",
+    "id": "9e12b2d54300842b71bdd18b54971385ff0d0d3a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "wifi: ar5523: Fix use-after-free on ar5523_cmd() timed out",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b6702a942a069c2a975478d719e98d83cdae1797",
+            "hash": "b6702a942a069c2a975478d719e98d83cdae1797",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000001d7a5505e9984eb0@google.com/T/",
+        "https://lore.kernel.org/all/20221009183223.420015-1-syoshida@redhat.com/T/",
+        "https://lore.kernel.org/all/20221218160142.925394-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221218160741.927862-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221218161244.930785-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221218161559.932604-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221218161836.933697-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221218162016.934280-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221218162149.935047-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221218162305.935724-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in ar5523_cmd_tx_cb",
+            "syz-reproducer": "/text?tag=ReproSyz&x=120c5c74080000",
+            "c-reproducer": "/text?tag=ReproC&x=1511a9fc080000",
+            "kernel-config": "/text?tag=KernelConfig&x=a01cb298f103d7e3",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=80e19f34c2887a8881084b7bb7480e9544d56b91",
+            "kernel-source-commit": "80e19f34c2887a8881084b7bb7480e9544d56b91",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/ff988920cbabff061e582d566b7f9b99bb9e7d1f",
+            "syzkaller-commit": "ff988920cbabff061e582d566b7f9b99bb9e7d1f",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11902a9c080000"
+        }
+    ],
+    "subsystems": [
+        "usb",
+        "wireless"
+    ],
+    "parent_of_fix_commit": "2577a58df24417dcdd35a3ba5b9e4e419a7d1234",
+    "patch": "diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c\nindex 6f937d2cc126..ce3d613fa36c 100644\n--- a/drivers/net/wireless/ath/ar5523/ar5523.c\n+++ b/drivers/net/wireless/ath/ar5523/ar5523.c\n@@ -241,6 +241,11 @@ static void ar5523_cmd_tx_cb(struct urb *urb)\n \t}\n }\n \n+static void ar5523_cancel_tx_cmd(struct ar5523 *ar)\n+{\n+\tusb_kill_urb(ar->tx_cmd.urb_tx);\n+}\n+\n static int ar5523_cmd(struct ar5523 *ar, u32 code, const void *idata,\n \t\t      int ilen, void *odata, int olen, int flags)\n {\n@@ -280,6 +285,7 @@ static int ar5523_cmd(struct ar5523 *ar, u32 code, const void *idata,\n \t}\n \n \tif (!wait_for_completion_timeout(&cmd->done, 2 * HZ)) {\n+\t\tar5523_cancel_tx_cmd(ar);\n \t\tcmd->odata = NULL;\n \t\tar5523_err(ar, \"timeout waiting for command %02x reply\\n\",\n \t\t\t   code);\n",
+    "patch_modified_files": [
+        "drivers/net/wireless/ath/ar5523/ar5523.c"
+    ]
+}

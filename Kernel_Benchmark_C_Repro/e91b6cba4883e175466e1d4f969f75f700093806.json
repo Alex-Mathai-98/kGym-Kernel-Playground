@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "memory leak in qdisc_create_dflt",
+    "display-title": "memory leak in qdisc_create_dflt",
+    "id": "e91b6cba4883e175466e1d4f969f75f700093806",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net_sched: fix a memory leak in atm_tc_init()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=306381aec7c2b5a658eebca008c8a1b666536cba",
+            "hash": "306381aec7c2b5a658eebca008c8a1b666536cba",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000006cd5e905a9aeb60e@google.com/T/",
+        "https://lore.kernel.org/all/20200709031359.11063-1-xiyou.wangcong@gmail.com/T/",
+        "https://lore.kernel.org/all/20200720152802.929969555@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200720152803.732195882@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200720152820.122442056@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200720152825.863040590@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10e579e3100000",
+            "c-reproducer": "/text?tag=ReproC&x=1007c45b100000",
+            "kernel-config": "/text?tag=KernelConfig&x=5ee23b9caef4e07a",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=9ebcfadb0610322ac537dd7aa5d9cbc2b2894c68",
+            "kernel-source-commit": "9ebcfadb0610322ac537dd7aa5d9cbc2b2894c68",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/917afeaa705dfdebeebcd674db3bcba279241d5e",
+            "syzkaller-commit": "917afeaa705dfdebeebcd674db3bcba279241d5e",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10f34587100000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "atm_tc_init",
+            "net/sched/sch_atm.c"
+        ]
+    ],
+    "patch_commit_date": "2020-07-09T03:13:59+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "13cf8aab7425a253070433b5a55b4209ceac8b19",
+    "patch": "diff --git a/net/sched/sch_atm.c b/net/sched/sch_atm.c\nindex ee12ca9f55b4..1c281cc81f57 100644\n--- a/net/sched/sch_atm.c\n+++ b/net/sched/sch_atm.c\n@@ -553,16 +553,16 @@ static int atm_tc_init(struct Qdisc *sch, struct nlattr *opt,\n \tif (!p->link.q)\n \t\tp->link.q = &noop_qdisc;\n \tpr_debug(\"atm_tc_init: link (%p) qdisc %p\\n\", &p->link, p->link.q);\n+\tp->link.vcc = NULL;\n+\tp->link.sock = NULL;\n+\tp->link.common.classid = sch->handle;\n+\tp->link.ref = 1;\n \n \terr = tcf_block_get(&p->link.block, &p->link.filter_list, sch,\n \t\t\t    extack);\n \tif (err)\n \t\treturn err;\n \n-\tp->link.vcc = NULL;\n-\tp->link.sock = NULL;\n-\tp->link.common.classid = sch->handle;\n-\tp->link.ref = 1;\n \ttasklet_init(&p->task, sch_atm_dequeue, (unsigned long)sch);\n \treturn 0;\n }\n",
+    "patch_modified_files": [
+        "net/sched/sch_atm.c"
+    ]
+}

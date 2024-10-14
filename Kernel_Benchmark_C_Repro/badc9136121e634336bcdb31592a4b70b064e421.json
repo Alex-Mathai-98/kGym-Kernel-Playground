@@ -1,0 +1,80 @@
+{
+    "version": 1,
+    "title": "WARNING: refcount bug in qdisc_put",
+    "display-title": "WARNING: refcount bug in qdisc_put (2)",
+    "id": "badc9136121e634336bcdb31592a4b70b064e421",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net_sched: fix error path in red_init()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5438dd45831ee33869779bd1919b05816ae4dbc9",
+            "hash": "5438dd45831ee33869779bd1919b05816ae4dbc9",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "net: sched: sch_red: Add qevents \"early_drop\" and \"mark\"",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=aee9caa03fc3c8b02f8f31824354d85f30e562e0",
+        "hash": "aee9caa03fc3c8b02f8f31824354d85f30e562e0",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000000d12fd05adc89e64@google.com/T/",
+        "https://lore.kernel.org/all/20200827174041.13300-1-xiyou.wangcong@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15e2a461900000",
+            "c-reproducer": "/text?tag=ReproC&x=176e7296900000",
+            "kernel-config": "/text?tag=KernelConfig&x=978db74cb30aa994",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=6a9dc5fd6170d0a41c8a14eb19e63d94bea5705a",
+            "kernel-source-commit": "6a9dc5fd6170d0a41c8a14eb19e63d94bea5705a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/344da168cb738076d82a75e1a7a1f5177df8dbc7",
+            "syzkaller-commit": "344da168cb738076d82a75e1a7a1f5177df8dbc7",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1693782e900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "red_init",
+            "net/sched/sch_red.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "red_dump",
+            "net/sched/sch_red.c"
+        ],
+        [
+            "red_init",
+            "net/sched/sch_red.c"
+        ],
+        [
+            "red_change",
+            "net/sched/sch_red.c"
+        ],
+        [
+            "red_enqueue",
+            "net/sched/sch_red.c"
+        ],
+        [
+            "red_destroy",
+            "net/sched/sch_red.c"
+        ]
+    ],
+    "patch_commit_date": "2020-08-27T17:40:41+00:00",
+    "cause_commit_date": "2020-06-26T22:45:28+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "f272285f6abb9178d029375599626baf3d5f4e8a",
+    "patch": "diff --git a/net/sched/sch_red.c b/net/sched/sch_red.c\nindex deac82f3ad7b..e89fab6ccb34 100644\n--- a/net/sched/sch_red.c\n+++ b/net/sched/sch_red.c\n@@ -353,23 +353,11 @@ static int red_init(struct Qdisc *sch, struct nlattr *opt,\n \t\t\t      FLOW_BLOCK_BINDER_TYPE_RED_EARLY_DROP,\n \t\t\t      tb[TCA_RED_EARLY_DROP_BLOCK], extack);\n \tif (err)\n-\t\tgoto err_early_drop_init;\n-\n-\terr = tcf_qevent_init(&q->qe_mark, sch,\n-\t\t\t      FLOW_BLOCK_BINDER_TYPE_RED_MARK,\n-\t\t\t      tb[TCA_RED_MARK_BLOCK], extack);\n-\tif (err)\n-\t\tgoto err_mark_init;\n-\n-\treturn 0;\n+\t\treturn err;\n \n-err_mark_init:\n-\ttcf_qevent_destroy(&q->qe_early_drop, sch);\n-err_early_drop_init:\n-\tdel_timer_sync(&q->adapt_timer);\n-\tred_offload(sch, false);\n-\tqdisc_put(q->qdisc);\n-\treturn err;\n+\treturn tcf_qevent_init(&q->qe_mark, sch,\n+\t\t\t       FLOW_BLOCK_BINDER_TYPE_RED_MARK,\n+\t\t\t       tb[TCA_RED_MARK_BLOCK], extack);\n }\n \n static int red_change(struct Qdisc *sch, struct nlattr *opt,\n",
+    "patch_modified_files": [
+        "net/sched/sch_red.c"
+    ]
+}

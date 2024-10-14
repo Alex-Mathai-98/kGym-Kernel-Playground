@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "memory leak in nfs_fs_context_parse_monolithic",
+    "display-title": "memory leak in nfs_fs_context_parse_monolithic",
+    "id": "4458c0f2a1c09f02470e8a2d799882ef2e840ecd",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "NFS: Fix leak of ctx->nfs_server.hostname",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=75a9b9176157f3095d3099adf512b5a233addbc7",
+            "hash": "75a9b9176157f3095d3099adf512b5a233addbc7",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000fe87be059e8ca7bc@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13dec65ee00000",
+            "c-reproducer": "/text?tag=ReproC&x=14c05311e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=2802e33434f4f863",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=0bf999f9c5e74c7ecf9dafb527146601e5c848b9",
+            "kernel-source-commit": "0bf999f9c5e74c7ecf9dafb527146601e5c848b9",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c5ed587f4af5e639f7373d8ebf10ac049cb9c71b",
+            "syzkaller-commit": "c5ed587f4af5e639f7373d8ebf10ac049cb9c71b",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=144e9701e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nfs_parse_source",
+            "fs/nfs/fs_context.c"
+        ]
+    ],
+    "patch_commit_date": "2020-02-25T16:05:22+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "nfs"
+    ],
+    "parent_of_fix_commit": "1821b26a1fed8fca57a96ef87bac7a6a48e78815",
+    "patch": "diff --git a/fs/nfs/fs_context.c b/fs/nfs/fs_context.c\nindex b616263b0eb6..e113fcb4bb4c 100644\n--- a/fs/nfs/fs_context.c\n+++ b/fs/nfs/fs_context.c\n@@ -832,6 +832,8 @@ static int nfs_parse_source(struct fs_context *fc,\n \tif (len > maxnamlen)\n \t\tgoto out_hostname;\n \n+\tkfree(ctx->nfs_server.hostname);\n+\n \t/* N.B. caller will free nfs_server.hostname in all cases */\n \tctx->nfs_server.hostname = kmemdup_nul(dev_name, len, GFP_KERNEL);\n \tif (!ctx->nfs_server.hostname)\n",
+    "patch_modified_files": [
+        "fs/nfs/fs_context.c"
+    ]
+}

@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Write in dst_release",
+    "display-title": "KASAN: use-after-free Write in dst_release",
+    "id": "bf967d2c5ba62946c61152534c8b84823d848f05",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "pptp: remove a buggy dst release in pptp_connect()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bfacfb457b36911a10140b8cb3ce76a74883ac5a",
+            "hash": "bfacfb457b36911a10140b8cb3ce76a74883ac5a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1113d54b800000",
+            "c-reproducer": "/text?tag=ReproC&x=1198a8db800000",
+            "kernel-config": "/text?tag=KernelConfig&x=5e630e8cb6d3da36",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=86bbbebac1933e6e95e8234c4f7d220c5ddd38bc",
+            "kernel-source-commit": "86bbbebac1933e6e95e8234c4f7d220c5ddd38bc",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/676bd07e7e80f8a270af7f0276443c68f4a99e25",
+            "syzkaller-commit": "676bd07e7e80f8a270af7f0276443c68f4a99e25",
+            "compiler-description": "gcc (GCC) 7.1.1 20170620",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11bd77ab800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "pptp_connect",
+            "drivers/net/ppp/pptp.c"
+        ]
+    ],
+    "patch_commit_date": "2018-04-03T01:48:37+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "18bd5949e5c825f29f022b9ac46474d2e95b4eb0",
+    "patch": "diff --git a/drivers/net/ppp/pptp.c b/drivers/net/ppp/pptp.c\nindex 8249d46a7844..c4267ecefd85 100644\n--- a/drivers/net/ppp/pptp.c\n+++ b/drivers/net/ppp/pptp.c\n@@ -464,7 +464,6 @@ static int pptp_connect(struct socket *sock, struct sockaddr *uservaddr,\n \tpo->chan.mtu = dst_mtu(&rt->dst);\n \tif (!po->chan.mtu)\n \t\tpo->chan.mtu = PPP_MRU;\n-\tip_rt_put(rt);\n \tpo->chan.mtu -= PPTP_HEADER_OVERHEAD;\n \n \tpo->chan.hdrlen = 2 + sizeof(struct pptp_gre_header);\n",
+    "patch_modified_files": [
+        "drivers/net/ppp/pptp.c"
+    ]
+}

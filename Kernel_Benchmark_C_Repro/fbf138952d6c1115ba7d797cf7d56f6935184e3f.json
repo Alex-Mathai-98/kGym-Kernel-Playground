@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "memory leak in htc_connect_service",
+    "display-title": "memory leak in htc_connect_service",
+    "id": "fbf138952d6c1115ba7d797cf7d56f6935184e3f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "wifi: ath9k: don't allow to overwrite ENDPOINT0 attributes",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=061b0cb9327b80d7a0f63a33e7c3e2a91a71f142",
+            "hash": "061b0cb9327b80d7a0f63a33e7c3e2a91a71f142",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000007dceb405f56b32dc@google.com/T/",
+        "https://lore.kernel.org/all/20230513214146.120963-1-pchelkin@ispras.ru/T/",
+        "https://lore.kernel.org/all/ZFTEkCsFcEa44CN8@DESKTOP/T/",
+        "https://lore.kernel.org/all/ZFXk/AIKeapT72Pj@DESKTOP/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in htc_connect_service",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16523630c80000",
+            "c-reproducer": "/text?tag=ReproC&x=13a3de27480000",
+            "kernel-config": "/text?tag=KernelConfig&x=eeb87d4dfcdb4cc0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c9c3395d5e3dcc6daee66c6908354d47bf98cb0c",
+            "kernel-source-commit": "c9c3395d5e3dcc6daee66c6908354d47bf98cb0c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/bcdf85f8bd3fccff5bc9507a589c4847d9b35405",
+            "syzkaller-commit": "bcdf85f8bd3fccff5bc9507a589c4847d9b35405",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11195fd7480000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "htc_process_conn_rsp",
+            "drivers/net/wireless/ath/ath9k/htc_hst.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-17T15:03:17+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "27044b57f8a5328f4f7517f8a15d9fe3171ab279",
+    "patch": "diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c\nindex fe62ff668f75..99667aba289d 100644\n--- a/drivers/net/wireless/ath/ath9k/htc_hst.c\n+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c\n@@ -114,7 +114,13 @@ static void htc_process_conn_rsp(struct htc_target *target,\n \n \tif (svc_rspmsg->status == HTC_SERVICE_SUCCESS) {\n \t\tepid = svc_rspmsg->endpoint_id;\n-\t\tif (epid < 0 || epid >= ENDPOINT_MAX)\n+\n+\t\t/* Check that the received epid for the endpoint to attach\n+\t\t * a new service is valid. ENDPOINT0 can't be used here as it\n+\t\t * is already reserved for HTC_CTRL_RSVD_SVC service and thus\n+\t\t * should not be modified.\n+\t\t */\n+\t\tif (epid <= ENDPOINT0 || epid >= ENDPOINT_MAX)\n \t\t\treturn;\n \n \t\tservice_id = be16_to_cpu(svc_rspmsg->service_id);\n",
+    "patch_modified_files": [
+        "drivers/net/wireless/ath/ath9k/htc_hst.c"
+    ]
+}

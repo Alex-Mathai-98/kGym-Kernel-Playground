@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "title": "memory leak in class_create",
+    "display-title": "memory leak in class_create",
+    "id": "46dd655664a8b38dbf7234683b294171a4e0142b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "driver core: class: properly reference count class_dev_iter()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ddaf098ea779b3c1302c7843f6ff01e89b1fd380",
+            "hash": "ddaf098ea779b3c1302c7843f6ff01e89b1fd380",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000077472605faa4aad5@google.com/T/",
+        "https://lore.kernel.org/all/2023051610-stove-condense-9a77@gregkh/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in class_create",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1599a2b4280000",
+            "c-reproducer": "/text?tag=ReproC&x=14eb395fc80000",
+            "kernel-config": "/text?tag=KernelConfig&x=5046ebeca744dd40",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=22b8cc3e78f5448b4c5df00303817a9137cd663f",
+            "kernel-source-commit": "22b8cc3e78f5448b4c5df00303817a9137cd663f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/62df2017e3b1edd786a4c737bd4ccba2b4581d88",
+            "syzkaller-commit": "62df2017e3b1edd786a4c737bd4ccba2b4581d88",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=102048dfc80000"
+        }
+    ],
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "1e94be78ec1556e90056ac038b15231723d315a9",
+    "patch": "diff --git a/drivers/base/class.c b/drivers/base/class.c\nindex ac1808d1a2e8..05d9df90f621 100644\n--- a/drivers/base/class.c\n+++ b/drivers/base/class.c\n@@ -320,6 +320,7 @@ void class_dev_iter_init(struct class_dev_iter *iter, const struct class *class,\n \t\tstart_knode = &start->p->knode_class;\n \tklist_iter_init_node(&sp->klist_devices, &iter->ki, start_knode);\n \titer->type = type;\n+\titer->sp = sp;\n }\n EXPORT_SYMBOL_GPL(class_dev_iter_init);\n \n@@ -361,6 +362,7 @@ EXPORT_SYMBOL_GPL(class_dev_iter_next);\n void class_dev_iter_exit(struct class_dev_iter *iter)\n {\n \tklist_iter_exit(&iter->ki);\n+\tsubsys_put(iter->sp);\n }\n EXPORT_SYMBOL_GPL(class_dev_iter_exit);\n \ndiff --git a/include/linux/device/class.h b/include/linux/device/class.h\nindex 9deeaeb457bb..abf3d3bfb6fe 100644\n--- a/include/linux/device/class.h\n+++ b/include/linux/device/class.h\n@@ -74,6 +74,7 @@ struct class {\n struct class_dev_iter {\n \tstruct klist_iter\t\tki;\n \tconst struct device_type\t*type;\n+\tstruct subsys_private\t\t*sp;\n };\n \n int __must_check class_register(const struct class *class);\n",
+    "patch_modified_files": [
+        "drivers/base/class.c",
+        "include/linux/device/class.h"
+    ]
+}

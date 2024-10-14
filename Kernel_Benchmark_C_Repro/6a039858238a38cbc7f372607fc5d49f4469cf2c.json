@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "WARNING: ODEBUG bug in tcf_queue_work",
+    "display-title": "WARNING: ODEBUG bug in tcf_queue_work",
+    "id": "6a039858238a38cbc7f372607fc5d49f4469cf2c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net_sched: cls_route: remove the right filter from hashtable",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ef299cc3fa1a9e1288665a9fdc8bff55629fd359",
+            "hash": "ef299cc3fa1a9e1288665a9fdc8bff55629fd359",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000bf5ff105a01fef33@google.com/T/",
+        "https://lore.kernel.org/all/20200314052954.26885-1-xiyou.wangcong@gmail.com/T/",
+        "https://lore.kernel.org/all/20200331085418.274292403@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200331085423.990189598@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200401161512.917494101@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200401161530.451355388@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200401161542.669484650@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200401161552.245876366@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/CAM_iQpXMZ9r_mPVVNuP6rU3=sBDkB=XoYyywD7HmTQF92fWapQ@mail.gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=168c4839e00000",
+            "c-reproducer": "/text?tag=ReproC&x=10587419e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=9833e26bab355358",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=63623fd44972d1ed2bfb6e0fb631dfcf547fd1e7",
+            "kernel-source-commit": "63623fd44972d1ed2bfb6e0fb631dfcf547fd1e7",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c88c7b75a4e022b758f4b0f1bf3db8ebb2fb25e6",
+            "syzkaller-commit": "c88c7b75a4e022b758f4b0f1bf3db8ebb2fb25e6",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=118cf3b5e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "route4_change",
+            "net/sched/cls_route.c"
+        ]
+    ],
+    "patch_commit_date": "2020-03-14T05:29:54+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "4ae649e8879d5a96b0ce104c8eae6563c6f368a1",
+    "patch": "diff --git a/net/sched/cls_route.c b/net/sched/cls_route.c\nindex 6f8786b06bde..5efa3e7ace15 100644\n--- a/net/sched/cls_route.c\n+++ b/net/sched/cls_route.c\n@@ -534,8 +534,8 @@ static int route4_change(struct net *net, struct sk_buff *in_skb,\n \t\t\tfp = &b->ht[h];\n \t\t\tfor (pfp = rtnl_dereference(*fp); pfp;\n \t\t\t     fp = &pfp->next, pfp = rtnl_dereference(*fp)) {\n-\t\t\t\tif (pfp == f) {\n-\t\t\t\t\t*fp = f->next;\n+\t\t\t\tif (pfp == fold) {\n+\t\t\t\t\trcu_assign_pointer(*fp, fold->next);\n \t\t\t\t\tbreak;\n \t\t\t\t}\n \t\t\t}\n",
+    "patch_modified_files": [
+        "net/sched/cls_route.c"
+    ]
+}

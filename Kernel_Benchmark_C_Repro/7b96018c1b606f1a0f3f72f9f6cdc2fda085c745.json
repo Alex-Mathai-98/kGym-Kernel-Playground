@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "memory leak in mgmt_cmd_complete",
+    "display-title": "memory leak in mgmt_cmd_complete",
+    "id": "7b96018c1b606f1a0f3f72f9f6cdc2fda085c745",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: hci_sock: purge socket queues in the destruct() callback",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=709fca500067524381e28a5f481882930eebac88",
+            "hash": "709fca500067524381e28a5f481882930eebac88",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000065b14e05c282fd15@google.com/T/",
+        "https://lore.kernel.org/all/20211007190424.196281-1-phind.uet@gmail.com/T/",
+        "https://lore.kernel.org/all/20211101095539.423246-1-mudongliangabcd@gmail.com/T/",
+        "https://lore.kernel.org/all/20220118021940.1942199-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220124184125.121143506@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20230309181251.479447-1-pchelkin@ispras.ru/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in mgmt_cmd_complete",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1355278d300000",
+            "c-reproducer": "/text?tag=ReproC&x=150997c5300000",
+            "kernel-config": "/text?tag=KernelConfig&x=a938918bd15e088e",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=6e764bcd1cf72a2846c0e53d3975a09b242c04c9",
+            "kernel-source-commit": "6e764bcd1cf72a2846c0e53d3975a09b242c04c9",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/b599f2fcc734e2183016a340d4f6fc2891d8e41f",
+            "syzkaller-commit": "b599f2fcc734e2183016a340d4f6fc2891d8e41f",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13d34cd5300000"
+        }
+    ],
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "b15bfa4df63529150df9ff0585675f728436e0c1",
+    "patch": "diff --git a/net/bluetooth/hci_sock.c b/net/bluetooth/hci_sock.c\nindex d0dad1fafe07..446573a12571 100644\n--- a/net/bluetooth/hci_sock.c\n+++ b/net/bluetooth/hci_sock.c\n@@ -889,10 +889,6 @@ static int hci_sock_release(struct socket *sock)\n \t}\n \n \tsock_orphan(sk);\n-\n-\tskb_queue_purge(&sk->sk_receive_queue);\n-\tskb_queue_purge(&sk->sk_write_queue);\n-\n \trelease_sock(sk);\n \tsock_put(sk);\n \treturn 0;\n@@ -2058,6 +2054,12 @@ static int hci_sock_getsockopt(struct socket *sock, int level, int optname,\n \treturn err;\n }\n \n+static void hci_sock_destruct(struct sock *sk)\n+{\n+\tskb_queue_purge(&sk->sk_receive_queue);\n+\tskb_queue_purge(&sk->sk_write_queue);\n+}\n+\n static const struct proto_ops hci_sock_ops = {\n \t.family\t\t= PF_BLUETOOTH,\n \t.owner\t\t= THIS_MODULE,\n@@ -2111,6 +2113,7 @@ static int hci_sock_create(struct net *net, struct socket *sock, int protocol,\n \n \tsock->state = SS_UNCONNECTED;\n \tsk->sk_state = BT_OPEN;\n+\tsk->sk_destruct = hci_sock_destruct;\n \n \tbt_sock_link(&hci_sk_list, sk);\n \treturn 0;\n",
+    "patch_modified_files": [
+        "net/bluetooth/hci_sock.c"
+    ]
+}

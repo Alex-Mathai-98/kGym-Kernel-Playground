@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "general protection fault in jffs2_parse_param",
+    "display-title": "general protection fault in jffs2_parse_param",
+    "id": "8e599aa994f78719d580f20a59db1416dfb0d198",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "jffs2: Fix NULL pointer dereference in rp_size fs option parsing",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a61df3c413e49b0042f9caf774c58512d1cc71b7",
+            "hash": "a61df3c413e49b0042f9caf774c58512d1cc71b7",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000418c7705afcff2e1@google.com/T/",
+        "https://lore.kernel.org/all/20201003203310.494524-1-anmol.karan123@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=175909d9900000",
+            "c-reproducer": "/text?tag=ReproC&x=179b3cc3900000",
+            "kernel-config": "/text?tag=KernelConfig&x=b12e84189082991c",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=325d0eab4f31c6240b59d5b2b8042c88f59405b5",
+            "kernel-source-commit": "325d0eab4f31c6240b59d5b2b8042c88f59405b5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9564d2e9821aea842b6ab213174aabd4b578b039",
+            "syzkaller-commit": "9564d2e9821aea842b6ab213174aabd4b578b039",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15a425d9900000"
+        }
+    ],
+    "subsystems": [
+        "jffs2"
+    ],
+    "parent_of_fix_commit": "89f40d0a9656aa73bf4a6d905d28952381b6cb53",
+    "patch": "diff --git a/fs/jffs2/super.c b/fs/jffs2/super.c\nindex c523adaca79f..81ca58c10b72 100644\n--- a/fs/jffs2/super.c\n+++ b/fs/jffs2/super.c\n@@ -202,12 +202,8 @@ static int jffs2_parse_param(struct fs_context *fc, struct fs_parameter *param)\n \tcase Opt_rp_size:\n \t\tif (result.uint_32 > UINT_MAX / 1024)\n \t\t\treturn invalf(fc, \"jffs2: rp_size unrepresentable\");\n-\t\topt = result.uint_32 * 1024;\n-\t\tif (opt > c->mtd->size)\n-\t\t\treturn invalf(fc, \"jffs2: Too large reserve pool specified, max is %llu KB\",\n-\t\t\t\t      c->mtd->size / 1024);\n+\t\tc->mount_opts.rp_size = result.uint_32 * 1024;\n \t\tc->mount_opts.set_rp_size = true;\n-\t\tc->mount_opts.rp_size = opt;\n \t\tbreak;\n \tdefault:\n \t\treturn -EINVAL;\n@@ -269,6 +265,10 @@ static int jffs2_fill_super(struct super_block *sb, struct fs_context *fc)\n \tc->mtd = sb->s_mtd;\n \tc->os_priv = sb;\n \n+\tif (c->mount_opts.rp_size > c->mtd->size)\n+\t\treturn invalf(fc, \"jffs2: Too large reserve pool specified, max is %llu KB\",\n+\t\t\t      c->mtd->size / 1024);\n+\n \t/* Initialize JFFS2 superblock locks, the further initialization will\n \t * be done later */\n \tmutex_init(&c->alloc_sem);\n",
+    "patch_modified_files": [
+        "fs/jffs2/super.c"
+    ]
+}

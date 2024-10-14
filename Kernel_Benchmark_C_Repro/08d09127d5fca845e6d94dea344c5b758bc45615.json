@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "WARNING: bad unlock balance in rxrpc_do_sendmsg",
+    "display-title": "WARNING: bad unlock balance in rxrpc_do_sendmsg",
+    "id": "08d09127d5fca845e6d94dea344c5b758bc45615",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "rxrpc: Fix locking in rxrpc's sendmsg",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b0f571ecd7943423c25947439045f0d352ca3dbf",
+            "hash": "b0f571ecd7943423c25947439045f0d352ca3dbf",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ce327f05d537ebf7@google.com/T/",
+        "https://lore.kernel.org/all/166135894583.600315.7170979436768124075.stgit@warthog.procyon.org.uk/T/",
+        "https://lore.kernel.org/all/20220821125751.4185-1-yin31149@gmail.com/T/",
+        "https://lore.kernel.org/all/20220829105756.500128871@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220829105804.609007228@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220829105808.828227973@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING: bad unlock balance in rxrpc_do_sendmsg",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10a9dd99b00000",
+            "c-reproducer": "/text?tag=ReproC&x=12fdd6fdb00000",
+            "kernel-config": "/text?tag=KernelConfig&x=48863e33ecce99a5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=438645193e59e91761ccb3fa55f6ce70b615ff93",
+            "kernel-source-commit": "438645193e59e91761ccb3fa55f6ce70b615ff93",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e4f103c49590d5ff0c7e416ade15a99f54029f8d",
+            "syzkaller-commit": "e4f103c49590d5ff0c7e416ade15a99f54029f8d",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14676a0bb00000"
+        }
+    ],
+    "subsystems": [
+        "afs",
+        "net"
+    ],
+    "parent_of_fix_commit": "0cf731f9ebb5bf6f252055bebf4463a5c0bd490b",
+    "patch": "diff --git a/net/rxrpc/call_object.c b/net/rxrpc/call_object.c\nindex 84d0a4109645..6401cdf7a624 100644\n--- a/net/rxrpc/call_object.c\n+++ b/net/rxrpc/call_object.c\n@@ -285,8 +285,10 @@ struct rxrpc_call *rxrpc_new_client_call(struct rxrpc_sock *rx,\n \t_enter(\"%p,%lx\", rx, p->user_call_ID);\n \n \tlimiter = rxrpc_get_call_slot(p, gfp);\n-\tif (!limiter)\n+\tif (!limiter) {\n+\t\trelease_sock(&rx->sk);\n \t\treturn ERR_PTR(-ERESTARTSYS);\n+\t}\n \n \tcall = rxrpc_alloc_client_call(rx, srx, gfp, debug_id);\n \tif (IS_ERR(call)) {\ndiff --git a/net/rxrpc/sendmsg.c b/net/rxrpc/sendmsg.c\nindex 1d38e279e2ef..3c3a626459de 100644\n--- a/net/rxrpc/sendmsg.c\n+++ b/net/rxrpc/sendmsg.c\n@@ -51,10 +51,7 @@ static int rxrpc_wait_for_tx_window_intr(struct rxrpc_sock *rx,\n \t\t\treturn sock_intr_errno(*timeo);\n \n \t\ttrace_rxrpc_transmit(call, rxrpc_transmit_wait);\n-\t\tmutex_unlock(&call->user_mutex);\n \t\t*timeo = schedule_timeout(*timeo);\n-\t\tif (mutex_lock_interruptible(&call->user_mutex) < 0)\n-\t\t\treturn sock_intr_errno(*timeo);\n \t}\n }\n \n@@ -290,37 +287,48 @@ static int rxrpc_queue_packet(struct rxrpc_sock *rx, struct rxrpc_call *call,\n static int rxrpc_send_data(struct rxrpc_sock *rx,\n \t\t\t   struct rxrpc_call *call,\n \t\t\t   struct msghdr *msg, size_t len,\n-\t\t\t   rxrpc_notify_end_tx_t notify_end_tx)\n+\t\t\t   rxrpc_notify_end_tx_t notify_end_tx,\n+\t\t\t   bool *_dropped_lock)\n {\n \tstruct rxrpc_skb_priv *sp;\n \tstruct sk_buff *skb;\n \tstruct sock *sk = &rx->sk;\n+\tenum rxrpc_call_state state;\n \tlong timeo;\n-\tbool more;\n-\tint ret, copied;\n+\tbool more = msg->msg_flags & MSG_MORE;\n+\tint ret, copied = 0;\n \n \ttimeo = sock_sndtimeo(sk, msg->msg_flags & MSG_DONTWAIT);\n \n \t/* this should be in poll */\n \tsk_clear_bit(SOCKWQ_ASYNC_NOSPACE, sk);\n \n+reload:\n+\tret = -EPIPE;\n \tif (sk->sk_shutdown & SEND_SHUTDOWN)\n-\t\treturn -EPIPE;\n-\n-\tmore = msg->msg_flags & MSG_MORE;\n-\n+\t\tgoto maybe_error;\n+\tstate = READ_ONCE(call->state);\n+\tret = -ESHUTDOWN;\n+\tif (state >= RXRPC_CALL_COMPLETE)\n+\t\tgoto maybe_error;\n+\tret = -EPROTO;\n+\tif (state != RXRPC_CALL_CLIENT_SEND_REQUEST &&\n+\t    state != RXRPC_CALL_SERVER_ACK_REQUEST &&\n+\t    state != RXRPC_CALL_SERVER_SEND_REPLY)\n+\t\tgoto maybe_error;\n+\n+\tret = -EMSGSIZE;\n \tif (call->tx_total_len != -1) {\n-\t\tif (len > call->tx_total_len)\n-\t\t\treturn -EMSGSIZE;\n-\t\tif (!more && len != call->tx_total_len)\n-\t\t\treturn -EMSGSIZE;\n+\t\tif (len - copied > call->tx_total_len)\n+\t\t\tgoto maybe_error;\n+\t\tif (!more && len - copied != call->tx_total_len)\n+\t\t\tgoto maybe_error;\n \t}\n \n \tskb = call->tx_pending;\n \tcall->tx_pending = NULL;\n \trxrpc_see_skb(skb, rxrpc_skb_seen);\n \n-\tcopied = 0;\n \tdo {\n \t\t/* Check to see if there's a ping ACK to reply to. */\n \t\tif (call->ackr_reason == RXRPC_ACK_PING_RESPONSE)\n@@ -331,16 +339,8 @@ static int rxrpc_send_data(struct rxrpc_sock *rx,\n \n \t\t\t_debug(\"alloc\");\n \n-\t\t\tif (!rxrpc_check_tx_space(call, NULL)) {\n-\t\t\t\tret = -EAGAIN;\n-\t\t\t\tif (msg->msg_flags & MSG_DONTWAIT)\n-\t\t\t\t\tgoto maybe_error;\n-\t\t\t\tret = rxrpc_wait_for_tx_window(rx, call,\n-\t\t\t\t\t\t\t       &timeo,\n-\t\t\t\t\t\t\t       msg->msg_flags & MSG_WAITALL);\n-\t\t\t\tif (ret < 0)\n-\t\t\t\t\tgoto maybe_error;\n-\t\t\t}\n+\t\t\tif (!rxrpc_check_tx_space(call, NULL))\n+\t\t\t\tgoto wait_for_space;\n \n \t\t\t/* Work out the maximum size of a packet.  Assume that\n \t\t\t * the security header is going to be in the padded\n@@ -468,6 +468,27 @@ static int rxrpc_send_data(struct rxrpc_sock *rx,\n efault:\n \tret = -EFAULT;\n \tgoto out;\n+\n+wait_for_space:\n+\tret = -EAGAIN;\n+\tif (msg->msg_flags & MSG_DONTWAIT)\n+\t\tgoto maybe_error;\n+\tmutex_unlock(&call->user_mutex);\n+\t*_dropped_lock = true;\n+\tret = rxrpc_wait_for_tx_window(rx, call, &timeo,\n+\t\t\t\t       msg->msg_flags & MSG_WAITALL);\n+\tif (ret < 0)\n+\t\tgoto maybe_error;\n+\tif (call->interruptibility == RXRPC_INTERRUPTIBLE) {\n+\t\tif (mutex_lock_interruptible(&call->user_mutex) < 0) {\n+\t\t\tret = sock_intr_errno(timeo);\n+\t\t\tgoto maybe_error;\n+\t\t}\n+\t} else {\n+\t\tmutex_lock(&call->user_mutex);\n+\t}\n+\t*_dropped_lock = false;\n+\tgoto reload;\n }\n \n /*\n@@ -629,6 +650,7 @@ int rxrpc_do_sendmsg(struct rxrpc_sock *rx, struct msghdr *msg, size_t len)\n \tenum rxrpc_call_state state;\n \tstruct rxrpc_call *call;\n \tunsigned long now, j;\n+\tbool dropped_lock = false;\n \tint ret;\n \n \tstruct rxrpc_send_params p = {\n@@ -737,21 +759,13 @@ int rxrpc_do_sendmsg(struct rxrpc_sock *rx, struct msghdr *msg, size_t len)\n \t\t\tret = rxrpc_send_abort_packet(call);\n \t} else if (p.command != RXRPC_CMD_SEND_DATA) {\n \t\tret = -EINVAL;\n-\t} else if (rxrpc_is_client_call(call) &&\n-\t\t   state != RXRPC_CALL_CLIENT_SEND_REQUEST) {\n-\t\t/* request phase complete for this client call */\n-\t\tret = -EPROTO;\n-\t} else if (rxrpc_is_service_call(call) &&\n-\t\t   state != RXRPC_CALL_SERVER_ACK_REQUEST &&\n-\t\t   state != RXRPC_CALL_SERVER_SEND_REPLY) {\n-\t\t/* Reply phase not begun or not complete for service call. */\n-\t\tret = -EPROTO;\n \t} else {\n-\t\tret = rxrpc_send_data(rx, call, msg, len, NULL);\n+\t\tret = rxrpc_send_data(rx, call, msg, len, NULL, &dropped_lock);\n \t}\n \n out_put_unlock:\n-\tmutex_unlock(&call->user_mutex);\n+\tif (!dropped_lock)\n+\t\tmutex_unlock(&call->user_mutex);\n error_put:\n \trxrpc_put_call(call, rxrpc_call_put);\n \t_leave(\" = %d\", ret);\n@@ -779,6 +793,7 @@ int rxrpc_kernel_send_data(struct socket *sock, struct rxrpc_call *call,\n \t\t\t   struct msghdr *msg, size_t len,\n \t\t\t   rxrpc_notify_end_tx_t notify_end_tx)\n {\n+\tbool dropped_lock = false;\n \tint ret;\n \n \t_enter(\"{%d,%s},\", call->debug_id, rxrpc_call_states[call->state]);\n@@ -796,7 +811,7 @@ int rxrpc_kernel_send_data(struct socket *sock, struct rxrpc_call *call,\n \tcase RXRPC_CALL_SERVER_ACK_REQUEST:\n \tcase RXRPC_CALL_SERVER_SEND_REPLY:\n \t\tret = rxrpc_send_data(rxrpc_sk(sock->sk), call, msg, len,\n-\t\t\t\t      notify_end_tx);\n+\t\t\t\t      notify_end_tx, &dropped_lock);\n \t\tbreak;\n \tcase RXRPC_CALL_COMPLETE:\n \t\tread_lock_bh(&call->state_lock);\n@@ -810,7 +825,8 @@ int rxrpc_kernel_send_data(struct socket *sock, struct rxrpc_call *call,\n \t\tbreak;\n \t}\n \n-\tmutex_unlock(&call->user_mutex);\n+\tif (!dropped_lock)\n+\t\tmutex_unlock(&call->user_mutex);\n \t_leave(\" = %d\", ret);\n \treturn ret;\n }\n",
+    "patch_modified_files": [
+        "net/rxrpc/call_object.c",
+        "net/rxrpc/sendmsg.c"
+    ]
+}

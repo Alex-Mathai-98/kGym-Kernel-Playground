@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "memory leak in tcf_ctinfo_init",
+    "display-title": "memory leak in tcf_ctinfo_init",
+    "id": "70d491b839984c756992b68c93e666828a4a301c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: sched: act_ctinfo: fix memory leak",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=09d4f10a5e78d76a53e3e584f1e6a701b6d24108",
+            "hash": "09d4f10a5e78d76a53e3e584f1e6a701b6d24108",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=178dc8bee00000",
+            "c-reproducer": "/text?tag=ReproC&x=128711d1e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=a0eee3ce463efd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=25e73aadf297d78cf528841795cd37bad8320642",
+            "kernel-source-commit": "25e73aadf297d78cf528841795cd37bad8320642",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3de7aabbb79a6c2267f5d7ee8a8aaa83f63305b7",
+            "syzkaller-commit": "3de7aabbb79a6c2267f5d7ee8a8aaa83f63305b7",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12866faee00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "tcf_ctinfo_search",
+            "net/sched/act_ctinfo.c"
+        ]
+    ],
+    "patch_commit_date": "2020-01-19T04:45:06+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "e02d9c4c68dc0ca08ded9487720bba775c09669b",
+    "patch": "diff --git a/net/sched/act_ctinfo.c b/net/sched/act_ctinfo.c\nindex 40038c321b4a..19649623493b 100644\n--- a/net/sched/act_ctinfo.c\n+++ b/net/sched/act_ctinfo.c\n@@ -360,6 +360,16 @@ static int tcf_ctinfo_search(struct net *net, struct tc_action **a, u32 index)\n \treturn tcf_idr_search(tn, a, index);\n }\n \n+static void tcf_ctinfo_cleanup(struct tc_action *a)\n+{\n+\tstruct tcf_ctinfo *ci = to_ctinfo(a);\n+\tstruct tcf_ctinfo_params *cp;\n+\n+\tcp = rcu_dereference_protected(ci->params, 1);\n+\tif (cp)\n+\t\tkfree_rcu(cp, rcu);\n+}\n+\n static struct tc_action_ops act_ctinfo_ops = {\n \t.kind\t= \"ctinfo\",\n \t.id\t= TCA_ID_CTINFO,\n@@ -367,6 +377,7 @@ static struct tc_action_ops act_ctinfo_ops = {\n \t.act\t= tcf_ctinfo_act,\n \t.dump\t= tcf_ctinfo_dump,\n \t.init\t= tcf_ctinfo_init,\n+\t.cleanup= tcf_ctinfo_cleanup,\n \t.walk\t= tcf_ctinfo_walker,\n \t.lookup\t= tcf_ctinfo_search,\n \t.size\t= sizeof(struct tcf_ctinfo),\n",
+    "patch_modified_files": [
+        "net/sched/act_ctinfo.c"
+    ]
+}

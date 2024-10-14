@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in j1939_tp_txtimer",
+    "display-title": "KASAN: use-after-free Read in j1939_tp_txtimer",
+    "id": "6f64ebda3aa14d01cf286926de2d30726801b82f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "can: j1939: transport: j1939_session_tx_dat(): fix use-after-free read in j1939_tp_txtimer()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cd3b3636c99fcac52c598b64061f3fe4413c6a12",
+            "hash": "cd3b3636c99fcac52c598b64061f3fe4413c6a12",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "can: add support of SAE J1939 protocol",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9d71dd0c70099914fcd063135da3c580865e924c",
+        "hash": "9d71dd0c70099914fcd063135da3c580865e924c",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005b5fc7059aa1df89@google.com/T/",
+        "https://lore.kernel.org/all/20200214120623.19574-1-o.rempel@pengutronix.de/T/",
+        "https://lore.kernel.org/all/20200807105200.26441-1-o.rempel@pengutronix.de/T/",
+        "https://lore.kernel.org/all/20200814110428.405051-4-mkl@pengutronix.de/T/",
+        "https://lore.kernel.org/all/20200824082405.020301642@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200824082409.368269240@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200824082413.900489417@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11af21fee00000",
+            "c-reproducer": "/text?tag=ReproC&x=116b4ec1e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=ed9d672709340e35",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=46cf053efec6a3a5f343fead837777efe8252a46",
+            "kernel-source-commit": "46cf053efec6a3a5f343fead837777efe8252a46",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/be5c2c81971442d623dd1b265dabf4644ceeb35b",
+            "syzkaller-commit": "be5c2c81971442d623dd1b265dabf4644ceeb35b",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=136fa799e00000"
+        }
+    ],
+    "subsystems": [
+        "can"
+    ],
+    "parent_of_fix_commit": "b43e3a82bc432c1caaed8950e7662c143470c54c",
+    "patch": "diff --git a/net/can/j1939/transport.c b/net/can/j1939/transport.c\nindex b135c5e2a86e..30957c9a8eb7 100644\n--- a/net/can/j1939/transport.c\n+++ b/net/can/j1939/transport.c\n@@ -787,6 +787,18 @@ static int j1939_session_tx_dat(struct j1939_session *session)\n \t\tif (len > 7)\n \t\t\tlen = 7;\n \n+\t\tif (offset + len > se_skb->len) {\n+\t\t\tnetdev_err_once(priv->ndev,\n+\t\t\t\t\t\"%s: 0x%p: requested data outside of queued buffer: offset %i, len %i, pkt.tx: %i\\n\",\n+\t\t\t\t\t__func__, session, skcb->offset, se_skb->len , session->pkt.tx);\n+\t\t\treturn -EOVERFLOW;\n+\t\t}\n+\n+\t\tif (!len) {\n+\t\t\tret = -ENOBUFS;\n+\t\t\tbreak;\n+\t\t}\n+\n \t\tmemcpy(&dat[1], &tpdat[offset], len);\n \t\tret = j1939_tp_tx_dat(session, dat, len + 1);\n \t\tif (ret < 0) {\n@@ -1120,6 +1132,9 @@ static enum hrtimer_restart j1939_tp_txtimer(struct hrtimer *hrtimer)\n \t\t * cleanup including propagation of the error to user space.\n \t\t */\n \t\tbreak;\n+\tcase -EOVERFLOW:\n+\t\tj1939_session_cancel(session, J1939_XTP_ABORT_ECTS_TOO_BIG);\n+\t\tbreak;\n \tcase 0:\n \t\tsession->tx_retry = 0;\n \t\tbreak;\n",
+    "patch_modified_files": [
+        "net/can/j1939/transport.c"
+    ]
+}

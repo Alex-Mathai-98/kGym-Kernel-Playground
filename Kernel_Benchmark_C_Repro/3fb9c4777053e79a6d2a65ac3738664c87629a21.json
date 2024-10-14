@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in uprobe_perf_close",
+    "display-title": "KASAN: use-after-free Read in uprobe_perf_close",
+    "id": "3fb9c4777053e79a6d2a65ac3738664c87629a21",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "perf/core: Fix use-after-free in uprobe_perf_close()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=621b6d2ea297d0fb6030452c5bcd221f12165fcf",
+            "hash": "621b6d2ea297d0fb6030452c5bcd221f12165fcf",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/001a113f8bf6a9acd90568e8ea59@google.com/T/",
+        "https://lore.kernel.org/all/20190702054342.GB27702@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20190724014510.GG643@sol.localdomain/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=162240bb800000",
+            "c-reproducer": "/text?tag=ReproC&x=17a4e0bb800000",
+            "kernel-config": "/text?tag=KernelConfig&x=5e630e8cb6d3da36",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=86bbbebac1933e6e95e8234c4f7d220c5ddd38bc",
+            "kernel-source-commit": "86bbbebac1933e6e95e8234c4f7d220c5ddd38bc",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/676bd07e7e80f8a270af7f0276443c68f4a99e25",
+            "syzkaller-commit": "676bd07e7e80f8a270af7f0276443c68f4a99e25",
+            "compiler-description": "gcc (GCC) 7.1.1 20170620",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16df98db800000"
+        }
+    ],
+    "subsystems": [
+        "trace"
+    ],
+    "parent_of_fix_commit": "ce9f85c32678efd3ab9b8c9aade0f0ffed0016c5",
+    "patch": "diff --git a/kernel/events/core.c b/kernel/events/core.c\nindex fc1c330c6bd6..d7af82827373 100644\n--- a/kernel/events/core.c\n+++ b/kernel/events/core.c\n@@ -4447,6 +4447,9 @@ static void _free_event(struct perf_event *event)\n \tif (event->ctx)\n \t\tput_ctx(event->ctx);\n \n+\tif (event->hw.target)\n+\t\tput_task_struct(event->hw.target);\n+\n \texclusive_event_destroy(event);\n \tmodule_put(event->pmu->module);\n \n@@ -9955,6 +9958,7 @@ perf_event_alloc(struct perf_event_attr *attr, int cpu,\n \t\t * and we cannot use the ctx information because we need the\n \t\t * pmu before we get a ctx.\n \t\t */\n+\t\tget_task_struct(task);\n \t\tevent->hw.target = task;\n \t}\n \n@@ -10070,6 +10074,8 @@ perf_event_alloc(struct perf_event_attr *attr, int cpu,\n \t\tperf_detach_cgroup(event);\n \tif (event->ns)\n \t\tput_pid_ns(event->ns);\n+\tif (event->hw.target)\n+\t\tput_task_struct(event->hw.target);\n \tkfree(event);\n \n \treturn ERR_PTR(err);\n",
+    "patch_modified_files": [
+        "kernel/events/core.c"
+    ]
+}

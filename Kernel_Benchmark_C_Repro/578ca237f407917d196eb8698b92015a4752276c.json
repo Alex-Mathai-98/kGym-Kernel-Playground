@@ -1,0 +1,100 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel paging request in dqput",
+    "display-title": "BUG: unable to handle kernel paging request in dqput",
+    "id": "578ca237f407917d196eb8698b92015a4752276c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "quota: Sanity-check quota file headers on load",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=11c514a99bb960941535134f0587102855e8ddee",
+            "hash": "11c514a99bb960941535134f0587102855e8ddee",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "ALSA: usb-audio: Fix irq/process data synchronization",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1d0f953086f090a022f2c0e1448300c15372db46",
+        "hash": "1d0f953086f090a022f2c0e1448300c15372db46",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000067becf05b03d8dd6@google.com/T/",
+        "https://lore.kernel.org/all/20201102172733.23444-1-jack@suse.cz/T/",
+        "https://lore.kernel.org/all/20201223150515.553836647@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124904.654293249@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124919.745526410@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124937.240114599@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=133783ab900000",
+            "c-reproducer": "/text?tag=ReproC&x=13bb5973900000",
+            "kernel-config": "/text?tag=KernelConfig&x=af502ec9a451c9fc",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=98477740630f270aecf648f1d6a9dbc6027d4ff1",
+            "kernel-source-commit": "98477740630f270aecf648f1d6a9dbc6027d4ff1",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3e8f6c27551f163a2fd2661e4b3cac126a5e7ef2",
+            "syzkaller-commit": "3e8f6c27551f163a2fd2661e4b3cac126a5e7ef2",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13ec028d900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "v2_read_file_info",
+            "fs/quota/quota_v2.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "snd_usb_substream_capture_trigger",
+            "sound/usb/pcm.c"
+        ],
+        [
+            "snd_usb_init_pitch",
+            "sound/usb/pcm.c"
+        ],
+        [
+            "start_endpoints",
+            "sound/usb/pcm.c"
+        ],
+        [
+            "snd_usb_endpoint_stop",
+            "sound/usb/endpoint.c"
+        ],
+        [
+            "snd_usb_endpoint_set_params",
+            "sound/usb/endpoint.c"
+        ],
+        [
+            "snd_usb_endpoint_start",
+            "sound/usb/endpoint.c"
+        ],
+        [
+            "snd_usb_endpoint_set_params",
+            "sound/usb/endpoint.h"
+        ],
+        [
+            "snd_usb_pcm_prepare",
+            "sound/usb/pcm.c"
+        ],
+        [
+            "wait_clear_urbs",
+            "sound/usb/endpoint.c"
+        ]
+    ],
+    "patch_commit_date": "2020-11-02T15:16:29+00:00",
+    "cause_commit_date": "2017-01-04T22:37:46+00:00",
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "10f04d40a9fa29785206c619f80d8beedb778837",
+    "patch": "diff --git a/fs/quota/quota_v2.c b/fs/quota/quota_v2.c\nindex e69a2bfdd81c..c21106557a37 100644\n--- a/fs/quota/quota_v2.c\n+++ b/fs/quota/quota_v2.c\n@@ -157,6 +157,25 @@ static int v2_read_file_info(struct super_block *sb, int type)\n \t\tqinfo->dqi_entry_size = sizeof(struct v2r1_disk_dqblk);\n \t\tqinfo->dqi_ops = &v2r1_qtree_ops;\n \t}\n+\tret = -EUCLEAN;\n+\t/* Some sanity checks of the read headers... */\n+\tif ((loff_t)qinfo->dqi_blocks << qinfo->dqi_blocksize_bits >\n+\t    i_size_read(sb_dqopt(sb)->files[type])) {\n+\t\tquota_error(sb, \"Number of blocks too big for quota file size (%llu > %llu).\",\n+\t\t    (loff_t)qinfo->dqi_blocks << qinfo->dqi_blocksize_bits,\n+\t\t    i_size_read(sb_dqopt(sb)->files[type]));\n+\t\tgoto out;\n+\t}\n+\tif (qinfo->dqi_free_blk >= qinfo->dqi_blocks) {\n+\t\tquota_error(sb, \"Free block number too big (%u >= %u).\",\n+\t\t\t    qinfo->dqi_free_blk, qinfo->dqi_blocks);\n+\t\tgoto out;\n+\t}\n+\tif (qinfo->dqi_free_entry >= qinfo->dqi_blocks) {\n+\t\tquota_error(sb, \"Block with free entry too big (%u >= %u).\",\n+\t\t\t    qinfo->dqi_free_entry, qinfo->dqi_blocks);\n+\t\tgoto out;\n+\t}\n \tret = 0;\n out:\n \tup_read(&dqopt->dqio_sem);\n",
+    "patch_modified_files": [
+        "fs/quota/quota_v2.c"
+    ]
+}

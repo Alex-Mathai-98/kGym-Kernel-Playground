@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "WARNING in static_key_slow_try_dec",
+    "display-title": "WARNING in static_key_slow_try_dec (3)",
+    "id": "032c91d1b0189a2a36f47141f9c3331f8c09d7b1",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: nf_tables: fix nft_counters_enabled underflow at nf_tables_addchain()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=921ebde3c0d22c8cba74ce8eb3cc4626abff1ccd",
+            "hash": "921ebde3c0d22c8cba74ce8eb3cc4626abff1ccd",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a9172705e7ffef2e@google.com/T/",
+        "https://lore.kernel.org/all/20220921073825.4658-1-fw@strlen.de/T/",
+        "https://lore.kernel.org/all/20220926100754.639112000@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220926100756.074519146@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220926100806.522017616@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/8c86a1bb-9c43-b02e-cf93-e098b158ee8c@I-love.SAKURA.ne.jp/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in static_key_slow_try_dec",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15065393080000",
+            "c-reproducer": "/text?tag=ReproC&x=11b22817080000",
+            "kernel-config": "/text?tag=KernelConfig&x=892a57667b7af6cf",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=42cf58c272ee1dae902e8cc1166c246589abd1d8",
+            "kernel-source-commit": "42cf58c272ee1dae902e8cc1166c246589abd1d8",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/28811d0ac5274e8b3730fcf2ad0634d723fcd878",
+            "syzkaller-commit": "28811d0ac5274e8b3730fcf2ad0634d723fcd878",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1178c63b080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nf_tables_addchain",
+            "net/netfilter/nf_tables_api.c"
+        ]
+    ],
+    "patch_commit_date": "2022-09-12T12:41:00+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "76b907ee00c4a5cdd5d0adbacdaa1c1989385615",
+    "patch": "diff --git a/net/netfilter/nf_tables_api.c b/net/netfilter/nf_tables_api.c\nindex 816052089b33..e062754dc6cc 100644\n--- a/net/netfilter/nf_tables_api.c\n+++ b/net/netfilter/nf_tables_api.c\n@@ -2197,7 +2197,6 @@ static int nf_tables_addchain(struct nft_ctx *ctx, u8 family, u8 genmask,\n \t\t\t      struct netlink_ext_ack *extack)\n {\n \tconst struct nlattr * const *nla = ctx->nla;\n-\tstruct nft_stats __percpu *stats = NULL;\n \tstruct nft_table *table = ctx->table;\n \tstruct nft_base_chain *basechain;\n \tstruct net *net = ctx->net;\n@@ -2212,6 +2211,7 @@ static int nf_tables_addchain(struct nft_ctx *ctx, u8 family, u8 genmask,\n \t\treturn -EOVERFLOW;\n \n \tif (nla[NFTA_CHAIN_HOOK]) {\n+\t\tstruct nft_stats __percpu *stats = NULL;\n \t\tstruct nft_chain_hook hook;\n \n \t\tif (flags & NFT_CHAIN_BINDING)\n@@ -2245,6 +2245,8 @@ static int nf_tables_addchain(struct nft_ctx *ctx, u8 family, u8 genmask,\n \t\t\tkfree(basechain);\n \t\t\treturn err;\n \t\t}\n+\t\tif (stats)\n+\t\t\tstatic_branch_inc(&nft_counters_enabled);\n \t} else {\n \t\tif (flags & NFT_CHAIN_BASE)\n \t\t\treturn -EINVAL;\n@@ -2319,9 +2321,6 @@ static int nf_tables_addchain(struct nft_ctx *ctx, u8 family, u8 genmask,\n \t\tgoto err_unregister_hook;\n \t}\n \n-\tif (stats)\n-\t\tstatic_branch_inc(&nft_counters_enabled);\n-\n \ttable->use++;\n \n \treturn 0;\n",
+    "patch_modified_files": [
+        "net/netfilter/nf_tables_api.c"
+    ]
+}

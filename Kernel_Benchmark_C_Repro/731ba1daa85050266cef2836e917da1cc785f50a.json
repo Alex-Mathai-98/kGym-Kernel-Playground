@@ -1,0 +1,77 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in ntfs_attr_find",
+    "display-title": "KASAN: slab-out-of-bounds Read in ntfs_attr_find",
+    "id": "731ba1daa85050266cef2836e917da1cc785f50a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ntfs: add check for mft record size in superblock",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4f8c94022f0bc3babd0a124c0a7dcdd7547bd94e",
+            "hash": "4f8c94022f0bc3babd0a124c0a7dcdd7547bd94e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "soc: mediatek: Fix SCPSYS compilation",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9dd068a4b85a68733213c874d08ef768bbec8d01",
+        "hash": "9dd068a4b85a68733213c874d08ef768bbec8d01",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/001a11447acae6b4560568e08829@google.com/T/",
+        "https://lore.kernel.org/all/20190709202706.GL641@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20190724023048.GT643@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20200823152147.55766-1-rkovhaev@gmail.com/T/",
+        "https://lore.kernel.org/all/20200824022804.226242-1-rkovhaev@gmail.com/T/",
+        "https://lore.kernel.org/all/20201013234817.kgKs7HBdo%akpm@linux-foundation.org/T/",
+        "https://lore.kernel.org/all/20201018191807.4052726-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192026.4053674-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192231.4054535-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192417.4055228-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192530.4055730-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192635.4056198-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201018192728.4056577-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20201027134900.532249571@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027134902.130312227@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027134909.701581493@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135430.632029009@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135450.497324313@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135455.027547757@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135522.655719020@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1430ded3800000",
+            "c-reproducer": "/text?tag=ReproC&x=1533214b800000",
+            "kernel-config": "/text?tag=KernelConfig&x=df0c336cc3b55d45",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=0adb32858b0bddf4ada5f364a84ed60b196dbcda",
+            "kernel-source-commit": "0adb32858b0bddf4ada5f364a84ed60b196dbcda",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/dc88925771c47ef787f6f3a7b6756b8f0ce40af5",
+            "syzkaller-commit": "dc88925771c47ef787f6f3a7b6756b8f0ce40af5",
+            "compiler-description": "gcc (GCC) 7.1.1 20170620",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11a1f7eb800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ntfs_read_inode_mount",
+            "fs/ntfs/inode.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2020-10-13T23:48:17+00:00",
+    "cause_commit_date": "2015-07-31T15:03:13+00:00",
+    "subsystems": [
+        "ntfs3"
+    ],
+    "parent_of_fix_commit": "d72e720a19393eb611a112e4c5c377785dbd645d",
+    "patch": "diff --git a/fs/ntfs/inode.c b/fs/ntfs/inode.c\nindex 9bb9f0952b18..caf563981532 100644\n--- a/fs/ntfs/inode.c\n+++ b/fs/ntfs/inode.c\n@@ -1810,6 +1810,12 @@ int ntfs_read_inode_mount(struct inode *vi)\n \t\tbrelse(bh);\n \t}\n \n+\tif (le32_to_cpu(m->bytes_allocated) != vol->mft_record_size) {\n+\t\tntfs_error(sb, \"Incorrect mft record size %u in superblock, should be %u.\",\n+\t\t\t\tle32_to_cpu(m->bytes_allocated), vol->mft_record_size);\n+\t\tgoto err_out;\n+\t}\n+\n \t/* Apply the mst fixups. */\n \tif (post_read_mst_fixup((NTFS_RECORD*)m, vol->mft_record_size)) {\n \t\t/* FIXME: Try to use the $MFTMirr now. */\n",
+    "patch_modified_files": [
+        "fs/ntfs/inode.c"
+    ]
+}

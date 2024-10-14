@@ -1,0 +1,65 @@
+{
+    "version": 1,
+    "title": "memory leak in usb_urb_init",
+    "display-title": "memory leak in usb_urb_init",
+    "id": "29c5543922b443b1843b38f1334976b6305e30c9",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: dvb-usb: fix memory leak in dvb_usb_adapter_init",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b7cd0da982e3043f2eec7235ac5530cb18d6af1d",
+            "hash": "b7cd0da982e3043f2eec7235ac5530cb18d6af1d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000009d50ae05b81e4091@google.com/T/",
+        "https://lore.kernel.org/all/20210328193219.18647-1-paskripkin@gmail.com/T/",
+        "https://lore.kernel.org/all/20210503163941.2853291-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210503164109.2853838-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210503164204.2854178-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210503164252.2854487-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210503164329.2854739-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210510101950.200777181@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210510102004.821838356@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210510102010.096403571@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210510102014.849075526@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210520092102.149300807@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210520092108.587553970@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210520092120.115153432@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210520092131.308959589@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1509c9c0d00000",
+            "c-reproducer": "/text?tag=ReproC&x=12e15e0b500000",
+            "kernel-config": "/text?tag=KernelConfig&x=1dcbf163b62a8256",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f6e1ea19649216156576aeafa784e3b4cee45549",
+            "kernel-source-commit": "f6e1ea19649216156576aeafa784e3b4cee45549",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/79264ae39c1ef4b4875ab67d6f0c8c3e75aa6a34",
+            "syzkaller-commit": "79264ae39c1ef4b4875ab67d6f0c8c3e75aa6a34",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=141f4d2f500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "dvb_usb_adapter_init",
+            "drivers/media/usb/dvb-usb/dvb-usb-init.c"
+        ]
+    ],
+    "patch_commit_date": "2021-03-28T19:32:19+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "media",
+        "usb"
+    ],
+    "parent_of_fix_commit": "3ddcea9f7da0d7df25e12c2f2e06082341fed4fb",
+    "patch": "diff --git a/drivers/media/usb/dvb-usb/dvb-usb-init.c b/drivers/media/usb/dvb-usb/dvb-usb-init.c\nindex 6c9e3290af56..28e1fd64dd3c 100644\n--- a/drivers/media/usb/dvb-usb/dvb-usb-init.c\n+++ b/drivers/media/usb/dvb-usb/dvb-usb-init.c\n@@ -79,11 +79,17 @@ static int dvb_usb_adapter_init(struct dvb_usb_device *d, short *adapter_nrs)\n \t\t\t}\n \t\t}\n \n-\t\tif ((ret = dvb_usb_adapter_stream_init(adap)) ||\n-\t\t\t(ret = dvb_usb_adapter_dvb_init(adap, adapter_nrs)) ||\n-\t\t\t(ret = dvb_usb_adapter_frontend_init(adap))) {\n+\t\tret = dvb_usb_adapter_stream_init(adap);\n+\t\tif (ret)\n \t\t\treturn ret;\n-\t\t}\n+\n+\t\tret = dvb_usb_adapter_dvb_init(adap, adapter_nrs);\n+\t\tif (ret)\n+\t\t\tgoto dvb_init_err;\n+\n+\t\tret = dvb_usb_adapter_frontend_init(adap);\n+\t\tif (ret)\n+\t\t\tgoto frontend_init_err;\n \n \t\t/* use exclusive FE lock if there is multiple shared FEs */\n \t\tif (adap->fe_adap[1].fe)\n@@ -103,6 +109,12 @@ static int dvb_usb_adapter_init(struct dvb_usb_device *d, short *adapter_nrs)\n \t}\n \n \treturn 0;\n+\n+frontend_init_err:\n+\tdvb_usb_adapter_dvb_exit(adap);\n+dvb_init_err:\n+\tdvb_usb_adapter_stream_exit(adap);\n+\treturn ret;\n }\n \n static int dvb_usb_adapter_exit(struct dvb_usb_device *d)\n",
+    "patch_modified_files": [
+        "drivers/media/usb/dvb-usb/dvb-usb-init.c"
+    ]
+}

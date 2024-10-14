@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "general protection fault in nilfs_palloc_commit_free_entry",
+    "display-title": "general protection fault in nilfs_palloc_commit_free_entry",
+    "id": "c861c927f694825cea94240c7acf698eccb2a8c2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "nilfs2: fix NULL pointer dereference in nilfs_palloc_commit_free_entry()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f0a0ccda18d6fd826d7c7e7ad48a6ed61c20f8b4",
+            "hash": "f0a0ccda18d6fd826d7c7e7ad48a6ed61c20f8b4",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000097c20205ebaea3d6@google.com/T/",
+        "https://lore.kernel.org/all/20221114040441.1649940-1-zhangpeng362@huawei.com/T/",
+        "https://lore.kernel.org/all/20221119120542.17204-1-konishi.ryusuke@gmail.com/T/",
+        "https://lore.kernel.org/all/CAKFNMokh1fQNyqVCMWoQVnRnXf65j__Op9p+a3Prz_qk-YnoVQ@mail.gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in nilfs_palloc_commit_free_entry",
+            "syz-reproducer": "/text?tag=ReproSyz&x=15d81572880000",
+            "c-reproducer": "/text?tag=ReproC&x=162b0a36880000",
+            "kernel-config": "/text?tag=KernelConfig&x=afc317c0f52ce670",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=440b7895c990a63869a9d55e5c2502dd501a124e",
+            "kernel-source-commit": "440b7895c990a63869a9d55e5c2502dd501a124e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c0b80a55c9c8cfe75e77c555ed0d4ae7aa373cc2",
+            "syzkaller-commit": "c0b80a55c9c8cfe75e77c555ed0d4ae7aa373cc2",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11c81ad6880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nilfs_dat_commit_free",
+            "fs/nilfs2/dat.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-19T12:05:42+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "nilfs"
+    ],
+    "parent_of_fix_commit": "04ada095dcfc4ae359418053c0be94453bdf1e84",
+    "patch": "diff --git a/fs/nilfs2/dat.c b/fs/nilfs2/dat.c\nindex 3b55e239705f..9930fa901039 100644\n--- a/fs/nilfs2/dat.c\n+++ b/fs/nilfs2/dat.c\n@@ -111,6 +111,13 @@ static void nilfs_dat_commit_free(struct inode *dat,\n \tkunmap_atomic(kaddr);\n \n \tnilfs_dat_commit_entry(dat, req);\n+\n+\tif (unlikely(req->pr_desc_bh == NULL || req->pr_bitmap_bh == NULL)) {\n+\t\tnilfs_error(dat->i_sb,\n+\t\t\t    \"state inconsistency probably due to duplicate use of vblocknr = %llu\",\n+\t\t\t    (unsigned long long)req->pr_entry_nr);\n+\t\treturn;\n+\t}\n \tnilfs_palloc_commit_free_entry(dat, req);\n }\n \n",
+    "patch_modified_files": [
+        "fs/nilfs2/dat.c"
+    ]
+}

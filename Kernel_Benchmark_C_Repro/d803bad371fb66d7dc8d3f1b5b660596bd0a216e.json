@@ -1,0 +1,71 @@
+{
+    "version": 1,
+    "title": "WARNING in hfs_write_inode",
+    "display-title": "WARNING in hfs_write_inode",
+    "id": "d803bad371fb66d7dc8d3f1b5b660596bd0a216e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "hfs/hfsplus: avoid WARN_ON() for sanity check, use proper error handling",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cb7a95af78d29442b8294683eca4897544b8ef46",
+            "hash": "cb7a95af78d29442b8294683eca4897544b8ef46",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "hfs/hfsplus: use WARN_ON for sanity check",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=55d1cbbbb29e6656c662ee8f73ba1fc4777532eb",
+        "hash": "55d1cbbbb29e6656c662ee8f73ba1fc4777532eb",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000dbce4e05f170f289@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in hfs_write_inode",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10beaa7c480000",
+            "c-reproducer": "/text?tag=ReproC&x=117c1a2a480000",
+            "kernel-config": "/text?tag=KernelConfig&x=60208ff8fae87ede",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c8451c141e07a8d05693f6c8d0e418fbb4b68bb7",
+            "kernel-source-commit": "c8451c141e07a8d05693f6c8d0e418fbb4b68bb7",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/ab32d50881df9f96f2af301aadca62ad00b7e099",
+            "syzkaller-commit": "ab32d50881df9f96f2af301aadca62ad00b7e099",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=161357c4480000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "hfs_write_inode",
+            "fs/hfs/inode.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "hfsplus_cat_read_inode",
+            "fs/hfsplus/inode.c"
+        ],
+        [
+            "hfsplus_cat_write_inode",
+            "fs/hfsplus/inode.c"
+        ],
+        [
+            "hfs_write_inode",
+            "fs/hfs/inode.c"
+        ]
+    ],
+    "patch_commit_date": "2023-01-04T19:06:28+00:00",
+    "cause_commit_date": "2021-11-09T02:35:04+00:00",
+    "subsystems": [
+        "hfs"
+    ],
+    "parent_of_fix_commit": "a689b938df39ab513026c53fb7011fd7cd594943",
+    "patch": "diff --git a/fs/hfs/inode.c b/fs/hfs/inode.c\nindex 9c329a365e75..3a155c1d810e 100644\n--- a/fs/hfs/inode.c\n+++ b/fs/hfs/inode.c\n@@ -458,15 +458,16 @@ int hfs_write_inode(struct inode *inode, struct writeback_control *wbc)\n \t\t/* panic? */\n \t\treturn -EIO;\n \n+\tres = -EIO;\n \tif (HFS_I(main_inode)->cat_key.CName.len > HFS_NAMELEN)\n-\t\treturn -EIO;\n+\t\tgoto out;\n \tfd.search_key->cat = HFS_I(main_inode)->cat_key;\n \tif (hfs_brec_find(&fd))\n-\t\t/* panic? */\n \t\tgoto out;\n \n \tif (S_ISDIR(main_inode->i_mode)) {\n-\t\tWARN_ON(fd.entrylength < sizeof(struct hfs_cat_dir));\n+\t\tif (fd.entrylength < sizeof(struct hfs_cat_dir))\n+\t\t\tgoto out;\n \t\thfs_bnode_read(fd.bnode, &rec, fd.entryoffset,\n \t\t\t   sizeof(struct hfs_cat_dir));\n \t\tif (rec.type != HFS_CDR_DIR ||\n@@ -479,6 +480,8 @@ int hfs_write_inode(struct inode *inode, struct writeback_control *wbc)\n \t\thfs_bnode_write(fd.bnode, &rec, fd.entryoffset,\n \t\t\t    sizeof(struct hfs_cat_dir));\n \t} else if (HFS_IS_RSRC(inode)) {\n+\t\tif (fd.entrylength < sizeof(struct hfs_cat_file))\n+\t\t\tgoto out;\n \t\thfs_bnode_read(fd.bnode, &rec, fd.entryoffset,\n \t\t\t       sizeof(struct hfs_cat_file));\n \t\thfs_inode_write_fork(inode, rec.file.RExtRec,\n@@ -486,7 +489,8 @@ int hfs_write_inode(struct inode *inode, struct writeback_control *wbc)\n \t\thfs_bnode_write(fd.bnode, &rec, fd.entryoffset,\n \t\t\t\tsizeof(struct hfs_cat_file));\n \t} else {\n-\t\tWARN_ON(fd.entrylength < sizeof(struct hfs_cat_file));\n+\t\tif (fd.entrylength < sizeof(struct hfs_cat_file))\n+\t\t\tgoto out;\n \t\thfs_bnode_read(fd.bnode, &rec, fd.entryoffset,\n \t\t\t   sizeof(struct hfs_cat_file));\n \t\tif (rec.type != HFS_CDR_FIL ||\n@@ -503,9 +507,10 @@ int hfs_write_inode(struct inode *inode, struct writeback_control *wbc)\n \t\thfs_bnode_write(fd.bnode, &rec, fd.entryoffset,\n \t\t\t    sizeof(struct hfs_cat_file));\n \t}\n+\tres = 0;\n out:\n \thfs_find_exit(&fd);\n-\treturn 0;\n+\treturn res;\n }\n \n static struct dentry *hfs_file_lookup(struct inode *dir, struct dentry *dentry,\n",
+    "patch_modified_files": [
+        "fs/hfs/inode.c"
+    ]
+}

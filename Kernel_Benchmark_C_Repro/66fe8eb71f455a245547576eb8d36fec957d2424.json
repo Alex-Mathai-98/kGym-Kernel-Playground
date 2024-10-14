@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "memory leak in hub_event",
+    "display-title": "memory leak in hub_event",
+    "id": "66fe8eb71f455a245547576eb8d36fec957d2424",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "media: gspca: Fix memory leak in probe",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e469d0b09a19496e1972a20974bbf55b728151eb",
+            "hash": "e469d0b09a19496e1972a20974bbf55b728151eb",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000014163805b48b5063@google.com/T/",
+        "https://lore.kernel.org/all/20201124160026.GA749809@rowland.harvard.edu/T/",
+        "https://lore.kernel.org/all/20201228124846.409999325@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124853.216621466@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124904.654293249@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124919.745526410@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228124937.240114599@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201228125020.963311703@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14925089500000",
+            "c-reproducer": "/text?tag=ReproC&x=16810051500000",
+            "kernel-config": "/text?tag=KernelConfig&x=c5353ac514ca5a43",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4d02da974ea85a62074efedf354e82778f910d82",
+            "kernel-source-commit": "4d02da974ea85a62074efedf354e82778f910d82",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0767f13fbd87c99aea7893eb64199b76be42cd61",
+            "syzkaller-commit": "0767f13fbd87c99aea7893eb64199b76be42cd61",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1117ad0e500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "gspca_dev_probe2",
+            "drivers/media/usb/gspca/gspca.c"
+        ]
+    ],
+    "patch_commit_date": "2020-12-02T17:20:04+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "2b006e748c81da1b32029257d003f9b2af7435a5",
+    "patch": "diff --git a/drivers/media/usb/gspca/gspca.c b/drivers/media/usb/gspca/gspca.c\nindex c295f642d352..158c8e28ed2c 100644\n--- a/drivers/media/usb/gspca/gspca.c\n+++ b/drivers/media/usb/gspca/gspca.c\n@@ -1575,6 +1575,7 @@ int gspca_dev_probe2(struct usb_interface *intf,\n \t\tinput_unregister_device(gspca_dev->input_dev);\n #endif\n \tv4l2_ctrl_handler_free(gspca_dev->vdev.ctrl_handler);\n+\tv4l2_device_unregister(&gspca_dev->v4l2_dev);\n \tkfree(gspca_dev->usb_buf);\n \tkfree(gspca_dev);\n \treturn ret;\n",
+    "patch_modified_files": [
+        "drivers/media/usb/gspca/gspca.c"
+    ]
+}

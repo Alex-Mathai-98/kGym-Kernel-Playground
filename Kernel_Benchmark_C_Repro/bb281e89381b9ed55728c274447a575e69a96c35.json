@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "general protection fault in ovl_dentry_upper",
+    "display-title": "general protection fault in ovl_dentry_upper",
+    "id": "bb281e89381b9ed55728c274447a575e69a96c35",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ovl: fix use inode directly in rcu-walk mode",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=672e4268b2863d7e4978dfed29552b31c2f9bd4e",
+            "hash": "672e4268b2863d7e4978dfed29552b31c2f9bd4e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000381c1405ee3029c0@google.com/T/",
+        "https://lore.kernel.org/all/20221124092602.259809-1-chenzhongjin@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in ovl_dentry_upper",
+            "syz-reproducer": "/text?tag=ReproSyz&x=10a320fd880000",
+            "c-reproducer": "/text?tag=ReproC&x=10e6b6ed880000",
+            "kernel-config": "/text?tag=KernelConfig&x=6f9416d398342c83",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=fe24a97cf2543e8832e7a2124802e5c32aac05aa",
+            "kernel-source-commit": "fe24a97cf2543e8832e7a2124802e5c32aac05aa",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/5bb7001449cd1dae6cbff2d660374d6d17cbd2c4",
+            "syzkaller-commit": "5bb7001449cd1dae6cbff2d660374d6d17cbd2c4",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12032fe9880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ovl_dentry_revalidate_common",
+            "fs/overlayfs/super.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-28T10:33:05+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "overlayfs"
+    ],
+    "parent_of_fix_commit": "eb7081409f94a9a8608593d0fb63a1aa3d6f95d8",
+    "patch": "diff --git a/fs/overlayfs/super.c b/fs/overlayfs/super.c\nindex a29a8afe9b26..3d14a3f1465d 100644\n--- a/fs/overlayfs/super.c\n+++ b/fs/overlayfs/super.c\n@@ -139,11 +139,16 @@ static int ovl_dentry_revalidate_common(struct dentry *dentry,\n \t\t\t\t\tunsigned int flags, bool weak)\n {\n \tstruct ovl_entry *oe = dentry->d_fsdata;\n+\tstruct inode *inode = d_inode_rcu(dentry);\n \tstruct dentry *upper;\n \tunsigned int i;\n \tint ret = 1;\n \n-\tupper = ovl_dentry_upper(dentry);\n+\t/* Careful in RCU mode */\n+\tif (!inode)\n+\t\treturn -ECHILD;\n+\n+\tupper = ovl_i_dentry_upper(inode);\n \tif (upper)\n \t\tret = ovl_revalidate_real(upper, flags, weak);\n \n",
+    "patch_modified_files": [
+        "fs/overlayfs/super.c"
+    ]
+}

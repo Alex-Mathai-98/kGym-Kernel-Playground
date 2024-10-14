@@ -1,0 +1,45 @@
+{
+    "version": 1,
+    "title": "inconsistent lock state in kmem_cache_alloc",
+    "display-title": "inconsistent lock state in kmem_cache_alloc",
+    "id": "bf3e592d3ed61b8f86b8ffba072adcde5485a5f6",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring/rw: defer fsnotify calls to task context",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b000145e9907809406d8164c3b2b8861d95aecd1",
+            "hash": "b000145e9907809406d8164c3b2b8861d95aecd1",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000074b50005e997178a@google.com/T/",
+        "https://lore.kernel.org/all/20221012072319.1a678100@rorschach.local.home/T/",
+        "https://lore.kernel.org/all/20221019083249.951566199@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/8cc4528f-ebce-d570-086f-f2f1098b532d@kernel.dk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "inconsistent lock state in kmem_cache_alloc",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1020566c880000",
+            "c-reproducer": "/text?tag=ReproC&x=104819e4880000",
+            "kernel-config": "/text?tag=KernelConfig&x=7db7ad17eb14cb7",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=105a36f3694edc680f3e9318cdd3c03722e42554",
+            "kernel-source-commit": "105a36f3694edc680f3e9318cdd3c03722e42554",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0042f2b4c00ce1ceeaa44a0147909fe3a6f86c5c",
+            "syzkaller-commit": "0042f2b4c00ce1ceeaa44a0147909fe3a6f86c5c",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12f56188880000"
+        }
+    ],
+    "subsystems": [
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "3e4cb6ebbb2bad201c1186bc0b7e8cf41dd7f7e6",
+    "patch": "diff --git a/io_uring/rw.c b/io_uring/rw.c\nindex 1ae1e52ab4cb..a25cd44cd415 100644\n--- a/io_uring/rw.c\n+++ b/io_uring/rw.c\n@@ -236,14 +236,6 @@ static void kiocb_end_write(struct io_kiocb *req)\n \n static bool __io_complete_rw_common(struct io_kiocb *req, long res)\n {\n-\tstruct io_rw *rw = io_kiocb_to_cmd(req, struct io_rw);\n-\n-\tif (rw->kiocb.ki_flags & IOCB_WRITE) {\n-\t\tkiocb_end_write(req);\n-\t\tfsnotify_modify(req->file);\n-\t} else {\n-\t\tfsnotify_access(req->file);\n-\t}\n \tif (unlikely(res != req->cqe.res)) {\n \t\tif ((res == -EAGAIN || res == -EOPNOTSUPP) &&\n \t\t    io_rw_should_reissue(req)) {\n@@ -270,6 +262,20 @@ static inline int io_fixup_rw_res(struct io_kiocb *req, long res)\n \treturn res;\n }\n \n+static void io_req_rw_complete(struct io_kiocb *req, bool *locked)\n+{\n+\tstruct io_rw *rw = io_kiocb_to_cmd(req, struct io_rw);\n+\n+\tif (rw->kiocb.ki_flags & IOCB_WRITE) {\n+\t\tkiocb_end_write(req);\n+\t\tfsnotify_modify(req->file);\n+\t} else {\n+\t\tfsnotify_access(req->file);\n+\t}\n+\n+\tio_req_task_complete(req, locked);\n+}\n+\n static void io_complete_rw(struct kiocb *kiocb, long res)\n {\n \tstruct io_rw *rw = container_of(kiocb, struct io_rw, kiocb);\n@@ -278,7 +284,7 @@ static void io_complete_rw(struct kiocb *kiocb, long res)\n \tif (__io_complete_rw_common(req, res))\n \t\treturn;\n \tio_req_set_res(req, io_fixup_rw_res(req, res), 0);\n-\treq->io_task_work.func = io_req_task_complete;\n+\treq->io_task_work.func = io_req_rw_complete;\n \tio_req_task_work_add(req);\n }\n \n",
+    "patch_modified_files": [
+        "io_uring/rw.c"
+    ]
+}

@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "kernel BUG in remove_inode_hugepages",
+    "display-title": "kernel BUG in remove_inode_hugepages",
+    "id": "022a4a69e31e49dd07fdd6837974fcc98eddf413",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "hugetlb: don't pass page cache pages to restore_reserve_on_error",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c7b1850dfb41d0b4154aca8dbc04777fbd75616f",
+            "hash": "c7b1850dfb41d0b4154aca8dbc04777fbd75616f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "bpf: Add kernel/modules BTF presence checks to bpftool feature command",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b9fc8b4a591811546fec2dbef7e9f809362100c9",
+        "hash": "b9fc8b4a591811546fec2dbef7e9f809362100c9",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000050776d05c9b7c7f0@google.com/T/",
+        "https://lore.kernel.org/all/20210818213304.37038-1-mike.kravetz@oracle.com/T/",
+        "https://lore.kernel.org/all/20210820020433.cv6IN-Xde%akpm@linux-foundation.org/T/",
+        "https://lore.kernel.org/all/20210824165607.709387-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "kernel BUG in remove_inode_hugepages",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12eeb6a6300000",
+            "c-reproducer": "/text?tag=ReproC&x=13515779300000",
+            "kernel-config": "/text?tag=KernelConfig&x=96f0602203250753",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a2824f19e6065a0d3735acd9fe7155b104e7edf5",
+            "kernel-source-commit": "a2824f19e6065a0d3735acd9fe7155b104e7edf5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/33c26cb735dc83786ebebe071a3e17cdd5383ead",
+            "syzkaller-commit": "33c26cb735dc83786ebebe071a3e17cdd5383ead",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12a4d5e9300000"
+        }
+    ],
+    "subsystems": [
+        "fs",
+        "mm"
+    ],
+    "parent_of_fix_commit": "a7cb5d23eaea148f8582229846f8dfff192f05c3",
+    "patch": "diff --git a/mm/hugetlb.c b/mm/hugetlb.c\nindex dfc940d5221d..8ea35ba6699f 100644\n--- a/mm/hugetlb.c\n+++ b/mm/hugetlb.c\n@@ -2476,7 +2476,7 @@ void restore_reserve_on_error(struct hstate *h, struct vm_area_struct *vma,\n \t\tif (!rc) {\n \t\t\t/*\n \t\t\t * This indicates there is an entry in the reserve map\n-\t\t\t * added by alloc_huge_page.  We know it was added\n+\t\t\t * not added by alloc_huge_page.  We know it was added\n \t\t\t * before the alloc_huge_page call, otherwise\n \t\t\t * HPageRestoreReserve would be set on the page.\n \t\t\t * Remove the entry so that a subsequent allocation\n@@ -4660,7 +4660,9 @@ static vm_fault_t hugetlb_cow(struct mm_struct *mm, struct vm_area_struct *vma,\n \tspin_unlock(ptl);\n \tmmu_notifier_invalidate_range_end(&range);\n out_release_all:\n-\trestore_reserve_on_error(h, vma, haddr, new_page);\n+\t/* No restore in case of successful pagetable update (Break COW) */\n+\tif (new_page != old_page)\n+\t\trestore_reserve_on_error(h, vma, haddr, new_page);\n \tput_page(new_page);\n out_release_old:\n \tput_page(old_page);\n@@ -4776,7 +4778,7 @@ static vm_fault_t hugetlb_no_page(struct mm_struct *mm,\n \tpte_t new_pte;\n \tspinlock_t *ptl;\n \tunsigned long haddr = address & huge_page_mask(h);\n-\tbool new_page = false;\n+\tbool new_page, new_pagecache_page = false;\n \n \t/*\n \t * Currently, we are forced to kill the process in the event the\n@@ -4799,6 +4801,7 @@ static vm_fault_t hugetlb_no_page(struct mm_struct *mm,\n \t\tgoto out;\n \n retry:\n+\tnew_page = false;\n \tpage = find_lock_page(mapping, idx);\n \tif (!page) {\n \t\t/* Check for page in userfault range */\n@@ -4842,6 +4845,7 @@ static vm_fault_t hugetlb_no_page(struct mm_struct *mm,\n \t\t\t\t\tgoto retry;\n \t\t\t\tgoto out;\n \t\t\t}\n+\t\t\tnew_pagecache_page = true;\n \t\t} else {\n \t\t\tlock_page(page);\n \t\t\tif (unlikely(anon_vma_prepare(vma))) {\n@@ -4926,7 +4930,9 @@ static vm_fault_t hugetlb_no_page(struct mm_struct *mm,\n \tspin_unlock(ptl);\n backout_unlocked:\n \tunlock_page(page);\n-\trestore_reserve_on_error(h, vma, haddr, page);\n+\t/* restore reserve for newly allocated pages not in page cache */\n+\tif (new_page && !new_pagecache_page)\n+\t\trestore_reserve_on_error(h, vma, haddr, page);\n \tput_page(page);\n \tgoto out;\n }\n@@ -5135,6 +5141,7 @@ int hugetlb_mcopy_atomic_pte(struct mm_struct *dst_mm,\n \tint ret = -ENOMEM;\n \tstruct page *page;\n \tint writable;\n+\tbool new_pagecache_page = false;\n \n \tif (is_continue) {\n \t\tret = -EFAULT;\n@@ -5228,6 +5235,7 @@ int hugetlb_mcopy_atomic_pte(struct mm_struct *dst_mm,\n \t\tret = huge_add_to_page_cache(page, mapping, idx);\n \t\tif (ret)\n \t\t\tgoto out_release_nounlock;\n+\t\tnew_pagecache_page = true;\n \t}\n \n \tptl = huge_pte_lockptr(h, dst_mm, dst_pte);\n@@ -5291,7 +5299,8 @@ int hugetlb_mcopy_atomic_pte(struct mm_struct *dst_mm,\n \tif (vm_shared || is_continue)\n \t\tunlock_page(page);\n out_release_nounlock:\n-\trestore_reserve_on_error(h, dst_vma, dst_addr, page);\n+\tif (!new_pagecache_page)\n+\t\trestore_reserve_on_error(h, dst_vma, dst_addr, page);\n \tput_page(page);\n \tgoto out;\n }\n",
+    "patch_modified_files": [
+        "mm/hugetlb.c"
+    ]
+}

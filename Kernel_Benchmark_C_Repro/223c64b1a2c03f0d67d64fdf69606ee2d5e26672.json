@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "WARNING in batadv_nc_mesh_free",
+    "display-title": "WARNING in batadv_nc_mesh_free",
+    "id": "223c64b1a2c03f0d67d64fdf69606ee2d5e26672",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: batman-adv: fix error handling",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6f68cd634856f8ca93bafd623ba5357e0f648c68",
+            "hash": "6f68cd634856f8ca93bafd623ba5357e0f648c68",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000000c522305cee520e6@google.com/T/",
+        "https://lore.kernel.org/all/20211024131356.10699-1-paskripkin@gmail.com/T/",
+        "https://lore.kernel.org/all/20211101082444.133899096@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211101082447.070493993@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211101082451.430720900@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211101082500.203657870@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211101082511.254155853@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211101082533.618411490@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20211124115658.328640564@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in batadv_nc_mesh_free",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1026ef2cb00000",
+            "c-reproducer": "/text?tag=ReproC&x=15c9c162b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=d95853dad8472c91",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=2f111a6fd5b5297b4e92f53798ca086f7c7d33a4",
+            "kernel-source-commit": "2f111a6fd5b5297b4e92f53798ca086f7c7d33a4",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/c5cb7da830c941bb15b077cb5e4591b2e2e54554",
+            "syzkaller-commit": "c5cb7da830c941bb15b077cb5e4591b2e2e54554",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1563eef0b00000"
+        }
+    ],
+    "subsystems": [
+        "batman"
+    ],
+    "parent_of_fix_commit": "fa40d9734a57bcbfa79a280189799f76c88f7bb0",
+    "patch": "diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c\nindex 1669744304c5..17687848daec 100644\n--- a/net/batman-adv/bridge_loop_avoidance.c\n+++ b/net/batman-adv/bridge_loop_avoidance.c\n@@ -1560,10 +1560,14 @@ int batadv_bla_init(struct batadv_priv *bat_priv)\n \t\treturn 0;\n \n \tbat_priv->bla.claim_hash = batadv_hash_new(128);\n-\tbat_priv->bla.backbone_hash = batadv_hash_new(32);\n+\tif (!bat_priv->bla.claim_hash)\n+\t\treturn -ENOMEM;\n \n-\tif (!bat_priv->bla.claim_hash || !bat_priv->bla.backbone_hash)\n+\tbat_priv->bla.backbone_hash = batadv_hash_new(32);\n+\tif (!bat_priv->bla.backbone_hash) {\n+\t\tbatadv_hash_destroy(bat_priv->bla.claim_hash);\n \t\treturn -ENOMEM;\n+\t}\n \n \tbatadv_hash_set_lock_class(bat_priv->bla.claim_hash,\n \t\t\t\t   &batadv_claim_hash_lock_class_key);\ndiff --git a/net/batman-adv/main.c b/net/batman-adv/main.c\nindex 3ddd66e4c29e..5207cd8d6ad8 100644\n--- a/net/batman-adv/main.c\n+++ b/net/batman-adv/main.c\n@@ -190,29 +190,41 @@ int batadv_mesh_init(struct net_device *soft_iface)\n \n \tbat_priv->gw.generation = 0;\n \n-\tret = batadv_v_mesh_init(bat_priv);\n-\tif (ret < 0)\n-\t\tgoto err;\n-\n \tret = batadv_originator_init(bat_priv);\n-\tif (ret < 0)\n-\t\tgoto err;\n+\tif (ret < 0) {\n+\t\tatomic_set(&bat_priv->mesh_state, BATADV_MESH_DEACTIVATING);\n+\t\tgoto err_orig;\n+\t}\n \n \tret = batadv_tt_init(bat_priv);\n-\tif (ret < 0)\n-\t\tgoto err;\n+\tif (ret < 0) {\n+\t\tatomic_set(&bat_priv->mesh_state, BATADV_MESH_DEACTIVATING);\n+\t\tgoto err_tt;\n+\t}\n+\n+\tret = batadv_v_mesh_init(bat_priv);\n+\tif (ret < 0) {\n+\t\tatomic_set(&bat_priv->mesh_state, BATADV_MESH_DEACTIVATING);\n+\t\tgoto err_v;\n+\t}\n \n \tret = batadv_bla_init(bat_priv);\n-\tif (ret < 0)\n-\t\tgoto err;\n+\tif (ret < 0) {\n+\t\tatomic_set(&bat_priv->mesh_state, BATADV_MESH_DEACTIVATING);\n+\t\tgoto err_bla;\n+\t}\n \n \tret = batadv_dat_init(bat_priv);\n-\tif (ret < 0)\n-\t\tgoto err;\n+\tif (ret < 0) {\n+\t\tatomic_set(&bat_priv->mesh_state, BATADV_MESH_DEACTIVATING);\n+\t\tgoto err_dat;\n+\t}\n \n \tret = batadv_nc_mesh_init(bat_priv);\n-\tif (ret < 0)\n-\t\tgoto err;\n+\tif (ret < 0) {\n+\t\tatomic_set(&bat_priv->mesh_state, BATADV_MESH_DEACTIVATING);\n+\t\tgoto err_nc;\n+\t}\n \n \tbatadv_gw_init(bat_priv);\n \tbatadv_mcast_init(bat_priv);\n@@ -222,8 +234,20 @@ int batadv_mesh_init(struct net_device *soft_iface)\n \n \treturn 0;\n \n-err:\n-\tbatadv_mesh_free(soft_iface);\n+err_nc:\n+\tbatadv_dat_free(bat_priv);\n+err_dat:\n+\tbatadv_bla_free(bat_priv);\n+err_bla:\n+\tbatadv_v_mesh_free(bat_priv);\n+err_v:\n+\tbatadv_tt_free(bat_priv);\n+err_tt:\n+\tbatadv_originator_free(bat_priv);\n+err_orig:\n+\tbatadv_purge_outstanding_packets(bat_priv, NULL);\n+\tatomic_set(&bat_priv->mesh_state, BATADV_MESH_INACTIVE);\n+\n \treturn ret;\n }\n \ndiff --git a/net/batman-adv/network-coding.c b/net/batman-adv/network-coding.c\nindex 9f06132e007d..0a7f1d36a6a8 100644\n--- a/net/batman-adv/network-coding.c\n+++ b/net/batman-adv/network-coding.c\n@@ -152,8 +152,10 @@ int batadv_nc_mesh_init(struct batadv_priv *bat_priv)\n \t\t\t\t   &batadv_nc_coding_hash_lock_class_key);\n \n \tbat_priv->nc.decoding_hash = batadv_hash_new(128);\n-\tif (!bat_priv->nc.decoding_hash)\n+\tif (!bat_priv->nc.decoding_hash) {\n+\t\tbatadv_hash_destroy(bat_priv->nc.coding_hash);\n \t\tgoto err;\n+\t}\n \n \tbatadv_hash_set_lock_class(bat_priv->nc.decoding_hash,\n \t\t\t\t   &batadv_nc_decoding_hash_lock_class_key);\ndiff --git a/net/batman-adv/translation-table.c b/net/batman-adv/translation-table.c\nindex e0b3dace2020..4b7ad6684bc4 100644\n--- a/net/batman-adv/translation-table.c\n+++ b/net/batman-adv/translation-table.c\n@@ -4162,8 +4162,10 @@ int batadv_tt_init(struct batadv_priv *bat_priv)\n \t\treturn ret;\n \n \tret = batadv_tt_global_init(bat_priv);\n-\tif (ret < 0)\n+\tif (ret < 0) {\n+\t\tbatadv_tt_local_table_free(bat_priv);\n \t\treturn ret;\n+\t}\n \n \tbatadv_tvlv_handler_register(bat_priv, batadv_tt_tvlv_ogm_handler_v1,\n \t\t\t\t     batadv_tt_tvlv_unicast_handler_v1,\n",
+    "patch_modified_files": [
+        "net/batman-adv/bridge_loop_avoidance.c",
+        "net/batman-adv/main.c",
+        "net/batman-adv/network-coding.c",
+        "net/batman-adv/translation-table.c"
+    ]
+}

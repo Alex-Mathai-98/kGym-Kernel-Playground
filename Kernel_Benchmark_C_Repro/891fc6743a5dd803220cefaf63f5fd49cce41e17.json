@@ -1,0 +1,115 @@
+{
+    "version": 1,
+    "title": "KASAN: vmalloc-out-of-bounds Write in lzo_uncompress",
+    "display-title": "KASAN: vmalloc-out-of-bounds Write in lzo_uncompress",
+    "id": "891fc6743a5dd803220cefaf63f5fd49cce41e17",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "squashfs: avoid out of bounds writes in decompressors",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e812cbbbbbb15adbbbee176baa1e8bda53059bf0",
+            "hash": "e812cbbbbbb15adbbbee176baa1e8bda53059bf0",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "squashfs: migrate from ll_rw_block usage to BIO",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=93e72b3c612adcaca13d874fcc86c53e6c8da541",
+        "hash": "93e72b3c612adcaca13d874fcc86c53e6c8da541",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000000a196b05b8c5b94a@google.com/T/",
+        "https://lore.kernel.org/all/20210204165326.7700111635890f9476b479ae@linux-foundation.org/T/",
+        "https://lore.kernel.org/all/20210209214150._Vu1-fOx4%akpm@linux-foundation.org/T/",
+        "https://lore.kernel.org/all/20210211150152.885701259@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/344389784.754551.1612769674031@webmail.123-reg.co.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=143237db500000",
+            "c-reproducer": "/text?tag=ReproC&x=17eff0af500000",
+            "kernel-config": "/text?tag=KernelConfig&x=c066f800cf2824be",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a0d54b4f5b219fb31f0776e9f53aa137e78ae431",
+            "kernel-source-commit": "a0d54b4f5b219fb31f0776e9f53aa137e78ae431",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2c1f2513486f21d26b1942ce77ffc782677fbf4e",
+            "syzkaller-commit": "2c1f2513486f21d26b1942ce77ffc782677fbf4e",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=106f58d7500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "squashfs_read_data",
+            "fs/squashfs/block.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "squashfs_decompressor_destroy",
+            "fs/squashfs/decompressor_multi_percpu.c"
+        ],
+        [
+            "zlib_uncompress",
+            "fs/squashfs/zlib_wrapper.c"
+        ],
+        [
+            "zstd_free",
+            "fs/squashfs/zstd_wrapper.c"
+        ],
+        [
+            "zstd_uncompress",
+            "fs/squashfs/zstd_wrapper.c"
+        ],
+        [
+            "squashfs_decompressor_setup",
+            "fs/squashfs/squashfs.h"
+        ],
+        [
+            "squashfs_xz_uncompress",
+            "fs/squashfs/xz_wrapper.c"
+        ],
+        [
+            "lzo_free",
+            "fs/squashfs/lzo_wrapper.c"
+        ],
+        [
+            "squashfs_decompressor_destroy",
+            "fs/squashfs/decompressor_single.c"
+        ],
+        [
+            "get_block_length",
+            "fs/squashfs/block.c"
+        ],
+        [
+            "squashfs_xz_free",
+            "fs/squashfs/xz_wrapper.c"
+        ],
+        [
+            "get_decomp_stream",
+            "fs/squashfs/decompressor_multi.c"
+        ],
+        [
+            "zlib_free",
+            "fs/squashfs/zlib_wrapper.c"
+        ],
+        [
+            "lz4_free",
+            "fs/squashfs/lz4_wrapper.c"
+        ]
+    ],
+    "patch_commit_date": "2021-02-09T21:41:50+00:00",
+    "cause_commit_date": "2020-06-02T04:45:23+00:00",
+    "subsystems": [
+        "squashfs"
+    ],
+    "parent_of_fix_commit": "e0756cfc7d7cd08c98a53b6009c091a3f6a50be6",
+    "patch": "diff --git a/fs/squashfs/block.c b/fs/squashfs/block.c\nindex 8a19773b5a0b..45f44425d856 100644\n--- a/fs/squashfs/block.c\n+++ b/fs/squashfs/block.c\n@@ -196,9 +196,15 @@ int squashfs_read_data(struct super_block *sb, u64 index, int length,\n \t\tlength = SQUASHFS_COMPRESSED_SIZE(length);\n \t\tindex += 2;\n \n-\t\tTRACE(\"Block @ 0x%llx, %scompressed size %d\\n\", index,\n+\t\tTRACE(\"Block @ 0x%llx, %scompressed size %d\\n\", index - 2,\n \t\t      compressed ? \"\" : \"un\", length);\n \t}\n+\tif (length < 0 || length > output->length ||\n+\t\t\t(index + length) > msblk->bytes_used) {\n+\t\tres = -EIO;\n+\t\tgoto out;\n+\t}\n+\n \tif (next_index)\n \t\t*next_index = index + length;\n \n",
+    "patch_modified_files": [
+        "fs/squashfs/block.c"
+    ]
+}

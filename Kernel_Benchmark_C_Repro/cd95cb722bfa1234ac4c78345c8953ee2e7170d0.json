@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in ext4_find_extent",
+    "display-title": "KASAN: use-after-free Read in ext4_find_extent (2)",
+    "id": "cd95cb722bfa1234ac4c78345c8953ee2e7170d0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ext4: fix use-after-free read in ext4_find_extent for bigalloc + inline",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=835659598c67907b98cd2aa57bb951dfaf675c69",
+            "hash": "835659598c67907b98cd2aa57bb951dfaf675c69",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000fb09de05f11a626d@google.com/T/",
+        "https://lore.kernel.org/all/168287753834.584010.2057559370526197114.b4-ty@mit.edu/T/",
+        "https://lore.kernel.org/all/20230102145833.2758-1-syoshida@redhat.com/T/",
+        "https://lore.kernel.org/all/20230104071559.2051847-1-yebin@huaweicloud.com/T/",
+        "https://lore.kernel.org/all/20230406111627.1916759-1-tudor.ambarus@linaro.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in ext4_find_extent",
+            "syz-reproducer": "/text?tag=ReproSyz&x=109a70f4480000",
+            "c-reproducer": "/text?tag=ReproC&x=1200b8f4480000",
+            "kernel-config": "/text?tag=KernelConfig&x=68e0be42c8ee4bb4",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=1b929c02afd37871d5afb9d498426f83432e71c2",
+            "kernel-source-commit": "1b929c02afd37871d5afb9d498426f83432e71c2",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9da18ae8fa827d046ef8da48cc23c97418553c23",
+            "syzkaller-commit": "9da18ae8fa827d046ef8da48cc23c97418553c23",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=173d9ae4480000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ext4_clu_mapped",
+            "fs/ext4/extents.c"
+        ]
+    ],
+    "patch_commit_date": "2023-04-06T11:16:27+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ext4"
+    ],
+    "parent_of_fix_commit": "1dedde690303c05ef732b7c5c8356fdf60a4ade3",
+    "patch": "diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c\nindex e79c767cc5e0..35703dce23a3 100644\n--- a/fs/ext4/extents.c\n+++ b/fs/ext4/extents.c\n@@ -5795,7 +5795,8 @@ int ext4_clu_mapped(struct inode *inode, ext4_lblk_t lclu)\n \t * mapped - no physical clusters have been allocated, and the\n \t * file has no extents\n \t */\n-\tif (ext4_test_inode_state(inode, EXT4_STATE_MAY_INLINE_DATA))\n+\tif (ext4_test_inode_state(inode, EXT4_STATE_MAY_INLINE_DATA) ||\n+\t    ext4_has_inline_data(inode))\n \t\treturn 0;\n \n \t/* search for the extent closest to the first block in the cluster */\n",
+    "patch_modified_files": [
+        "fs/ext4/extents.c"
+    ]
+}

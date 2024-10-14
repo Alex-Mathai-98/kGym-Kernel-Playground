@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in skb_copy_datagram_iter",
+    "display-title": "KASAN: use-after-free Read in skb_copy_datagram_iter",
+    "id": "55a499bb9fcef61ae7100e29ef7470efc8059e65",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "packet: in packet_snd start writing at link layer allocation",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b84bbaf7a6c8cca24f8acf25a2c8e46913a947ba",
+            "hash": "b84bbaf7a6c8cca24f8acf25a2c8e46913a947ba",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16f7110b800000",
+            "c-reproducer": "/text?tag=ReproC&x=1102082b800000",
+            "kernel-config": "/text?tag=KernelConfig&x=df8599aee7eea4d0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3eb2ce825ea1ad89d20f7a3b5780df850e4be274",
+            "kernel-source-commit": "3eb2ce825ea1ad89d20f7a3b5780df850e4be274",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e033c1f167809d025521a34e0f97bbc207b880f8",
+            "syzkaller-commit": "e033c1f167809d025521a34e0f97bbc207b880f8",
+            "compiler-description": "gcc (GCC) 7.1.1 20170620",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=172a850b800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "packet_snd",
+            "net/packet/af_packet.c"
+        ]
+    ],
+    "patch_commit_date": "2018-05-11T17:24:25+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "4bc871984f7cb5b2dec3ae64b570cb02f9ce2227",
+    "patch": "diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c\nindex 01f3515cada0..e9422fe45179 100644\n--- a/net/packet/af_packet.c\n+++ b/net/packet/af_packet.c\n@@ -2903,13 +2903,15 @@ static int packet_snd(struct socket *sock, struct msghdr *msg, size_t len)\n \tif (skb == NULL)\n \t\tgoto out_unlock;\n \n-\tskb_set_network_header(skb, reserve);\n+\tskb_reset_network_header(skb);\n \n \terr = -EINVAL;\n \tif (sock->type == SOCK_DGRAM) {\n \t\toffset = dev_hard_header(skb, dev, ntohs(proto), addr, NULL, len);\n \t\tif (unlikely(offset < 0))\n \t\t\tgoto out_free;\n+\t} else if (reserve) {\n+\t\tskb_push(skb, reserve);\n \t}\n \n \t/* Returns -EFAULT on error */\n",
+    "patch_modified_files": [
+        "net/packet/af_packet.c"
+    ]
+}

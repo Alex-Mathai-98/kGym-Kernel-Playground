@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "UBSAN: shift-out-of-bounds in __detect_linklayer",
+    "display-title": "UBSAN: shift-out-of-bounds in __detect_linklayer",
+    "id": "f79471b55fd9ce5071945b73d68db0c4aec2f2e0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net_sched: reject silly cell_log in qdisc_get_rtab()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e4bedf48aaa5552bc1f49703abd17606e7e6e82a",
+            "hash": "e4bedf48aaa5552bc1f49703abd17606e7e6e82a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "Linux 5.3",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4d856f72c10ecb060868ed10ff1b1453943fc6c8",
+        "hash": "4d856f72c10ecb060868ed10ff1b1453943fc6c8",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16369f0b500000",
+            "c-reproducer": "/text?tag=ReproC&x=12021acf500000",
+            "kernel-config": "/text?tag=KernelConfig&x=ee2266946ed36986",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=65f0d2414b7079556fbbcc070b3d1c9f9587606d",
+            "kernel-source-commit": "65f0d2414b7079556fbbcc070b3d1c9f9587606d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/269d24e857a757d09a898086a2fa6fa5d827c3e1",
+            "syzkaller-commit": "269d24e857a757d09a898086a2fa6fa5d827c3e1",
+            "compiler-description": "clang version 11.0.0 (https://github.com/llvm/llvm-project.git ca2dcbd030eadbf0aa9b660efe864ff08af6e18b)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16731868d00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "qdisc_get_rtab",
+            "net/sched/sch_api.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2021-01-14T16:06:37+00:00",
+    "cause_commit_date": "2019-09-15T21:19:32+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "e23a8d00219818ba74f97f6a4cbe071dbbd5b5f1",
+    "patch": "diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c\nindex 51cb553e4317..6fe4e5cc807c 100644\n--- a/net/sched/sch_api.c\n+++ b/net/sched/sch_api.c\n@@ -412,7 +412,8 @@ struct qdisc_rate_table *qdisc_get_rtab(struct tc_ratespec *r,\n {\n \tstruct qdisc_rate_table *rtab;\n \n-\tif (tab == NULL || r->rate == 0 || r->cell_log == 0 ||\n+\tif (tab == NULL || r->rate == 0 ||\n+\t    r->cell_log == 0 || r->cell_log >= 32 ||\n \t    nla_len(tab) != TC_RTAB_SIZE) {\n \t\tNL_SET_ERR_MSG(extack, \"Invalid rate table parameters for searching\");\n \t\treturn NULL;\n",
+    "patch_modified_files": [
+        "net/sched/sch_api.c"
+    ]
+}

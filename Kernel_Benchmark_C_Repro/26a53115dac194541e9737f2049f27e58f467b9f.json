@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "memory leak in read_adv_mon_features",
+    "display-title": "memory leak in read_adv_mon_features",
+    "id": "26a53115dac194541e9737f2049f27e58f467b9f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: Fix memory leak in read_adv_mon_features()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cafd472a10ff3bccd8afd25a69f20a491cd8d7b8",
+            "hash": "cafd472a10ff3bccd8afd25a69f20a491cd8d7b8",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000033913705acedbd6b@google.com/T/",
+        "https://lore.kernel.org/all/20200908200635.1099360-1-yepeilin.cs@gmail.com/T/",
+        "https://lore.kernel.org/all/20201027135450.497324313@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1286db9a900000",
+            "c-reproducer": "/text?tag=ReproC&x=1143ddf6900000",
+            "kernel-config": "/text?tag=KernelConfig&x=e320bbff976a5cdc",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7fca4dee610dffbe119714231cac0d59496bc193",
+            "kernel-source-commit": "7fca4dee610dffbe119714231cac0d59496bc193",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/424dd8e7b52828cad44ce653a5d4ac30670f5e2c",
+            "syzkaller-commit": "424dd8e7b52828cad44ce653a5d4ac30670f5e2c",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1737cea6900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "read_adv_mon_features",
+            "net/bluetooth/mgmt.c"
+        ]
+    ],
+    "patch_commit_date": "2020-09-09T07:25:51+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "2041a3f5009745d2b7d37208e7e7e8ccdb3d4c9c",
+    "patch": "diff --git a/net/bluetooth/mgmt.c b/net/bluetooth/mgmt.c\nindex 5bbe71002fb9..f96251f818fc 100644\n--- a/net/bluetooth/mgmt.c\n+++ b/net/bluetooth/mgmt.c\n@@ -4157,7 +4157,7 @@ static int read_adv_mon_features(struct sock *sk, struct hci_dev *hdev,\n {\n \tstruct adv_monitor *monitor = NULL;\n \tstruct mgmt_rp_read_adv_monitor_features *rp = NULL;\n-\tint handle;\n+\tint handle, err;\n \tsize_t rp_size = 0;\n \t__u32 supported = 0;\n \t__u16 num_handles = 0;\n@@ -4192,9 +4192,13 @@ static int read_adv_mon_features(struct sock *sk, struct hci_dev *hdev,\n \tif (num_handles)\n \t\tmemcpy(&rp->handles, &handles, (num_handles * sizeof(u16)));\n \n-\treturn mgmt_cmd_complete(sk, hdev->id,\n-\t\t\t\t MGMT_OP_READ_ADV_MONITOR_FEATURES,\n-\t\t\t\t MGMT_STATUS_SUCCESS, rp, rp_size);\n+\terr = mgmt_cmd_complete(sk, hdev->id,\n+\t\t\t\tMGMT_OP_READ_ADV_MONITOR_FEATURES,\n+\t\t\t\tMGMT_STATUS_SUCCESS, rp, rp_size);\n+\n+\tkfree(rp);\n+\n+\treturn err;\n }\n \n static int add_adv_patterns_monitor(struct sock *sk, struct hci_dev *hdev,\n",
+    "patch_modified_files": [
+        "net/bluetooth/mgmt.c"
+    ]
+}

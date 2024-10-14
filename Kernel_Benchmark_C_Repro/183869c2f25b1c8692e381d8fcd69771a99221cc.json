@@ -1,0 +1,150 @@
+{
+    "version": 1,
+    "title": "WARNING in cfg80211_inform_single_bss_frame_data",
+    "display-title": "WARNING in cfg80211_inform_single_bss_frame_data",
+    "id": "183869c2f25b1c8692e381d8fcd69771a99221cc",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mac80211: fix skb length check in ieee80211_scan_rx()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e298aa358f0ca658406d524b6639fe389cb6e11e",
+            "hash": "e298aa358f0ca658406d524b6639fe389cb6e11e",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "mac80211: pass bssids to elements parsing function",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4abb52a46e7336c1e568a53761c8b7a81bbaaeaf",
+        "hash": "4abb52a46e7336c1e568a53761c8b7a81bbaaeaf",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000063dcb705ba42aa1d@google.com/T/",
+        "https://lore.kernel.org/all/20210510041649.589754-1-ducheng2@gmail.com/T/",
+        "https://lore.kernel.org/all/20210621154911.244649123@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210621154921.212599475@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in cfg80211_inform_single_bss_frame_data",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13fdeca0d00000",
+            "c-reproducer": "/text?tag=ReproC&x=173e9028d00000",
+            "kernel-config": "/text?tag=KernelConfig&x=96b123631a6700e9",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=6642d600b541b81931fb1ab0c041b0d68f77be7e",
+            "kernel-source-commit": "6642d600b541b81931fb1ab0c041b0d68f77be7e",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/fc9fd31ee7998c8b747752791000ea4eef07b5c6",
+            "syzkaller-commit": "fc9fd31ee7998c8b747752791000ea4eef07b5c6",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=169f06bf500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ieee80211_scan_rx",
+            "net/mac80211/scan.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "mesh_rx_plink_frame",
+            "net/mac80211/mesh_plink.c"
+        ],
+        [
+            "ieee80211_scan_rx",
+            "net/mac80211/scan.c"
+        ],
+        [
+            "ieee80211_mesh_rx_bcn_presp",
+            "net/mac80211/mesh.c"
+        ],
+        [
+            "mesh_rx_csa_frame",
+            "net/mac80211/mesh.c"
+        ],
+        [
+            "ieee80211_sta_rx_queued_mgmt",
+            "net/mac80211/mlme.c"
+        ],
+        [
+            "ieee80211_process_tdls_channel_switch_resp",
+            "net/mac80211/tdls.c"
+        ],
+        [
+            "EXPORT_SYMBOL",
+            "net/mac80211/util.c"
+        ],
+        [
+            "ieee80211_ibss_rx_queued_mgmt",
+            "net/mac80211/ibss.c"
+        ],
+        [
+            "ieee80211_rx_bss_info",
+            "net/mac80211/mlme.c"
+        ],
+        [
+            "ieee80211_bss_info_update",
+            "net/mac80211/scan.c"
+        ],
+        [
+            "ieee80211_tx_skb",
+            "net/mac80211/ieee80211_i.h"
+        ],
+        [
+            "ieee80211_process_tdls_channel_switch_req",
+            "net/mac80211/tdls.c"
+        ],
+        [
+            "ieee80211_rx_bss_info",
+            "net/mac80211/ibss.c"
+        ],
+        [
+            "ieee80211_mesh_rx_probe_req",
+            "net/mac80211/mesh.c"
+        ],
+        [
+            "ieee80211_rx_mgmt_assoc_resp",
+            "net/mac80211/mlme.c"
+        ],
+        [
+            "mesh_rx_path_sel_frame",
+            "net/mac80211/mesh_hwmp.c"
+        ],
+        [
+            "ieee80211_auth_challenge",
+            "net/mac80211/mlme.c"
+        ],
+        [
+            "ieee80211_rx_mgmt_probe_resp",
+            "net/mac80211/mlme.c"
+        ],
+        [
+            "ieee80211_assoc_success",
+            "net/mac80211/mlme.c"
+        ],
+        [
+            "ieee80211_rx_mgmt_probe_beacon",
+            "net/mac80211/ibss.c"
+        ],
+        [
+            "ieee80211_rx_mgmt_beacon",
+            "net/mac80211/mlme.c"
+        ],
+        [
+            "ieee80211_bss_info_update",
+            "net/mac80211/ieee80211_i.h"
+        ]
+    ],
+    "patch_commit_date": "2021-05-10T04:16:49+00:00",
+    "cause_commit_date": "2019-01-16T10:14:41+00:00",
+    "subsystems": [
+        "wireless"
+    ],
+    "parent_of_fix_commit": "b90f51e8e1f5014c01c82a7bf4c611643d0a8bcb",
+    "patch": "diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c\nindex d4cc9ac2d703..6b50cb5e0e3c 100644\n--- a/net/mac80211/scan.c\n+++ b/net/mac80211/scan.c\n@@ -251,13 +251,24 @@ void ieee80211_scan_rx(struct ieee80211_local *local, struct sk_buff *skb)\n \tstruct ieee80211_mgmt *mgmt = (void *)skb->data;\n \tstruct ieee80211_bss *bss;\n \tstruct ieee80211_channel *channel;\n+\tsize_t min_hdr_len = offsetof(struct ieee80211_mgmt,\n+\t\t\t\t      u.probe_resp.variable);\n+\n+\tif (!ieee80211_is_probe_resp(mgmt->frame_control) &&\n+\t    !ieee80211_is_beacon(mgmt->frame_control) &&\n+\t    !ieee80211_is_s1g_beacon(mgmt->frame_control))\n+\t\treturn;\n \n \tif (ieee80211_is_s1g_beacon(mgmt->frame_control)) {\n-\t\tif (skb->len < 15)\n-\t\t\treturn;\n-\t} else if (skb->len < 24 ||\n-\t\t (!ieee80211_is_probe_resp(mgmt->frame_control) &&\n-\t\t  !ieee80211_is_beacon(mgmt->frame_control)))\n+\t\tif (ieee80211_is_s1g_short_beacon(mgmt->frame_control))\n+\t\t\tmin_hdr_len = offsetof(struct ieee80211_ext,\n+\t\t\t\t\t       u.s1g_short_beacon.variable);\n+\t\telse\n+\t\t\tmin_hdr_len = offsetof(struct ieee80211_ext,\n+\t\t\t\t\t       u.s1g_beacon);\n+\t}\n+\n+\tif (skb->len < min_hdr_len)\n \t\treturn;\n \n \tsdata1 = rcu_dereference(local->scan_sdata);\n",
+    "patch_modified_files": [
+        "net/mac80211/scan.c"
+    ]
+}

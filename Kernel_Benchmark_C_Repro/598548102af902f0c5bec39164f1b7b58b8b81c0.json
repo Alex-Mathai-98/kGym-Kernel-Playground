@@ -1,0 +1,63 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in io_worker_get",
+    "display-title": "KASAN: use-after-free Read in io_worker_get",
+    "id": "598548102af902f0c5bec39164f1b7b58b8b81c0",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring/io-wq: only free worker if it was allocated for creation",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e6db6f9398dadcbc06318a133d4c44a2d3844e61",
+            "hash": "e6db6f9398dadcbc06318a133d4c44a2d3844e61",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "io_uring/io-wq: free worker if task_work creation is canceled",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=af82425c6a2d2f347c79b63ce74fca6dc6be157f",
+        "hash": "af82425c6a2d2f347c79b63ce74fca6dc6be157f",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000097fc2305f1ce87d9@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in io_worker_get",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1532ef72480000",
+            "c-reproducer": "/text?tag=ReproC&x=10b43f3a480000",
+            "kernel-config": "/text?tag=KernelConfig&x=33ad6720950f996d",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a689b938df39ab513026c53fb7011fd7cd594943",
+            "kernel-source-commit": "a689b938df39ab513026c53fb7011fd7cd594943",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/1dac8c7a01e2bdd35cb04eb4901ddb157291ac2d",
+            "syzkaller-commit": "1dac8c7a01e2bdd35cb04eb4901ddb157291ac2d",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=154480a4480000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "io_wq_cancel_tw_create",
+            "io_uring/io-wq.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "io_wq_cancel_tw_create",
+            "io_uring/io-wq.c"
+        ]
+    ],
+    "patch_commit_date": "2023-01-08T17:39:17+00:00",
+    "cause_commit_date": "2023-01-02T23:49:46+00:00",
+    "subsystems": [
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "12521a5d5cb7ff0ad43eadfc9c135d86e1131fa8",
+    "patch": "diff --git a/io_uring/io-wq.c b/io_uring/io-wq.c\nindex 992dcd9f8c4c..411bb2d1acd4 100644\n--- a/io_uring/io-wq.c\n+++ b/io_uring/io-wq.c\n@@ -1230,7 +1230,12 @@ static void io_wq_cancel_tw_create(struct io_wq *wq)\n \n \t\tworker = container_of(cb, struct io_worker, create_work);\n \t\tio_worker_cancel_cb(worker);\n-\t\tkfree(worker);\n+\t\t/*\n+\t\t * Only the worker continuation helper has worker allocated and\n+\t\t * hence needs freeing.\n+\t\t */\n+\t\tif (cb->func == create_worker_cont)\n+\t\t\tkfree(worker);\n \t}\n }\n \n",
+    "patch_modified_files": [
+        "io_uring/io-wq.c"
+    ]
+}

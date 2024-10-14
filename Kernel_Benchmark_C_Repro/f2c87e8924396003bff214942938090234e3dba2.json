@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "possible deadlock in snd_timer_interrupt",
+    "display-title": "possible deadlock in snd_timer_interrupt (2)",
+    "id": "f2c87e8924396003bff214942938090234e3dba2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ALSA: timer: Use deferred fasync helper",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=95cc637c1afd83fb7dd3d7c8a53710488f4caf9c",
+            "hash": "95cc637c1afd83fb7dd3d7c8a53710488f4caf9c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000afc4bc05d150d3af@google.com/T/",
+        "https://lore.kernel.org/all/20220814161943.2394452-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220814162332.2396012-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220814162610.2397644-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220814162739.2398217-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220814162833.2398478-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220814162922.2398723-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220814162959.2399011-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220814163041.2399552-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20220823080034.579196046@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220823080046.056825146@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220823080053.202747790@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220823080059.091088642@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220823080100.268827165@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220823080115.331990024@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220823080118.128342613@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/s5hfsnup3jf.wl-tiwai@suse.de/T/"
+    ],
+    "crashes": [
+        {
+            "title": "possible deadlock in snd_timer_interrupt",
+            "syz-reproducer": "/text?tag=ReproSyz&x=11b6ad85700000",
+            "c-reproducer": "/text?tag=ReproC&x=12527ef1700000",
+            "kernel-config": "/text?tag=KernelConfig&x=4e9585407e09f75f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=38f80f42147ff658aff218edb0a88c37e58bf44f",
+            "kernel-source-commit": "38f80f42147ff658aff218edb0a88c37e58bf44f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/45a13a7381e60020d94d037d88a75727984b7a9a",
+            "syzkaller-commit": "45a13a7381e60020d94d037d88a75727984b7a9a",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1546da95700000"
+        }
+    ],
+    "subsystems": [
+        "sound"
+    ],
+    "parent_of_fix_commit": "ef34a0ae7a2654bc9e58675e36898217fb2799d8",
+    "patch": "diff --git a/sound/core/timer.c b/sound/core/timer.c\nindex b3214baa8919..e08a37c23add 100644\n--- a/sound/core/timer.c\n+++ b/sound/core/timer.c\n@@ -83,7 +83,7 @@ struct snd_timer_user {\n \tunsigned int filter;\n \tstruct timespec64 tstamp;\t\t/* trigger tstamp */\n \twait_queue_head_t qchange_sleep;\n-\tstruct fasync_struct *fasync;\n+\tstruct snd_fasync *fasync;\n \tstruct mutex ioctl_lock;\n };\n \n@@ -1345,7 +1345,7 @@ static void snd_timer_user_interrupt(struct snd_timer_instance *timeri,\n \t}\n       __wake:\n \tspin_unlock(&tu->qlock);\n-\tkill_fasync(&tu->fasync, SIGIO, POLL_IN);\n+\tsnd_kill_fasync(tu->fasync, SIGIO, POLL_IN);\n \twake_up(&tu->qchange_sleep);\n }\n \n@@ -1383,7 +1383,7 @@ static void snd_timer_user_ccallback(struct snd_timer_instance *timeri,\n \tspin_lock_irqsave(&tu->qlock, flags);\n \tsnd_timer_user_append_to_tqueue(tu, &r1);\n \tspin_unlock_irqrestore(&tu->qlock, flags);\n-\tkill_fasync(&tu->fasync, SIGIO, POLL_IN);\n+\tsnd_kill_fasync(tu->fasync, SIGIO, POLL_IN);\n \twake_up(&tu->qchange_sleep);\n }\n \n@@ -1453,7 +1453,7 @@ static void snd_timer_user_tinterrupt(struct snd_timer_instance *timeri,\n \tspin_unlock(&tu->qlock);\n \tif (append == 0)\n \t\treturn;\n-\tkill_fasync(&tu->fasync, SIGIO, POLL_IN);\n+\tsnd_kill_fasync(tu->fasync, SIGIO, POLL_IN);\n \twake_up(&tu->qchange_sleep);\n }\n \n@@ -1521,6 +1521,7 @@ static int snd_timer_user_release(struct inode *inode, struct file *file)\n \t\t\tsnd_timer_instance_free(tu->timeri);\n \t\t}\n \t\tmutex_unlock(&tu->ioctl_lock);\n+\t\tsnd_fasync_free(tu->fasync);\n \t\tkfree(tu->queue);\n \t\tkfree(tu->tqueue);\n \t\tkfree(tu);\n@@ -2135,7 +2136,7 @@ static int snd_timer_user_fasync(int fd, struct file * file, int on)\n \tstruct snd_timer_user *tu;\n \n \ttu = file->private_data;\n-\treturn fasync_helper(fd, file, on, &tu->fasync);\n+\treturn snd_fasync_helper(fd, file, on, &tu->fasync);\n }\n \n static ssize_t snd_timer_user_read(struct file *file, char __user *buffer,\n",
+    "patch_modified_files": [
+        "sound/core/timer.c"
+    ]
+}

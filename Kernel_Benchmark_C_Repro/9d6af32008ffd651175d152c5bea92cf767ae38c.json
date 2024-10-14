@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "title": "memory leak in io_submit_sqes",
+    "display-title": "memory leak in io_submit_sqes (4)",
+    "id": "9d6af32008ffd651175d152c5bea92cf767ae38c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring/poll: add hash if ready poll request can't complete inline",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=febb985c06cb6f5fac63598c0bffd4fd823d110d",
+            "hash": "febb985c06cb6f5fac63598c0bffd4fd823d110d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000009f829805f1ce87b2@google.com/T/",
+        "https://lore.kernel.org/all/559d2a90-25c5-626c-c643-25a86cf15e6a@kernel.dk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in io_submit_sqes",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12929d9a480000",
+            "c-reproducer": "/text?tag=ReproC&x=105ffae2480000",
+            "kernel-config": "/text?tag=KernelConfig&x=5ddca4921a53cff2",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=0a71553536d270e988580a3daa9fc87535908221",
+            "kernel-source-commit": "0a71553536d270e988580a3daa9fc87535908221",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/1dac8c7a01e2bdd35cb04eb4901ddb157291ac2d",
+            "syzkaller-commit": "1dac8c7a01e2bdd35cb04eb4901ddb157291ac2d",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17105b3a480000"
+        }
+    ],
+    "subsystems": [
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "e6db6f9398dadcbc06318a133d4c44a2d3844e61",
+    "patch": "diff --git a/io_uring/poll.c b/io_uring/poll.c\nindex ee7da6150ec4..cf6a70bd54e0 100644\n--- a/io_uring/poll.c\n+++ b/io_uring/poll.c\n@@ -533,6 +533,14 @@ static bool io_poll_can_finish_inline(struct io_kiocb *req,\n \treturn pt->owning || io_poll_get_ownership(req);\n }\n \n+static void io_poll_add_hash(struct io_kiocb *req)\n+{\n+\tif (req->flags & REQ_F_HASH_LOCKED)\n+\t\tio_poll_req_insert_locked(req);\n+\telse\n+\t\tio_poll_req_insert(req);\n+}\n+\n /*\n  * Returns 0 when it's handed over for polling. The caller owns the requests if\n  * it returns non-zero, but otherwise should not touch it. Negative values\n@@ -591,18 +599,17 @@ static int __io_arm_poll_handler(struct io_kiocb *req,\n \n \tif (mask &&\n \t   ((poll->events & (EPOLLET|EPOLLONESHOT)) == (EPOLLET|EPOLLONESHOT))) {\n-\t\tif (!io_poll_can_finish_inline(req, ipt))\n+\t\tif (!io_poll_can_finish_inline(req, ipt)) {\n+\t\t\tio_poll_add_hash(req);\n \t\t\treturn 0;\n+\t\t}\n \t\tio_poll_remove_entries(req);\n \t\tipt->result_mask = mask;\n \t\t/* no one else has access to the req, forget about the ref */\n \t\treturn 1;\n \t}\n \n-\tif (req->flags & REQ_F_HASH_LOCKED)\n-\t\tio_poll_req_insert_locked(req);\n-\telse\n-\t\tio_poll_req_insert(req);\n+\tio_poll_add_hash(req);\n \n \tif (mask && (poll->events & EPOLLET) &&\n \t    io_poll_can_finish_inline(req, ipt)) {\n",
+    "patch_modified_files": [
+        "io_uring/poll.c"
+    ]
+}

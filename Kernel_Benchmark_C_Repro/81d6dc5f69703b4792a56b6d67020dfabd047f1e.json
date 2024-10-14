@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "title": "general protection fault in __xfs_free_extent",
+    "display-title": "general protection fault in __xfs_free_extent",
+    "id": "81d6dc5f69703b4792a56b6d67020dfabd047f1e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "xfs: pass per-ag references to xfs_free_extent",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b2ccab3199aa7cea9154d80ea2585312c5f6eba0",
+            "hash": "b2ccab3199aa7cea9154d80ea2585312c5f6eba0",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000529f1805f81b23c2@google.com/T/",
+        "https://lore.kernel.org/all/000000000000540fc405f01401bf@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in __xfs_free_extent",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1798429d880000",
+            "c-reproducer": "/text?tag=ReproC&x=161b948f880000",
+            "kernel-config": "/text?tag=KernelConfig&x=8c59170b68d26a55",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=02bf43c7b7f7a19aa59a75f5244f0a3408bace1a",
+            "kernel-source-commit": "02bf43c7b7f7a19aa59a75f5244f0a3408bace1a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/f6511626584e1f100818d9036909e0480ffd34c1",
+            "syzkaller-commit": "f6511626584e1f100818d9036909e0480ffd34c1",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=114fc70b880000"
+        }
+    ],
+    "subsystems": [
+        "xfs"
+    ],
+    "parent_of_fix_commit": "774a99b47b588bf0bd9f65d3b241d5bba0b2fcb0",
+    "patch": "diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c\nindex 86696a1c6891..ae45f546ed86 100644\n--- a/fs/xfs/libxfs/xfs_ag.c\n+++ b/fs/xfs/libxfs/xfs_ag.c\n@@ -1043,10 +1043,8 @@ xfs_ag_extend_space(\n \tif (error)\n \t\treturn error;\n \n-\terror = xfs_free_extent(tp, XFS_AGB_TO_FSB(pag->pag_mount, pag->pag_agno,\n-\t\t\t\t\tbe32_to_cpu(agf->agf_length) - len),\n-\t\t\t\tlen, &XFS_RMAP_OINFO_SKIP_UPDATE,\n-\t\t\t\tXFS_AG_RESV_NONE);\n+\terror = xfs_free_extent(tp, pag, be32_to_cpu(agf->agf_length) - len,\n+\t\t\tlen, &XFS_RMAP_OINFO_SKIP_UPDATE, XFS_AG_RESV_NONE);\n \tif (error)\n \t\treturn error;\n \ndiff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c\nindex 203f16c48c19..ea9ac2ad9d36 100644\n--- a/fs/xfs/libxfs/xfs_alloc.c\n+++ b/fs/xfs/libxfs/xfs_alloc.c\n@@ -3596,7 +3596,8 @@ xfs_free_extent_fix_freelist(\n int\n __xfs_free_extent(\n \tstruct xfs_trans\t\t*tp,\n-\txfs_fsblock_t\t\t\tbno,\n+\tstruct xfs_perag\t\t*pag,\n+\txfs_agblock_t\t\t\tagbno,\n \txfs_extlen_t\t\t\tlen,\n \tconst struct xfs_owner_info\t*oinfo,\n \tenum xfs_ag_resv_type\t\ttype,\n@@ -3604,12 +3605,9 @@ __xfs_free_extent(\n {\n \tstruct xfs_mount\t\t*mp = tp->t_mountp;\n \tstruct xfs_buf\t\t\t*agbp;\n-\txfs_agnumber_t\t\t\tagno = XFS_FSB_TO_AGNO(mp, bno);\n-\txfs_agblock_t\t\t\tagbno = XFS_FSB_TO_AGBNO(mp, bno);\n \tstruct xfs_agf\t\t\t*agf;\n \tint\t\t\t\terror;\n \tunsigned int\t\t\tbusy_flags = 0;\n-\tstruct xfs_perag\t\t*pag;\n \n \tASSERT(len != 0);\n \tASSERT(type != XFS_AG_RESV_AGFL);\n@@ -3618,10 +3616,9 @@ __xfs_free_extent(\n \t\t\tXFS_ERRTAG_FREE_EXTENT))\n \t\treturn -EIO;\n \n-\tpag = xfs_perag_get(mp, agno);\n \terror = xfs_free_extent_fix_freelist(tp, pag, &agbp);\n \tif (error)\n-\t\tgoto err;\n+\t\treturn error;\n \tagf = agbp->b_addr;\n \n \tif (XFS_IS_CORRUPT(mp, agbno >= mp->m_sb.sb_agblocks)) {\n@@ -3635,20 +3632,18 @@ __xfs_free_extent(\n \t\tgoto err_release;\n \t}\n \n-\terror = xfs_free_ag_extent(tp, agbp, agno, agbno, len, oinfo, type);\n+\terror = xfs_free_ag_extent(tp, agbp, pag->pag_agno, agbno, len, oinfo,\n+\t\t\ttype);\n \tif (error)\n \t\tgoto err_release;\n \n \tif (skip_discard)\n \t\tbusy_flags |= XFS_EXTENT_BUSY_SKIP_DISCARD;\n \txfs_extent_busy_insert(tp, pag, agbno, len, busy_flags);\n-\txfs_perag_put(pag);\n \treturn 0;\n \n err_release:\n \txfs_trans_brelse(tp, agbp);\n-err:\n-\txfs_perag_put(pag);\n \treturn error;\n }\n \ndiff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h\nindex 2b246d74c189..e12d86e3aeec 100644\n--- a/fs/xfs/libxfs/xfs_alloc.h\n+++ b/fs/xfs/libxfs/xfs_alloc.h\n@@ -141,7 +141,8 @@ int xfs_alloc_vextent_first_ag(struct xfs_alloc_arg *args,\n int\t\t\t\t/* error */\n __xfs_free_extent(\n \tstruct xfs_trans\t*tp,\t/* transaction pointer */\n-\txfs_fsblock_t\t\tbno,\t/* starting block number of extent */\n+\tstruct xfs_perag\t*pag,\n+\txfs_agblock_t\t\tagbno,\n \txfs_extlen_t\t\tlen,\t/* length of extent */\n \tconst struct xfs_owner_info\t*oinfo,\t/* extent owner */\n \tenum xfs_ag_resv_type\ttype,\t/* block reservation type */\n@@ -150,12 +151,13 @@ __xfs_free_extent(\n static inline int\n xfs_free_extent(\n \tstruct xfs_trans\t*tp,\n-\txfs_fsblock_t\t\tbno,\n+\tstruct xfs_perag\t*pag,\n+\txfs_agblock_t\t\tagbno,\n \txfs_extlen_t\t\tlen,\n \tconst struct xfs_owner_info\t*oinfo,\n \tenum xfs_ag_resv_type\ttype)\n {\n-\treturn __xfs_free_extent(tp, bno, len, oinfo, type, false);\n+\treturn __xfs_free_extent(tp, pag, agbno, len, oinfo, type, false);\n }\n \n int\t\t\t\t/* error */\ndiff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c\nindex 9b28211d5a4c..1d2af50ac95b 100644\n--- a/fs/xfs/libxfs/xfs_ialloc_btree.c\n+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c\n@@ -156,9 +156,12 @@ __xfs_inobt_free_block(\n \tstruct xfs_buf\t\t*bp,\n \tenum xfs_ag_resv_type\tresv)\n {\n+\txfs_fsblock_t\t\tfsbno;\n+\n \txfs_inobt_mod_blockcount(cur, -1);\n-\treturn xfs_free_extent(cur->bc_tp,\n-\t\t\tXFS_DADDR_TO_FSB(cur->bc_mp, xfs_buf_daddr(bp)), 1,\n+\tfsbno = XFS_DADDR_TO_FSB(cur->bc_mp, xfs_buf_daddr(bp));\n+\treturn xfs_free_extent(cur->bc_tp, cur->bc_ag.pag,\n+\t\t\tXFS_FSB_TO_AGBNO(cur->bc_mp, fsbno), 1,\n \t\t\t&XFS_RMAP_OINFO_INOBT, resv);\n }\n \ndiff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c\nindex f3b860970b26..749e837de98d 100644\n--- a/fs/xfs/libxfs/xfs_refcount_btree.c\n+++ b/fs/xfs/libxfs/xfs_refcount_btree.c\n@@ -112,8 +112,9 @@ xfs_refcountbt_free_block(\n \t\t\tXFS_FSB_TO_AGBNO(cur->bc_mp, fsbno), 1);\n \tbe32_add_cpu(&agf->agf_refcount_blocks, -1);\n \txfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_REFCOUNT_BLOCKS);\n-\terror = xfs_free_extent(cur->bc_tp, fsbno, 1, &XFS_RMAP_OINFO_REFC,\n-\t\t\tXFS_AG_RESV_METADATA);\n+\terror = xfs_free_extent(cur->bc_tp, cur->bc_ag.pag,\n+\t\t\tXFS_FSB_TO_AGBNO(cur->bc_mp, fsbno), 1,\n+\t\t\t&XFS_RMAP_OINFO_REFC, XFS_AG_RESV_METADATA);\n \tif (error)\n \t\treturn error;\n \ndiff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c\nindex 1b71174ec0d6..e12058a5f22e 100644\n--- a/fs/xfs/scrub/repair.c\n+++ b/fs/xfs/scrub/repair.c\n@@ -598,7 +598,8 @@ xrep_reap_block(\n \telse if (resv == XFS_AG_RESV_AGFL)\n \t\terror = xrep_put_freelist(sc, agbno);\n \telse\n-\t\terror = xfs_free_extent(sc->tp, fsbno, 1, oinfo, resv);\n+\t\terror = xfs_free_extent(sc->tp, sc->sa.pag, agbno, 1, oinfo,\n+\t\t\t\tresv);\n \tif (agf_bp != sc->sa.agf_bp)\n \t\txfs_trans_brelse(sc->tp, agf_bp);\n \tif (error)\ndiff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c\nindex 011b50469301..c1aae07467c9 100644\n--- a/fs/xfs/xfs_extfree_item.c\n+++ b/fs/xfs/xfs_extfree_item.c\n@@ -350,6 +350,7 @@ xfs_trans_free_extent(\n \tstruct xfs_owner_info\t\toinfo = { };\n \tstruct xfs_mount\t\t*mp = tp->t_mountp;\n \tstruct xfs_extent\t\t*extp;\n+\tstruct xfs_perag\t\t*pag;\n \tuint\t\t\t\tnext_extent;\n \txfs_agnumber_t\t\t\tagno = XFS_FSB_TO_AGNO(mp,\n \t\t\t\t\t\t\txefi->xefi_startblock);\n@@ -366,9 +367,12 @@ xfs_trans_free_extent(\n \ttrace_xfs_bmap_free_deferred(tp->t_mountp, agno, 0, agbno,\n \t\t\txefi->xefi_blockcount);\n \n-\terror = __xfs_free_extent(tp, xefi->xefi_startblock,\n-\t\t\txefi->xefi_blockcount, &oinfo, XFS_AG_RESV_NONE,\n+\tpag = xfs_perag_get(mp, agno);\n+\terror = __xfs_free_extent(tp, pag, agbno, xefi->xefi_blockcount,\n+\t\t\t&oinfo, XFS_AG_RESV_NONE,\n \t\t\txefi->xefi_flags & XFS_EFI_SKIP_DISCARD);\n+\txfs_perag_put(pag);\n+\n \t/*\n \t * Mark the transaction dirty, even on error. This ensures the\n \t * transaction is aborted, which:\n",
+    "patch_modified_files": [
+        "fs/xfs/libxfs/xfs_ag.c",
+        "fs/xfs/libxfs/xfs_alloc.c",
+        "fs/xfs/libxfs/xfs_alloc.h",
+        "fs/xfs/libxfs/xfs_ialloc_btree.c",
+        "fs/xfs/libxfs/xfs_refcount_btree.c",
+        "fs/xfs/scrub/repair.c",
+        "fs/xfs/xfs_extfree_item.c"
+    ]
+}

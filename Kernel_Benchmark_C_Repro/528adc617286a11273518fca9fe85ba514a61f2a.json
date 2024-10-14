@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "WARNING in alloc_charge_hpage",
+    "display-title": "WARNING in alloc_charge_hpage",
+    "id": "528adc617286a11273518fca9fe85ba514a61f2a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm: khugepaged: allow page allocation fallback to eligible nodes",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e031ff96b334a08704d40ef64cd9024d7d83af9b",
+            "hash": "e031ff96b334a08704d40ef64cd9024d7d83af9b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        },
+        {
+            "title": "mm: replace VM_WARN_ON to pr_warn if the node is offline with __GFP_THISNODE",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=dec1d352de5c6e2bcdbb03a2e7a84d85ad2e4f14",
+            "hash": "dec1d352de5c6e2bcdbb03a2e7a84d85ad2e4f14",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000553fc805ec1380e0@google.com/T/",
+        "https://lore.kernel.org/all/20221031183122.470962-1-shy828301@gmail.com/T/",
+        "https://lore.kernel.org/all/20221103213641.7296-1-shy828301@gmail.com/T/",
+        "https://lore.kernel.org/all/20221108184357.55614-1-shy828301@gmail.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in alloc_charge_hpage",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13726f72880000",
+            "c-reproducer": "/text?tag=ReproC&x=13b57436880000",
+            "kernel-config": "/text?tag=KernelConfig&x=ea03ca45176080bc",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a70385240892bcbc6442b054e847c74100e72f1a",
+            "kernel-source-commit": "a70385240892bcbc6442b054e847c74100e72f1a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/23bf86af9a2ba03cda2b5b913bafb76ce8ce14b8",
+            "syzkaller-commit": "23bf86af9a2ba03cda2b5b913bafb76ce8ce14b8",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=122df5ba880000"
+        }
+    ],
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "f53af4285d775cd9a9a146fc438bd0a1bee1838a",
+    "patch": "diff --git a/mm/khugepaged.c b/mm/khugepaged.c\nindex 4734315f7940..52b9cae2412d 100644\n--- a/mm/khugepaged.c\n+++ b/mm/khugepaged.c\n@@ -97,8 +97,8 @@ struct collapse_control {\n \t/* Num pages scanned per node */\n \tu32 node_load[MAX_NUMNODES];\n \n-\t/* Last target selected in hpage_collapse_find_target_node() */\n-\tint last_target_node;\n+\t/* nodemask for allocation fallback */\n+\tnodemask_t alloc_nmask;\n };\n \n /**\n@@ -734,7 +734,6 @@ static void khugepaged_alloc_sleep(void)\n \n struct collapse_control khugepaged_collapse_control = {\n \t.is_khugepaged = true,\n-\t.last_target_node = NUMA_NO_NODE,\n };\n \n static bool hpage_collapse_scan_abort(int nid, struct collapse_control *cc)\n@@ -783,16 +782,11 @@ static int hpage_collapse_find_target_node(struct collapse_control *cc)\n \t\t\ttarget_node = nid;\n \t\t}\n \n-\t/* do some balance if several nodes have the same hit record */\n-\tif (target_node <= cc->last_target_node)\n-\t\tfor (nid = cc->last_target_node + 1; nid < MAX_NUMNODES;\n-\t\t     nid++)\n-\t\t\tif (max_value == cc->node_load[nid]) {\n-\t\t\t\ttarget_node = nid;\n-\t\t\t\tbreak;\n-\t\t\t}\n+\tfor_each_online_node(nid) {\n+\t\tif (max_value == cc->node_load[nid])\n+\t\t\tnode_set(nid, cc->alloc_nmask);\n+\t}\n \n-\tcc->last_target_node = target_node;\n \treturn target_node;\n }\n #else\n@@ -802,9 +796,10 @@ static int hpage_collapse_find_target_node(struct collapse_control *cc)\n }\n #endif\n \n-static bool hpage_collapse_alloc_page(struct page **hpage, gfp_t gfp, int node)\n+static bool hpage_collapse_alloc_page(struct page **hpage, gfp_t gfp, int node,\n+\t\t\t\t      nodemask_t *nmask)\n {\n-\t*hpage = __alloc_pages_node(node, gfp, HPAGE_PMD_ORDER);\n+\t*hpage = __alloc_pages(gfp, HPAGE_PMD_ORDER, node, nmask);\n \tif (unlikely(!*hpage)) {\n \t\tcount_vm_event(THP_COLLAPSE_ALLOC_FAILED);\n \t\treturn false;\n@@ -955,12 +950,11 @@ static int __collapse_huge_page_swapin(struct mm_struct *mm,\n static int alloc_charge_hpage(struct page **hpage, struct mm_struct *mm,\n \t\t\t      struct collapse_control *cc)\n {\n-\t/* Only allocate from the target node */\n \tgfp_t gfp = (cc->is_khugepaged ? alloc_hugepage_khugepaged_gfpmask() :\n-\t\t     GFP_TRANSHUGE) | __GFP_THISNODE;\n+\t\t     GFP_TRANSHUGE);\n \tint node = hpage_collapse_find_target_node(cc);\n \n-\tif (!hpage_collapse_alloc_page(hpage, gfp, node))\n+\tif (!hpage_collapse_alloc_page(hpage, gfp, node, &cc->alloc_nmask))\n \t\treturn SCAN_ALLOC_HUGE_PAGE_FAIL;\n \tif (unlikely(mem_cgroup_charge(page_folio(*hpage), mm, gfp)))\n \t\treturn SCAN_CGROUP_CHARGE_FAIL;\n@@ -1144,6 +1138,7 @@ static int hpage_collapse_scan_pmd(struct mm_struct *mm,\n \t\tgoto out;\n \n \tmemset(cc->node_load, 0, sizeof(cc->node_load));\n+\tnodes_clear(cc->alloc_nmask);\n \tpte = pte_offset_map_lock(mm, pmd, address, &ptl);\n \tfor (_address = address, _pte = pte; _pte < pte + HPAGE_PMD_NR;\n \t     _pte++, _address += PAGE_SIZE) {\n@@ -2077,6 +2072,7 @@ static int hpage_collapse_scan_file(struct mm_struct *mm, unsigned long addr,\n \tpresent = 0;\n \tswap = 0;\n \tmemset(cc->node_load, 0, sizeof(cc->node_load));\n+\tnodes_clear(cc->alloc_nmask);\n \trcu_read_lock();\n \txas_for_each(&xas, page, start + HPAGE_PMD_NR - 1) {\n \t\tif (xas_retry(&xas, page))\n@@ -2576,7 +2572,6 @@ int madvise_collapse(struct vm_area_struct *vma, struct vm_area_struct **prev,\n \tif (!cc)\n \t\treturn -ENOMEM;\n \tcc->is_khugepaged = false;\n-\tcc->last_target_node = NUMA_NO_NODE;\n \n \tmmgrab(mm);\n \tlru_add_drain_all();\n@@ -2602,6 +2597,7 @@ int madvise_collapse(struct vm_area_struct *vma, struct vm_area_struct **prev,\n \t\t}\n \t\tmmap_assert_locked(mm);\n \t\tmemset(cc->node_load, 0, sizeof(cc->node_load));\n+\t\tnodes_clear(cc->alloc_nmask);\n \t\tif (IS_ENABLED(CONFIG_SHMEM) && vma->vm_file) {\n \t\t\tstruct file *file = get_file(vma->vm_file);\n \t\t\tpgoff_t pgoff = linear_page_index(vma, addr);\n",
+    "patch_modified_files": [
+        "mm/khugepaged.c"
+    ]
+}

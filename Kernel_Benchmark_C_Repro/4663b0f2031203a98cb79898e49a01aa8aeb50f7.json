@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "WARNING in ntfs_fill_super",
+    "display-title": "WARNING in ntfs_fill_super",
+    "id": "4663b0f2031203a98cb79898e49a01aa8aeb50f7",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fs/ntfs3: Use __GFP_NOWARN allocation at ntfs_fill_super()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=59bfd7a483da36bd202532a3d9ea1f14f3bf3aaf",
+            "hash": "59bfd7a483da36bd202532a3d9ea1f14f3bf3aaf",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000067a9d105ea0b6304@google.com/T/",
+        "https://lore.kernel.org/all/20221227203249.1213526-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221227203342.1213918-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20221227203433.1214255-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in ntfs_fill_super",
+            "syz-reproducer": "/text?tag=ReproSyz&x=106b6db8880000",
+            "c-reproducer": "/text?tag=ReproC&x=13004fea880000",
+            "kernel-config": "/text?tag=KernelConfig&x=d323d85b1f8a4ed7",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=0326074ff4652329f2a1a9c8685104576bd8d131",
+            "kernel-source-commit": "0326074ff4652329f2a1a9c8685104576bd8d131",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/267e3bb1576b2f9fa97ae49305aaaa80768ba385",
+            "syzkaller-commit": "267e3bb1576b2f9fa97ae49305aaaa80768ba385",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16b88124880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "ntfs_fill_super",
+            "fs/ntfs3/super.c"
+        ]
+    ],
+    "patch_commit_date": "2022-10-02T14:54:11+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "ntfs3"
+    ],
+    "parent_of_fix_commit": "0d0f659bf713662fabed973f9996b8f23c59ca51",
+    "patch": "diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c\nindex 1e2c04e48f98..2fd1367a5982 100644\n--- a/fs/ntfs3/super.c\n+++ b/fs/ntfs3/super.c\n@@ -1167,7 +1167,7 @@ static int ntfs_fill_super(struct super_block *sb, struct fs_context *fc)\n \t\tgoto put_inode_out;\n \t}\n \tbytes = inode->i_size;\n-\tsbi->def_table = t = kmalloc(bytes, GFP_NOFS);\n+\tsbi->def_table = t = kmalloc(bytes, GFP_NOFS | __GFP_NOWARN);\n \tif (!t) {\n \t\terr = -ENOMEM;\n \t\tgoto put_inode_out;\n",
+    "patch_modified_files": [
+        "fs/ntfs3/super.c"
+    ]
+}

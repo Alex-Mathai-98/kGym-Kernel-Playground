@@ -1,0 +1,42 @@
+{
+    "version": 1,
+    "title": "WARNING in __gup_longterm_locked",
+    "display-title": "WARNING in __gup_longterm_locked",
+    "id": "01383b29d139cf9c9f9d9bd6e9947474ffe657a6",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "gup: make the stack expansion warning a bit more targeted",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6cd06ab12d1afdab3847e7981f301bd0404aaa5c",
+            "hash": "6cd06ab12d1afdab3847e7981f301bd0404aaa5c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b73abf05ffa60902@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "WARNING in __gup_longterm_locked",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12e5b04f280000",
+            "c-reproducer": "/text?tag=ReproC&x=102dff80a80000",
+            "kernel-config": "/text?tag=KernelConfig&x=7406f415f386e786",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f8566aa4f1766bb0267b7a0ed89c1d2c4a82ee1a",
+            "kernel-source-commit": "f8566aa4f1766bb0267b7a0ed89c1d2c4a82ee1a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/bfc478367b83b3fda580f54964aa9f3651beeb3d",
+            "syzkaller-commit": "bfc478367b83b3fda580f54964aa9f3651beeb3d",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14477dd0a80000"
+        }
+    ],
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "d528014517f2b0531862c02865b9d4c908019dc4",
+    "patch": "diff --git a/mm/gup.c b/mm/gup.c\nindex ef29641671c7..76d222ccc3ff 100644\n--- a/mm/gup.c\n+++ b/mm/gup.c\n@@ -1091,6 +1091,45 @@ static int check_vma_flags(struct vm_area_struct *vma, unsigned long gup_flags)\n \treturn 0;\n }\n \n+/*\n+ * This is \"vma_lookup()\", but with a warning if we would have\n+ * historically expanded the stack in the GUP code.\n+ */\n+static struct vm_area_struct *gup_vma_lookup(struct mm_struct *mm,\n+\t unsigned long addr)\n+{\n+#ifdef CONFIG_STACK_GROWSUP\n+\treturn vma_lookup(mm, addr);\n+#else\n+\tstatic volatile unsigned long next_warn;\n+\tstruct vm_area_struct *vma;\n+\tunsigned long now, next;\n+\n+\tvma = find_vma(mm, addr);\n+\tif (!vma || (addr >= vma->vm_start))\n+\t\treturn vma;\n+\n+\t/* Only warn for half-way relevant accesses */\n+\tif (!(vma->vm_flags & VM_GROWSDOWN))\n+\t\treturn NULL;\n+\tif (vma->vm_start - addr > 65536)\n+\t\treturn NULL;\n+\n+\t/* Let's not warn more than once an hour.. */\n+\tnow = jiffies; next = next_warn;\n+\tif (next && time_before(now, next))\n+\t\treturn NULL;\n+\tnext_warn = now + 60*60*HZ;\n+\n+\t/* Let people know things may have changed. */\n+\tpr_warn(\"GUP no longer grows the stack in %s (%d): %lx-%lx (%lx)\\n\",\n+\t\tcurrent->comm, task_pid_nr(current),\n+\t\tvma->vm_start, vma->vm_end, addr);\n+\tdump_stack();\n+\treturn NULL;\n+#endif\n+}\n+\n /**\n  * __get_user_pages() - pin user pages in memory\n  * @mm:\t\tmm_struct of target mm\n@@ -1168,11 +1207,7 @@ static long __get_user_pages(struct mm_struct *mm,\n \n \t\t/* first iteration or cross vma bound */\n \t\tif (!vma || start >= vma->vm_end) {\n-\t\t\tvma = find_vma(mm, start);\n-\t\t\tif (vma && (start < vma->vm_start)) {\n-\t\t\t\tWARN_ON_ONCE(vma->vm_flags & VM_GROWSDOWN);\n-\t\t\t\tvma = NULL;\n-\t\t\t}\n+\t\t\tvma = gup_vma_lookup(mm, start);\n \t\t\tif (!vma && in_gate_area(mm, start)) {\n \t\t\t\tret = get_gate_page(mm, start & PAGE_MASK,\n \t\t\t\t\t\tgup_flags, &vma,\n@@ -1337,13 +1372,9 @@ int fixup_user_fault(struct mm_struct *mm,\n \t\tfault_flags |= FAULT_FLAG_ALLOW_RETRY | FAULT_FLAG_KILLABLE;\n \n retry:\n-\tvma = find_vma(mm, address);\n+\tvma = gup_vma_lookup(mm, address);\n \tif (!vma)\n \t\treturn -EFAULT;\n-\tif (address < vma->vm_start ) {\n-\t\tWARN_ON_ONCE(vma->vm_flags & VM_GROWSDOWN);\n-\t\treturn -EFAULT;\n-\t}\n \n \tif (!vma_permits_fault(vma, fault_flags))\n \t\treturn -EFAULT;\n",
+    "patch_modified_files": [
+        "mm/gup.c"
+    ]
+}

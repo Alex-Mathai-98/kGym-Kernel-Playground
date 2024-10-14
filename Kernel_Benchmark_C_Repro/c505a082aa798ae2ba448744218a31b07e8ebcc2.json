@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "title": "INFO: rcu detected stall in __snd_pcm_lib_xfer",
+    "display-title": "INFO: rcu detected stall in __snd_pcm_lib_xfer (2)",
+    "id": "c505a082aa798ae2ba448744218a31b07e8ebcc2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ALSA: pcm: Fix endless loop for XRUN recovery in OSS emulation",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e15dc99dbb9cf99f6432e8e3c0b3a8f7a3403a86",
+            "hash": "e15dc99dbb9cf99f6432e8e3c0b3a8f7a3403a86",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000118a9a056928bbd9@google.com/T/",
+        "https://lore.kernel.org/all/00000000000078359d056928b7ea@google.com/T/",
+        "https://lore.kernel.org/all/20180422135104.278511750@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180422135135.400265110@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180422135210.432103639@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180422135304.577223025@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20180422135315.254787616@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/lsq.1539530740.755408431@decadent.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1351a91b800000",
+            "c-reproducer": "/text?tag=ReproC&x=146a8d47800000",
+            "kernel-config": "/text?tag=KernelConfig&x=f54bb762924a2f22",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=fd40ffc72e2f74c7db61e400903e7d50a88bc0b0",
+            "kernel-source-commit": "fd40ffc72e2f74c7db61e400903e7d50a88bc0b0",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/b9f655072cffb76f8b33aca772bfda9eb3a4530d",
+            "syzkaller-commit": "b9f655072cffb76f8b33aca772bfda9eb3a4530d",
+            "compiler-description": "gcc (GCC) 8.0.1 20180301 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16413d1b800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "snd_pcm_oss_get_active_substream",
+            "sound/core/oss/pcm_oss.c"
+        ]
+    ],
+    "patch_commit_date": "2018-04-07T09:48:58+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "sound"
+    ],
+    "parent_of_fix_commit": "b580fbfff13b01fa79a0760cbb6386f33bc9e10b",
+    "patch": "diff --git a/sound/core/oss/pcm_oss.c b/sound/core/oss/pcm_oss.c\nindex 481ab0e94ffa..1980f68246cb 100644\n--- a/sound/core/oss/pcm_oss.c\n+++ b/sound/core/oss/pcm_oss.c\n@@ -1128,13 +1128,14 @@ static int snd_pcm_oss_get_active_substream(struct snd_pcm_oss_file *pcm_oss_fil\n }\n \n /* call with params_lock held */\n+/* NOTE: this always call PREPARE unconditionally no matter whether\n+ * runtime->oss.prepare is set or not\n+ */\n static int snd_pcm_oss_prepare(struct snd_pcm_substream *substream)\n {\n \tint err;\n \tstruct snd_pcm_runtime *runtime = substream->runtime;\n \n-\tif (!runtime->oss.prepare)\n-\t\treturn 0;\n \terr = snd_pcm_kernel_ioctl(substream, SNDRV_PCM_IOCTL_PREPARE, NULL);\n \tif (err < 0) {\n \t\tpcm_dbg(substream->pcm,\n",
+    "patch_modified_files": [
+        "sound/core/oss/pcm_oss.c"
+    ]
+}

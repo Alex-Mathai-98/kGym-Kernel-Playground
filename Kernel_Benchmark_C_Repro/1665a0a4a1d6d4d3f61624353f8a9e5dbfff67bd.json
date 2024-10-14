@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "possible deadlock in __inet_inherit_port",
+    "display-title": "possible deadlock in __inet_inherit_port",
+    "id": "1665a0a4a1d6d4d3f61624353f8a9e5dbfff67bd",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "l2tp: Don't sleep and disable BH under writer-side sk_callback_lock",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=af295e854a4e3813ffbdef26dbb6a4d6226c3ea1",
+            "hash": "af295e854a4e3813ffbdef26dbb6a4d6226c3ea1",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "l2tp: Serialize access to sk_user_data with sk_callback_lock",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b68777d54fac21fc833ec26ea1a2a84f975ab035",
+        "hash": "b68777d54fac21fc833ec26ea1a2a84f975ab035",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "possible deadlock in __inet_inherit_port",
+            "syz-reproducer": "/text?tag=ReproSyz&x=129b286e880000",
+            "c-reproducer": "/text?tag=ReproC&x=174de265880000",
+            "kernel-config": "/text?tag=KernelConfig&x=24d192d47d02d9e1",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=81ac25651a62c958bb0e074e0d4e25060ea557dd",
+            "kernel-source-commit": "81ac25651a62c958bb0e074e0d4e25060ea557dd",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4ba8ab94b872006785aeb11e8c22c9dd578b3d1e",
+            "syzkaller-commit": "4ba8ab94b872006785aeb11e8c22c9dd578b3d1e",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1382cb49880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "l2tp_tunnel_register",
+            "net/l2tp/l2tp_core.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "l2tp_tunnel_destruct",
+            "net/l2tp/l2tp_core.c"
+        ],
+        [
+            "l2tp_tunnel_register",
+            "net/l2tp/l2tp_core.c"
+        ]
+    ],
+    "patch_commit_date": "2022-11-21T08:54:26+00:00",
+    "cause_commit_date": "2022-11-14T19:16:19+00:00",
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "bac81f40c2c1484a2bd416b3fbf983f6e76488cd",
+    "patch": "diff --git a/net/l2tp/l2tp_core.c b/net/l2tp/l2tp_core.c\nindex 754fdda8a5f5..9a1415fe3fa7 100644\n--- a/net/l2tp/l2tp_core.c\n+++ b/net/l2tp/l2tp_core.c\n@@ -1474,11 +1474,12 @@ int l2tp_tunnel_register(struct l2tp_tunnel *tunnel, struct net *net,\n \t}\n \n \tsk = sock->sk;\n-\twrite_lock(&sk->sk_callback_lock);\n-\n+\twrite_lock_bh(&sk->sk_callback_lock);\n \tret = l2tp_validate_socket(sk, net, tunnel->encap);\n \tif (ret < 0)\n-\t\tgoto err_sock;\n+\t\tgoto err_inval_sock;\n+\trcu_assign_sk_user_data(sk, tunnel);\n+\twrite_unlock_bh(&sk->sk_callback_lock);\n \n \ttunnel->l2tp_net = net;\n \tpn = l2tp_pernet(net);\n@@ -1507,8 +1508,6 @@ int l2tp_tunnel_register(struct l2tp_tunnel *tunnel, struct net *net,\n \t\t};\n \n \t\tsetup_udp_tunnel_sock(net, sock, &udp_cfg);\n-\t} else {\n-\t\trcu_assign_sk_user_data(sk, tunnel);\n \t}\n \n \ttunnel->old_sk_destruct = sk->sk_destruct;\n@@ -1522,16 +1521,18 @@ int l2tp_tunnel_register(struct l2tp_tunnel *tunnel, struct net *net,\n \tif (tunnel->fd >= 0)\n \t\tsockfd_put(sock);\n \n-\twrite_unlock(&sk->sk_callback_lock);\n \treturn 0;\n \n err_sock:\n+\twrite_lock_bh(&sk->sk_callback_lock);\n+\trcu_assign_sk_user_data(sk, NULL);\n+err_inval_sock:\n+\twrite_unlock_bh(&sk->sk_callback_lock);\n+\n \tif (tunnel->fd < 0)\n \t\tsock_release(sock);\n \telse\n \t\tsockfd_put(sock);\n-\n-\twrite_unlock(&sk->sk_callback_lock);\n err:\n \treturn ret;\n }\n",
+    "patch_modified_files": [
+        "net/l2tp/l2tp_core.c"
+    ]
+}

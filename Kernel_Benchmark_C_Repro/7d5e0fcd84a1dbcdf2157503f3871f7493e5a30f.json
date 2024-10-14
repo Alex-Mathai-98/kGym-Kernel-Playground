@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "memory leak in io_submit_sqes",
+    "display-title": "memory leak in io_submit_sqes",
+    "id": "7d5e0fcd84a1dbcdf2157503f3871f7493e5a30f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "io_uring: fail poll arm on queue proc failure",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a36da65c46565d2527eec3efdb546251e38253fd",
+            "hash": "a36da65c46565d2527eec3efdb546251e38253fd",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f50fb505ac9a72c9@google.com/T/",
+        "https://lore.kernel.org/all/20200817143819.579311991@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200817143833.737102804@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/6d9ed36f-c55a-9907-179d-3b1b82b56e90@kernel.dk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16e877dc900000",
+            "c-reproducer": "/text?tag=ReproC&x=1608291a900000",
+            "kernel-config": "/text?tag=KernelConfig&x=42163327839348a9",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d6efb3ac3e6c19ab722b28bdb9252bae0b9676b6",
+            "kernel-source-commit": "d6efb3ac3e6c19ab722b28bdb9252bae0b9676b6",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/cb436c69d9bcb0330518a48559649c9436ed5e7a",
+            "syzkaller-commit": "cb436c69d9bcb0330518a48559649c9436ed5e7a",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=17f3e7ec900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "io_arm_poll_handler",
+            "fs/io_uring.c"
+        ]
+    ],
+    "patch_commit_date": "2020-08-11T15:50:19+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fs",
+        "io-uring"
+    ],
+    "parent_of_fix_commit": "6d816e088c359866f9867057e04f244c608c42fe",
+    "patch": "diff --git a/fs/io_uring.c b/fs/io_uring.c\nindex 99582cf5106b..8a2afd8c33c9 100644\n--- a/fs/io_uring.c\n+++ b/fs/io_uring.c\n@@ -4883,7 +4883,7 @@ static bool io_arm_poll_handler(struct io_kiocb *req)\n \n \tret = __io_arm_poll_handler(req, &apoll->poll, &ipt, mask,\n \t\t\t\t\tio_async_wake);\n-\tif (ret) {\n+\tif (ret || ipt.error) {\n \t\tio_poll_remove_double(req, apoll->double_poll);\n \t\tspin_unlock_irq(&ctx->completion_lock);\n \t\tkfree(apoll->double_poll);\n",
+    "patch_modified_files": [
+        "fs/io_uring.c"
+    ]
+}

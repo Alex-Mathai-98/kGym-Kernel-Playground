@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "memory leak in gadget_bind",
+    "display-title": "memory leak in gadget_bind",
+    "id": "9f45870b9b0218be0cd678380aa432f5c7cdacc1",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "usb: raw-gadget: fix memory leak in gadget_setup",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=129aa9734559a17990ee933351c7b6956f1dba62",
+            "hash": "129aa9734559a17990ee933351c7b6956f1dba62",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000ea810305b2583377@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=177a731c500000",
+            "c-reproducer": "/text?tag=ReproC&x=1328d038500000",
+            "kernel-config": "/text?tag=KernelConfig&x=b8e9005328853c49",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f9893351acaecf0a414baf9942b48d5bb5c688c6",
+            "kernel-source-commit": "f9893351acaecf0a414baf9942b48d5bb5c688c6",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4e740c00a474b578896830c7d27d90d9474364bb",
+            "syzkaller-commit": "4e740c00a474b578896830c7d27d90d9474364bb",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=165e5428500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "raw_ioctl_event_fetch",
+            "drivers/usb/gadget/legacy/raw_gadget.c"
+        ]
+    ],
+    "patch_commit_date": "2020-10-27T07:30:44+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "usb"
+    ],
+    "parent_of_fix_commit": "190bb01b72d2d5c3654a03c42fb1ad0dc6114c79",
+    "patch": "diff --git a/drivers/usb/gadget/legacy/raw_gadget.c b/drivers/usb/gadget/legacy/raw_gadget.c\nindex e01e366d89cd..062dfac30399 100644\n--- a/drivers/usb/gadget/legacy/raw_gadget.c\n+++ b/drivers/usb/gadget/legacy/raw_gadget.c\n@@ -564,9 +564,12 @@ static int raw_ioctl_event_fetch(struct raw_dev *dev, unsigned long value)\n \t\treturn -ENODEV;\n \t}\n \tlength = min(arg.length, event->length);\n-\tif (copy_to_user((void __user *)value, event, sizeof(*event) + length))\n+\tif (copy_to_user((void __user *)value, event, sizeof(*event) + length)) {\n+\t\tkfree(event);\n \t\treturn -EFAULT;\n+\t}\n \n+\tkfree(event);\n \treturn 0;\n }\n \n",
+    "patch_modified_files": [
+        "drivers/usb/gadget/legacy/raw_gadget.c"
+    ]
+}

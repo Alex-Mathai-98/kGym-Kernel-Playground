@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "BUG: Dentry still in use [unmount of sysfs sysfs]",
+    "display-title": "BUG: Dentry still in use [unmount of sysfs sysfs]",
+    "id": "2dbce17f865f34c37da63de733f31001f293d78f",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "vfs: fsmount: add missing mntget()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1b0b9cc8d3793e31b313e6c9685513b08cd883c4",
+            "hash": "1b0b9cc8d3793e31b313e6c9685513b08cd883c4",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "uapi, x86: Fix the syscall numbering of the mount API syscalls [ver #2]",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9c8ad7a2ff0bfe58f019ec0abc1fb965114dde7d",
+        "hash": "9c8ad7a2ff0bfe58f019ec0abc1fb965114dde7d",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=13ba6a56a00000",
+            "c-reproducer": "/text?tag=ReproC&x=1118bf7aa00000",
+            "kernel-config": "/text?tag=KernelConfig&x=fa9f7e1b6a8bb586",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=0011572c883082a95e02d47f45fc4a42dc0e8634",
+            "kernel-source-commit": "0011572c883082a95e02d47f45fc4a42dc0e8634",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/442206d76b974cca2d83ec763d4cf5ee829eb7d6",
+            "syzkaller-commit": "442206d76b974cca2d83ec763d4cf5ee829eb7d6",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14fc8fb6a00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "SYSCALL_DEFINE3",
+            "fs/namespace.c"
+        ]
+    ],
+    "cause_modified_functions": [],
+    "patch_commit_date": "2019-06-12T18:43:13+00:00",
+    "cause_commit_date": "2019-05-16T11:52:27+00:00",
+    "subsystems": [
+        "kernfs"
+    ],
+    "parent_of_fix_commit": "9e0babf2c06c73cda2c0cd37a1653d823adb40ec",
+    "patch": "diff --git a/fs/namespace.c b/fs/namespace.c\nindex b26778bdc236..5dc137a22d40 100644\n--- a/fs/namespace.c\n+++ b/fs/namespace.c\n@@ -3445,6 +3445,7 @@ SYSCALL_DEFINE3(fsmount, int, fs_fd, unsigned int, flags,\n \tns->root = mnt;\n \tns->mounts = 1;\n \tlist_add(&mnt->mnt_list, &ns->list);\n+\tmntget(newmount.mnt);\n \n \t/* Attach to an apparent O_PATH fd with a note that we need to unmount\n \t * it, not just simply put it.\n",
+    "patch_modified_files": [
+        "fs/namespace.c"
+    ]
+}

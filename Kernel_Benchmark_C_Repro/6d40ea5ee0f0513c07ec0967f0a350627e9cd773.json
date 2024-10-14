@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in register_shrinker_prepared",
+    "display-title": "KASAN: use-after-free Read in register_shrinker_prepared (2)",
+    "id": "6d40ea5ee0f0513c07ec0967f0a350627e9cd773",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "NFSD: unregister shrinker when nfsd_init_net() fails",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bd86c69dae65de30f6d47249418ba7889809e31a",
+            "hash": "bd86c69dae65de30f6d47249418ba7889809e31a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "btrfs: don't merge pages into bio if their page offset is not contiguous",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4a445b7b6178d88956192c0202463063f52e8667",
+        "hash": "4a445b7b6178d88956192c0202463063f52e8667",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000006a789905e9a67167@google.com/T/",
+        "https://lore.kernel.org/all/66b0ff35-c468-1a5b-3327-7e2ffcc768ee@I-love.SAKURA.ne.jp/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: use-after-free Read in register_shrinker_prepared",
+            "syz-reproducer": "/text?tag=ReproSyz&x=105ee158880000",
+            "c-reproducer": "/text?tag=ReproC&x=15a7ea78880000",
+            "kernel-config": "/text?tag=KernelConfig&x=e2021a61197ebe02",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=a6afa4199d3d038fbfdff5511f7523b0e30cb774",
+            "kernel-source-commit": "a6afa4199d3d038fbfdff5511f7523b0e30cb774",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/aea5da898f473385f3b66c94f8aa49ca9a1c9744",
+            "syzkaller-commit": "aea5da898f473385f3b66c94f8aa49ca9a1c9744",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14c7391a880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "nfsd_init_net",
+            "fs/nfsd/nfsctl.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "btrfs_bio_add_page",
+            "fs/btrfs/extent_io.c"
+        ]
+    ],
+    "patch_commit_date": "2022-10-10T05:59:02+00:00",
+    "cause_commit_date": "2022-08-13T08:06:53+00:00",
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "243a5263014a30436c93ed3f1f864c1da845455e",
+    "patch": "diff --git a/fs/nfsd/nfsctl.c b/fs/nfsd/nfsctl.c\nindex 6a29bcfc9390..dc74a947a440 100644\n--- a/fs/nfsd/nfsctl.c\n+++ b/fs/nfsd/nfsctl.c\n@@ -1458,12 +1458,14 @@ static __net_init int nfsd_init_net(struct net *net)\n \t\tgoto out_drc_error;\n \tretval = nfsd_reply_cache_init(nn);\n \tif (retval)\n-\t\tgoto out_drc_error;\n+\t\tgoto out_cache_error;\n \tget_random_bytes(&nn->siphash_key, sizeof(nn->siphash_key));\n \tseqlock_init(&nn->writeverf_lock);\n \n \treturn 0;\n \n+out_cache_error:\n+\tnfsd4_leases_net_shutdown(nn);\n out_drc_error:\n \tnfsd_idmap_shutdown(net);\n out_idmap_error:\n",
+    "patch_modified_files": [
+        "fs/nfsd/nfsctl.c"
+    ]
+}

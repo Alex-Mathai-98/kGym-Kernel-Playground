@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "BUG: using smp_processor_id() in preemptible code in tipc_crypto_xmit",
+    "display-title": "BUG: using smp_processor_id() in preemptible code in tipc_crypto_xmit",
+    "id": "301b758c0f45c2498f0ffb1e9c91b362c5441d9a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "tipc: fix using smp_processor_id() in preemptible",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bb8872a1e6bc911869a729240781076ed950764b",
+            "hash": "bb8872a1e6bc911869a729240781076ed950764b",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "tipc: add support for AEAD key setting via netlink",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e1f32190cf7ddd55778b460e7d44af3f76529698",
+        "hash": "e1f32190cf7ddd55778b460e7d44af3f76529698",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000cbef4a05a8ffc4ef@google.com/T/",
+        "https://lore.kernel.org/all/20200714015341.27446-1-qiang.zhang@windriver.com/T/",
+        "https://lore.kernel.org/all/20200714080559.9617-1-qiang.zhang@windriver.com/T/",
+        "https://lore.kernel.org/all/20200829193755.9429-1-tuong.t.lien@dektech.com.au/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=132d41c0900000",
+            "c-reproducer": "/text?tag=ReproC&x=147f114f100000",
+            "kernel-config": "/text?tag=KernelConfig&x=66ad203c2bb6d8b",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4437dd6e8f71e8b4b5546924a6e48e7edaf4a8dc",
+            "kernel-source-commit": "4437dd6e8f71e8b4b5546924a6e48e7edaf4a8dc",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9ebcc5b1a8145326065b932958d82ada85a5c224",
+            "syzkaller-commit": "9ebcc5b1a8145326065b932958d82ada85a5c224",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11a7ef3f100000"
+        }
+    ],
+    "subsystems": [
+        "tipc"
+    ],
+    "parent_of_fix_commit": "c8146fe292a726d71e302719df90b53e2f84f7a5",
+    "patch": "diff --git a/net/tipc/crypto.c b/net/tipc/crypto.c\nindex c38babaa4e57..7c523dc81575 100644\n--- a/net/tipc/crypto.c\n+++ b/net/tipc/crypto.c\n@@ -326,7 +326,8 @@ static void tipc_aead_free(struct rcu_head *rp)\n \tif (aead->cloned) {\n \t\ttipc_aead_put(aead->cloned);\n \t} else {\n-\t\thead = *this_cpu_ptr(aead->tfm_entry);\n+\t\thead = *get_cpu_ptr(aead->tfm_entry);\n+\t\tput_cpu_ptr(aead->tfm_entry);\n \t\tlist_for_each_entry_safe(tfm_entry, tmp, &head->list, list) {\n \t\t\tcrypto_free_aead(tfm_entry->tfm);\n \t\t\tlist_del(&tfm_entry->list);\n@@ -399,10 +400,15 @@ static void tipc_aead_users_set(struct tipc_aead __rcu *aead, int val)\n  */\n static struct crypto_aead *tipc_aead_tfm_next(struct tipc_aead *aead)\n {\n-\tstruct tipc_tfm **tfm_entry = this_cpu_ptr(aead->tfm_entry);\n+\tstruct tipc_tfm **tfm_entry;\n+\tstruct crypto_aead *tfm;\n \n+\ttfm_entry = get_cpu_ptr(aead->tfm_entry);\n \t*tfm_entry = list_next_entry(*tfm_entry, list);\n-\treturn (*tfm_entry)->tfm;\n+\ttfm = (*tfm_entry)->tfm;\n+\tput_cpu_ptr(tfm_entry);\n+\n+\treturn tfm;\n }\n \n /**\n",
+    "patch_modified_files": [
+        "net/tipc/crypto.c"
+    ]
+}

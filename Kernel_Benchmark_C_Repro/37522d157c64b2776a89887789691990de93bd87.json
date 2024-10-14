@@ -1,0 +1,81 @@
+{
+    "version": 1,
+    "title": "general protection fault in madvise_cold_or_pageout_pte_range",
+    "display-title": "general protection fault in madvise_cold_or_pageout_pte_range",
+    "id": "37522d157c64b2776a89887789691990de93bd87",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "mm: validate pmd after splitting",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ce2684254bd4818ca3995c0d021fb62c4cf10a19",
+            "hash": "ce2684254bd4818ca3995c0d021fb62c4cf10a19",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "mm: introduce MADV_PAGEOUT",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1a4e58cce84ee88129d5d49c064bd2852b481357",
+        "hash": "1a4e58cce84ee88129d5d49c064bd2852b481357",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000002a86f05af42ab27@google.com/T/",
+        "https://lore.kernel.org/all/20200929105929.719230296@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200929110010.467764689@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16e2a255900000",
+            "c-reproducer": "/text?tag=ReproC&x=164afdb3900000",
+            "kernel-config": "/text?tag=KernelConfig&x=8f5c353182ed6199",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=729e3d091984487f7aa1ebfabfe594e5b317ed0f",
+            "kernel-source-commit": "729e3d091984487f7aa1ebfabfe594e5b317ed0f",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/ce441f065b6eebb166bb006dfd28ea0c6b730384",
+            "syzkaller-commit": "ce441f065b6eebb166bb006dfd28ea0c6b730384",
+            "compiler-description": "clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11992c11900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "madvise_cold_or_pageout_pte_range",
+            "mm/madvise.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "shrink_active_list",
+            "mm/vmscan.c"
+        ],
+        [
+            "madvise_need_mmap_write",
+            "mm/madvise.c"
+        ],
+        [
+            "madvise_vma",
+            "mm/madvise.c"
+        ],
+        [
+            "madvise_behavior_valid",
+            "mm/madvise.c"
+        ],
+        [
+            "madvise_cold",
+            "mm/madvise.c"
+        ]
+    ],
+    "patch_commit_date": "2020-09-15T06:32:15+00:00",
+    "cause_commit_date": "2019-09-25T23:49:15+00:00",
+    "subsystems": [
+        "mm"
+    ],
+    "parent_of_fix_commit": "678ff6a7afccc43d352c1b8c94b6d8c0ee1464ad",
+    "patch": "diff --git a/mm/madvise.c b/mm/madvise.c\nindex d4aa5f776543..0e0d61003fc6 100644\n--- a/mm/madvise.c\n+++ b/mm/madvise.c\n@@ -381,9 +381,9 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,\n \t\treturn 0;\n \t}\n \n+regular_page:\n \tif (pmd_trans_unstable(pmd))\n \t\treturn 0;\n-regular_page:\n #endif\n \ttlb_change_page_size(tlb, PAGE_SIZE);\n \torig_pte = pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);\n",
+    "patch_modified_files": [
+        "mm/madvise.c"
+    ]
+}

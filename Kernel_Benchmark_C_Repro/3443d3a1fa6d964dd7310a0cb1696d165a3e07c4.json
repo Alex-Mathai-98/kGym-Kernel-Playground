@@ -1,0 +1,66 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel paging request in bitfill_aligned",
+    "display-title": "BUG: unable to handle kernel paging request in bitfill_aligned (3)",
+    "id": "3443d3a1fa6d964dd7310a0cb1696d165a3e07c4",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fbdev: fbcon: Properly revert changes when vc_resize() failed",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a5a923038d70d2d4a86cb4e3f32625a5ee6e7e24",
+            "hash": "a5a923038d70d2d4a86cb4e3f32625a5ee6e7e24",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "drm/sun4i: dw-hdmi: Fix missing put_device() call in sun8i_hdmi_phy_get",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c71af3dae3e34d2fde0c19623cf7f8483321f0e3",
+        "hash": "c71af3dae3e34d2fde0c19623cf7f8483321f0e3",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000063154a05e382eae9@google.com/T/",
+        "https://lore.kernel.org/all/20220818181336.3504010-1-syoshida@redhat.com/T/",
+        "https://lore.kernel.org/all/20220829105804.609007228@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220829105808.828227973@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "BUG: unable to handle kernel paging request in bitfill_aligned",
+            "syz-reproducer": "/text?tag=ReproSyz&x=16e0ef4b080000",
+            "c-reproducer": "/text?tag=ReproC&x=11a1183d080000",
+            "kernel-config": "/text?tag=KernelConfig&x=20bc0b329895d963",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7ebfc85e2cd7b08f518b526173e9a33b56b3913b",
+            "kernel-source-commit": "7ebfc85e2cd7b08f518b526173e9a33b56b3913b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8dfcaa3d2828a113ae780da01f5f73ad64710e31",
+            "syzkaller-commit": "8dfcaa3d2828a113ae780da01f5f73ad64710e31",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=15a88e5b080000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "fbcon_do_set_font",
+            "drivers/video/fbdev/core/fbcon.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "sun8i_hdmi_phy_get",
+            "drivers/gpu/drm/sun4i/sun8i_hdmi_phy.c"
+        ]
+    ],
+    "patch_commit_date": "2022-08-18T18:13:36+00:00",
+    "cause_commit_date": "2022-01-07T08:36:32+00:00",
+    "subsystems": [
+        "fbdev"
+    ],
+    "parent_of_fix_commit": "8d0268585b9c07dd01b77b63913a4f31ad99239b",
+    "patch": "diff --git a/drivers/video/fbdev/core/fbcon.c b/drivers/video/fbdev/core/fbcon.c\nindex 4a032fcf0d14..098b62f7b701 100644\n--- a/drivers/video/fbdev/core/fbcon.c\n+++ b/drivers/video/fbdev/core/fbcon.c\n@@ -2401,15 +2401,21 @@ static int fbcon_do_set_font(struct vc_data *vc, int w, int h, int charcount,\n \tstruct fb_info *info = fbcon_info_from_console(vc->vc_num);\n \tstruct fbcon_ops *ops = info->fbcon_par;\n \tstruct fbcon_display *p = &fb_display[vc->vc_num];\n-\tint resize;\n+\tint resize, ret, old_userfont, old_width, old_height, old_charcount;\n \tchar *old_data = NULL;\n \n \tresize = (w != vc->vc_font.width) || (h != vc->vc_font.height);\n \tif (p->userfont)\n \t\told_data = vc->vc_font.data;\n \tvc->vc_font.data = (void *)(p->fontdata = data);\n+\told_userfont = p->userfont;\n \tif ((p->userfont = userfont))\n \t\tREFCOUNT(data)++;\n+\n+\told_width = vc->vc_font.width;\n+\told_height = vc->vc_font.height;\n+\told_charcount = vc->vc_font.charcount;\n+\n \tvc->vc_font.width = w;\n \tvc->vc_font.height = h;\n \tvc->vc_font.charcount = charcount;\n@@ -2425,7 +2431,9 @@ static int fbcon_do_set_font(struct vc_data *vc, int w, int h, int charcount,\n \t\trows = FBCON_SWAP(ops->rotate, info->var.yres, info->var.xres);\n \t\tcols /= w;\n \t\trows /= h;\n-\t\tvc_resize(vc, cols, rows);\n+\t\tret = vc_resize(vc, cols, rows);\n+\t\tif (ret)\n+\t\t\tgoto err_out;\n \t} else if (con_is_visible(vc)\n \t\t   && vc->vc_mode == KD_TEXT) {\n \t\tfbcon_clear_margins(vc, 0);\n@@ -2435,6 +2443,21 @@ static int fbcon_do_set_font(struct vc_data *vc, int w, int h, int charcount,\n \tif (old_data && (--REFCOUNT(old_data) == 0))\n \t\tkfree(old_data - FONT_EXTRA_WORDS * sizeof(int));\n \treturn 0;\n+\n+err_out:\n+\tp->fontdata = old_data;\n+\tvc->vc_font.data = (void *)old_data;\n+\n+\tif (userfont) {\n+\t\tp->userfont = old_userfont;\n+\t\tREFCOUNT(data)--;\n+\t}\n+\n+\tvc->vc_font.width = old_width;\n+\tvc->vc_font.height = old_height;\n+\tvc->vc_font.charcount = old_charcount;\n+\n+\treturn ret;\n }\n \n /*\n",
+    "patch_modified_files": [
+        "drivers/video/fbdev/core/fbcon.c"
+    ]
+}

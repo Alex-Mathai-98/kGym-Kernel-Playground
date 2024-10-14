@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "title": "memory leak in qrtr_tun_open",
+    "display-title": "memory leak in qrtr_tun_open",
+    "id": "e2f0676dd0bb3d0e83184bfcaa2bcba46b1410b5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net: qrtr: Fix memory leak in qrtr_tun_open",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fc0494ead6398609c49afa37bc949b61c5c16b91",
+            "hash": "fc0494ead6398609c49afa37bc949b61c5c16b91",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000029861705b4e4dc59@google.com/T/",
+        "https://lore.kernel.org/all/20210221234427.GA2140@DESKTOP/T/",
+        "https://lore.kernel.org/all/20210301161031.684018251@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210301161048.294656001@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210301161141.760350206@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210301161201.679371205@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1115d001500000",
+            "c-reproducer": "/text?tag=ReproC&x=1467f82e500000",
+            "kernel-config": "/text?tag=KernelConfig&x=c5353ac514ca5a43",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4d02da974ea85a62074efedf354e82778f910d82",
+            "kernel-source-commit": "4d02da974ea85a62074efedf354e82778f910d82",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/740ff4615a9ced4a8a016365aa44674b9b0e807d",
+            "syzkaller-commit": "740ff4615a9ced4a8a016365aa44674b9b0e807d",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11e97c8e500000"
+        }
+    ],
+    "subsystems": [
+        "net",
+        "arm-msm"
+    ],
+    "parent_of_fix_commit": "92584ddf550ae72d492858c19d1f9025e07a9350",
+    "patch": "diff --git a/net/qrtr/tun.c b/net/qrtr/tun.c\nindex b238c40a9984..304b41fea5ab 100644\n--- a/net/qrtr/tun.c\n+++ b/net/qrtr/tun.c\n@@ -31,6 +31,7 @@ static int qrtr_tun_send(struct qrtr_endpoint *ep, struct sk_buff *skb)\n static int qrtr_tun_open(struct inode *inode, struct file *filp)\n {\n \tstruct qrtr_tun *tun;\n+\tint ret;\n \n \ttun = kzalloc(sizeof(*tun), GFP_KERNEL);\n \tif (!tun)\n@@ -43,7 +44,16 @@ static int qrtr_tun_open(struct inode *inode, struct file *filp)\n \n \tfilp->private_data = tun;\n \n-\treturn qrtr_endpoint_register(&tun->ep, QRTR_EP_NID_AUTO);\n+\tret = qrtr_endpoint_register(&tun->ep, QRTR_EP_NID_AUTO);\n+\tif (ret)\n+\t\tgoto out;\n+\n+\treturn 0;\n+\n+out:\n+\tfilp->private_data = NULL;\n+\tkfree(tun);\n+\treturn ret;\n }\n \n static ssize_t qrtr_tun_read_iter(struct kiocb *iocb, struct iov_iter *to)\n",
+    "patch_modified_files": [
+        "net/qrtr/tun.c"
+    ]
+}

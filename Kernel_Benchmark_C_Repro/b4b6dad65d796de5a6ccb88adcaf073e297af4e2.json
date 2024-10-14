@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in reiserfs_fill_super",
+    "display-title": "KASAN: use-after-free Read in reiserfs_fill_super",
+    "id": "b4b6dad65d796de5a6ccb88adcaf073e297af4e2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "reiserfs: add check for an invalid ih_entry_count",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d24396c5290ba8ab04ba505176874c4e04a2d53c",
+            "hash": "d24396c5290ba8ab04ba505176874c4e04a2d53c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b51b6b05b5dc833b@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12ad719b500000",
+            "c-reproducer": "/text?tag=ReproC&x=11193117500000",
+            "kernel-config": "/text?tag=KernelConfig&x=e49433cfed49b7d9",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=b3298500b23f0b53a8d81e0d5ad98a29db71f4f0",
+            "kernel-source-commit": "b3298500b23f0b53a8d81e0d5ad98a29db71f4f0",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/5050311712ecf43945d306df4653fc28da89fb43",
+            "syzkaller-commit": "5050311712ecf43945d306df4653fc28da89fb43",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16463cef500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "is_leaf",
+            "fs/reiserfs/stree.c"
+        ]
+    ],
+    "patch_commit_date": "2020-11-01T14:09:58+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "reiserfs"
+    ],
+    "parent_of_fix_commit": "8fca3c8a3451514c6f20dd26d5e66e78220d16e3",
+    "patch": "diff --git a/fs/reiserfs/stree.c b/fs/reiserfs/stree.c\nindex 8bf88d690729..476a7ff49482 100644\n--- a/fs/reiserfs/stree.c\n+++ b/fs/reiserfs/stree.c\n@@ -454,6 +454,12 @@ static int is_leaf(char *buf, int blocksize, struct buffer_head *bh)\n \t\t\t\t\t \"(second one): %h\", ih);\n \t\t\treturn 0;\n \t\t}\n+\t\tif (is_direntry_le_ih(ih) && (ih_item_len(ih) < (ih_entry_count(ih) * IH_SIZE))) {\n+\t\t\treiserfs_warning(NULL, \"reiserfs-5093\",\n+\t\t\t\t\t \"item entry count seems wrong %h\",\n+\t\t\t\t\t ih);\n+\t\t\treturn 0;\n+\t\t}\n \t\tprev_location = ih_location(ih);\n \t}\n \n",
+    "patch_modified_files": [
+        "fs/reiserfs/stree.c"
+    ]
+}

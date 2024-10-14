@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "title": "memory leak in smc_sysctl_net_init",
+    "display-title": "memory leak in smc_sysctl_net_init",
+    "id": "1fbd9fd0ef463a9811d2c5b7d206f119cf259601",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/smc: fix a memory leak in smc_sysctl_net_exit()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5ae6acf1d00be462d7b08b4a8748798ef595ae5a",
+            "hash": "5ae6acf1d00be462d7b08b4a8748798ef595ae5a",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "memory leak in smc_sysctl_net_init",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17c0323d700000",
+            "c-reproducer": "/text?tag=ReproC&x=12f21799700000",
+            "kernel-config": "/text?tag=KernelConfig&x=9ca2a67ddb20027f",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=52deda9551a01879b3562e7b41748e85c591f14c",
+            "kernel-source-commit": "52deda9551a01879b3562e7b41748e85c591f14c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/89bc860804252dbacb8c2bea60b9204859f4afd7",
+            "syzkaller-commit": "89bc860804252dbacb8c2bea60b9204859f4afd7",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=16106db3700000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "smc_sysctl_net_init",
+            "net/smc/smc_sysctl.c"
+        ]
+    ],
+    "patch_commit_date": "2022-03-25T16:50:21+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net",
+        "s390"
+    ],
+    "parent_of_fix_commit": "5c7e49be96ea24776a5b5a07c732c477294add00",
+    "patch": "diff --git a/net/smc/smc_sysctl.c b/net/smc/smc_sysctl.c\nindex bae19419e755..cf3ab1334c00 100644\n--- a/net/smc/smc_sysctl.c\n+++ b/net/smc/smc_sysctl.c\n@@ -61,5 +61,10 @@ int __net_init smc_sysctl_net_init(struct net *net)\n \n void __net_exit smc_sysctl_net_exit(struct net *net)\n {\n+\tstruct ctl_table *table;\n+\n+\ttable = net->smc.smc_hdr->ctl_table_arg;\n \tunregister_net_sysctl_table(net->smc.smc_hdr);\n+\tif (!net_eq(net, &init_net))\n+\t\tkfree(table);\n }\n",
+    "patch_modified_files": [
+        "net/smc/smc_sysctl.c"
+    ]
+}

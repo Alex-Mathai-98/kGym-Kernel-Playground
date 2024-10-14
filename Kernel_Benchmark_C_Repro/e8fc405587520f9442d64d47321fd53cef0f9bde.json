@@ -1,0 +1,73 @@
+{
+    "version": 1,
+    "title": "KASAN: user-memory-access Write in zram_slot_lock",
+    "display-title": "KASAN: user-memory-access Write in zram_slot_lock",
+    "id": "e8fc405587520f9442d64d47321fd53cef0f9bde",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "block: make bio_check_eod work for zero sized devices",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3eb96946f0be6bf447cbdf219aba22bc42672f92",
+            "hash": "3eb96946f0be6bf447cbdf219aba22bc42672f92",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "zram: remove valid_io_request",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9fe95babc7420722d39a1ded379027a1e1825d3a",
+        "hash": "9fe95babc7420722d39a1ded379027a1e1825d3a",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000066a94205fc488445@google.com/T/",
+        "https://lore.kernel.org/all/20230524060538.1593686-1-hch@lst.de/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: user-memory-access Write in zram_slot_lock",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1223f7d9280000",
+            "c-reproducer": "/text?tag=ReproC&x=1245326a280000",
+            "kernel-config": "/text?tag=KernelConfig&x=7d8067683055e3f5",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=44c026a73be8038f03dbdeef028b642880cf1511",
+            "kernel-source-commit": "44c026a73be8038f03dbdeef028b642880cf1511",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/4bce1a3e705a8b62de8194bdb28f5eef89c8feec",
+            "syzkaller-commit": "4bce1a3e705a8b62de8194bdb28f5eef89c8feec",
+            "compiler-description": "Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12411a61280000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "bio_check_eod",
+            "block/blk-core.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "zram_get_priority",
+            "drivers/block/zram/zram_drv.c"
+        ],
+        [
+            "io_stat_show",
+            "drivers/block/zram/zram_drv.c"
+        ],
+        [
+            "zram_submit_bio",
+            "drivers/block/zram/zram_drv.c"
+        ]
+    ],
+    "patch_commit_date": "2023-05-24T06:05:38+00:00",
+    "cause_commit_date": "2023-04-11T17:14:44+00:00",
+    "subsystems": [
+        "block",
+        "reiserfs"
+    ],
+    "parent_of_fix_commit": "46930b7cc7727271c9c27aac1fdc97a8645e2d00",
+    "patch": "diff --git a/block/blk-core.c b/block/blk-core.c\nindex 00c74330fa92..1da77e7d6289 100644\n--- a/block/blk-core.c\n+++ b/block/blk-core.c\n@@ -520,7 +520,7 @@ static inline int bio_check_eod(struct bio *bio)\n \tsector_t maxsector = bdev_nr_sectors(bio->bi_bdev);\n \tunsigned int nr_sectors = bio_sectors(bio);\n \n-\tif (nr_sectors && maxsector &&\n+\tif (nr_sectors &&\n \t    (nr_sectors > maxsector ||\n \t     bio->bi_iter.bi_sector > maxsector - nr_sectors)) {\n \t\tpr_info_ratelimited(\"%s: attempt to access beyond end of device\\n\"\n",
+    "patch_modified_files": [
+        "block/blk-core.c"
+    ]
+}

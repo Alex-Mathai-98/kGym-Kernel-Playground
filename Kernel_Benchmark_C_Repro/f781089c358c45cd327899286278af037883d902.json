@@ -1,0 +1,70 @@
+{
+    "version": 1,
+    "title": "general protection fault in sg_alloc_append_table_from_pages",
+    "display-title": "general protection fault in sg_alloc_append_table_from_pages",
+    "id": "f781089c358c45cd327899286278af037883d902",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "udmabuf: validate ubuf->pagecount",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2b6dd600dd72573c23ea180b5b0b2f1813405882",
+            "hash": "2b6dd600dd72573c23ea180b5b0b2f1813405882",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "udmabuf: implement begin_cpu_access/end_cpu_access hooks",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=284562e1f34874e267d4f499362c3816f8f6bc3f",
+        "hash": "284562e1f34874e267d4f499362c3816f8f6bc3f",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b0a1a605ce3ec5ad@google.com/T/",
+        "https://lore.kernel.org/all/20211230142649.23022-1-paskripkin@gmail.com/T/",
+        "https://lore.kernel.org/all/20220405070258.802373272@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220405070339.801210740@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220405070354.155796697@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220405070407.513532867@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220414110855.141582785@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "general protection fault in sg_alloc_append_table_from_pages",
+            "syz-reproducer": "/text?tag=ReproSyz&x=14df5c71b00000",
+            "c-reproducer": "/text?tag=ReproC&x=11d67495b00000",
+            "kernel-config": "/text?tag=KernelConfig&x=fa556098924b78f0",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3f667b5d4053ad54aee13dab5c94f04ff75ddfdf",
+            "kernel-source-commit": "3f667b5d4053ad54aee13dab5c94f04ff75ddfdf",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/44068e196185e2f5a7c94629b6245cdde008b140",
+            "syzkaller-commit": "44068e196185e2f5a7c94629b6245cdde008b140",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=104cd943b00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "udmabuf_create",
+            "drivers/dma-buf/udmabuf.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "unmap_udmabuf",
+            "drivers/dma-buf/udmabuf.c"
+        ]
+    ],
+    "patch_commit_date": "2021-12-30T14:26:49+00:00",
+    "cause_commit_date": "2019-12-03T01:36:27+00:00",
+    "subsystems": [
+        "dri",
+        "media"
+    ],
+    "parent_of_fix_commit": "269332997a160b3785690a32d2c5496bce7dae51",
+    "patch": "diff --git a/drivers/dma-buf/udmabuf.c b/drivers/dma-buf/udmabuf.c\nindex c57a609db75b..e7330684d3b8 100644\n--- a/drivers/dma-buf/udmabuf.c\n+++ b/drivers/dma-buf/udmabuf.c\n@@ -190,6 +190,10 @@ static long udmabuf_create(struct miscdevice *device,\n \t\tif (ubuf->pagecount > pglimit)\n \t\t\tgoto err;\n \t}\n+\n+\tif (!ubuf->pagecount)\n+\t\tgoto err;\n+\n \tubuf->pages = kmalloc_array(ubuf->pagecount, sizeof(*ubuf->pages),\n \t\t\t\t    GFP_KERNEL);\n \tif (!ubuf->pages) {\n",
+    "patch_modified_files": [
+        "drivers/dma-buf/udmabuf.c"
+    ]
+}

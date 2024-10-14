@@ -1,0 +1,133 @@
+{
+    "version": 1,
+    "title": "general protection fault in ip_set_comment_free",
+    "display-title": "general protection fault in ip_set_comment_free",
+    "id": "6e96f5bd56bfecdaa0bfeaf2695a25cc80bfbd9a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "netfilter: ipset: Fix forceadd evaluation path",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8af1c6fbd9239877998c7f5a591cb2c88d41fb66",
+            "hash": "8af1c6fbd9239877998c7f5a591cb2c88d41fb66",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "netfilter: ipset: Introduction of new commands and protocol version 7",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=23c42a403a9cfdbad6004a556c927be7dd61a8ee",
+        "hash": "23c42a403a9cfdbad6004a556c927be7dd61a8ee",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e78d8a059d0f8eba@google.com/T/",
+        "https://lore.kernel.org/all/20200222113005.5647-1-kadlec@netfilter.org/T/",
+        "https://lore.kernel.org/all/20200226225442.9598-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20200303174302.523080016@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200303174304.593872177@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200305171309.29118-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20200305171420.29595-1-sashal@kernel.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12df0376e00000",
+            "c-reproducer": "/text?tag=ReproC&x=14d225c9e00000",
+            "kernel-config": "/text?tag=KernelConfig&x=cf8e288883e40aba",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=d5d359b0ac3ffc319ca93c46a4cfd87093759ad6",
+            "kernel-source-commit": "d5d359b0ac3ffc319ca93c46a4cfd87093759ad6",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/2e95ab335759ed7e1c246c2057c84d813a2c29e1",
+            "syzkaller-commit": "2e95ab335759ed7e1c246c2057c84d813a2c29e1",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10153335e00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "mtype_add",
+            "net/netfilter/ipset/ip_set_hash_gen.h"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "ip_set_dump",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_swap",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "EXPORT_SYMBOL_GPL",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_udel",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_destroy",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_rename",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "dump_init",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_type",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_sockfn_get",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_dump_start",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_create",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_uadd",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_flush",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_protocol",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_put_flags",
+            "include/linux/netfilter/ipset/ip_set.h"
+        ],
+        [
+            "ip_set_header",
+            "net/netfilter/ipset/ip_set_core.c"
+        ],
+        [
+            "ip_set_utest",
+            "net/netfilter/ipset/ip_set_core.c"
+        ]
+    ],
+    "patch_commit_date": "2020-02-22T11:01:43+00:00",
+    "cause_commit_date": "2018-10-27T13:07:40+00:00",
+    "subsystems": [
+        "netfilter"
+    ],
+    "parent_of_fix_commit": "f66ee0410b1c3481ee75e5db9b34547b4d582465",
+    "patch": "diff --git a/net/netfilter/ipset/ip_set_hash_gen.h b/net/netfilter/ipset/ip_set_hash_gen.h\nindex 71e93eac0831..e52d7b7597a0 100644\n--- a/net/netfilter/ipset/ip_set_hash_gen.h\n+++ b/net/netfilter/ipset/ip_set_hash_gen.h\n@@ -931,6 +931,8 @@ mtype_add(struct ip_set *set, void *value, const struct ip_set_ext *ext,\n \t\t}\n \t}\n \tif (reuse || forceadd) {\n+\t\tif (j == -1)\n+\t\t\tj = 0;\n \t\tdata = ahash_data(n, j, set->dsize);\n \t\tif (!deleted) {\n #ifdef IP_SET_HASH_WITH_NETS\n",
+    "patch_modified_files": [
+        "net/netfilter/ipset/ip_set_hash_gen.h"
+    ]
+}

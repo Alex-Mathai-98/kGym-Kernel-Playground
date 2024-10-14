@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "title": "INFO: task hung in vhost_work_dev_flush",
+    "display-title": "INFO: task hung in vhost_work_dev_flush",
+    "id": "7b2aea1ce02f87c175f94492d21d04a34bc99b5e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "vhost: fix hung thread due to erroneous iotlb entries",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e2ae38cf3d91837a493cb2093c87700ff3cbe667",
+            "hash": "e2ae38cf3d91837a493cb2093c87700ff3cbe667",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000057702a05d8532b18@google.com/T/",
+        "https://lore.kernel.org/all/20220221072852.31820-1-mail@anirudhrb.com/T/",
+        "https://lore.kernel.org/all/20220221114916.107045-1-sgarzare@redhat.com/T/",
+        "https://lore.kernel.org/all/20220221195303.13560-1-mail@anirudhrb.com/T/",
+        "https://lore.kernel.org/all/20220224143320.3751-1-mail@anirudhrb.com/T/",
+        "https://lore.kernel.org/all/20220305095525.5145-1-mail@anirudhrb.com/T/",
+        "https://lore.kernel.org/all/20220307060332-mutt-send-email-mst@kernel.org/T/",
+        "https://lore.kernel.org/all/20220314112743.029192918@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220314112744.120491875@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "INFO: task hung in vhost_work_dev_flush",
+            "syz-reproducer": "/text?tag=ReproSyz&x=108514a4700000",
+            "c-reproducer": "/text?tag=ReproC&x=16ca671c700000",
+            "kernel-config": "/text?tag=KernelConfig&x=266de9da75c71a45",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=e6251ab4551f51fa4cee03523e08051898c3ce82",
+            "kernel-source-commit": "e6251ab4551f51fa4cee03523e08051898c3ce82",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/0b33604d8e2793b82ec89abecf82d92b82e3d410",
+            "syzkaller-commit": "0b33604d8e2793b82ec89abecf82d92b82e3d410",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11dcf52c700000"
+        }
+    ],
+    "subsystems": [
+        "kvm",
+        "net",
+        "virt"
+    ],
+    "parent_of_fix_commit": "b9d102dafec6af1c07b610faf0a6d4e8aee14ae0",
+    "patch": "diff --git a/drivers/vhost/iotlb.c b/drivers/vhost/iotlb.c\nindex 670d56c879e5..40b098320b2a 100644\n--- a/drivers/vhost/iotlb.c\n+++ b/drivers/vhost/iotlb.c\n@@ -57,6 +57,17 @@ int vhost_iotlb_add_range_ctx(struct vhost_iotlb *iotlb,\n \tif (last < start)\n \t\treturn -EFAULT;\n \n+\t/* If the range being mapped is [0, ULONG_MAX], split it into two entries\n+\t * otherwise its size would overflow u64.\n+\t */\n+\tif (start == 0 && last == ULONG_MAX) {\n+\t\tu64 mid = last / 2;\n+\n+\t\tvhost_iotlb_add_range_ctx(iotlb, start, mid, addr, perm, opaque);\n+\t\taddr += mid + 1;\n+\t\tstart = mid + 1;\n+\t}\n+\n \tif (iotlb->limit &&\n \t    iotlb->nmaps == iotlb->limit &&\n \t    iotlb->flags & VHOST_IOTLB_FLAG_RETIRE) {\ndiff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c\nindex 59edb5a1ffe2..55475fd59fb7 100644\n--- a/drivers/vhost/vhost.c\n+++ b/drivers/vhost/vhost.c\n@@ -1170,6 +1170,11 @@ ssize_t vhost_chr_write_iter(struct vhost_dev *dev,\n \t\tgoto done;\n \t}\n \n+\tif (msg.size == 0) {\n+\t\tret = -EINVAL;\n+\t\tgoto done;\n+\t}\n+\n \tif (dev->msg_handler)\n \t\tret = dev->msg_handler(dev, &msg);\n \telse\n",
+    "patch_modified_files": [
+        "drivers/vhost/iotlb.c",
+        "drivers/vhost/vhost.c"
+    ]
+}

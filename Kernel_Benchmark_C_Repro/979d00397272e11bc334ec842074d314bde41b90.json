@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "title": "KASAN: use-after-free Read in crypto_gcm_init_common",
+    "display-title": "KASAN: use-after-free Read in crypto_gcm_init_common",
+    "id": "979d00397272e11bc334ec842074d314bde41b90",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/tls: fix page double free on TX cleanup",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9354544cbccf68da1b047f8fb7b47630e3c8a59d",
+            "hash": "9354544cbccf68da1b047f8fb7b47630e3c8a59d",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "security/keys: rewrite all of big_key crypto",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=428490e38b2e352812e0b765d8bceafab0ec441d",
+        "hash": "428490e38b2e352812e0b765d8bceafab0ec441d",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000060e0ae057a092be8@google.com/T/",
+        "https://lore.kernel.org/all/20190625055019.GD17703@sol.localdomain/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=17902f5b400000",
+            "c-reproducer": "/text?tag=ReproC&x=111377e5400000",
+            "kernel-config": "/text?tag=KernelConfig&x=9384ecb1c973baed",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=4710e78940d8d957f24b8f085f961f1279f8fbff",
+            "kernel-source-commit": "4710e78940d8d957f24b8f085f961f1279f8fbff",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8bd6bd63656d411729c450d452e1355b42adf900",
+            "syzkaller-commit": "8bd6bd63656d411729c450d452e1355b42adf900",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=11f7942b400000"
+        }
+    ],
+    "subsystems": [
+        "crypto"
+    ],
+    "parent_of_fix_commit": "45d5cb137c3638b3a310f41b31d8e79daf647f14",
+    "patch": "diff --git a/include/net/tls.h b/include/net/tls.h\nindex 4a55ce6a303f..53d96bca220d 100644\n--- a/include/net/tls.h\n+++ b/include/net/tls.h\n@@ -373,21 +373,6 @@ static inline bool tls_is_partially_sent_record(struct tls_context *ctx)\n \treturn !!ctx->partially_sent_record;\n }\n \n-static inline int tls_complete_pending_work(struct sock *sk,\n-\t\t\t\t\t    struct tls_context *ctx,\n-\t\t\t\t\t    int flags, long *timeo)\n-{\n-\tint rc = 0;\n-\n-\tif (unlikely(sk->sk_write_pending))\n-\t\trc = wait_on_pending_writer(sk, timeo);\n-\n-\tif (!rc && tls_is_partially_sent_record(ctx))\n-\t\trc = tls_push_partial_record(sk, ctx, flags);\n-\n-\treturn rc;\n-}\n-\n static inline bool tls_is_pending_open_record(struct tls_context *tls_ctx)\n {\n \treturn tls_ctx->pending_open_record_frags;\ndiff --git a/net/tls/tls_main.c b/net/tls/tls_main.c\nindex fc81ae18cc44..e2b69e805d46 100644\n--- a/net/tls/tls_main.c\n+++ b/net/tls/tls_main.c\n@@ -279,7 +279,8 @@ static void tls_sk_proto_close(struct sock *sk, long timeout)\n \t\tgoto skip_tx_cleanup;\n \t}\n \n-\tif (!tls_complete_pending_work(sk, ctx, 0, &timeo))\n+\tif (unlikely(sk->sk_write_pending) &&\n+\t    !wait_on_pending_writer(sk, &timeo))\n \t\ttls_handle_open_record(sk, 0);\n \n \t/* We need these for tls_sw_fallback handling of other packets */\n",
+    "patch_modified_files": [
+        "include/net/tls.h",
+        "net/tls/tls_main.c"
+    ]
+}

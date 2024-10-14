@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "title": "BUG: unable to handle kernel paging request in truncate_inode_partial_folio",
+    "display-title": "BUG: unable to handle kernel paging request in truncate_inode_partial_folio",
+    "id": "75b0feac9a3f9e361fd60605e261f8a4ffef1c40",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "secretmem: fix unhandled fault in truncate",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=84ac013046ccc438af04b7acecd4d3ab84fe4bde",
+            "hash": "84ac013046ccc438af04b7acecd4d3ab84fe4bde",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000f94c4805e289fc47@google.com/T/",
+        "https://lore.kernel.org/all/20220707165650.248088-1-rppt@kernel.org/T/",
+        "https://lore.kernel.org/all/20220714091337.412297-1-rppt@kernel.org/T/",
+        "https://lore.kernel.org/all/20220801114134.468284027@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20220801114138.041018499@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "BUG: unable to handle kernel paging request in truncate_inode_partial_folio",
+            "syz-reproducer": "/text?tag=ReproSyz&x=140f9ba8080000",
+            "c-reproducer": "/text?tag=ReproC&x=15495188080000",
+            "kernel-config": "/text?tag=KernelConfig&x=833001d0819ddbc9",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=941e3e7912696b9fbe3586083a7c2e102cee7a87",
+            "kernel-source-commit": "941e3e7912696b9fbe3586083a7c2e102cee7a87",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/ef82eb2c4a4a718bdb87ccd783a1d6431ec2faf8",
+            "syzkaller-commit": "ef82eb2c4a4a718bdb87ccd783a1d6431ec2faf8",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=146fef90080000"
+        }
+    ],
+    "subsystems": [
+        "fs",
+        "mm"
+    ],
+    "parent_of_fix_commit": "c2cb0dcce9dd8b748b6ca8bb8d4a389f2e232307",
+    "patch": "diff --git a/mm/secretmem.c b/mm/secretmem.c\nindex 206ed6b40c1d..f06279d6190a 100644\n--- a/mm/secretmem.c\n+++ b/mm/secretmem.c\n@@ -55,22 +55,28 @@ static vm_fault_t secretmem_fault(struct vm_fault *vmf)\n \tgfp_t gfp = vmf->gfp_mask;\n \tunsigned long addr;\n \tstruct page *page;\n+\tvm_fault_t ret;\n \tint err;\n \n \tif (((loff_t)vmf->pgoff << PAGE_SHIFT) >= i_size_read(inode))\n \t\treturn vmf_error(-EINVAL);\n \n+\tfilemap_invalidate_lock_shared(mapping);\n+\n retry:\n \tpage = find_lock_page(mapping, offset);\n \tif (!page) {\n \t\tpage = alloc_page(gfp | __GFP_ZERO);\n-\t\tif (!page)\n-\t\t\treturn VM_FAULT_OOM;\n+\t\tif (!page) {\n+\t\t\tret = VM_FAULT_OOM;\n+\t\t\tgoto out;\n+\t\t}\n \n \t\terr = set_direct_map_invalid_noflush(page);\n \t\tif (err) {\n \t\t\tput_page(page);\n-\t\t\treturn vmf_error(err);\n+\t\t\tret = vmf_error(err);\n+\t\t\tgoto out;\n \t\t}\n \n \t\t__SetPageUptodate(page);\n@@ -86,7 +92,8 @@ static vm_fault_t secretmem_fault(struct vm_fault *vmf)\n \t\t\tif (err == -EEXIST)\n \t\t\t\tgoto retry;\n \n-\t\t\treturn vmf_error(err);\n+\t\t\tret = vmf_error(err);\n+\t\t\tgoto out;\n \t\t}\n \n \t\taddr = (unsigned long)page_address(page);\n@@ -94,7 +101,11 @@ static vm_fault_t secretmem_fault(struct vm_fault *vmf)\n \t}\n \n \tvmf->page = page;\n-\treturn VM_FAULT_LOCKED;\n+\tret = VM_FAULT_LOCKED;\n+\n+out:\n+\tfilemap_invalidate_unlock_shared(mapping);\n+\treturn ret;\n }\n \n static const struct vm_operations_struct secretmem_vm_ops = {\n@@ -162,12 +173,20 @@ static int secretmem_setattr(struct user_namespace *mnt_userns,\n \t\t\t     struct dentry *dentry, struct iattr *iattr)\n {\n \tstruct inode *inode = d_inode(dentry);\n+\tstruct address_space *mapping = inode->i_mapping;\n \tunsigned int ia_valid = iattr->ia_valid;\n+\tint ret;\n+\n+\tfilemap_invalidate_lock(mapping);\n \n \tif ((ia_valid & ATTR_SIZE) && inode->i_size)\n-\t\treturn -EINVAL;\n+\t\tret = -EINVAL;\n+\telse\n+\t\tret = simple_setattr(mnt_userns, dentry, iattr);\n \n-\treturn simple_setattr(mnt_userns, dentry, iattr);\n+\tfilemap_invalidate_unlock(mapping);\n+\n+\treturn ret;\n }\n \n static const struct inode_operations secretmem_iops = {\n",
+    "patch_modified_files": [
+        "mm/secretmem.c"
+    ]
+}

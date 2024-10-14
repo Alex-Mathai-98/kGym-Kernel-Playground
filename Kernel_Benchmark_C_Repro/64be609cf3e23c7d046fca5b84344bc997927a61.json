@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "memory leak in nf_hook_entries_grow",
+    "display-title": "memory leak in nf_hook_entries_grow",
+    "id": "64be609cf3e23c7d046fca5b84344bc997927a61",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "ipvs: defer hook registration to avoid leaks",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cf47a0b882a4e5f6b34c7949d7b293e9287f1972",
+            "hash": "cf47a0b882a4e5f6b34c7949d7b293e9287f1972",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000002b2262058a70001d@google.com/T/",
+        "https://lore.kernel.org/all/20190604185635.16823-1-ja@ssi.bg/T/",
+        "https://lore.kernel.org/all/20190628174125.20739-1-pablo@netfilter.org/T/",
+        "https://lore.kernel.org/all/20190715134655.4076-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715140341.6443-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715141809.8445-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190715142839.9896-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20190724191655.268628197@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190724191724.382593077@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190724191735.096702571@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20190729190820.321094988@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12f02772a00000",
+            "c-reproducer": "/text?tag=ReproC&x=1657b80ea00000",
+            "kernel-config": "/text?tag=KernelConfig&x=50393f7bfe444ff6",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=3ab4436f688c2d2f221793953cd05435ca84261c",
+            "kernel-source-commit": "3ab4436f688c2d2f221793953cd05435ca84261c",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/53c81ea5385ee17c68d0afa4e524b6aead37c903",
+            "syzkaller-commit": "53c81ea5385ee17c68d0afa4e524b6aead37c903",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1152687ca00000"
+        }
+    ],
+    "subsystems": [
+        "lvs"
+    ],
+    "parent_of_fix_commit": "85f9aa7565bd79b039325f2c01af7ffa717924df",
+    "patch": "diff --git a/net/netfilter/ipvs/ip_vs_core.c b/net/netfilter/ipvs/ip_vs_core.c\nindex 7138556b206b..d5103a9eb302 100644\n--- a/net/netfilter/ipvs/ip_vs_core.c\n+++ b/net/netfilter/ipvs/ip_vs_core.c\n@@ -2245,7 +2245,6 @@ static const struct nf_hook_ops ip_vs_ops[] = {\n static int __net_init __ip_vs_init(struct net *net)\n {\n \tstruct netns_ipvs *ipvs;\n-\tint ret;\n \n \tipvs = net_generic(net, ip_vs_net_id);\n \tif (ipvs == NULL)\n@@ -2277,17 +2276,11 @@ static int __net_init __ip_vs_init(struct net *net)\n \tif (ip_vs_sync_net_init(ipvs) < 0)\n \t\tgoto sync_fail;\n \n-\tret = nf_register_net_hooks(net, ip_vs_ops, ARRAY_SIZE(ip_vs_ops));\n-\tif (ret < 0)\n-\t\tgoto hook_fail;\n-\n \treturn 0;\n /*\n  * Error handling\n  */\n \n-hook_fail:\n-\tip_vs_sync_net_cleanup(ipvs);\n sync_fail:\n \tip_vs_conn_net_cleanup(ipvs);\n conn_fail:\n@@ -2317,6 +2310,19 @@ static void __net_exit __ip_vs_cleanup(struct net *net)\n \tnet->ipvs = NULL;\n }\n \n+static int __net_init __ip_vs_dev_init(struct net *net)\n+{\n+\tint ret;\n+\n+\tret = nf_register_net_hooks(net, ip_vs_ops, ARRAY_SIZE(ip_vs_ops));\n+\tif (ret < 0)\n+\t\tgoto hook_fail;\n+\treturn 0;\n+\n+hook_fail:\n+\treturn ret;\n+}\n+\n static void __net_exit __ip_vs_dev_cleanup(struct net *net)\n {\n \tstruct netns_ipvs *ipvs = net_ipvs(net);\n@@ -2336,6 +2342,7 @@ static struct pernet_operations ipvs_core_ops = {\n };\n \n static struct pernet_operations ipvs_core_dev_ops = {\n+\t.init = __ip_vs_dev_init,\n \t.exit = __ip_vs_dev_cleanup,\n };\n \n",
+    "patch_modified_files": [
+        "net/netfilter/ipvs/ip_vs_core.c"
+    ]
+}

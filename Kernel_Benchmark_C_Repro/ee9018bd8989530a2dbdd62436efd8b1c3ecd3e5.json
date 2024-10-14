@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "title": "INFO: task hung in rfcomm_process_sessions",
+    "display-title": "INFO: task hung in rfcomm_process_sessions (2)",
+    "id": "ee9018bd8989530a2dbdd62436efd8b1c3ecd3e5",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: Fix possible deadlock in rfcomm_sk_state_change",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1d80d57ffcb55488f0ec0b77928d4f82d16b6a90",
+            "hash": "1d80d57ffcb55488f0ec0b77928d4f82d16b6a90",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000005e857005db658b71@google.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "INFO: task hung in rfcomm_process_sessions",
+            "syz-reproducer": "/text?tag=ReproSyz&x=103e2107700000",
+            "c-reproducer": "/text?tag=ReproC&x=149c7ec7700000",
+            "kernel-config": "/text?tag=KernelConfig&x=69c8957f4ac2dea6",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=cffb2b72d3ed47f5093d128bd44d9ce136b6b5af",
+            "kernel-source-commit": "cffb2b72d3ed47f5093d128bd44d9ce136b6b5af",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/6bdac76629d4d80501671c0c312d6b81411481e7",
+            "syzkaller-commit": "6bdac76629d4d80501671c0c312d6b81411481e7",
+            "compiler-description": "Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=12aba673700000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "rfcomm_sock_connect",
+            "net/bluetooth/rfcomm/sock.c"
+        ]
+    ],
+    "patch_commit_date": "2023-01-11T03:16:14+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "506d9b4099a0ce8249bba16b4d0b828fdcf69d9a",
+    "patch": "diff --git a/net/bluetooth/rfcomm/sock.c b/net/bluetooth/rfcomm/sock.c\nindex 21e24da4847f..4397e14ff560 100644\n--- a/net/bluetooth/rfcomm/sock.c\n+++ b/net/bluetooth/rfcomm/sock.c\n@@ -391,6 +391,7 @@ static int rfcomm_sock_connect(struct socket *sock, struct sockaddr *addr, int a\n \t    addr->sa_family != AF_BLUETOOTH)\n \t\treturn -EINVAL;\n \n+\tsock_hold(sk);\n \tlock_sock(sk);\n \n \tif (sk->sk_state != BT_OPEN && sk->sk_state != BT_BOUND) {\n@@ -410,14 +411,18 @@ static int rfcomm_sock_connect(struct socket *sock, struct sockaddr *addr, int a\n \td->sec_level = rfcomm_pi(sk)->sec_level;\n \td->role_switch = rfcomm_pi(sk)->role_switch;\n \n+\t/* Drop sock lock to avoid potential deadlock with the RFCOMM lock */\n+\trelease_sock(sk);\n \terr = rfcomm_dlc_open(d, &rfcomm_pi(sk)->src, &sa->rc_bdaddr,\n \t\t\t      sa->rc_channel);\n-\tif (!err)\n+\tlock_sock(sk);\n+\tif (!err && !sock_flag(sk, SOCK_ZAPPED))\n \t\terr = bt_sock_wait_state(sk, BT_CONNECTED,\n \t\t\t\tsock_sndtimeo(sk, flags & O_NONBLOCK));\n \n done:\n \trelease_sock(sk);\n+\tsock_put(sk);\n \treturn err;\n }\n \n",
+    "patch_modified_files": [
+        "net/bluetooth/rfcomm/sock.c"
+    ]
+}

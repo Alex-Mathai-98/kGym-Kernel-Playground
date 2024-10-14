@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "title": "memory leak in udf_process_sequence",
+    "display-title": "memory leak in udf_process_sequence",
+    "id": "c5ec4e6f5d818f3c4afd4d59342468eec08a38da",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "udf: Fix memory leak when mounting",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a7be300de800e755714c71103ae4a0d205e41e99",
+            "hash": "a7be300de800e755714c71103ae4a0d205e41e99",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000004c1f4d05afcff2f4@google.com/T/",
+        "https://lore.kernel.org/all/20200922154531.153922-1-yepeilin.cs@gmail.com/T/",
+        "https://lore.kernel.org/all/20201103203232.656475008@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201103203249.448706377@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201103203348.153465465@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=101a0e9b900000",
+            "c-reproducer": "/text?tag=ReproC&x=17ae18d3900000",
+            "kernel-config": "/text?tag=KernelConfig&x=a1f3c5052e8097e9",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=325d0eab4f31c6240b59d5b2b8042c88f59405b5",
+            "kernel-source-commit": "325d0eab4f31c6240b59d5b2b8042c88f59405b5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/9564d2e9821aea842b6ab213174aabd4b578b039",
+            "syzkaller-commit": "9564d2e9821aea842b6ab213174aabd4b578b039",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1091c0e3900000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "udf_process_sequence",
+            "fs/udf/super.c"
+        ]
+    ],
+    "patch_commit_date": "2020-09-22T10:20:14+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "udf"
+    ],
+    "parent_of_fix_commit": "aa9f6661eddd342e8d7a621a805beb7354d8d8f9",
+    "patch": "diff --git a/fs/udf/super.c b/fs/udf/super.c\nindex 8b381456482d..a76025de6710 100644\n--- a/fs/udf/super.c\n+++ b/fs/udf/super.c\n@@ -1690,7 +1690,8 @@ static noinline int udf_process_sequence(\n \t\t\t\t\t\"Pointers (max %u supported)\\n\",\n \t\t\t\t\tUDF_MAX_TD_NESTING);\n \t\t\t\tbrelse(bh);\n-\t\t\t\treturn -EIO;\n+\t\t\t\tret = -EIO;\n+\t\t\t\tgoto out;\n \t\t\t}\n \n \t\t\tvdp = (struct volDescPtr *)bh->b_data;\n@@ -1710,7 +1711,8 @@ static noinline int udf_process_sequence(\n \t\t\tcurr = get_volume_descriptor_record(ident, bh, &data);\n \t\t\tif (IS_ERR(curr)) {\n \t\t\t\tbrelse(bh);\n-\t\t\t\treturn PTR_ERR(curr);\n+\t\t\t\tret = PTR_ERR(curr);\n+\t\t\t\tgoto out;\n \t\t\t}\n \t\t\t/* Descriptor we don't care about? */\n \t\t\tif (!curr)\n@@ -1732,28 +1734,31 @@ static noinline int udf_process_sequence(\n \t */\n \tif (!data.vds[VDS_POS_PRIMARY_VOL_DESC].block) {\n \t\tudf_err(sb, \"Primary Volume Descriptor not found!\\n\");\n-\t\treturn -EAGAIN;\n+\t\tret = -EAGAIN;\n+\t\tgoto out;\n \t}\n \tret = udf_load_pvoldesc(sb, data.vds[VDS_POS_PRIMARY_VOL_DESC].block);\n \tif (ret < 0)\n-\t\treturn ret;\n+\t\tgoto out;\n \n \tif (data.vds[VDS_POS_LOGICAL_VOL_DESC].block) {\n \t\tret = udf_load_logicalvol(sb,\n \t\t\t\tdata.vds[VDS_POS_LOGICAL_VOL_DESC].block,\n \t\t\t\tfileset);\n \t\tif (ret < 0)\n-\t\t\treturn ret;\n+\t\t\tgoto out;\n \t}\n \n \t/* Now handle prevailing Partition Descriptors */\n \tfor (i = 0; i < data.num_part_descs; i++) {\n \t\tret = udf_load_partdesc(sb, data.part_descs_loc[i].rec.block);\n \t\tif (ret < 0)\n-\t\t\treturn ret;\n+\t\t\tgoto out;\n \t}\n-\n-\treturn 0;\n+\tret = 0;\n+out:\n+\tkfree(data.part_descs_loc);\n+\treturn ret;\n }\n \n /*\n",
+    "patch_modified_files": [
+        "fs/udf/super.c"
+    ]
+}

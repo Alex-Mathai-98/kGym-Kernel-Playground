@@ -1,0 +1,39 @@
+{
+    "version": 1,
+    "title": "kernel BUG at kernel/time/timer.c:LINE!",
+    "display-title": "kernel BUG at kernel/time/timer.c:LINE! (2)",
+    "id": "896177e5e24481c07897a3bc3b8de90760c40b27",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "net/hamradio/6pack: use mod_timer() to rearm timers",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=202700e30740c6568b5a6943662f3829566dd533",
+            "hash": "202700e30740c6568b5a6943662f3829566dd533",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1293d8d7400000",
+            "c-reproducer": "/text?tag=ReproC&x=128dc120c00000",
+            "kernel-config": "/text?tag=KernelConfig&x=76d28549be7c27cf",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=f12e840c819bab42621685558a01d3f46ab9a226",
+            "kernel-source-commit": "f12e840c819bab42621685558a01d3f46ab9a226",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/3d85f48c1449a8fe6db5cef827592f56ee6dcf26",
+            "syzkaller-commit": "3d85f48c1449a8fe6db5cef827592f56ee6dcf26",
+            "compiler-description": "gcc (GCC) 9.0.0 20181231 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14cfbc9f400000"
+        }
+    ],
+    "subsystems": [
+        "hams"
+    ],
+    "parent_of_fix_commit": "53fe3ed19df0bca6ce752fae8e483910b6f112f6",
+    "patch": "diff --git a/drivers/net/hamradio/6pack.c b/drivers/net/hamradio/6pack.c\nindex 28c749980359..a19868cba48c 100644\n--- a/drivers/net/hamradio/6pack.c\n+++ b/drivers/net/hamradio/6pack.c\n@@ -523,10 +523,7 @@ static void resync_tnc(struct timer_list *t)\n \n \n \t/* Start resync timer again -- the TNC might be still absent */\n-\n-\tdel_timer(&sp->resync_t);\n-\tsp->resync_t.expires\t= jiffies + SIXP_RESYNC_TIMEOUT;\n-\tadd_timer(&sp->resync_t);\n+\tmod_timer(&sp->resync_t, jiffies + SIXP_RESYNC_TIMEOUT);\n }\n \n static inline int tnc_init(struct sixpack *sp)\n@@ -537,9 +534,7 @@ static inline int tnc_init(struct sixpack *sp)\n \n \tsp->tty->ops->write(sp->tty, &inbyte, 1);\n \n-\tdel_timer(&sp->resync_t);\n-\tsp->resync_t.expires = jiffies + SIXP_RESYNC_TIMEOUT;\n-\tadd_timer(&sp->resync_t);\n+\tmod_timer(&sp->resync_t, jiffies + SIXP_RESYNC_TIMEOUT);\n \n \treturn 0;\n }\n@@ -897,11 +892,8 @@ static void decode_prio_command(struct sixpack *sp, unsigned char cmd)\n         /* if the state byte has been received, the TNC is present,\n            so the resync timer can be reset. */\n \n-\tif (sp->tnc_state == TNC_IN_SYNC) {\n-\t\tdel_timer(&sp->resync_t);\n-\t\tsp->resync_t.expires\t= jiffies + SIXP_INIT_RESYNC_TIMEOUT;\n-\t\tadd_timer(&sp->resync_t);\n-\t}\n+\tif (sp->tnc_state == TNC_IN_SYNC)\n+\t\tmod_timer(&sp->resync_t, jiffies + SIXP_INIT_RESYNC_TIMEOUT);\n \n \tsp->status1 = cmd & SIXP_PRIO_DATA_MASK;\n }\n",
+    "patch_modified_files": [
+        "drivers/net/hamradio/6pack.c"
+    ]
+}

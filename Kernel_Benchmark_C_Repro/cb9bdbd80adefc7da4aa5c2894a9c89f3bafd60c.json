@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in __fscache_acquire_volume",
+    "display-title": "KASAN: slab-out-of-bounds Read in __fscache_acquire_volume",
+    "id": "cb9bdbd80adefc7da4aa5c2894a9c89f3bafd60c",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fscache: fix OOB Read in __fscache_acquire_volume",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9f0933ac026f7e54fe096797af9de20724e79097",
+            "hash": "9f0933ac026f7e54fe096797af9de20724e79097",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "9p: Use fscache indexing rewrite and reenable caching",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=24e42e32d347f0787a6f99aeb590f3aaa7221093",
+        "hash": "24e42e32d347f0787a6f99aeb590f3aaa7221093",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a5d1ac05e76a23bb@google.com/T/",
+        "https://lore.kernel.org/all/166869954095.3793579.8500020902371015443.stgit@warthog.procyon.org.uk/T/",
+        "https://lore.kernel.org/all/20221115122701.2117502-1-zhangpeng362@huawei.com/T/",
+        "https://lore.kernel.org/all/20221115140447.2971680-1-zhangpeng362@huawei.com/T/",
+        "https://lore.kernel.org/all/4193090.1668754852@warthog.procyon.org.uk/T/",
+        "https://lore.kernel.org/all/479316.1669048294@warthog.procyon.org.uk/T/"
+    ],
+    "crashes": [
+        {
+            "title": "KASAN: slab-out-of-bounds Read in __fscache_acquire_volume",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1552b3ad080000",
+            "c-reproducer": "/text?tag=ReproC&x=15b0294d080000",
+            "kernel-config": "/text?tag=KernelConfig&x=911efaff115942bb",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=8379c0b31fbc5d20946f617f8e2fe4791e6f58c1",
+            "kernel-source-commit": "8379c0b31fbc5d20946f617f8e2fe4791e6f58c1",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/071779164d7640bc97cdb04864e59dbb91db6469",
+            "syzkaller-commit": "071779164d7640bc97cdb04864e59dbb91db6469",
+            "compiler-description": "gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=13d17357080000"
+        }
+    ],
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "eb7081409f94a9a8608593d0fb63a1aa3d6f95d8",
+    "patch": "diff --git a/fs/fscache/volume.c b/fs/fscache/volume.c\nindex a058e0136bfe..ab8ceddf9efa 100644\n--- a/fs/fscache/volume.c\n+++ b/fs/fscache/volume.c\n@@ -203,7 +203,11 @@ static struct fscache_volume *fscache_alloc_volume(const char *volume_key,\n \tstruct fscache_volume *volume;\n \tstruct fscache_cache *cache;\n \tsize_t klen, hlen;\n-\tchar *key;\n+\tu8 *key;\n+\n+\tklen = strlen(volume_key);\n+\tif (klen > NAME_MAX)\n+\t\treturn NULL;\n \n \tif (!coherency_data)\n \t\tcoherency_len = 0;\n@@ -229,7 +233,6 @@ static struct fscache_volume *fscache_alloc_volume(const char *volume_key,\n \t/* Stick the length on the front of the key and pad it out to make\n \t * hashing easier.\n \t */\n-\tklen = strlen(volume_key);\n \thlen = round_up(1 + klen + 1, sizeof(__le32));\n \tkey = kzalloc(hlen, GFP_KERNEL);\n \tif (!key)\ndiff --git a/include/linux/fscache.h b/include/linux/fscache.h\nindex 36e5dd84cf59..8e312c8323a8 100644\n--- a/include/linux/fscache.h\n+++ b/include/linux/fscache.h\n@@ -75,7 +75,7 @@ struct fscache_volume {\n \tatomic_t\t\t\tn_accesses;\t/* Number of cache accesses in progress */\n \tunsigned int\t\t\tdebug_id;\n \tunsigned int\t\t\tkey_hash;\t/* Hash of key string */\n-\tchar\t\t\t\t*key;\t\t/* Volume ID, eg. \"afs@example.com@1234\" */\n+\tu8\t\t\t\t*key;\t\t/* Volume ID, eg. \"afs@example.com@1234\" */\n \tstruct list_head\t\tproc_link;\t/* Link in /proc/fs/fscache/volumes */\n \tstruct hlist_bl_node\t\thash_link;\t/* Link in hash table */\n \tstruct work_struct\t\twork;\n",
+    "patch_modified_files": [
+        "fs/fscache/volume.c",
+        "include/linux/fscache.h"
+    ]
+}

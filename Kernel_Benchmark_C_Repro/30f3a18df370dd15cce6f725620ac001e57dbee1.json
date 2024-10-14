@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "kernel BUG in hfs_bnode_put",
+    "display-title": "kernel BUG in hfs_bnode_put",
+    "id": "30f3a18df370dd15cce6f725620ac001e57dbee1",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "hfs: fix missing hfs_bnode_get() in __hfs_bnode_create",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a9dc087fd3c484fd1ed18c5efb290efaaf44ce03",
+            "hash": "a9dc087fd3c484fd1ed18c5efb290efaaf44ce03",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000de9b9d05ef0cbe7c@google.com/T/",
+        "https://lore.kernel.org/all/20221209091035.2062184-1-liushixin2@huawei.com/T/",
+        "https://lore.kernel.org/all/20221212021627.3766829-1-liushixin2@huawei.com/T/"
+    ],
+    "crashes": [
+        {
+            "title": "kernel BUG in hfs_bnode_put",
+            "syz-reproducer": "/text?tag=ReproSyz&x=109e8647880000",
+            "c-reproducer": "/text?tag=ReproC&x=15ecd229880000",
+            "kernel-config": "/text?tag=KernelConfig&x=2325e409a9a893e1",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=97ee9d1c16963375eefdf964c429897d27e28956",
+            "kernel-source-commit": "97ee9d1c16963375eefdf964c429897d27e28956",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/e080de16713b9dbf308cdd7bcb85b58293e46e33",
+            "syzkaller-commit": "e080de16713b9dbf308cdd7bcb85b58293e46e33",
+            "compiler-description": "Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=170923ad880000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "__hfs_bnode_create",
+            "fs/hfs/bnode.c"
+        ]
+    ],
+    "patch_commit_date": "2022-12-12T02:16:27+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "hfs"
+    ],
+    "parent_of_fix_commit": "bef7ec4e8f30173614b3e441924685f2bd8858e7",
+    "patch": "diff --git a/fs/hfs/bnode.c b/fs/hfs/bnode.c\nindex 2015e42e752a..6add6ebfef89 100644\n--- a/fs/hfs/bnode.c\n+++ b/fs/hfs/bnode.c\n@@ -274,6 +274,7 @@ static struct hfs_bnode *__hfs_bnode_create(struct hfs_btree *tree, u32 cnid)\n \t\ttree->node_hash[hash] = node;\n \t\ttree->node_hash_cnt++;\n \t} else {\n+\t\thfs_bnode_get(node2);\n \t\tspin_unlock(&tree->hash_lock);\n \t\tkfree(node);\n \t\twait_event(node2->lock_wq, !test_bit(HFS_BNODE_NEW, &node2->flags));\n",
+    "patch_modified_files": [
+        "fs/hfs/bnode.c"
+    ]
+}

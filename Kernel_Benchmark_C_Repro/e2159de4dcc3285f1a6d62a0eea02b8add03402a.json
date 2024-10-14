@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "title": "general protection fault in get_task_pid",
+    "display-title": "general protection fault in get_task_pid",
+    "id": "e2159de4dcc3285f1a6d62a0eea02b8add03402a",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "fork: return proper negative error code",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=28dd29c06d0dede4b32b2c559cff21955a830928",
+            "hash": "28dd29c06d0dede4b32b2c559cff21955a830928",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "copy_process(): don't use ksys_close() on cleanups",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6fd2fe494b17bf2dec37b610d23a43a72b16923a",
+        "hash": "6fd2fe494b17bf2dec37b610d23a43a72b16923a",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000e0dc0d058c9e7142@google.com/T/",
+        "https://lore.kernel.org/all/20190701144808.6804-1-christian@brauner.io/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1716d35ba00000",
+            "c-reproducer": "/text?tag=ReproC&x=1489f565a00000",
+            "kernel-config": "/text?tag=KernelConfig&x=9a31528e58cc12e2",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=556e2f6020bf90f63c5dd65e9a2254be6db3185b",
+            "kernel-source-commit": "556e2f6020bf90f63c5dd65e9a2254be6db3185b",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/7509bf360eba1461ac6059e4cacfbc29c9d2d4c7",
+            "syzkaller-commit": "7509bf360eba1461ac6059e4cacfbc29c9d2d4c7",
+            "compiler-description": "clang version 9.0.0 (/home/glider/llvm/clang 80fee25776c2fb61e74c1ecb1a523375c2500b69)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=1569b75ba00000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "copy_process",
+            "kernel/fork.c"
+        ]
+    ],
+    "cause_modified_functions": [
+        [
+            "copy_process",
+            "kernel/fork.c"
+        ]
+    ],
+    "patch_commit_date": "2019-07-01T14:01:46+00:00",
+    "cause_commit_date": "2019-06-27T02:22:09+00:00",
+    "subsystems": [
+        "kernel"
+    ],
+    "parent_of_fix_commit": "6fbc7275c7a9ba97877050335f290341a1fd8dbf",
+    "patch": "diff --git a/kernel/fork.c b/kernel/fork.c\nindex 61667909ce83..fe83343da24b 100644\n--- a/kernel/fork.c\n+++ b/kernel/fork.c\n@@ -2036,6 +2036,7 @@ static __latent_entropy struct task_struct *copy_process(\n \t\t\t\t\t      O_RDWR | O_CLOEXEC);\n \t\tif (IS_ERR(pidfile)) {\n \t\t\tput_unused_fd(pidfd);\n+\t\t\tretval = PTR_ERR(pidfile);\n \t\t\tgoto bad_fork_free_pid;\n \t\t}\n \t\tget_pid(pid);\t/* held by pidfile now */\n",
+    "patch_modified_files": [
+        "kernel/fork.c"
+    ]
+}

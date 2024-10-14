@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "title": "KASAN: slab-out-of-bounds Read in hci_extended_inquiry_result_evt",
+    "display-title": "KASAN: slab-out-of-bounds Read in hci_extended_inquiry_result_evt",
+    "id": "4bf11aa05c4ca51ce0df86e500fce486552dc8d2",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "Bluetooth: Fix slab-out-of-bounds read in hci_extended_inquiry_result_evt()",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=51c19bf3d5cfaa66571e4b88ba2a6f6295311101",
+            "hash": "51c19bf3d5cfaa66571e4b88ba2a6f6295311101",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/00000000000095a5f205a9e43b69@google.com/T/",
+        "https://lore.kernel.org/all/20200709051802.185168-1-yepeilin.cs@gmail.com/T/",
+        "https://lore.kernel.org/all/20200810151803.920113428@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200810151804.199494191@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200810151809.438685785@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200810151812.114485777@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200820091602.251285210@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200820091607.532711107@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20200820092125.688850368@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=12d62e6d100000",
+            "c-reproducer": "/text?tag=ReproC&x=1061f66d100000",
+            "kernel-config": "/text?tag=KernelConfig&x=7be693511b29b338",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=7cc2a8ea104820dd9e702202621e8fd4d9f6c8cf",
+            "kernel-source-commit": "7cc2a8ea104820dd9e702202621e8fd4d9f6c8cf",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/510951950dc0ee69cfdaf746061d3dbe31b49fd8",
+            "syzkaller-commit": "510951950dc0ee69cfdaf746061d3dbe31b49fd8",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=140c42d5100000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "hci_extended_inquiry_result_evt",
+            "net/bluetooth/hci_event.c"
+        ]
+    ],
+    "patch_commit_date": "2020-07-10T16:09:15+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "bluetooth"
+    ],
+    "parent_of_fix_commit": "51b64c476a5ddc66d3459f14e98e5de9211e9e24",
+    "patch": "diff --git a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c\nindex 03a0759f2fc2..13d8802b8137 100644\n--- a/net/bluetooth/hci_event.c\n+++ b/net/bluetooth/hci_event.c\n@@ -4375,7 +4375,7 @@ static void hci_extended_inquiry_result_evt(struct hci_dev *hdev,\n \n \tBT_DBG(\"%s num_rsp %d\", hdev->name, num_rsp);\n \n-\tif (!num_rsp)\n+\tif (!num_rsp || skb->len < num_rsp * sizeof(*info) + 1)\n \t\treturn;\n \n \tif (hci_dev_test_flag(hdev, HCI_PERIODIC_INQ))\n",
+    "patch_modified_files": [
+        "net/bluetooth/hci_event.c"
+    ]
+}

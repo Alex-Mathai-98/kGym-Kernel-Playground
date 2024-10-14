@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "KASAN: stack-out-of-bounds Read in xfrm_state_find",
+    "display-title": "KASAN: stack-out-of-bounds Read in xfrm_state_find (5)",
+    "id": "44fa54548362cb84e26da7c1bbd356c86c54f36d",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "xfrm: validate template mode",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=32bf94fb5c2ec4ec842152d0e5937cd4bb6738fa",
+            "hash": "32bf94fb5c2ec4ec842152d0e5937cd4bb6738fa",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000a5390a0568d7508a@google.com/T/",
+        "https://lore.kernel.org/all/20190625055102.GE17703@sol.localdomain/T/",
+        "https://lore.kernel.org/all/20190724014236.GE643@sol.localdomain/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1231c30b800000",
+            "c-reproducer": "/text?tag=ReproC&x=17c1c37b800000",
+            "kernel-config": "/text?tag=KernelConfig&x=d9b0d91297e224bc",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=10b84daddbec72c6b440216a69de9a9605127f7a",
+            "kernel-source-commit": "10b84daddbec72c6b440216a69de9a9605127f7a",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/dc88925771c47ef787f6f3a7b6756b8f0ce40af5",
+            "syzkaller-commit": "dc88925771c47ef787f6f3a7b6756b8f0ce40af5",
+            "compiler-description": "gcc (GCC) 7.1.1 20170620",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=14a8582b800000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "validate_tmpl",
+            "net/xfrm/xfrm_user.c"
+        ]
+    ],
+    "patch_commit_date": "2018-09-19T19:54:56+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "net"
+    ],
+    "parent_of_fix_commit": "9e1437937807b0122e8da1ca8765be2adca9aee6",
+    "patch": "diff --git a/net/xfrm/xfrm_user.c b/net/xfrm/xfrm_user.c\nindex 5151b3ebf068..d0672c400c2f 100644\n--- a/net/xfrm/xfrm_user.c\n+++ b/net/xfrm/xfrm_user.c\n@@ -1455,6 +1455,9 @@ static int validate_tmpl(int nr, struct xfrm_user_tmpl *ut, u16 family)\n \t\t    (ut[i].family != prev_family))\n \t\t\treturn -EINVAL;\n \n+\t\tif (ut[i].mode >= XFRM_MODE_MAX)\n+\t\t\treturn -EINVAL;\n+\n \t\tprev_family = ut[i].family;\n \n \t\tswitch (ut[i].family) {\n",
+    "patch_modified_files": [
+        "net/xfrm/xfrm_user.c"
+    ]
+}

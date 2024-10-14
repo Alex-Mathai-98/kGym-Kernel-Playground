@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "memory leak in generic_parse_monolithic",
+    "display-title": "memory leak in generic_parse_monolithic",
+    "id": "7dad5a2676b60426b152a941cc525162e438178b",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "afs: Fix memory leak when mounting with multiple source parameters",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4cb682964706deffb4861f0a91329ab3a705039f",
+            "hash": "4cb682964706deffb4861f0a91329ab3a705039f",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000002a530d05b400349b@google.com/T/",
+        "https://lore.kernel.org/all/160747152376.1115012.15487588820547991576.stgit@warthog.procyon.org.uk/T/",
+        "https://lore.kernel.org/all/20201228124937.240114599@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=102a57dc500000",
+            "c-reproducer": "/text?tag=ReproC&x=129ca3d6500000",
+            "kernel-config": "/text?tag=KernelConfig&x=a3f13716fa0212fd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=af5043c89a8ef6b6949a245fff355a552eaed240",
+            "kernel-source-commit": "af5043c89a8ef6b6949a245fff355a552eaed240",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/77a55c8ea6070a9a88715db4c17e9612a7f99b21",
+            "syzkaller-commit": "77a55c8ea6070a9a88715db4c17e9612a7f99b21",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=172c7106500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "afs_parse_source",
+            "fs/afs/super.c"
+        ]
+    ],
+    "patch_commit_date": "2020-12-08T23:52:03+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "fs"
+    ],
+    "parent_of_fix_commit": "c6f7e1510b872c281ff603a3108c084b6548d35c",
+    "patch": "diff --git a/fs/afs/super.c b/fs/afs/super.c\nindex 6c5900df6aa5..e38bb1e7a4d2 100644\n--- a/fs/afs/super.c\n+++ b/fs/afs/super.c\n@@ -230,6 +230,9 @@ static int afs_parse_source(struct fs_context *fc, struct fs_parameter *param)\n \n \t_enter(\",%s\", name);\n \n+\tif (fc->source)\n+\t\treturn invalf(fc, \"kAFS: Multiple sources not supported\");\n+\n \tif (!name) {\n \t\tprintk(KERN_ERR \"kAFS: no volume name specified\\n\");\n \t\treturn -EINVAL;\n",
+    "patch_modified_files": [
+        "fs/afs/super.c"
+    ]
+}

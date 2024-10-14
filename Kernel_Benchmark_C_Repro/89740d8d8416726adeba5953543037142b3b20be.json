@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "title": "general protection fault in keyctl_pkey_params_get",
+    "display-title": "general protection fault in keyctl_pkey_params_get",
+    "id": "89740d8d8416726adeba5953543037142b3b20be",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "KEYS: fix parsing invalid pkey info string",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=57b0e31453209d746c99e513d80b3d0c44a80891",
+            "hash": "57b0e31453209d746c99e513d80b3d0c44a80891",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        },
+        {
+            "title": "security: don't use a negative Opt_err token index",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=94c13f66e13ca0f3d5b7b9e7e385fe5db35abe3c",
+            "hash": "94c13f66e13ca0f3d5b7b9e7e385fe5db35abe3c",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000c220960579c4936d@google.com/T/",
+        "https://lore.kernel.org/all/20181103173035.23974-1-ebiggers@kernel.org/T/",
+        "https://lore.kernel.org/all/20190107104437.308206189@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=1026dcd5400000",
+            "c-reproducer": "/text?tag=ReproC&x=167e882b400000",
+            "kernel-config": "/text?tag=KernelConfig&x=9384ecb1c973baed",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=5f21585384a4a69b8bfdd2cae7e3648ae805f57d",
+            "kernel-source-commit": "5f21585384a4a69b8bfdd2cae7e3648ae805f57d",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/8bd6bd63656d411729c450d452e1355b42adf900",
+            "syzkaller-commit": "8bd6bd63656d411729c450d452e1355b42adf900",
+            "compiler-description": "gcc (GCC) 8.0.1 20180413 (experimental)",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=145c2fcb400000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "keyctl_pkey_params_parse",
+            "security/keys/keyctl_pkey.c"
+        ]
+    ],
+    "patch_commit_date": "2018-11-03T17:30:35+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "keyrings",
+        "lsm"
+    ],
+    "parent_of_fix_commit": "e1ef035d272ef4dbfdda98e58699698305138856",
+    "patch": "diff --git a/security/keys/keyctl_pkey.c b/security/keys/keyctl_pkey.c\nindex 70e65a2ff207..8bdea5abad11 100644\n--- a/security/keys/keyctl_pkey.c\n+++ b/security/keys/keyctl_pkey.c\n@@ -50,6 +50,8 @@ static int keyctl_pkey_params_parse(struct kernel_pkey_params *params)\n \t\tif (*p == '\\0' || *p == ' ' || *p == '\\t')\n \t\t\tcontinue;\n \t\ttoken = match_token(p, param_keys, args);\n+\t\tif (token == Opt_err)\n+\t\t\treturn -EINVAL;\n \t\tif (__test_and_set_bit(token, &token_mask))\n \t\t\treturn -EINVAL;\n \t\tq = args[0].from;\n",
+    "patch_modified_files": [
+        "security/keys/keyctl_pkey.c"
+    ]
+}

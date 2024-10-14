@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "title": "WARNING: proc registration bug in afs_manage_cell",
+    "display-title": "WARNING: proc registration bug in afs_manage_cell",
+    "id": "352510b0a559c9f3820035667d6aada33d160d0e",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "afs: Fix cell removal",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1d0e850a49a5b56f8f3cb51e74a11e2fedb96be6",
+            "hash": "1d0e850a49a5b56f8f3cb51e74a11e2fedb96be6",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "cause-commit": {
+        "title": "neigh: allow admin to set NUD_STALE",
+        "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0e7bbcc104baaade4f64205e9706b7d43c46db7d",
+        "hash": "0e7bbcc104baaade4f64205e9706b7d43c46db7d",
+        "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+        "branch": "master"
+    },
+    "discussions": [
+        "https://lore.kernel.org/all/000000000000b9f2ac05b05ae349@google.com/T/",
+        "https://lore.kernel.org/all/20201027135450.497324313@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20201027135522.655719020@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=164ee99b900000",
+            "c-reproducer": "/text?tag=ReproC&x=165dd5c5900000",
+            "kernel-config": "/text?tag=KernelConfig&x=5f4c828c9e3cef97",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=c9c9e6a49f8998e9334507378c08cc16cb3ec0e5",
+            "kernel-source-commit": "c9c9e6a49f8998e9334507378c08cc16cb3ec0e5",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/54289b0835634ca07a8117613c48b73e9e647d13",
+            "syzkaller-commit": "54289b0835634ca07a8117613c48b73e9e647d13",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=178a399b900000"
+        }
+    ],
+    "subsystems": [
+        "afs"
+    ],
+    "parent_of_fix_commit": "286377f6bdf71568a4cf07104fe44006ae0dba6d",
+    "patch": "diff --git a/fs/afs/cell.c b/fs/afs/cell.c\nindex 1944be78e9b0..bc7ed46aaca9 100644\n--- a/fs/afs/cell.c\n+++ b/fs/afs/cell.c\n@@ -291,11 +291,11 @@ struct afs_cell *afs_lookup_cell(struct afs_net *net,\n \twait_var_event(&cell->state,\n \t\t       ({\n \t\t\t       state = smp_load_acquire(&cell->state); /* vs error */\n-\t\t\t       state == AFS_CELL_ACTIVE || state == AFS_CELL_FAILED;\n+\t\t\t       state == AFS_CELL_ACTIVE || state == AFS_CELL_REMOVED;\n \t\t       }));\n \n \t/* Check the state obtained from the wait check. */\n-\tif (state == AFS_CELL_FAILED) {\n+\tif (state == AFS_CELL_REMOVED) {\n \t\tret = cell->error;\n \t\tgoto error;\n \t}\n@@ -700,7 +700,6 @@ static void afs_deactivate_cell(struct afs_net *net, struct afs_cell *cell)\n static void afs_manage_cell(struct afs_cell *cell)\n {\n \tstruct afs_net *net = cell->net;\n-\tbool deleted;\n \tint ret, active;\n \n \t_enter(\"%s\", cell->name);\n@@ -712,13 +711,15 @@ static void afs_manage_cell(struct afs_cell *cell)\n \tcase AFS_CELL_FAILED:\n \t\tdown_write(&net->cells_lock);\n \t\tactive = 1;\n-\t\tdeleted = atomic_try_cmpxchg_relaxed(&cell->active, &active, 0);\n-\t\tif (deleted) {\n+\t\tif (atomic_try_cmpxchg_relaxed(&cell->active, &active, 0)) {\n \t\t\trb_erase(&cell->net_node, &net->cells);\n+\t\t\tsmp_store_release(&cell->state, AFS_CELL_REMOVED);\n \t\t}\n \t\tup_write(&net->cells_lock);\n-\t\tif (deleted)\n+\t\tif (cell->state == AFS_CELL_REMOVED) {\n+\t\t\twake_up_var(&cell->state);\n \t\t\tgoto final_destruction;\n+\t\t}\n \t\tif (cell->state == AFS_CELL_FAILED)\n \t\t\tgoto done;\n \t\tsmp_store_release(&cell->state, AFS_CELL_UNSET);\n@@ -760,6 +761,9 @@ static void afs_manage_cell(struct afs_cell *cell)\n \t\twake_up_var(&cell->state);\n \t\tgoto again;\n \n+\tcase AFS_CELL_REMOVED:\n+\t\tgoto done;\n+\n \tdefault:\n \t\tbreak;\n \t}\ndiff --git a/fs/afs/internal.h b/fs/afs/internal.h\nindex 0363511290c8..06e617ee4cd1 100644\n--- a/fs/afs/internal.h\n+++ b/fs/afs/internal.h\n@@ -326,6 +326,7 @@ enum afs_cell_state {\n \tAFS_CELL_DEACTIVATING,\n \tAFS_CELL_INACTIVE,\n \tAFS_CELL_FAILED,\n+\tAFS_CELL_REMOVED,\n };\n \n /*\n",
+    "patch_modified_files": [
+        "fs/afs/cell.c",
+        "fs/afs/internal.h"
+    ]
+}

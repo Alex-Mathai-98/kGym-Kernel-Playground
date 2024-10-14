@@ -1,0 +1,66 @@
+{
+    "version": 1,
+    "title": "memory leak in atusb_probe",
+    "display-title": "memory leak in atusb_probe",
+    "id": "2482c46517c04822f40780fde741031bf9493450",
+    "status": "fixed",
+    "fix-commits": [
+        {
+            "title": "drivers: net: fix memory leak in atusb_probe",
+            "link": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6b9fbe16955152626557ec6f439f3407b7769941",
+            "hash": "6b9fbe16955152626557ec6f439f3407b7769941",
+            "repo": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            "branch": "master"
+        }
+    ],
+    "discussions": [
+        "https://lore.kernel.org/all/0000000000002ed0ef05b4003400@google.com/T/",
+        "https://lore.kernel.org/all/20210401044624.19017-1-paskripkin@gmail.com/T/",
+        "https://lore.kernel.org/all/20210412083958.129944265@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210412084004.200986670@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210412084013.643370347@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210412084016.009884719@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210412162256.313524-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210412162401.314035-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210412162502.314854-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210412162553.315227-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210412162630.315526-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210412162704.315783-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210412162736.316026-1-sashal@kernel.org/T/",
+        "https://lore.kernel.org/all/20210415144413.352638802@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210415144413.487943796@linuxfoundation.org/T/",
+        "https://lore.kernel.org/all/20210415144414.464797272@linuxfoundation.org/T/"
+    ],
+    "crashes": [
+        {
+            "title": "",
+            "syz-reproducer": "/text?tag=ReproSyz&x=155d8dba500000",
+            "c-reproducer": "/text?tag=ReproC&x=153b46a1500000",
+            "kernel-config": "/text?tag=KernelConfig&x=a3f13716fa0212fd",
+            "kernel-source-git": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?id=af5043c89a8ef6b6949a245fff355a552eaed240",
+            "kernel-source-commit": "af5043c89a8ef6b6949a245fff355a552eaed240",
+            "syzkaller-git": "https://github.com/google/syzkaller/commits/16fca0c8ebd6f95e249caa4fbebe9b3b63b508b4",
+            "syzkaller-commit": "16fca0c8ebd6f95e249caa4fbebe9b3b63b508b4",
+            "compiler-description": "gcc (GCC) 10.1.0-syz 20200507",
+            "architecture": "amd64",
+            "crash-report-link": "/text?tag=CrashReport&x=10cc8f26500000"
+        }
+    ],
+    "patch_modified_functions": [
+        [
+            "atusb_alloc_urbs",
+            "drivers/net/ieee802154/atusb.c"
+        ]
+    ],
+    "patch_commit_date": "2021-04-01T04:46:24+00:00",
+    "cause_commit_date": null,
+    "subsystems": [
+        "usb",
+        "wpan"
+    ],
+    "parent_of_fix_commit": "622d13694b5f048c01caa7ba548498d9880d4cb0",
+    "patch": "diff --git a/drivers/net/ieee802154/atusb.c b/drivers/net/ieee802154/atusb.c\nindex 0dd0ba915ab9..23ee0b14cbfa 100644\n--- a/drivers/net/ieee802154/atusb.c\n+++ b/drivers/net/ieee802154/atusb.c\n@@ -365,6 +365,7 @@ static int atusb_alloc_urbs(struct atusb *atusb, int n)\n \t\t\treturn -ENOMEM;\n \t\t}\n \t\tusb_anchor_urb(urb, &atusb->idle_urbs);\n+\t\tusb_free_urb(urb);\n \t\tn--;\n \t}\n \treturn 0;\n",
+    "patch_modified_files": [
+        "drivers/net/ieee802154/atusb.c"
+    ]
+}
