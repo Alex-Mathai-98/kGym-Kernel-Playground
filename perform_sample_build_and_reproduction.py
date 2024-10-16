@@ -748,13 +748,13 @@ if __name__ == '__main__':
 
     JobAnalyzer.populate_job_status(all_job_path=args.job_receipt,job_type="simple_reproduction")
     
-    # run_experiment(save_path=os.path.join(base_path,"easy_experiment_data/sublists"),
-    #     data_folder_path=os.path.join(base_path,"Kernel_Benchmark"),
-    #     bug_list_path=os.path.join(base_path,"golden_subset_benchmark_with_kernel_and_image_try_3.json"),
-    #     per_point_user_image_flag=False,
+    # run_experiment(save_path=os.path.join(os.getenv("BASE_PATH"), "final_results"),
+    #     data_folder_path=os.getenv("KBENCH_PATH"),
+    #     bug_list_path=os.getenv("GOLDEN_SUBSET_PATH"),
+    #     per_point_user_image_flag=True,
     #     per_point_kernel_image_flag=False,
     #     per_point_apply_patch_flag=False,
     #     run_on_parent_of_fix_commit=True,
     #     run_on_fix_commit=False,
-    #     reproducer_type="log",
+    #     reproducer_type=os.getenv("REPRODUCER_TYPE","log"),
     #     ninstance=5)

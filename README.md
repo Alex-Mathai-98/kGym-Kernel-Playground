@@ -13,17 +13,28 @@ Below are the list of steps to follow when trying to run a sample experiment fro
 
 **Note** : Syzkaller was designed to be run with the ```log``` reproducer. The utility that converts this ```log``` reproducer to a ```C``` reproducer is provided for convenience by the Syzkaller team. As such, we place slightly more confidence on the smaller dataset provided in  ```Kernel_Benchmark``` than ```Kernel_Benchmark_C_Repro```. To use the ```C``` reproducer instead of the ```log``` reproducer :
 
-* The user needs to provide ```c``` as the argument for `--reproducer_type` to the file  ```run_prompt_predictions.py```.
-
-* The user must also change the values of two environment variables as shown below.
+* The user must change the values of three environment variables as shown below.
 ```
 export KBENCH_PATH="$BASE_PATH/Kernel_Benchmark_C_Repro"
 export GOLDEN_SUBSET_PATH="$BASE_PATH/golden_subset_C_benchmark_with_kernel_and_image_names.json"
+export REPRODUCER_TYPE="c"
 ```
 
 #### List of Submodules in this repository
 1. KBDr_Runner - [Kernel Gym](https://github.com/Alex-Mathai-98/kGym-Kernel-Gym)
 2. Kernel_Bench_Experiments - [Kernel Bench Experiments](https://github.com/Alex-Mathai-98/kGym-Kernel-Bench-Experiments)
+
+#### Initial Steps
+
+* Clone this repo and all the submodules
+```
+git clone --recurse-submodules https://github.com/Alex-Mathai-98/kGym-Kernel-Playground.git
+```
+
+* Create a conda environment using the `environment.yml`
+```
+conda env create -f environment.yml
+```
 
 ## Step 0 - Set up kGym
 Follow the README.md file in KBDr_Runner and bring up kGym
@@ -50,6 +61,7 @@ export ANTHROPIC_API_KEY="<YOUR_ANTHROPIC_API_KEY>"
 export GEMINI_API_KEY="<YOUR_GEMINI_API_KEY>"
 export OPENAI_API_KEY="<YOUR_OPENAI_API_KEY>"
 export KBDR_RUNNER_API_BASE_URL="<BASE_URL_OF_KGYM>"
+export REPRODUCER_TYPE="<THE_TYPE_OF_REPRODUCER> ('c' or 'log'). By default you should stick to 'log'."
 
 export KBENCH_PATH="$BASE_PATH/Kernel_Benchmark"
 export KGYM_PATH="$BASE_PATH/KBDr_Runner"

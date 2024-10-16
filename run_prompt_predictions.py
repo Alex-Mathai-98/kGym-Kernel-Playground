@@ -170,18 +170,15 @@ if __name__ == '__main__' :
         choices=["parent_commit","original_commit"],
         help="One of parent_commit/original_commit"
     )
-    parser.add_argument(
-        "--reproducer_type",
-        type=str,
-        default="log",
-        choices=["c","log"],
-        help="One of 'c'/'log'"
-    )
 
     args = parser.parse_args()
+
+    reproducer_type = os.getenv("REPRODUCER_TYPE", "log").lower()
+    if reproducer_type not in ["log", "c"] :
+        raise ValueError("The 'REPRODUCER_TYPE 'environment variable must be either 'c'/'log'")
 
     main(prediction_file=args.prediction_file,
         benchmark_dump_path=args.benchmark_dump_path,
         golden_subset=args.golden_subset,
         prediction_type=args.prediction_type,
-        reproducer_type=args.reproducer_type)
+        reproducer_type=reproducer_type)
