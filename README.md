@@ -11,8 +11,15 @@ Below are the list of steps to follow when trying to run a sample experiment fro
 
 1. We have pushed a larger kernel bug dataset with $513$ data points in the ```Kernel_Benchmark_C_Repro``` folder. These bugs are reproducible using the ```C``` reproducer instead of the ```log``` reproducer.
 
-**Note** : Syzkaller was designed to be run with the ```log``` reproducer. The utility that converts this ```log``` reproducer to a ```C``` reproducer is provided for convenience by the Syzkaller team. As such, we place slightly more confidence on the smaller dataset provided in  ```Kernel_Benchmark``` than ```Kernel_Benchmark_C_Repro```. To use the ```C``` reproducer instead of the ```log``` reproducer, a user needs to provide ```c``` as the argument for `--reproducer_type` to the file  ```run_prompt_predictions.py```.
+**Note** : Syzkaller was designed to be run with the ```log``` reproducer. The utility that converts this ```log``` reproducer to a ```C``` reproducer is provided for convenience by the Syzkaller team. As such, we place slightly more confidence on the smaller dataset provided in  ```Kernel_Benchmark``` than ```Kernel_Benchmark_C_Repro```. To use the ```C``` reproducer instead of the ```log``` reproducer :
 
+* The user needs to provide ```c``` as the argument for `--reproducer_type` to the file  ```run_prompt_predictions.py```.
+
+* The user must also change the values of two environment variables as shown below.
+```
+export KBENCH_PATH="$BASE_PATH/Kernel_Benchmark_C_Repro"
+export GOLDEN_SUBSET_PATH="$BASE_PATH/golden_subset_C_benchmark_with_kernel_and_image_names.json"
+```
 
 #### List of Submodules in this repository
 1. KBDr_Runner - [Kernel Gym](https://github.com/Alex-Mathai-98/kGym-Kernel-Gym)
