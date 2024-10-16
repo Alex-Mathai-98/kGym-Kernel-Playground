@@ -77,4 +77,4 @@ def main(benchmark_path) :
             json.dump(bug_data,open(bug_path,"w"),indent=4)
 
 if __name__ == '__main__' :
-    main(benchmark_path= os.path.join(os.getenv("BASE_PATH"),"Kernel_Benchmark"))
+    main(benchmark_path= os.path.join(os.getenv("KBENCH_PATH")))
