@@ -9,7 +9,7 @@ Below are the list of steps to follow when trying to run a sample experiment fro
 
 :star: **New Updates** :star:
 
-1. We have pushed a larger kernel bug dataset with $513$ data points in the ```Kernel_Benchmark_C_Repro``` folder. These bugs are reproducible using the ```C``` reproducer instead of the ```log``` reproducer.
+1. We have pushed a larger kernel bug dataset with $504$ data points in the ```Kernel_Benchmark_C_Repro``` folder. These bugs are reproducible using the ```C``` reproducer instead of the ```log``` reproducer.
 
 **Note** : Syzkaller was designed to be run with the ```log``` reproducer. The utility that converts this ```log``` reproducer to a ```C``` reproducer is provided for convenience by the Syzkaller team. As such, we place slightly more confidence on the smaller dataset provided in  ```Kernel_Benchmark``` than ```Kernel_Benchmark_C_Repro```. To use the ```C``` reproducer instead of the ```log``` reproducer :
 
