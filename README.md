@@ -7,7 +7,7 @@ Kernel Playground - A playground to run large scale experiments on the Linux Ker
 
 :star: **New Updates** :star:
 
-**Nov, 2025** - Our new iteration of kGym, kGymSuite that runs experiments on QEMU (kGym runs for ⭐ FREE ⭐) is now open sourced at ARiSE-Lab/kGymSuite, check it out!
+**Nov, 2025** - Our new iteration of kGym, kGymSuite that runs experiments on QEMU (kGym runs for ⭐ FREE ⭐) is now open sourced at [ARiSE-Lab/kGymSuite](https://github.com/ARiSE-Lab/kGymSuite), check it out!
 
 **May, 2025** - We have created an agent CrashFixer - that leverages kGym to resolve kernel crashes. Please find our paper below.
 
