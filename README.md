@@ -5,11 +5,20 @@ Kernel Playground - A playground to run large scale experiments on the Linux Ker
     <a href="https://opensource.org/license/mit/"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge"> </a>
 </p>
 
-Below are the list of steps to follow when trying to run a sample experiment from the paper ```kGym: A Platform and Dataset to Benchmark Large Language Models on Linux Kernel Crash Resolution```.
-
 :star: **New Updates** :star:
 
-1. We have pushed a larger kernel bug dataset with $504$ data points in the ```Kernel_Benchmark_C_Repro``` folder. These bugs are reproducible using the ```C``` reproducer instead of the ```log``` reproducer.
+**Nov, 2025** - Our new iteration of kGym, kGymSuite that runs experiments on QEMU (kGym runs for ⭐ FREE ⭐) is now open sourced at ARiSE-Lab/kGymSuite, check it out!
+
+**May, 2025** - We have created an agent CrashFixer - that leverages kGym to resolve kernel crashes. Please find our paper below.
+
+<a href="https://arxiv.org/abs/2504.20412"><img src="https://img.shields.io/badge/arXiv-2504.20412-b31b1b.svg?style=for-the-badge"> </a>
+
+**Dec, 2024** - We have pushed a larger kernel bug dataset with $504$ data points in the ```Kernel_Benchmark_C_Repro``` folder. These bugs are reproducible using the ```C``` reproducer instead of the ```log``` reproducer.
+
+---
+
+Below are the list of steps to follow when trying to run a sample experiment from the paper ```kGym: A Platform and Dataset to Benchmark Large Language Models on Linux Kernel Crash Resolution```.
+
 
 **Note** : Syzkaller was designed to be run with the ```log``` reproducer. The utility that converts this ```log``` reproducer to a ```C``` reproducer is provided for convenience by the Syzkaller team. As such, we place slightly more confidence on the smaller dataset provided in  ```Kernel_Benchmark``` than ```Kernel_Benchmark_C_Repro```. To use the ```C``` reproducer instead of the ```log``` reproducer :
 
